@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+<html class="light" lang="de-CH"><head></head><body class="bg-surface text-on-surface font-body-md min-h-screen">```html
 
-<html class="light" lang="de-CH"><head>
-<meta charset="utf-8"/>
+
+
+    <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Wer – Was – Bis wann | Digitaler Planer</title>
 <!-- PWA Meta Tags -->
@@ -166,8 +167,6 @@
         .qr-print-only { display: none; }
         @media print { .qr-print-only { display: block !important; } }
     </style>
-</head>
-<body class="bg-surface text-on-surface font-body-md min-h-screen">
 <noscript>
 <div class="fixed inset-0 flex items-center justify-center bg-white z-[9999] p-8 text-center">
 <div class="max-w-md">
@@ -263,9 +262,10 @@
                         </button>
 <button class="px-8 py-3 bg-surface-container-high text-on-surface border border-outline-variant rounded-full font-bold hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm min-w-[180px]" id="btn-import-students-json" onclick="document.getElementById('import-students-file').click()" type="button">
 <span class="material-icons text-[20px]">file_upload</span>
-                            Liste importieren
+                            Datei importieren
                         </button>
-<input accept=".json" class="hidden" id="import-students-file" onchange="importStudentList(event)" type="file"/>
+<p class="text-[10px] text-on-surface-variant text-center mt-1">(.txt oder .json möglich)</p>
+<input accept=".json,.txt" class="hidden" id="import-students-file" onchange="importStudentList(event)" type="file"/>
 </div>
 </div>
 <div class="border-t border-outline-variant pt-6">
@@ -843,26 +843,41 @@
     function importStudentList(event) {
         const file = event.target.files[0];
         if (!file) return;
+        
         const reader = new FileReader();
         reader.onload = function(e) {
+            const content = e.target.result;
+            let newStudents = null;
+
+            // Try JSON first
             try {
-                const imported = JSON.parse(e.target.result);
-                // Try to handle both full exports and specific student-only lists
-                const newStudents = imported.students || (Array.isArray(imported) ? imported : null);
+                const parsed = JSON.parse(content);
+                newStudents = parsed.students || (Array.isArray(parsed) ? parsed : null);
+            } catch (err) {
+                // Not JSON, treat as TXT with various separators
+                newStudents = content.split(/[,\n;\r]/)
+                    .map(n => n.trim())
+                    .filter(n => n.length > 0);
+            }
                 
-                if (newStudents && Array.isArray(newStudents)) {
-                    if (confirm(`Sollen ${newStudents.length} Schüler importiert werden? Bestehende Namen bleiben erhalten.`)) {
-                        students = Array.from(new Set([...students, ...newStudents])).sort();
-                        save();
-                        updateUI();
-                        alert('Klassenliste erfolgreich importiert.');
-                    }
-                } else {
-                    alert('Ungültiges Format für Klassenliste.');
+            if (newStudents && Array.isArray(newStudents) && newStudents.length > 0) {
+                if (confirm(`Sollen ${newStudents.length} Schüler importiert werden? Bestehende Namen bleiben erhalten.`)) {
+                    students = Array.from(new Set([...students, ...newStudents])).sort();
+                    save();
+                    updateUI();
+                    alert('Klassenliste erfolgreich importiert.');
                 }
-            } catch (err) { alert('Fehler beim Lesen der Datei.'); }
+            } else {
+                alert('Fehler beim Lesen der Datei: Keine gültigen Namen gefunden.');
+            }
             event.target.value = '';
         };
+        
+        reader.onerror = function() {
+            alert('Fehler beim Lesen der Datei.');
+            event.target.value = '';
+        };
+        
         reader.readAsText(file);
     }
 
