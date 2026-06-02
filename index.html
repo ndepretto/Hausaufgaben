@@ -255,9 +255,9 @@
 <div class="flex flex-col md:flex-row gap-4">
 <textarea class="flex-1 bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-2 focus:ring-secondary focus:border-secondary transition-all outline-none min-h-[80px]" id="bulk-student-input" placeholder="Anna, Ben, Lara, Mark, Sophie..."></textarea>
 <div class="flex flex-col gap-2">
-<button class="px-8 py-4 bg-secondary text-on-secondary rounded-full font-bold hover:bg-secondary/90 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm" onclick="importStudents()" type="button">
-<span class="material-icons text-[20px]">file_upload</span>
-                            Importieren
+<button class="px-8 py-4 bg-secondary text-on-secondary rounded-full font-bold hover:bg-secondary/90 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm" id="btn-import-students" onclick="importStudents()" type="button">
+<span class="material-icons text-[20px]">group_add</span>
+                            Hinzufügen
                         </button>
 </div>
 </div>
@@ -389,7 +389,7 @@
 <p class="text-xs text-on-surface-variant">
 <b>iOS:</b> Teilen <span class="material-icons text-[14px]">ios_share</span> -&gt; Zum Home-Bildschirm.<br/>
 <b>Android:</b> Menü <span class="material-icons text-[14px]">more_vert</span> -&gt; App installieren.
-</p>
+                </p>
 </div>
 </div>
 </section>
@@ -750,29 +750,44 @@
 
     function importStudents() {
         const input = document.getElementById('bulk-student-input');
-        if (!input || !input.value.trim()) return;
+        if (!input) return;
         
-        const newNames = input.value.split(',')
+        const rawValue = input.value.trim();
+        if (!rawValue) {
+            alert('Bitte geben Sie mindestens einen Namen ein.');
+            return;
+        }
+        
+        // Parse input: split by comma, semicolon or newline, trim, filter out empty strings
+        const newNames = rawValue.split(/[,\n;]/)
             .map(n => n.trim())
             .filter(n => n.length > 0);
             
         if (newNames.length > 0) {
+            // Merge with existing students and remove duplicates
             students = Array.from(new Set([...students, ...newNames])).sort();
             input.value = '';
+            
+            // Persist to localStorage
             save();
-            updateDropdowns();
-            renderStudentBadges();
-            renderTasks();
+            
+            // Full UI refresh for all components that depend on the student list
+            updateUI();
+            
             if (currentRole === 'teacher') {
                 renderTeacherConfirmations();
             }
+            
+            alert(`${newNames.length} Schüler wurden erfolgreich zur Liste hinzugefügt.`);
+        } else {
+            alert('Keine gültigen Namen im Eingabefeld gefunden.');
         }
     }
 
     function deleteStudent(name) {
         if (confirm(`Soll "${name}" wirklich aus der Klassenliste gelöscht werden?`)) {
             students = students.filter(s => s !== name);
-            delete studentConfirmations[name];
+            // We keep confirmations but they won't show up in lists if student is deleted
             save();
             updateUI();
         }
@@ -787,7 +802,7 @@
             badge.className = "flex items-center justify-between bg-secondary-container/10 border border-secondary-container/20 px-3 py-2 rounded-lg group";
             badge.innerHTML = `
                 <span class="text-sm font-semibold text-on-surface truncate pr-2">${name}</span>
-                <button onclick="deleteStudent('${name}')" class="text-error opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onclick="deleteStudent('${name}')" class="text-error opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-1 rounded-full hover:bg-error-container">
                     <span class="material-icons text-[16px]">close</span>
                 </button>
             `;
@@ -807,14 +822,23 @@
         const studentFilter = document.getElementById('student-filter');
         if (!taskWho || !studentFilter) return;
 
-        const opts = '<option value="Ganze Klasse">Ganze Klasse</option>' + 
-                     students.map(s => `<option value="${s}">${s}</option>`).join('');
-        taskWho.innerHTML = opts;
+        // Update Task Assigment Dropdown
+        const taskWhoVal = taskWho.value;
+        const taskWhoOpts = '<option value="Ganze Klasse">Ganze Klasse</option>' + 
+                             students.map(s => `<option value="${s}">${s}</option>`).join('');
+        taskWho.innerHTML = taskWhoOpts;
+        if (taskWhoVal && (taskWhoVal === 'Ganze Klasse' || students.includes(taskWhoVal))) {
+            taskWho.value = taskWhoVal;
+        }
 
+        // Update Student Filter Dropdown
         const filterVal = studentFilter.value;
-        studentFilter.innerHTML = '<option value="all">Alle anzeigen</option>' + 
-                                   students.map(s => `<option value="${s}">${s}</option>`).join('');
-        if (filterVal && students.includes(filterVal)) {
+        const filterOpts = '<option value="all">Alle anzeigen</option>' + 
+                           students.map(s => `<option value="${s}">${s}</option>`).join('');
+        studentFilter.innerHTML = filterOpts;
+        
+        // Restore previous selection if it still exists
+        if (filterVal && (filterVal === 'all' || students.includes(filterVal))) {
             studentFilter.value = filterVal;
         } else {
             studentFilter.value = 'all';
@@ -860,7 +884,7 @@
     }
 
     function resetTemplate() {
-        if(confirm('Alles löschen?')) {
+        if(confirm('Alles löschen? Die Seite wird neu geladen.')) {
             localStorage.clear();
             window.location.reload();
         }
@@ -887,11 +911,11 @@
         reader.onload = function(e) {
             try {
                 const imported = JSON.parse(e.target.result);
-                if (imported.tasks) {
+                if (imported.tasks && imported.students) {
                     if (confirm('Importierte Daten mit bestehenden mischen?')) {
                         tasks = [...tasks, ...imported.tasks];
                         students = Array.from(new Set([...students, ...imported.students])).sort();
-                        studentConfirmations = {...studentConfirmations, ...imported.confirmations};
+                        studentConfirmations = {...studentConfirmations, ...(imported.confirmations || {})};
                     } else {
                         tasks = imported.tasks;
                         students = imported.students;
@@ -902,7 +926,7 @@
                 }
                 save();
                 updateUI();
-            } catch (err) { alert('Fehler beim Import.'); }
+            } catch (err) { alert('Fehler beim Import der JSON-Datei.'); }
             event.target.value = '';
         };
         reader.readAsText(file);
