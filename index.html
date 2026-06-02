@@ -1,5 +1,4 @@
-<html class="light" lang="de-CH"><head></head><body class="bg-surface text-on-surface font-body-md min-h-screen">```html
-
+<html class="light" lang="de-CH"><head></head><body class="bg-surface text-on-surface font-body-md min-h-screen" onload="init()">```html
 
 
     <meta charset="utf-8"/>
@@ -181,6 +180,12 @@
         .dashboard-scrollbar::-webkit-scrollbar-thumb:hover {
             background: #999;
         }
+        
+        /* Fix for Material Icons in buttons to prevent text wrapping */
+        .role-btn span.material-icons {
+            font-size: 20px;
+            line-height: 1;
+        }
     </style>
 <main class="max-w-7xl mx-auto px-gutter py-8 md:py-12 space-y-12">
 <!-- Header -->
@@ -191,13 +196,13 @@
 </div>
 <div class="flex flex-col items-end gap-2 print-hide" id="role-switcher">
 <div class="bg-surface-container-high p-1 rounded-full flex gap-1 border border-outline-variant relative z-10">
-<button class="px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 bg-primary text-on-primary shadow-sm cursor-pointer z-30" id="btn-student" onclick="setMode('student')" type="button">
-<span class="material-icons">person</span>
-<span class="">Schüler-Ansicht</span>
+<button class="role-btn px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 bg-primary text-on-primary shadow-sm cursor-pointer z-30" id="btn-student" onclick="setMode('student')" type="button">
+<span class="material-icons">person_outline</span>
+<span class="hidden sm:inline">Schüler-Ansicht</span>
 </button>
-<button class="px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 text-on-surface-variant hover:bg-surface-container-highest cursor-pointer z-30 relative animate-pulse ring-4 ring-secondary/50" id="btn-teacher" onclick="setMode('teacher')" type="button">
-<span class="material-icons">lock</span>
-<span class="">Lehrer-Modus</span>
+<button class="role-btn px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 text-on-surface-variant hover:bg-surface-container-highest cursor-pointer z-30 relative" id="btn-teacher" onclick="setMode('teacher')" type="button">
+<span class="material-icons">lock_outline</span>
+<span class="hidden sm:inline">Lehrer-Modus</span>
 <span class="absolute top-0.5 right-0.5 w-3 h-3 bg-error rounded-full border-2 border-white hidden" id="teacher-notification-badge"></span>
 </button>
 <div class="absolute top-full right-0 mt-2 z-50 bg-secondary text-on-secondary p-4 rounded-xl shadow-xl border border-white/20 w-64 text-sm animate-bounce pointer-events-none" id="teacher-onboarding-hint">
@@ -267,9 +272,9 @@
 <table class="w-full text-left border-collapse min-w-[800px]" id="teacher-dashboard-table">
 <thead>
 <tr class="bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">
-<th class="p-4 border-b border-outline-variant">Aufgabe</th>
+<th class="p-4 border-b border-outline-variant">Schüler</th>
 <th class="p-4 border-b border-outline-variant text-center">Quote</th>
-<th class="p-4 border-b border-outline-variant" id="dashboard-students-header">Schüler</th>
+<th class="p-4 border-b border-outline-variant" id="dashboard-tasks-header">Aufgaben</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-outline-variant" id="teacher-dashboard-body"></tbody>
@@ -424,7 +429,7 @@
 </div>
 <!-- PWA Install Info -->
 <div class="flex flex-col gap-3 bg-surface-container-highest/50 p-4 rounded-xl border border-primary/10">
-<div class="w-10 h-10 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold bg-primary text-on-primary">4</div>
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold">4</div>
 <h4 class="font-bold text-on-surface">App installieren</h4>
 <p class="text-xs text-on-surface-variant">
 <b>iOS:</b> Teilen <span class="material-icons text-[14px]">ios_share</span> -&gt; Zum Home-Bildschirm.<br/>
@@ -583,8 +588,12 @@
             if (!studentBtn || !teacherBtn || !teacherSection) return;
 
             if (role === 'teacher') {
-                studentBtn.className = 'px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 text-on-surface-variant hover:bg-surface-container-highest cursor-pointer z-30';
-                teacherBtn.className = 'px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 bg-primary text-on-primary shadow-sm cursor-pointer z-30 relative';
+                studentBtn.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+                studentBtn.classList.add('text-on-surface-variant', 'hover:bg-surface-container-highest');
+                
+                teacherBtn.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+                teacherBtn.classList.remove('text-on-surface-variant', 'hover:bg-surface-container-highest');
+                
                 teacherSection.classList.remove('hidden');
                 resetBtn.classList.remove('hidden');
                 studentFilterCont.classList.add('hidden');
@@ -601,8 +610,12 @@
                 renderTeacherConfirmations();
                 renderTeacherDashboard();
             } else {
-                studentBtn.className = 'px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 bg-primary text-on-primary shadow-sm cursor-pointer z-30';
-                teacherBtn.className = 'px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 text-on-surface-variant hover:bg-surface-container-highest cursor-pointer z-30 relative';
+                studentBtn.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+                studentBtn.classList.remove('text-on-surface-variant', 'hover:bg-surface-container-highest');
+                
+                teacherBtn.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+                teacherBtn.classList.add('text-on-surface-variant', 'hover:bg-surface-container-highest');
+                
                 teacherSection.classList.add('hidden');
                 resetBtn.classList.add('hidden');
                 studentFilterCont.classList.remove('hidden');
@@ -671,8 +684,6 @@
                 if (!task.completedBy) task.completedBy = {};
                 if (currentRole === 'teacher') {
                     task.done = !task.done;
-                    // In teacher mode, toggling a "whole class" task sets it for all? 
-                    // Usually teacher just deletes or edits. We'll toggle general 'done' for overview.
                 } else {
                     task.completedBy[selectedStudent] = !task.completedBy[selectedStudent];
                 }
@@ -755,68 +766,60 @@
             });
         }
 
+        // Dashboard logic showing students as rows and tasks as columns
         function renderTeacherDashboard() {
-            const header = document.getElementById('dashboard-students-header');
+            const headerTasks = document.getElementById('dashboard-tasks-header');
             const body = document.getElementById('teacher-dashboard-body');
-            if (!header || !body) return;
+            if (!headerTasks || !body) return;
 
-            // Render Header with student names
-            header.innerHTML = `<div class="flex gap-4 min-w-[300px]">
-                ${students.map(s => `<div class="w-12 text-center text-[10px] font-bold uppercase truncate" title="${s}">${s}</div>`).join('')}
+            // Header for tasks (horizontal list)
+            headerTasks.innerHTML = `<div class="flex gap-4 min-w-[300px]">
+                ${tasks.map(t => `<div class="w-12 text-center text-[10px] font-bold uppercase truncate" title="${t.task} (${t.subject})">${t.task.substring(0,6)}...</div>`).join('')}
             </div>`;
 
-            if (tasks.length === 0) {
-                body.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-on-surface-variant italic">Erstellen Sie Aufgaben, um den Fortschritt zu sehen.</td></tr>`;
+            if (students.length === 0) {
+                body.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-on-surface-variant italic">Keine Schüler in der Liste.</td></tr>`;
                 return;
             }
 
-            body.innerHTML = tasks.map(task => {
+            body.innerHTML = students.map(student => {
                 let totalCompleted = 0;
-                let totalTarget = 0;
-                const subjectColor = subjectColorCodes[task.subject] || '#717786';
+                let totalAssigned = 0;
 
-                const statusCells = students.map(student => {
+                const statusCells = tasks.map(task => {
+                    let isAssigned = (task.who === 'Ganze Klasse' || task.who === student);
                     let isDone = false;
-                    if (task.who === 'Ganze Klasse') {
-                        totalTarget++;
-                        isDone = !!(task.completedBy && task.completedBy[student]);
+                    
+                    if (isAssigned) {
+                        totalAssigned++;
+                        if (task.who === 'Ganze Klasse') {
+                            isDone = !!(task.completedBy && task.completedBy[student]);
+                        } else {
+                            isDone = !!task.done;
+                        }
                         if (isDone) totalCompleted++;
-                    } else if (task.who === student) {
-                        totalTarget = 1;
-                        isDone = !!task.done;
-                        if (isDone) totalCompleted = 1;
-                    } else {
-                        // Task not assigned to this student
-                        return `<div class="w-12 flex justify-center opacity-10"><span class="material-icons text-[16px] text-outline">remove</span></div>`;
                     }
 
                     return `<div class="w-12 flex justify-center">
-                        ${isDone 
-                            ? `<span class="material-icons text-[18px] text-green-500">check_circle</span>` 
-                            : `<span class="material-icons text-[18px] text-outline-variant">radio_button_unchecked</span>`}
+                        ${!isAssigned ? '<span class="material-icons text-[14px] text-outline opacity-20">remove</span>' : 
+                          (isDone ? '<span class="material-icons text-[18px] text-green-500">check_circle</span>' : 
+                                    '<span class="material-icons text-[18px] text-outline-variant">radio_button_unchecked</span>')}
                     </div>`;
                 }).join('');
 
-                const percentage = totalTarget > 0 ? Math.round((totalCompleted / totalTarget) * 100) : 0;
+                const percentage = totalAssigned > 0 ? Math.round((totalCompleted / totalAssigned) * 100) : 0;
                 const progressColor = percentage === 100 ? 'bg-green-500' : (percentage > 50 ? 'bg-primary' : 'bg-outline-variant');
 
                 return `
                     <tr class="hover:bg-surface-container-low transition-colors">
                         <td class="p-4">
-                            <div class="flex flex-col">
-                                <span class="font-semibold text-sm text-on-surface truncate max-w-[200px]" title="${task.task}">${task.task}</span>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <span class="w-2 h-2 rounded-full" style="background-color: ${subjectColor}"></span>
-                                    <span class="text-[10px] uppercase font-bold text-on-surface-variant">${task.subject}</span>
-                                    <span class="text-[10px] text-outline">• ${task.who}</span>
-                                </div>
-                            </div>
+                            <span class="font-bold text-sm text-on-surface">${student}</span>
                         </td>
                         <td class="p-4 w-40">
                             <div class="flex flex-col gap-1">
                                 <div class="flex justify-between items-center text-[10px] font-bold">
                                     <span>${percentage}%</span>
-                                    <span class="text-on-surface-variant">${totalCompleted}/${totalTarget}</span>
+                                    <span class="text-on-surface-variant">${totalCompleted}/${totalAssigned}</span>
                                 </div>
                                 <div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
                                     <div class="h-full ${progressColor} transition-all duration-500" style="width: ${percentage}%"></div>
@@ -831,6 +834,63 @@
                     </tr>
                 `;
             }).join('');
+        }
+
+        function updateUI() {
+            renderStudentBadges();
+            renderWhoDropdown();
+            renderStudentSelect();
+            renderTasks();
+            renderColorLegend();
+            if (currentRole === 'teacher') {
+                renderTeacherConfirmations();
+                renderTeacherDashboard();
+            }
+        }
+
+        function renderStudentSelect() {
+            const select = document.getElementById('student-filter');
+            if (!select) return;
+            const currentVal = select.value;
+            select.innerHTML = '<option value="all">Alle anzeigen</option>';
+            students.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                select.appendChild(opt);
+            });
+            if (Array.from(select.options).some(o => o.value === currentVal)) {
+                select.value = currentVal;
+            }
+        }
+
+        function renderWhoDropdown() {
+            const select = document.getElementById('task-who');
+            if (!select) return;
+            select.innerHTML = '<option value="Ganze Klasse" selected>Ganze Klasse</option>';
+            students.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                select.appendChild(opt);
+            });
+        }
+
+        function renderStudentBadges() {
+            const container = document.getElementById('student-badges-container');
+            if (!container) return;
+            container.innerHTML = '';
+            students.forEach(s => {
+                const badge = document.createElement('div');
+                badge.className = 'flex items-center justify-between px-3 py-1.5 bg-surface-container-low border border-outline-variant rounded-full text-xs font-semibold';
+                badge.innerHTML = `
+                    <span class="truncate max-w-[80px]">${s}</span>
+                    <button onclick="deleteStudent('${s}')" class="text-on-surface-variant hover:text-error transition-colors ml-1">
+                        <span class="material-icons text-[14px]">close</span>
+                    </button>
+                `;
+                container.appendChild(badge);
+            });
         }
 
         function addTask() {
@@ -857,8 +917,6 @@
             tasks.push(newTask);
             save();
             updateUI();
-            
-            // Clear only description
             document.getElementById('task-desc').value = '';
         }
 
@@ -978,64 +1036,4 @@
             }
 
             list.innerHTML = confirmed.map(([name, data]) => {
-                const fmtDate = data.date ? new Date(data.date).toLocaleDateString('de-CH') : '-';
-                return `
-                    <div class="flex items-center justify-between p-3 bg-surface-container-low rounded-lg border border-outline-variant">
-                        <div>
-                            <span class="font-bold text-primary">${name}</span>
-                            <span class="text-on-surface-variant text-sm mx-2">bestätigt durch</span>
-                            <span class="font-semibold text-on-surface">${data.signature}</span>
-                        </div>
-                        <div class="text-xs text-outline font-mono">${fmtDate}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function importStudents() {
-            const input = document.getElementById('bulk-student-input');
-            if (!input) return;
-            const rawValue = input.value.trim();
-            if (!rawValue) return;
-            const newNames = rawValue.split(/[,\n;]/).map(n => n.trim()).filter(n => n.length > 0);
-            if (newNames.length > 0) {
-                students = Array.from(new Set([...students, ...newNames])).sort();
-                input.value = '';
-                save();
-                updateUI();
-            }
-        }
-
-        function importStudentList(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const content = e.target.result;
-                let newStudents = null;
-                try {
-                    const parsed = JSON.parse(content);
-                    newStudents = parsed.students || (Array.isArray(parsed) ? parsed : null);
-                } catch (err) {
-                    newStudents = content.split(/[,\n;\r]/).map(n => n.trim()).filter(n => n.length > 0);
-                }
-                if (newStudents && Array.isArray(newStudents)) {
-                    students = Array.from(new Set([...students, ...newStudents])).sort();
-                    save();
-                    updateUI();
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function deleteStudent(name) {
-            if (confirm(`Soll "${name}" gelöscht werden?`)) {
-                students = students.filter(s => s !== name);
-                delete studentConfirmations[name];
-                save();
-                updateUI();
-            }
-        }
-
-        function renderStudentBadges() {
-            const container = document.getElementById('student-badges</script></body></html>
+                const fmtDate = data.date ? new Date(data.date).toLocaleDateString('de-CH</script></body></html>
