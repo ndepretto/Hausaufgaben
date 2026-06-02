@@ -130,8 +130,10 @@
         }
         .task-row-done {
             opacity: 0.6;
-            text-decoration: line-through;
             background-color: #f1f5f9 !important;
+        }
+        .task-row-done .task-text {
+            text-decoration: line-through;
         }
         .subject-bar {
             width: 6px;
@@ -394,7 +396,7 @@
 </div>
 </section>
 <!-- Bestätigung der Eltern -->
-<section class="bg-surface-container-lowest border-2 border-primary border-dashed p-8 rounded-lg shadow-sm" id="parent-confirmation">
+<section class="bg-surface-container-lowest border-2 border-primary border-dashed p-8 rounded-lg shadow-sm transition-all" id="parent-confirmation">
 <div class="flex items-center gap-3 mb-8">
 <span class="material-icons text-primary text-3xl" id="confirm-icon">verified_user</span>
 <h2 class="font-h2 text-h2 text-primary" id="confirm-heading">Bestätigung der Eltern</h2>
@@ -588,36 +590,39 @@
         });
     }
 
-    // NEW INDIVIDUAL LOGIC: Check localStorage for student-specific key
+    // Logical identifier for a task status per student
+    function getTaskStatusKey(taskId, studentName) {
+        // Individual logic: task-erledigt-[STUDENT]-[TASKID]
+        return `task-erledigt-${studentName}-${taskId}`;
+    }
+
     function isTaskDone(taskId, studentName) {
         if (!studentName || studentName === 'all') return false; 
-        return localStorage.getItem(`done_${studentName}_${taskId}`) === 'true';
+        return localStorage.getItem(getTaskStatusKey(taskId, studentName)) === 'true';
     }
 
     function toggleTask(id) {
         const selectedStudent = document.getElementById('student-filter')?.value || 'all';
         
-        // Validation: Teacher can toggle generally (shared state logic for "Ganze Klasse" is handled differently for teachers)
-        // BUT for the requested fix: Teachers in student view/selection can also toggle
-        
         if (selectedStudent === 'all' && currentRole === 'student') {
             alert('Bitte wähle deinen Namen oben im Filter aus, um Aufgaben abzuhaken.');
+            renderTasks(); // Force reset visual state
             return;
         }
 
-        const studentToUse = selectedStudent === 'all' ? 'teacher_global' : selectedStudent;
-
-        // Prevention: parent lock for student mode
-        if (currentRole === 'student' && studentToUse !== 'teacher_global' && studentConfirmations[studentToUse]?.checked) {
-            alert('Liste ist durch Elternbestätigung gesperrt.');
+        // Parent lock check
+        if (currentRole === 'student' && selectedStudent !== 'all' && studentConfirmations[selectedStudent]?.checked) {
+            alert('Die Liste ist durch die Elternbestätigung gesperrt.');
+            renderTasks();
             return;
         }
 
-        const key = `done_${studentToUse}_${id}`;
+        const studentKeyName = (selectedStudent === 'all') ? 'TEACHER_ADMIN' : selectedStudent;
+        const key = getTaskStatusKey(id, studentKeyName);
         const currentStatus = localStorage.getItem(key) === 'true';
         localStorage.setItem(key, !currentStatus);
         
-        renderTasks(); // Immediate Update
+        renderTasks();
     }
 
     function renderTasks() {
@@ -632,7 +637,7 @@
         body.innerHTML = '';
         let filteredTasks = Array.isArray(tasks) ? [...tasks] : [];
         
-        // In student mode, if a student is selected, only show global or personal tasks
+        // Filtering: Student only sees shared or their own tasks
         if (currentRole === 'student' && selectedStudent !== 'all') {
             filteredTasks = filteredTasks.filter(t => t.who === 'Ganze Klasse' || t.who === selectedStudent);
         }
@@ -646,15 +651,13 @@
             const tr = document.createElement('tr');
             const subjectColor = subjectColorCodes[task.subject] || '#717786';
             
-            // Check state logic: based on current selected student
-            const done = isTaskDone(task.id, selectedStudent);
-            
-            // Disable if "Alle anzeigen" or locked
+            // Resolve completion status
+            const studentKey = (currentRole === 'teacher' && selectedStudent === 'all') ? 'TEACHER_ADMIN' : selectedStudent;
+            const done = isTaskDone(task.id, studentKey);
             const canToggle = (selectedStudent !== 'all' && !isLocked) || currentRole === 'teacher';
             
             tr.className = `relative border-b border-outline-variant transition-all ${done ? 'task-row-done' : 'bg-white hover:bg-surface-container-low/50'}`;
             
-            // Swiss Date format: DD.MM.YYYY
             const dateObj = new Date(task.due);
             const formattedDate = !isNaN(dateObj.getTime()) 
                 ? dateObj.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -679,7 +682,7 @@
                 <td class="p-5">
                     <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase text-white shadow-sm" style="background-color: ${subjectColor}">${(task.subject || '??').toUpperCase()}</span>
                 </td>
-                <td class="p-5 font-body-md text-on-surface-variant">${task.task}</td>
+                <td class="p-5 font-body-md text-on-surface-variant task-text">${task.task}</td>
                 <td class="p-5 text-sm font-semibold text-on-surface">${formattedDate}</td>
                 <td class="p-5 text-center">
                     <div class="flex items-center justify-center gap-2">
@@ -727,21 +730,24 @@
         const heading = document.getElementById('confirm-heading');
         const icon = document.getElementById('confirm-icon');
         const text = document.getElementById('confirm-text');
+        const label = document.getElementById('confirm-label');
         const btnText = isLocked ? "Bestätigt ✓" : "Gesehen ☑";
 
         if(isLocked) {
-            parentCard.className = "bg-primary border-2 border-primary border-dashed p-8 rounded-lg shadow-sm text-white transition-colors duration-300";
+            parentCard.className = "bg-primary border-2 border-primary border-dashed p-8 rounded-lg shadow-sm text-white transition-all duration-300";
             heading.className = "font-h2 text-h2 text-white";
             icon.className = "material-icons text-white text-3xl";
             text.className = "font-bold text-white";
             text.innerText = btnText;
+            label.className = "flex items-center justify-center gap-3 cursor-pointer select-none bg-white/20 p-3 rounded-lg border border-white/30 w-full transition-all";
             inputs.forEach(i => i.disabled = true);
         } else {
-            parentCard.className = "bg-surface-container-lowest border-2 border-primary border-dashed p-8 rounded-lg shadow-sm transition-colors duration-300";
+            parentCard.className = "bg-surface-container-lowest border-2 border-primary border-dashed p-8 rounded-lg shadow-sm transition-all duration-300";
             heading.className = "font-h2 text-h2 text-primary";
             icon.className = "material-icons text-primary text-3xl";
             text.className = "font-bold text-on-surface";
             text.innerText = btnText;
+            label.className = "flex items-center justify-center gap-3 cursor-pointer select-none bg-surface-container-low p-3 rounded-lg border border-outline-variant w-full hover:bg-surface-container-high transition-all";
             inputs.forEach(i => i.disabled = false);
         }
     }
@@ -757,16 +763,19 @@
         };
         
         save();
+        if (currentRole === 'teacher') renderTeacherConfirmations();
     }
 
     function toggleLock() {
         const student = document.getElementById('student-filter')?.value;
         if (!student || student === 'all') return;
 
-        const isChecked = document.getElementById('confirm-check').checked;
+        const checkElem = document.getElementById('confirm-check');
+        const isChecked = checkElem.checked;
+        
         if (isChecked && !document.getElementById('confirm-sig').value.trim()) {
             alert("Bitte geben Sie einen Namen als Unterschrift ein.");
-            document.getElementById('confirm-check').checked = false;
+            checkElem.checked = false;
             return;
         }
 
@@ -785,6 +794,7 @@
         }
 
         list.innerHTML = confirmed.map(([name, data]) => {
+            const fmtDate = data.date ? new Date(data.date).toLocaleDateString('de-CH') : '-';
             return `
                 <div class="flex items-center justify-between p-3 bg-surface-container-low rounded-lg border border-outline-variant">
                     <div>
@@ -792,7 +802,7 @@
                         <span class="text-on-surface-variant text-sm mx-2">bestätigt durch</span>
                         <span class="font-semibold text-on-surface">${data.signature}</span>
                     </div>
-                    <div class="text-xs text-outline font-mono">${new Date(data.date).toLocaleDateString('de-CH')}</div>
+                    <div class="text-xs text-outline font-mono">${fmtDate}</div>
                 </div>
             `;
         }).join('');
@@ -818,15 +828,17 @@
             save();
             updateUI();
             if (currentRole === 'teacher') renderTeacherConfirmations();
-            alert(`${newNames.length} Schüler wurden erfolgreich zur Liste hinzugefügt.`);
+            alert(`${newNames.length} Schüler wurden erfolgreich hinzugefügt.`);
         } else {
-            alert('Keine gültigen Namen im Eingabefeld gefunden.');
+            alert('Keine gültigen Namen gefunden.');
         }
     }
 
     function deleteStudent(name) {
         if (confirm(`Soll "${name}" wirklich aus der Klassenliste gelöscht werden?`)) {
             students = students.filter(s => s !== name);
+            // Optional: cleanup confirmation data for that student
+            delete studentConfirmations[name];
             save();
             updateUI();
         }
@@ -902,9 +914,11 @@
     function deleteTask(id) {
         if(confirm('Aufgabe löschen?')) {
             tasks = tasks.filter(t => t.id !== id);
-            // Cleanup individual status keys
-            students.forEach(s => localStorage.removeItem(`done_${s}_${id}`));
-            localStorage.removeItem(`done_teacher_global_${id}`);
+            // Cleanup states (not essential but cleaner)
+            for(let i=0; i<localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if(k.includes(`-${id}`)) localStorage.removeItem(k);
+            }
             save();
             renderTasks();
         }
@@ -922,15 +936,13 @@
             tasks,
             students,
             confirmations: studentConfirmations,
-            // Export individual completion states
-            individualStates: {}
+            completionStates: {}
         };
         
-        // Collate all "done" keys from localStorage
         for(let i=0; i<localStorage.length; i++){
             let key = localStorage.key(i);
-            if(key.startsWith('done_')){
-                exportData.individualStates[key] = localStorage.getItem(key);
+            if(key.startsWith('task-erledigt-')){
+                exportData.completionStates[key] = localStorage.getItem(key);
             }
         }
 
@@ -938,7 +950,7 @@
         const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
         const linkElement = document.createElement('a');
         linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', 'planer_export.json');
+        linkElement.setAttribute('download', 'digitaler_planer_export.json');
         linkElement.click();
     }
 
@@ -950,25 +962,26 @@
             try {
                 const imported = JSON.parse(e.target.result);
                 if (imported.tasks && imported.students) {
-                    if (confirm('Importierte Daten mit bestehenden mischen?')) {
+                    if (confirm('Daten mit bestehenden mischen?')) {
                         tasks = [...tasks, ...imported.tasks];
                         students = Array.from(new Set([...students, ...imported.students])).sort();
                         studentConfirmations = {...studentConfirmations, ...(imported.confirmations || {})};
-                        if(imported.individualStates){
-                            Object.entries(imported.individualStates).forEach(([k,v]) => localStorage.setItem(k,v));
+                        if(imported.completionStates) {
+                            Object.entries(imported.completionStates).forEach(([k,v]) => localStorage.setItem(k, v));
                         }
                     } else {
                         tasks = imported.tasks;
                         students = imported.students;
                         studentConfirmations = imported.confirmations || {};
-                        if(imported.individualStates){
-                            Object.entries(imported.individualStates).forEach(([k,v]) => localStorage.setItem(k,v));
+                        if(imported.completionStates) {
+                            Object.entries(imported.completionStates).forEach(([k,v]) => localStorage.setItem(k, v));
                         }
                     }
                 }
                 save();
                 updateUI();
-            } catch (err) { alert('Fehler beim Import der JSON-Datei.'); }
+                alert('Daten erfolgreich importiert.');
+            } catch (err) { alert('Fehler beim Import der Datei.'); }
             event.target.value = '';
         };
         reader.readAsText(file);
