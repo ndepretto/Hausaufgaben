@@ -1,4 +1,5 @@
-<html class="light" lang="de-CH"><head>
+<html class="light" lang="de-CH"><head></head><body class="bg-surface text-on-surface font-body-md min-h-screen">```html
+
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Wer – Was – Bis wann | Digitaler Planer</title>
@@ -144,7 +145,7 @@
             margin: 0 auto;
         }
         @media print {
-            header button, #email-section, .print-hide, #role-switcher, .no-print, #student-filter-container, #reset-btn, #teacher-qr-section, #manage-students-section, #add-task-section, #teacher-guide {
+            header button, #email-section, .print-hide, #role-switcher, .no-print, #student-filter-container, #reset-btn, #teacher-qr-section, #manage-students-section, #add-task-section, #teacher-guide, #teacher-confirmations-view, #teacher-dashboard-section {
                 display: none !important;
             }
             main {
@@ -163,9 +164,22 @@
         }
         .qr-print-only { display: none; }
         @media print { .qr-print-only { display: block !important; } }
+        
+        .dashboard-scrollbar::-webkit-scrollbar {
+            height: 8px;
+        }
+        .dashboard-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .dashboard-scrollbar::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 10px;
+        }
+        .dashboard-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
     </style>
-</head>
-<body class="bg-surface text-on-surface font-body-md min-h-screen">
 <main class="max-w-7xl mx-auto px-gutter py-8 md:py-12 space-y-12">
 <!-- Header -->
 <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -233,6 +247,28 @@
 <h4 class="font-bold text-on-surface">Datei verteilen</h4>
 <p class="text-sm text-on-surface-variant">Klicken Sie unten auf 'Export (.json)' und senden Sie die Datei an Ihre Schüler.</p>
 </div>
+</div>
+</section>
+<!-- Teacher Dashboard / Progress -->
+<section class="bg-surface-container-lowest border border-outline-variant p-8 rounded-lg shadow-sm" id="teacher-dashboard-section">
+<div class="flex items-center justify-between mb-8">
+<div>
+<h2 class="font-h2 text-h2">Klassen-Fortschritt</h2>
+<p class="text-on-surface-variant text-sm mt-1">Status-Übersicht aller Aufgaben pro Schüler.</p>
+</div>
+<span class="material-symbols-outlined text-primary text-3xl">dashboard</span>
+</div>
+<div class="overflow-x-auto dashboard-scrollbar">
+<table class="w-full text-left border-collapse min-w-[800px]" id="teacher-dashboard-table">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">
+<th class="p-4 border-b border-outline-variant">Aufgabe</th>
+<th class="p-4 border-b border-outline-variant text-center">Quote</th>
+<th class="p-4 border-b border-outline-variant" id="dashboard-students-header"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant" id="teacher-dashboard-body"></tbody>
+</table>
 </div>
 </section>
 <!-- Student Management Card -->
@@ -557,6 +593,7 @@
                 els.step1Text.innerText = 'Erfasse Aufgaben für die Klasse oder Einzelne.';
                 generateQRCode();
                 renderTeacherConfirmations();
+                renderTeacherDashboard();
             } else {
                 els.studentBtn.className = 'px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 bg-primary text-on-primary shadow-sm cursor-pointer z-30';
                 els.teacherBtn.className = 'px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 text-on-surface-variant hover:bg-surface-container-highest cursor-pointer z-30 relative';
@@ -636,6 +673,7 @@
             
             save();
             renderTasks();
+            if (currentRole === 'teacher') renderTeacherDashboard();
         }
 
         function renderTasks() {
@@ -706,6 +744,85 @@
                 `;
                 body.appendChild(tr);
             });
+        }
+
+        function renderTeacherDashboard() {
+            if (currentRole !== 'teacher') return;
+            const header = document.getElementById('dashboard-students-header');
+            const body = document.getElementById('teacher-dashboard-body');
+            if (!header || !body) return;
+
+            // Render Header with student names
+            header.innerHTML = `<div class="flex gap-4 min-w-[300px]">
+                ${students.map(s => `<div class="w-12 text-center text-[10px] font-bold uppercase truncate" title="${s}">${s}</div>`).join('')}
+            </div>`;
+
+            if (tasks.length === 0) {
+                body.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-on-surface-variant italic">Erstellen Sie Aufgaben, um den Fortschritt zu sehen.</td></tr>`;
+                return;
+            }
+
+            body.innerHTML = tasks.map(task => {
+                let totalCompleted = 0;
+                let totalTarget = 0;
+                const subjectColor = subjectColorCodes[task.subject] || '#717786';
+
+                const statusCells = students.map(student => {
+                    let isDone = false;
+                    if (task.who === 'Ganze Klasse') {
+                        totalTarget++;
+                        isDone = !!(task.completedBy && task.completedBy[student]);
+                        if (isDone) totalCompleted++;
+                    } else if (task.who === student) {
+                        totalTarget = 1;
+                        isDone = !!task.done;
+                        if (isDone) totalCompleted = 1;
+                    } else {
+                        // Task not assigned to this student
+                        return `<div class="w-12 flex justify-center opacity-10"><span class="material-icons text-[16px] text-outline">remove</span></div>`;
+                    }
+
+                    return `<div class="w-12 flex justify-center">
+                        ${isDone 
+                            ? `<span class="material-icons text-[18px] text-green-500">check_circle</span>` 
+                            : `<span class="material-icons text-[18px] text-outline-variant">radio_button_unchecked</span>`}
+                    </div>`;
+                }).join('');
+
+                const percentage = totalTarget > 0 ? Math.round((totalCompleted / totalTarget) * 100) : 0;
+                const progressColor = percentage === 100 ? 'bg-green-500' : (percentage > 50 ? 'bg-primary' : 'bg-outline-variant');
+
+                return `
+                    <tr class="hover:bg-surface-container-low transition-colors">
+                        <td class="p-4">
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-sm text-on-surface truncate max-w-[200px]" title="${task.task}">${task.task}</span>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="w-2 h-2 rounded-full" style="background-color: ${subjectColor}"></span>
+                                    <span class="text-[10px] uppercase font-bold text-on-surface-variant">${task.subject}</span>
+                                    <span class="text-[10px] text-outline">• ${task.who}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4 w-40">
+                            <div class="flex flex-col gap-1">
+                                <div class="flex justify-between items-center text-[10px] font-bold">
+                                    <span>${percentage}%</span>
+                                    <span class="text-on-surface-variant">${totalCompleted}/${totalTarget}</span>
+                                </div>
+                                <div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                                    <div class="h-full ${progressColor} transition-all duration-500" style="width: ${percentage}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4">
+                            <div class="flex gap-4 min-w-[300px]">
+                                ${statusCells}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function updateConfirmationStatusUI() {
@@ -896,6 +1013,10 @@
             renderStudentBadges();
             renderColorLegend();
             renderTasks();
+            if (currentRole === 'teacher') {
+                renderTeacherDashboard();
+                renderTeacherConfirmations();
+            }
         }
 
         function updateDropdowns() {
@@ -920,75 +1041,4 @@
             localStorage.setItem('hw_planner_tasks', JSON.stringify(tasks));
             localStorage.setItem('hw_planner_students', JSON.stringify(students));
             localStorage.setItem('hw_planner_confirmations_map', JSON.stringify(studentConfirmations));
-            localStorage.setItem('hw_planner_has_new_confirmations', hasNewConfirmations.toString());
-        }
-
-        function addTask() {
-            const who = document.getElementById('task-who').value;
-            const subject = document.getElementById('task-subject').value;
-            const taskDesc = document.getElementById('task-desc').value.trim();
-            const due = document.getElementById('task-date').value;
-            if(!taskDesc || !due) return;
-            
-            const newTask = { id: Date.now(), who, subject, task: taskDesc, due, done: false };
-            if (who === 'Ganze Klasse') newTask.completedBy = {};
-            
-            tasks.push(newTask);
-            document.getElementById('task-desc').value = '';
-            save();
-            renderTasks();
-        }
-
-        function deleteTask(id) {
-            if(confirm('Aufgabe löschen?')) {
-                tasks = tasks.filter(t => t.id !== id);
-                save();
-                renderTasks();
-            }
-        }
-
-        function resetTemplate() {
-            if(confirm('Alles löschen?')) {
-                localStorage.clear();
-                window.location.reload();
-            }
-        }
-
-        function exportTasks() {
-            const exportData = { tasks, students, confirmations: studentConfirmations };
-            const dataStr = JSON.stringify(exportData, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', 'digitaler_planer_export.json');
-            linkElement.click();
-        }
-
-        function importTasks(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (imported.tasks && imported.students) {
-                        tasks = imported.tasks;
-                        students = imported.students;
-                        studentConfirmations = imported.confirmations || {};
-                        save();
-                        updateUI();
-                    }
-                } catch (err) { alert('Fehler beim Import.'); }
-                event.target.value = '';
-            };
-            reader.readAsText(file);
-        }
-
-        function printQRCode() {
-            window.print();
-        }
-
-        // Initialize on load
-        window.addEventListener('DOMContentLoaded', init);
-    </script>
-</body></html>
+</script></body></html>
