@@ -1,20 +1,22 @@
-<!DOCTYPE html><html class="light" lang="de-CH"><head></head><body class="bg-surface text-on-surface font-body-md min-h-screen">```html
+<html class="light" lang="de-CH"><head></head><body class="bg-surface text-on-surface font-body-md min-h-screen">```html
 
-<meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+
+    <meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Wer – Was – Bis wann | Digitaler Planer</title>
 <!-- PWA Meta Tags -->
-<meta content="yes" name="mobile-web-app-capable">
-<meta content="yes" name="apple-mobile-web-app-capable">
-<meta content="default" name="apple-mobile-web-app-status-bar-style">
-<meta content="Planer" name="apple-mobile-web-app-title">
-<meta content="#0058bc" name="theme-color">
+<meta content="yes" name="mobile-web-app-capable"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="default" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="Planer" name="apple-mobile-web-app-title"/>
+<meta content="#0058bc" name="theme-color"/>
 <!-- Inline Web App Manifest -->
-<link href="data:application/manifest+json,{&quot;name&quot;:&quot;Digitaler Planer&quot;,&quot;short_name&quot;:&quot;Planer&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;#f9f9fe&quot;,&quot;theme_color&quot;:&quot;#0058bc&quot;,&quot;icons&quot;:[{&quot;src&quot;:&quot;https://cdn-icons-png.flaticon.com/512/3652/3652191.png&quot;,&quot;sizes&quot;:&quot;512x512&quot;,&quot;type&quot;:&quot;image/png&quot;}]}" rel="manifest">
+<link href='data:application/manifest+json,{"name":"Digitaler Planer","short_name":"Planer","start_url":".","display":"standalone","background_color":"#f9f9fe","theme_color":"#0058bc","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3652/3652191.png","sizes":"512x512","type":"image/png"}]}' rel="manifest"/>
 <!-- External Resources -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script id="tailwind-config">
@@ -197,7 +199,10 @@
 <span class="material-icons">lock</span>
 <span class="">Lehrer-Modus</span>
 <span class="absolute top-0.5 right-0.5 w-3 h-3 bg-error rounded-full border-2 border-white hidden" id="teacher-notification-badge"></span>
-</button><div class="absolute top-full right-0 mt-2 z-50 bg-secondary text-on-secondary p-4 rounded-xl shadow-xl border border-white/20 w-64 text-sm animate-bounce pointer-events-none"><div class="font-bold mb-1">Klicken Sie hier!</div>Hier gelangen Sie zum Lehrer-Dashboard.<br><span class="font-mono bg-black/20 px-1 rounded">Passwort: lehrer123</span><div class="absolute -top-2 right-8 w-4 h-4 bg-secondary rotate-45"></div></div>
+</button>
+<div class="absolute top-full right-0 mt-2 z-50 bg-secondary text-on-secondary p-4 rounded-xl shadow-xl border border-white/20 w-64 text-sm animate-bounce pointer-events-none" id="teacher-onboarding-hint">
+<div class="font-bold mb-1">Klicken Sie hier!</div>Hier gelangen Sie zum Lehrer-Dashboard.<br/><span class="font-mono bg-black/20 px-1 rounded">Passwort: lehrer123</span><div class="absolute -top-2 right-8 w-4 h-4 bg-secondary rotate-45"></div>
+</div>
 </div>
 <button class="flex items-center gap-2 px-4 py-2 text-primary border border-primary/20 hover:bg-primary/5 rounded-full transition-colors font-label-caps text-label-caps uppercase hidden cursor-pointer" id="reset-btn" onclick="resetTemplate()" type="button">
 <span class="material-symbols-outlined text-sm">refresh</span>
@@ -264,7 +269,7 @@
 <tr class="bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">
 <th class="p-4 border-b border-outline-variant">Aufgabe</th>
 <th class="p-4 border-b border-outline-variant text-center">Quote</th>
-<th class="p-4 border-b border-outline-variant" id="dashboard-students-header"></th>
+<th class="p-4 border-b border-outline-variant" id="dashboard-students-header">Schüler</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-outline-variant" id="teacher-dashboard-body"></tbody>
@@ -293,7 +298,7 @@
                                 Datei importieren
                             </button>
 <p class="text-[10px] text-on-surface-variant text-center mt-1">(.txt oder .json möglich)</p>
-<input accept=".json,.txt" class="hidden" id="import-students-file" onchange="importStudentList(event)" type="file">
+<input accept=".json,.txt" class="hidden" id="import-students-file" onchange="importStudentList(event)" type="file"/>
 </div>
 </div>
 <div class="border-t border-outline-variant pt-6">
@@ -356,11 +361,11 @@
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-caps text-label-caps text-outline uppercase">Aufgabe</label>
-<input class="bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" id="task-desc" placeholder="Was ist zu tun?" type="text">
+<input class="bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" id="task-desc" placeholder="Was ist zu tun?" type="text"/>
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-caps text-label-caps text-outline uppercase">Bis wann</label>
-<input class="bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" id="task-date" type="date">
+<input class="bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-2 focus:ring-primary focus:border-primary transition-all outline-none" id="task-date" type="date"/>
 </div>
 </div>
 <div class="mb-8 pt-6 border-t border-outline-variant">
@@ -422,7 +427,7 @@
 <div class="w-10 h-10 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold bg-primary text-on-primary">4</div>
 <h4 class="font-bold text-on-surface">App installieren</h4>
 <p class="text-xs text-on-surface-variant">
-<b>iOS:</b> Teilen <span class="material-icons text-[14px]">ios_share</span> -&gt; Zum Home-Bildschirm.<br>
+<b>iOS:</b> Teilen <span class="material-icons text-[14px]">ios_share</span> -&gt; Zum Home-Bildschirm.<br/>
 <b>Android:</b> Menü <span class="material-icons text-[14px]">more_vert</span> -&gt; App installieren.
                     </p>
 </div>
@@ -438,15 +443,15 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 <div class="flex flex-col gap-2">
 <label class="font-label-caps text-label-caps text-outline uppercase" id="label-confirm-date">Datum</label>
-<input class="bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-primary outline-none" id="confirm-date" onchange="saveConfirmationData()" type="date">
+<input class="bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-primary outline-none" id="confirm-date" onchange="saveConfirmationData()" type="date"/>
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-caps text-label-caps text-outline uppercase" id="label-confirm-sig">Unterschrift (Name)</label>
-<input class="bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-primary outline-none" id="confirm-sig" oninput="saveConfirmationData()" placeholder="Vorname Nachname" type="text">
+<input class="bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-primary outline-none" id="confirm-sig" oninput="saveConfirmationData()" placeholder="Vorname Nachname" type="text"/>
 </div>
 <div class="flex items-end">
 <label class="flex items-center justify-center gap-3 cursor-pointer select-none bg-surface-container-low p-3 rounded-lg border border-outline-variant w-full hover:bg-surface-container-high transition-all" id="confirm-label">
-<input class="w-6 h-6 text-primary rounded-full border-outline-variant focus:ring-primary cursor-pointer" id="confirm-check" onchange="toggleLock()" type="checkbox">
+<input class="w-6 h-6 text-primary rounded-full border-outline-variant focus:ring-primary cursor-pointer" id="confirm-check" onchange="toggleLock()" type="checkbox"/>
 <span class="font-bold text-on-surface" id="confirm-text">Gesehen ☑</span>
 </label>
 </div>
@@ -468,7 +473,7 @@
 <button class="px-6 py-3 bg-surface-container-low border border-outline-variant rounded-full font-bold text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-2 cursor-pointer" onclick="document.getElementById('import-file').click()" type="button">
 <span class="material-icons">file_upload</span> Daten importieren (.json)
             </button>
-<input accept=".json" class="hidden" id="import-file" onchange="importTasks(event)" type="file">
+<input accept=".json" class="hidden" id="import-file" onchange="importTasks(event)" type="file"/>
 </section>
 <!-- Footer -->
 <footer class="w-full py-10 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-6 text-on-surface-variant font-body-md print-hide">
@@ -504,7 +509,7 @@
 
         function init() {
             try {
-                // Initialize default local state if empty
+                // Initialize default local state
                 const storedTasks = localStorage.getItem('hw_planner_tasks');
                 if (storedTasks) tasks = JSON.parse(storedTasks);
                 
@@ -563,50 +568,52 @@
 
         function setRole(role) {
             currentRole = role;
-            const els = {
-                studentBtn: document.getElementById('btn-student'),
-                teacherBtn: document.getElementById('btn-teacher'),
-                teacherSection: document.getElementById('teacherSection'),
-                resetBtn: document.getElementById('reset-btn'),
-                studentFilterCont: document.getElementById('student-filter-container'),
-                bannerTitle: document.getElementById('banner-title'),
-                bannerIcon: document.getElementById('banner-icon'),
-                bannerDesc: document.getElementById('banner-desc'),
-                instructionTitle: document.getElementById('instruction-title'),
-                step1Text: document.getElementById('step-1-text')
-            };
+            const studentBtn = document.getElementById('btn-student');
+            const teacherBtn = document.getElementById('btn-teacher');
+            const teacherSection = document.getElementById('teacherSection');
+            const resetBtn = document.getElementById('reset-btn');
+            const studentFilterCont = document.getElementById('student-filter-container');
+            const bannerTitle = document.getElementById('banner-title');
+            const bannerIcon = document.getElementById('banner-icon');
+            const bannerDesc = document.getElementById('banner-desc');
+            const instructionTitle = document.getElementById('instruction-title');
+            const step1Text = document.getElementById('step-1-text');
+            const onboardingHint = document.getElementById('teacher-onboarding-hint');
 
-            if (!els.studentBtn || !els.teacherBtn || !els.teacherSection) return;
+            if (!studentBtn || !teacherBtn || !teacherSection) return;
 
             if (role === 'teacher') {
-                els.studentBtn.className = 'px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 text-on-surface-variant hover:bg-surface-container-highest cursor-pointer z-30';
-                els.teacherBtn.className = 'px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 bg-primary text-on-primary shadow-sm cursor-pointer z-30 relative';
-                els.teacherSection.classList.remove('hidden');
-                els.resetBtn.classList.remove('hidden');
-                els.studentFilterCont.classList.add('hidden');
-                els.bannerTitle.innerText = 'Lehrer-Modus';
-                els.bannerTitle.className = 'font-bold text-secondary font-body-lg';
-                els.bannerIcon.innerText = 'admin_panel_settings';
-                els.bannerIcon.className = 'material-symbols-outlined text-secondary mt-1';
-                els.bannerDesc.innerText = 'Als Lehrkraft kannst du Aufgaben erstellen und die Klassenliste verwalten.';
-                els.instructionTitle.innerText = 'Anleitung für Lehrkräfte';
-                els.step1Text.innerText = 'Erfasse Aufgaben für die Klasse oder Einzelne.';
+                studentBtn.className = 'px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 text-on-surface-variant hover:bg-surface-container-highest cursor-pointer z-30';
+                teacherBtn.className = 'px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 bg-primary text-on-primary shadow-sm cursor-pointer z-30 relative';
+                teacherSection.classList.remove('hidden');
+                resetBtn.classList.remove('hidden');
+                studentFilterCont.classList.add('hidden');
+                bannerTitle.innerText = 'Lehrer-Modus';
+                bannerTitle.className = 'font-bold text-secondary font-body-lg';
+                bannerIcon.innerText = 'admin_panel_settings';
+                bannerIcon.className = 'material-symbols-outlined text-secondary mt-1';
+                bannerDesc.innerText = 'Als Lehrkraft kannst du Aufgaben erstellen und die Klassenliste verwalten.';
+                instructionTitle.innerText = 'Anleitung für Lehrkräfte';
+                step1Text.innerText = 'Erfasse Aufgaben für die Klasse oder Einzelne.';
+                if (onboardingHint) onboardingHint.classList.add('hidden');
+                
                 generateQRCode();
                 renderTeacherConfirmations();
                 renderTeacherDashboard();
             } else {
-                els.studentBtn.className = 'px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 bg-primary text-on-primary shadow-sm cursor-pointer z-30';
-                els.teacherBtn.className = 'px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 text-on-surface-variant hover:bg-surface-container-highest cursor-pointer z-30 relative';
-                els.teacherSection.classList.add('hidden');
-                els.resetBtn.classList.add('hidden');
-                els.studentFilterCont.classList.remove('hidden');
-                els.bannerTitle.innerText = 'Schüleransicht';
-                els.bannerTitle.className = 'font-bold text-primary font-body-lg';
-                els.bannerIcon.innerText = 'info';
-                els.bannerIcon.className = 'material-symbols-outlined text-primary mt-1';
-                els.bannerDesc.innerText = 'Du siehst die aktuelle Aufgabenliste. Deine Erledigungen werden lokal gespeichert.';
-                els.instructionTitle.innerText = 'Anleitung für Schüler';
-                els.step1Text.innerText = 'Trage deine Hausaufgaben täglich ein.';
+                studentBtn.className = 'px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 bg-primary text-on-primary shadow-sm cursor-pointer z-30';
+                teacherBtn.className = 'px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 text-on-surface-variant hover:bg-surface-container-highest cursor-pointer z-30 relative';
+                teacherSection.classList.add('hidden');
+                resetBtn.classList.add('hidden');
+                studentFilterCont.classList.remove('hidden');
+                bannerTitle.innerText = 'Schüleransicht';
+                bannerTitle.className = 'font-bold text-primary font-body-lg';
+                bannerIcon.innerText = 'info';
+                bannerIcon.className = 'material-symbols-outlined text-primary mt-1';
+                bannerDesc.innerText = 'Du siehst die aktuelle Aufgabenliste. Deine Erledigungen werden lokal gespeichert.';
+                instructionTitle.innerText = 'Anleitung für Schüler';
+                step1Text.innerText = 'Trage deine Hausaufgaben täglich ein.';
+                if (onboardingHint) onboardingHint.classList.remove('hidden');
             }
             updateNotificationUI();
             renderTasks();
@@ -664,6 +671,8 @@
                 if (!task.completedBy) task.completedBy = {};
                 if (currentRole === 'teacher') {
                     task.done = !task.done;
+                    // In teacher mode, toggling a "whole class" task sets it for all? 
+                    // Usually teacher just deletes or edits. We'll toggle general 'done' for overview.
                 } else {
                     task.completedBy[selectedStudent] = !task.completedBy[selectedStudent];
                 }
@@ -747,7 +756,6 @@
         }
 
         function renderTeacherDashboard() {
-            if (currentRole !== 'teacher') return;
             const header = document.getElementById('dashboard-students-header');
             const body = document.getElementById('teacher-dashboard-body');
             if (!header || !body) return;
@@ -825,6 +833,43 @@
             }).join('');
         }
 
+        function addTask() {
+            const who = document.getElementById('task-who').value;
+            const subject = document.getElementById('task-subject').value;
+            const desc = document.getElementById('task-desc').value.trim();
+            const due = document.getElementById('task-date').value;
+
+            if (!desc || !due) {
+                alert("Bitte alle Felder ausfüllen.");
+                return;
+            }
+
+            const newTask = {
+                id: Date.now(),
+                who: who,
+                subject: subject,
+                task: desc,
+                due: due,
+                done: false,
+                completedBy: who === 'Ganze Klasse' ? {} : null
+            };
+
+            tasks.push(newTask);
+            save();
+            updateUI();
+            
+            // Clear only description
+            document.getElementById('task-desc').value = '';
+        }
+
+        function deleteTask(id) {
+            if (confirm("Aufgabe wirklich löschen?")) {
+                tasks = tasks.filter(t => t.id !== id);
+                save();
+                updateUI();
+            }
+        }
+
         function updateConfirmationStatusUI() {
             const student = document.getElementById('student-filter')?.value || 'all';
             const parentCard = document.getElementById('parent-confirmation');
@@ -837,13 +882,13 @@
 
             if (student === 'all') {
                 parentCard.classList.add('opacity-50', 'pointer-events-none');
-                hint.classList.remove('hidden');
+                if (hint) hint.classList.remove('hidden');
                 if (check) check.checked = false;
                 applyVisualLock(false);
                 return;
             } else {
                 parentCard.classList.remove('opacity-50', 'pointer-events-none');
-                hint.classList.add('hidden');
+                if (hint) hint.classList.add('hidden');
             }
 
             const data = studentConfirmations[student] || { date: new Date().toISOString().split('T')[0], signature: '', checked: false };
@@ -903,9 +948,10 @@
             if (!student || student === 'all') return;
 
             const checkElem = document.getElementById('confirm-check');
+            const sigElem = document.getElementById('confirm-sig');
             const isChecked = checkElem.checked;
             
-            if (isChecked && !document.getElementById('confirm-sig').value.trim()) {
+            if (isChecked && !sigElem.value.trim()) {
                 alert("Bitte geben Sie einen Namen als Unterschrift ein.");
                 checkElem.checked = false;
                 return;
@@ -992,55 +1038,4 @@
         }
 
         function renderStudentBadges() {
-            const container = document.getElementById('student-badges-container');
-            if (!container) return;
-            container.innerHTML = '';
-            students.forEach(name => {
-                const badge = document.createElement('div');
-                badge.className = "flex items-center justify-between bg-secondary-container/10 border border-secondary-container/20 px-3 py-2 rounded-lg group";
-                badge.innerHTML = `
-                    <span class="text-sm font-semibold text-on-surface truncate pr-2">${name}</span>
-                    <button onclick="deleteStudent('${name}')" class="text-error opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-1 rounded-full hover:bg-error-container">
-                        <span class="material-icons text-[16px]">close</span>
-                    </button>
-                `;
-                container.appendChild(badge);
-            });
-        }
-
-        function updateUI() {
-            updateDropdowns();
-            renderStudentBadges();
-            renderColorLegend();
-            renderTasks();
-            if (currentRole === 'teacher') {
-                renderTeacherDashboard();
-                renderTeacherConfirmations();
-            }
-        }
-
-        function updateDropdowns() {
-            const taskWho = document.getElementById('task-who');
-            const studentFilter = document.getElementById('student-filter');
-            if (!taskWho || !studentFilter) return;
-
-            const filterVal = studentFilter.value;
-            const filterOpts = '<option value="all">Alle anzeigen</option>' + 
-                               students.map(s => `<option value="${s}">${s}</option>`).join('');
-            studentFilter.innerHTML = filterOpts;
-            studentFilter.value = (filterVal && (filterVal === 'all' || students.includes(filterVal))) ? filterVal : 'all';
-
-            const whoVal = taskWho.value;
-            const whoOpts = '<option value="Ganze Klasse">Ganze Klasse</option>' + 
-                            students.map(s => `<option value="${s}">${s}</option>`).join('');
-            taskWho.innerHTML = whoOpts;
-            if (whoVal && (whoVal === 'Ganze Klasse' || students.includes(whoVal))) taskWho.value = whoVal;
-        }
-
-        function save() {
-            localStorage.setItem('hw_planner_tasks', JSON.stringify(tasks));
-            localStorage.setItem('hw_planner_students', JSON.stringify(students));
-            localStorage.setItem('hw_planner_confirmations_map', JSON.stringify(studentConfirmations));
-</script>
-
-</body></html>
+            const container = document.getElementById('student-badges</script></body></html>
