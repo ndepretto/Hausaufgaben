@@ -3,7 +3,7 @@
 
     <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Wer – Was – Bis wann | Digitaler Planer</title>
+<title>doeltschi – Digitaler Planer</title>
 <!-- PWA Meta Tags -->
 <meta content="yes" name="mobile-web-app-capable"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
@@ -181,7 +181,6 @@
             background: #999;
         }
         
-        /* Fix for Material Icons in buttons to prevent text wrapping */
         .role-btn span.material-icons {
             font-size: 20px;
             line-height: 1;
@@ -191,12 +190,12 @@
 <!-- Header -->
 <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 <div>
-<h1 class="font-h1 text-h1 text-on-surface">Digitaler Planer</h1>
+<h1 class="font-h1 text-h1 text-on-surface">doeltschi</h1>
 <p class="text-on-surface-variant">Wer macht was bis wann?</p>
 </div>
 <div class="flex flex-col items-end gap-2 print-hide" id="role-switcher">
 <div class="bg-surface-container-high p-1 rounded-full flex gap-1 border border-outline-variant relative z-10">
-<button class="role-btn px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 bg-primary text-on-primary shadow-sm cursor-pointer z-30" id="btn-student" onclick="setMode('student')" type="button">
+<button class="role-btn px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 cursor-pointer z-30" id="btn-student" onclick="setMode('student')" type="button">
 <span class="material-icons">person_outline</span>
 <span class="hidden sm:inline">Schüler-Ansicht</span>
 </button>
@@ -427,7 +426,6 @@
 <h4 class="font-bold text-on-surface">Bestätigen lassen</h4>
 <p class="text-sm text-on-surface-variant">Zeige die Liste am Ende der Woche deinen Eltern.</p>
 </div>
-<!-- PWA Install Info -->
 <div class="flex flex-col gap-3 bg-surface-container-highest/50 p-4 rounded-xl border border-primary/10">
 <div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold">4</div>
 <h4 class="font-bold text-on-surface">App installieren</h4>
@@ -483,8 +481,8 @@
 <!-- Footer -->
 <footer class="w-full py-10 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-6 text-on-surface-variant font-body-md print-hide">
 <div class="flex flex-col items-center md:items-start gap-1">
-<span class="font-bold text-on-surface">Digitaler Planer</span>
-<span class="text-xs">© 2024 doeltschi</span>
+<span class="font-bold text-on-surface">doeltschi</span>
+<span class="text-xs">© 2024 Digitaler Planer</span>
 </div>
 <div class="flex gap-8">
 <a class="hover:text-primary transition-colors text-sm font-semibold" href="#">Datenschutz</a>
@@ -514,7 +512,6 @@
 
         function init() {
             try {
-                // Initialize default local state
                 const storedTasks = localStorage.getItem('hw_planner_tasks');
                 if (storedTasks) tasks = JSON.parse(storedTasks);
                 
@@ -553,21 +550,11 @@
                     hasNewConfirmations = false;
                     localStorage.setItem('hw_planner_has_new_confirmations', 'false');
                     updateNotificationUI();
+                } else if (password !== null) {
+                    alert('Falsches Passwort! Zugriff verweigert.');
                 }
-                else if (password !== null) alert('Falsches Passwort! Zugriff verweigert.');
             } else {
                 setRole('student');
-            }
-        }
-
-        function updateNotificationUI() {
-            const badge = document.getElementById('teacher-notification-badge');
-            if (badge) {
-                if (hasNewConfirmations && currentRole === 'student') {
-                    badge.classList.remove('hidden');
-                } else {
-                    badge.classList.add('hidden');
-                }
             }
         }
 
@@ -632,6 +619,23 @@
             renderTasks();
         }
 
+        function updateNotificationUI() {
+            const badge = document.getElementById('teacher-notification-badge');
+            if (badge) {
+                if (hasNewConfirmations && currentRole === 'student') {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        }
+
+        function save() {
+            localStorage.setItem('hw_planner_tasks', JSON.stringify(tasks));
+            localStorage.setItem('hw_planner_students', JSON.stringify(students));
+            localStorage.setItem('hw_planner_confirmations_map', JSON.stringify(studentConfirmations));
+        }
+
         function generateQRCode() {
             const qrContainer = document.getElementById('qr-code');
             if (!qrContainer) return;
@@ -644,58 +648,6 @@
             });
         }
 
-        function renderColorLegend() {
-            const containers = [document.getElementById('color-legend-container'), document.getElementById('teacher-color-legend')];
-            containers.forEach(container => {
-                if (!container) return;
-                container.innerHTML = '';
-                Object.keys(subjectColorCodes).forEach(sub => {
-                    const div = document.createElement('div');
-                    div.className = `flex items-center gap-2 px-3 py-1.5 bg-surface-container-low border border-outline-variant rounded-full`;
-                    div.innerHTML = `
-                        <span class="w-3 h-3 rounded-full" style="background-color: ${subjectColorCodes[sub]}"></span>
-                        <span class="text-xs font-bold text-on-surface">${sub.toUpperCase()}</span>
-                        <span class="text-[10px] text-on-surface-variant opacity-70 ml-1">${subjectNames[sub]}</span>
-                    `;
-                    container.appendChild(div);
-                });
-            });
-        }
-
-        function toggleTask(id) {
-            const selectedStudent = document.getElementById('student-filter')?.value || 'all';
-            const taskIndex = tasks.findIndex(t => t.id === id);
-            if (taskIndex === -1) return;
-
-            if (currentRole === 'student' && selectedStudent === 'all') {
-                alert('Bitte wähle deinen Namen oben im Filter aus, um Aufgaben abzuhaken.');
-                renderTasks();
-                return;
-            }
-
-            if (currentRole === 'student' && selectedStudent !== 'all' && studentConfirmations[selectedStudent]?.checked) {
-                alert('Die Liste ist durch die Elternbestätigung gesperrt.');
-                renderTasks();
-                return;
-            }
-
-            const task = tasks[taskIndex];
-            if (task.who === 'Ganze Klasse') {
-                if (!task.completedBy) task.completedBy = {};
-                if (currentRole === 'teacher') {
-                    task.done = !task.done;
-                } else {
-                    task.completedBy[selectedStudent] = !task.completedBy[selectedStudent];
-                }
-            } else {
-                task.done = !task.done;
-            }
-            
-            save();
-            renderTasks();
-            if (currentRole === 'teacher') renderTeacherDashboard();
-        }
-
         function renderTasks() {
             const body = document.getElementById('task-list-body');
             if (!body) return;
@@ -706,7 +658,7 @@
             updateConfirmationStatusUI();
             
             body.innerHTML = '';
-            let filteredTasks = Array.isArray(tasks) ? [...tasks] : [];
+            let filteredTasks = [...tasks];
             
             if (currentRole === 'student' && selectedStudent !== 'all') {
                 filteredTasks = filteredTasks.filter(t => t.who === 'Ganze Klasse' || t.who === selectedStudent);
@@ -766,13 +718,45 @@
             });
         }
 
-        // Dashboard logic showing students as rows and tasks as columns
+        function toggleTask(id) {
+            const selectedStudent = document.getElementById('student-filter')?.value || 'all';
+            const taskIndex = tasks.findIndex(t => t.id === id);
+            if (taskIndex === -1) return;
+
+            if (currentRole === 'student' && selectedStudent === 'all') {
+                alert('Bitte wähle deinen Namen oben im Filter aus, um Aufgaben abzuhaken.');
+                renderTasks();
+                return;
+            }
+
+            if (currentRole === 'student' && selectedStudent !== 'all' && studentConfirmations[selectedStudent]?.checked) {
+                alert('Die Liste ist durch die Elternbestätigung gesperrt.');
+                renderTasks();
+                return;
+            }
+
+            const task = tasks[taskIndex];
+            if (task.who === 'Ganze Klasse') {
+                if (!task.completedBy) task.completedBy = {};
+                if (currentRole === 'teacher') {
+                    task.done = !task.done;
+                } else {
+                    task.completedBy[selectedStudent] = !task.completedBy[selectedStudent];
+                }
+            } else {
+                task.done = !task.done;
+            }
+            
+            save();
+            renderTasks();
+            if (currentRole === 'teacher') renderTeacherDashboard();
+        }
+
         function renderTeacherDashboard() {
             const headerTasks = document.getElementById('dashboard-tasks-header');
             const body = document.getElementById('teacher-dashboard-body');
             if (!headerTasks || !body) return;
 
-            // Header for tasks (horizontal list)
             headerTasks.innerHTML = `<div class="flex gap-4 min-w-[300px]">
                 ${tasks.map(t => `<div class="w-12 text-center text-[10px] font-bold uppercase truncate" title="${t.task} (${t.subject})">${t.task.substring(0,6)}...</div>`).join('')}
             </div>`;
@@ -834,6 +818,24 @@
                     </tr>
                 `;
             }).join('');
+        }
+
+        function renderColorLegend() {
+            const containers = [document.getElementById('color-legend-container'), document.getElementById('teacher-color-legend')];
+            containers.forEach(container => {
+                if (!container) return;
+                container.innerHTML = '';
+                Object.keys(subjectColorCodes).forEach(sub => {
+                    const div = document.createElement('div');
+                    div.className = `flex items-center gap-2 px-3 py-1.5 bg-surface-container-low border border-outline-variant rounded-full`;
+                    div.innerHTML = `
+                        <span class="w-3 h-3 rounded-full" style="background-color: ${subjectColorCodes[sub]}"></span>
+                        <span class="text-xs font-bold text-on-surface">${sub.toUpperCase()}</span>
+                        <span class="text-[10px] text-on-surface-variant opacity-70 ml-1">${subjectNames[sub]}</span>
+                    `;
+                    container.appendChild(div);
+                });
+            });
         }
 
         function updateUI() {
@@ -928,6 +930,63 @@
             }
         }
 
+        function importStudents() {
+            const input = document.getElementById('bulk-student-input');
+            const val = input.value.trim();
+            if (!val) return;
+            const names = val.split(/[,\n;]+/).map(n => n.trim()).filter(n => n && !students.includes(n));
+            students = [...students, ...names];
+            save();
+            updateUI();
+            input.value = '';
+        }
+
+        function deleteStudent(name) {
+            if (confirm(`Schüler "${name}" wirklich löschen?`)) {
+                students = students.filter(s => s !== name);
+                save();
+                updateUI();
+            }
+        }
+
+        function toggleLock() {
+            const student = document.getElementById('student-filter')?.value;
+            if (!student || student === 'all') return;
+
+            const checkElem = document.getElementById('confirm-check');
+            const sigElem = document.getElementById('confirm-sig');
+            const isChecked = checkElem.checked;
+            
+            if (isChecked && !sigElem.value.trim()) {
+                alert("Bitte geben Sie einen Namen als Unterschrift ein.");
+                checkElem.checked = false;
+                return;
+            }
+
+            if (isChecked) {
+                hasNewConfirmations = true;
+                localStorage.setItem('hw_planner_has_new_confirmations', 'true');
+            }
+
+            saveConfirmationData();
+            renderTasks(); 
+            updateNotificationUI();
+        }
+
+        function saveConfirmationData() {
+            const student = document.getElementById('student-filter')?.value;
+            if (!student || student === 'all') return;
+
+            studentConfirmations[student] = {
+                date: document.getElementById('confirm-date')?.value,
+                signature: document.getElementById('confirm-sig')?.value,
+                checked: document.getElementById('confirm-check')?.checked || false
+            };
+            
+            save();
+            if (currentRole === 'teacher') renderTeacherConfirmations();
+        }
+
         function updateConfirmationStatusUI() {
             const student = document.getElementById('student-filter')?.value || 'all';
             const parentCard = document.getElementById('parent-confirmation');
@@ -983,57 +1042,4 @@
                 text.className = "font-bold text-on-surface";
                 text.innerText = btnText;
                 label.className = "flex items-center justify-center gap-3 cursor-pointer select-none bg-surface-container-low p-3 rounded-lg border border-outline-variant w-full hover:bg-surface-container-high transition-all";
-                inputs.forEach(i => i.disabled = false);
-            }
-        }
-
-        function saveConfirmationData() {
-            const student = document.getElementById('student-filter')?.value;
-            if (!student || student === 'all') return;
-
-            studentConfirmations[student] = {
-                date: document.getElementById('confirm-date')?.value,
-                signature: document.getElementById('confirm-sig')?.value,
-                checked: document.getElementById('confirm-check')?.checked || false
-            };
-            
-            save();
-            if (currentRole === 'teacher') renderTeacherConfirmations();
-        }
-
-        function toggleLock() {
-            const student = document.getElementById('student-filter')?.value;
-            if (!student || student === 'all') return;
-
-            const checkElem = document.getElementById('confirm-check');
-            const sigElem = document.getElementById('confirm-sig');
-            const isChecked = checkElem.checked;
-            
-            if (isChecked && !sigElem.value.trim()) {
-                alert("Bitte geben Sie einen Namen als Unterschrift ein.");
-                checkElem.checked = false;
-                return;
-            }
-
-            if (isChecked) {
-                hasNewConfirmations = true;
-                localStorage.setItem('hw_planner_has_new_confirmations', 'true');
-                updateNotificationUI();
-            }
-
-            saveConfirmationData();
-            renderTasks(); 
-        }
-
-        function renderTeacherConfirmations() {
-            const list = document.getElementById('confirmations-list');
-            if (!list) return;
-            
-            const confirmed = Object.entries(studentConfirmations).filter(([name, data]) => data.checked);
-            if (confirmed.length === 0) {
-                list.innerHTML = '<p class="text-on-surface-variant italic">Keine Bestätigungen vorhanden.</p>';
-                return;
-            }
-
-            list.innerHTML = confirmed.map(([name, data]) => {
-                const fmtDate = data.date ? new Date(data.date).toLocaleDateString('de-CH</script></body></html>
+                inputs.forEach(</script></body></html>
