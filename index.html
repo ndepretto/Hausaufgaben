@@ -461,7 +461,6 @@
     };
 
     let tasks = [];
-    let individualDone = {}; // Map: taskId -> [studentNames]
     let students = ['Anna', 'Ben', 'Lara', 'Mark', 'Sophie'];
     let studentConfirmations = {}; // Map: studentName -> {date, signature, checked}
     let currentRole = 'student';
@@ -479,9 +478,6 @@
             const storedTasks = localStorage.getItem('hw_planner_tasks');
             if (storedTasks) tasks = JSON.parse(storedTasks);
             
-            const storedIndividualDone = localStorage.getItem('hw_planner_individual_done');
-            if (storedIndividualDone) individualDone = JSON.parse(storedIndividualDone);
-
             const storedStudents = localStorage.getItem('hw_planner_students');
             if (storedStudents) students = JSON.parse(storedStudents);
 
@@ -592,53 +588,36 @@
         });
     }
 
-    function isTaskDone(task, studentName) {
-        if (!studentName || studentName === 'all') {
-            return task.done; 
-        }
-        
-        const key = `${task.id}_${studentName}`;
-        const individualStatus = individualDone[key];
-        
-        if (task.who !== 'Ganze Klasse') {
-            return task.done;
-        }
-        
-        return individualStatus === true;
+    // NEW INDIVIDUAL LOGIC: Check localStorage for student-specific key
+    function isTaskDone(taskId, studentName) {
+        if (!studentName || studentName === 'all') return false; 
+        return localStorage.getItem(`done_${studentName}_${taskId}`) === 'true';
     }
 
     function toggleTask(id) {
         const selectedStudent = document.getElementById('student-filter')?.value || 'all';
-        const task = tasks.find(t => t.id === id);
-        if (!task) return;
-
-        // Prevention: parent lock for student mode
-        if (currentRole === 'student' && selectedStudent !== 'all' && studentConfirmations[selectedStudent]?.checked) {
-            alert('Liste ist durch Elternbestätigung gesperrt.');
-            return;
-        }
-
-        // Logic check: if student mode and 'all' selected, toggling is blocked
-        if (currentRole === 'student' && selectedStudent === 'all') {
+        
+        // Validation: Teacher can toggle generally (shared state logic for "Ganze Klasse" is handled differently for teachers)
+        // BUT for the requested fix: Teachers in student view/selection can also toggle
+        
+        if (selectedStudent === 'all' && currentRole === 'student') {
             alert('Bitte wähle deinen Namen oben im Filter aus, um Aufgaben abzuhaken.');
             return;
         }
 
-        if (currentRole === 'teacher' || selectedStudent !== 'all') {
-            if (task.who === 'Ganze Klasse') {
-                if (currentRole === 'teacher' && selectedStudent === 'all') {
-                    task.done = !task.done;
-                } else {
-                    const key = `${task.id}_${selectedStudent}`;
-                    individualDone[key] = !individualDone[key];
-                }
-            } else {
-                task.done = !task.done;
-            }
+        const studentToUse = selectedStudent === 'all' ? 'teacher_global' : selectedStudent;
+
+        // Prevention: parent lock for student mode
+        if (currentRole === 'student' && studentToUse !== 'teacher_global' && studentConfirmations[studentToUse]?.checked) {
+            alert('Liste ist durch Elternbestätigung gesperrt.');
+            return;
         }
+
+        const key = `done_${studentToUse}_${id}`;
+        const currentStatus = localStorage.getItem(key) === 'true';
+        localStorage.setItem(key, !currentStatus);
         
-        save();
-        renderTasks();
+        renderTasks(); // Immediate Update
     }
 
     function renderTasks() {
@@ -653,6 +632,7 @@
         body.innerHTML = '';
         let filteredTasks = Array.isArray(tasks) ? [...tasks] : [];
         
+        // In student mode, if a student is selected, only show global or personal tasks
         if (currentRole === 'student' && selectedStudent !== 'all') {
             filteredTasks = filteredTasks.filter(t => t.who === 'Ganze Klasse' || t.who === selectedStudent);
         }
@@ -666,14 +646,19 @@
             const tr = document.createElement('tr');
             const subjectColor = subjectColorCodes[task.subject] || '#717786';
             
-            const done = isTaskDone(task, selectedStudent);
-            const isAllSelected = selectedStudent === 'all';
-            const canToggle = currentRole === 'teacher' || (!isAllSelected && !isLocked);
+            // Check state logic: based on current selected student
+            const done = isTaskDone(task.id, selectedStudent);
+            
+            // Disable if "Alle anzeigen" or locked
+            const canToggle = (selectedStudent !== 'all' && !isLocked) || currentRole === 'teacher';
             
             tr.className = `relative border-b border-outline-variant transition-all ${done ? 'task-row-done' : 'bg-white hover:bg-surface-container-low/50'}`;
             
+            // Swiss Date format: DD.MM.YYYY
             const dateObj = new Date(task.due);
-            const formattedDate = dateObj.toLocaleDateString('de-CH');
+            const formattedDate = !isNaN(dateObj.getTime()) 
+                ? dateObj.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                : task.due;
             
             const statusBadge = done 
                 ? `<div class="flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
@@ -687,7 +672,7 @@
                 <td class="p-5 text-center relative">
                     <div class="subject-bar" style="background-color: ${subjectColor}"></div>
                     <div class="flex items-center justify-center">
-                        <input type="checkbox" ${done ? 'checked' : ''} onchange="toggleTask(${task.id})" class="w-6 h-6 rounded-full border-2 border-outline text-primary focus:ring-primary transition-transform active:scale-125 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" ${!canToggle ? 'disabled' : ''}>
+                        <input type="checkbox" ${done ? 'checked' : ''} onchange="toggleTask(${task.id})" class="w-6 h-6 rounded-full border-2 border-outline text-primary focus:ring-primary transition-transform active:scale-125 cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed" ${!canToggle ? 'disabled' : ''}>
                     </div>
                 </td>
                 <td class="p-5 font-semibold text-on-surface">${task.who}</td>
@@ -898,7 +883,6 @@
 
     function save() {
         localStorage.setItem('hw_planner_tasks', JSON.stringify(tasks));
-        localStorage.setItem('hw_planner_individual_done', JSON.stringify(individualDone));
         localStorage.setItem('hw_planner_students', JSON.stringify(students));
         localStorage.setItem('hw_planner_confirmations_map', JSON.stringify(studentConfirmations));
     }
@@ -909,7 +893,7 @@
         const taskDesc = document.getElementById('task-desc').value.trim();
         const due = document.getElementById('task-date').value;
         if(!taskDesc || !due) { alert('Bitte alle Felder ausfüllen.'); return; }
-        tasks.push({ id: Date.now(), who, subject, task: taskDesc, due, done: false });
+        tasks.push({ id: Date.now(), who, subject, task: taskDesc, due });
         document.getElementById('task-desc').value = '';
         save();
         renderTasks();
@@ -919,9 +903,8 @@
         if(confirm('Aufgabe löschen?')) {
             tasks = tasks.filter(t => t.id !== id);
             // Cleanup individual status keys
-            Object.keys(individualDone).forEach(key => {
-                if(key.startsWith(`${id}_`)) delete individualDone[key];
-            });
+            students.forEach(s => localStorage.removeItem(`done_${s}_${id}`));
+            localStorage.removeItem(`done_teacher_global_${id}`);
             save();
             renderTasks();
         }
@@ -937,10 +920,20 @@
     function exportTasks() {
         const exportData = {
             tasks,
-            individualDone,
             students,
-            confirmations: studentConfirmations
+            confirmations: studentConfirmations,
+            // Export individual completion states
+            individualStates: {}
         };
+        
+        // Collate all "done" keys from localStorage
+        for(let i=0; i<localStorage.length; i++){
+            let key = localStorage.key(i);
+            if(key.startsWith('done_')){
+                exportData.individualStates[key] = localStorage.getItem(key);
+            }
+        }
+
         const dataStr = JSON.stringify(exportData, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
         const linkElement = document.createElement('a');
@@ -961,15 +954,17 @@
                         tasks = [...tasks, ...imported.tasks];
                         students = Array.from(new Set([...students, ...imported.students])).sort();
                         studentConfirmations = {...studentConfirmations, ...(imported.confirmations || {})};
-                        individualDone = {...individualDone, ...(imported.individualDone || {})};
+                        if(imported.individualStates){
+                            Object.entries(imported.individualStates).forEach(([k,v]) => localStorage.setItem(k,v));
+                        }
                     } else {
                         tasks = imported.tasks;
                         students = imported.students;
                         studentConfirmations = imported.confirmations || {};
-                        individualDone = imported.individualDone || {};
+                        if(imported.individualStates){
+                            Object.entries(imported.individualStates).forEach(([k,v]) => localStorage.setItem(k,v));
+                        }
                     }
-                } else if (Array.isArray(imported)) {
-                    tasks = confirm('Aufgaben mischen?') ? [...tasks, ...imported] : imported;
                 }
                 save();
                 updateUI();
