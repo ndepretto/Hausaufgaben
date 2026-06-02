@@ -1,8 +1,5 @@
-<html class="light" lang="de-CH"><head></head><body class="bg-surface text-on-surface font-body-md min-h-screen">```html
-
-
-
-    <meta charset="utf-8"/>
+<html class="light" lang="de-CH"><head>
+<meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Wer – Was – Bis wann | Digitaler Planer</title>
 <!-- PWA Meta Tags -->
@@ -167,6 +164,8 @@
         .qr-print-only { display: none; }
         @media print { .qr-print-only { display: block !important; } }
     </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen">
 <noscript>
 <div class="fixed inset-0 flex items-center justify-center bg-white z-[9999] p-8 text-center">
 <div class="max-w-md">
@@ -595,19 +594,13 @@
         });
     }
 
-    // Logical identifier for a task status per student
-    function getTaskStatusKey(taskId, studentName) {
-        return `task_${taskId}_${studentName}`;
-    }
-
-    function isTaskDone(taskId, studentName) {
-        if (!studentName || studentName === 'all') return false; 
-        return localStorage.getItem(getTaskStatusKey(taskId, studentName)) === 'true';
-    }
-
     function toggleTask(id) {
         const selectedStudent = document.getElementById('student-filter')?.value || 'all';
         
+        // Single source of truth update
+        const taskIndex = tasks.findIndex(t => t.id === id);
+        if (taskIndex === -1) return;
+
         if (currentRole === 'student' && selectedStudent === 'all') {
             alert('Bitte wähle deinen Namen oben im Filter aus, um Aufgaben abzuhaken.');
             renderTasks();
@@ -621,11 +614,10 @@
             return;
         }
 
-        const studentKeyName = (selectedStudent === 'all') ? 'TEACHER_ADMIN' : selectedStudent;
-        const key = getTaskStatusKey(id, studentKeyName);
-        const currentStatus = localStorage.getItem(key) === 'true';
-        localStorage.setItem(key, !currentStatus);
+        // Update main tasks array status
+        tasks[taskIndex].done = !tasks[taskIndex].done;
         
+        save();
         renderTasks();
     }
 
@@ -655,12 +647,11 @@
             const tr = document.createElement('tr');
             const subjectColor = subjectColorCodes[task.subject] || '#717786';
             
-            // Resolve completion status
-            const studentKey = (currentRole === 'teacher' && selectedStudent === 'all') ? 'TEACHER_ADMIN' : selectedStudent;
-            const done = isTaskDone(task.id, studentKey);
+            // Shared status from the task object
+            const done = !!task.done;
             
             // Checkboxes enabled if student is selected and not locked, or in teacher mode
-            const canToggle = (selectedStudent !== 'all' && !isLocked) || (currentRole === 'teacher' && selectedStudent === 'all');
+            const canToggle = (selectedStudent !== 'all' && !isLocked) || (currentRole === 'teacher');
             
             tr.className = `relative border-b border-outline-variant transition-all ${done ? 'task-row-done' : 'bg-white hover:bg-surface-container-low/50'}`;
             
@@ -849,12 +840,10 @@
             const content = e.target.result;
             let newStudents = null;
 
-            // Try JSON first
             try {
                 const parsed = JSON.parse(content);
                 newStudents = parsed.students || (Array.isArray(parsed) ? parsed : null);
             } catch (err) {
-                // Not JSON, treat as TXT with various separators
                 newStudents = content.split(/[,\n;\r]/)
                     .map(n => n.trim())
                     .filter(n => n.length > 0);
@@ -951,7 +940,7 @@
         const taskDesc = document.getElementById('task-desc').value.trim();
         const due = document.getElementById('task-date').value;
         if(!taskDesc || !due) { alert('Bitte alle Felder ausfüllen.'); return; }
-        tasks.push({ id: Date.now(), who, subject, task: taskDesc, due });
+        tasks.push({ id: Date.now(), who, subject, task: taskDesc, due, done: false });
         document.getElementById('task-desc').value = '';
         save();
         renderTasks();
@@ -960,11 +949,6 @@
     function deleteTask(id) {
         if(confirm('Aufgabe löschen?')) {
             tasks = tasks.filter(t => t.id !== id);
-            // Cleanup states
-            for(let i=0; i<localStorage.length; i++) {
-                const k = localStorage.key(i);
-                if(k && k.startsWith(`task_${id}_`)) localStorage.removeItem(k);
-            }
             save();
             renderTasks();
         }
@@ -981,17 +965,8 @@
         const exportData = {
             tasks,
             students,
-            confirmations: studentConfirmations,
-            completionStates: {}
+            confirmations: studentConfirmations
         };
-        
-        for(let i=0; i<localStorage.length; i++){
-            let key = localStorage.key(i);
-            if(key && key.startsWith('task_')){
-                exportData.completionStates[key] = localStorage.getItem(key);
-            }
-        }
-
         const dataStr = JSON.stringify(exportData, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
         const linkElement = document.createElement('a');
@@ -1012,16 +987,10 @@
                         tasks = [...tasks, ...imported.tasks];
                         students = Array.from(new Set([...students, ...imported.students])).sort();
                         studentConfirmations = {...studentConfirmations, ...(imported.confirmations || {})};
-                        if(imported.completionStates) {
-                            Object.entries(imported.completionStates).forEach(([k,v]) => localStorage.setItem(k, v));
-                        }
                     } else {
                         tasks = imported.tasks;
                         students = imported.students;
                         studentConfirmations = imported.confirmations || {};
-                        if(imported.completionStates) {
-                            Object.entries(imported.completionStates).forEach(([k,v]) => localStorage.setItem(k, v));
-                        }
                     }
                 }
                 save();
