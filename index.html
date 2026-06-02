@@ -4,6 +4,14 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Wer – Was – Bis wann | Digitaler Planer</title>
+<!-- PWA Meta Tags -->
+<meta content="yes" name="mobile-web-app-capable"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="default" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="Planer" name="apple-mobile-web-app-title"/>
+<meta content="#0058bc" name="theme-color"/>
+<!-- Inline Web App Manifest -->
+<link href='data:application/manifest+json,{"name":"Digitaler Planer","short_name":"Planer","start_url":".","display":"standalone","background_color":"#f9f9fe","theme_color":"#0058bc","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3652/3652191.png","sizes":"512x512","type":"image/png"}]}' rel="manifest"/>
 <!-- External Resources -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -358,7 +366,7 @@
 <!-- Instructions -->
 <section class="bg-surface-container-low p-8 rounded-lg" id="instruction-section">
 <h2 class="font-h2 text-h2 mb-6" id="instruction-title">Anleitung für Schüler</h2>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="instruction-grid">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" id="instruction-grid">
 <div class="flex flex-col gap-3">
 <div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold">1</div>
 <h4 class="font-bold text-on-surface">Erfassen</h4>
@@ -373,6 +381,15 @@
 <div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold">3</div>
 <h4 class="font-bold text-on-surface">Bestätigen lassen</h4>
 <p class="text-sm text-on-surface-variant">Zeige die Liste am Ende der Woche deinen Eltern.</p>
+</div>
+<!-- PWA Install Info -->
+<div class="flex flex-col gap-3 bg-white/50 p-4 rounded-xl border border-primary/10">
+<div class="w-10 h-10 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold">4</div>
+<h4 class="font-bold text-on-surface">App installieren</h4>
+<p class="text-xs text-on-surface-variant">
+<b>iOS:</b> Teilen <span class="material-icons text-[14px]">ios_share</span> -&gt; Zum Home-Bildschirm.<br/>
+<b>Android:</b> Menü <span class="material-icons text-[14px]">more_vert</span> -&gt; App installieren.
+</p>
 </div>
 </div>
 </section>
@@ -451,6 +468,14 @@
 
     function init() {
         try {
+            // Register dummy service worker for PWA support
+            if ('serviceWorker' in navigator) {
+                const swCode = `self.addEventListener('fetch', function(event) {});`;
+                const blob = new Blob([swCode], {type: 'application/javascript'});
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).catch(e => console.log('SW registration skipped', e));
+            }
+
             const storedTasks = localStorage.getItem('hw_planner_tasks');
             if (storedTasks) tasks = JSON.parse(storedTasks);
             
@@ -725,13 +750,22 @@
 
     function importStudents() {
         const input = document.getElementById('bulk-student-input');
-        if (!input.value.trim()) return;
-        const newNames = input.value.split(',').map(n => n.trim()).filter(n => n.length > 0);
+        if (!input || !input.value.trim()) return;
+        
+        const newNames = input.value.split(',')
+            .map(n => n.trim())
+            .filter(n => n.length > 0);
+            
         if (newNames.length > 0) {
             students = Array.from(new Set([...students, ...newNames])).sort();
             input.value = '';
             save();
-            updateUI();
+            updateDropdowns();
+            renderStudentBadges();
+            renderTasks();
+            if (currentRole === 'teacher') {
+                renderTeacherConfirmations();
+            }
         }
     }
 
@@ -780,7 +814,11 @@
         const filterVal = studentFilter.value;
         studentFilter.innerHTML = '<option value="all">Alle anzeigen</option>' + 
                                    students.map(s => `<option value="${s}">${s}</option>`).join('');
-        if (filterVal && students.includes(filterVal)) studentFilter.value = filterVal;
+        if (filterVal && students.includes(filterVal)) {
+            studentFilter.value = filterVal;
+        } else {
+            studentFilter.value = 'all';
+        }
     }
 
     function save() {
@@ -849,7 +887,7 @@
         reader.onload = function(e) {
             try {
                 const imported = JSON.parse(e.target.result);
-                if (imported.tasks) { // New format
+                if (imported.tasks) {
                     if (confirm('Importierte Daten mit bestehenden mischen?')) {
                         tasks = [...tasks, ...imported.tasks];
                         students = Array.from(new Set([...students, ...imported.students])).sort();
@@ -859,7 +897,7 @@
                         students = imported.students;
                         studentConfirmations = imported.confirmations || {};
                     }
-                } else if (Array.isArray(imported)) { // Legacy format
+                } else if (Array.isArray(imported)) {
                     tasks = confirm('Aufgaben mischen?') ? [...tasks, ...imported] : imported;
                 }
                 save();
