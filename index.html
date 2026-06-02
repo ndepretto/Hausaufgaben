@@ -470,7 +470,6 @@
     let tasks = [];
     let students = ['Anna', 'Ben', 'Lara', 'Mark', 'Sophie'];
     let studentConfirmations = {}; // Map: studentName -> {date, signature, checked}
-    let classTaskCompletions = {}; // Map: taskId_studentName -> true/false
     let currentRole = 'student';
     let qrCodeInstance = null;
     let hasNewConfirmations = false;
@@ -492,9 +491,6 @@
 
             const storedConfirmations = localStorage.getItem('hw_planner_confirmations_map');
             if (storedConfirmations) studentConfirmations = JSON.parse(storedConfirmations);
-
-            const storedCompletions = localStorage.getItem('hw_planner_class_completions');
-            if (storedCompletions) classTaskCompletions = JSON.parse(storedCompletions);
 
             const storedNotificationFlag = localStorage.getItem('hw_planner_has_new_confirmations');
             if (storedNotificationFlag === 'true') hasNewConfirmations = true;
@@ -522,6 +518,7 @@
             const password = prompt("Bitte gib das Lehrer-Passwort ein:");
             if (password === 'lehrer123') {
                 setRole('teacher');
+                // Reset notifications when successfully entering teacher mode
                 hasNewConfirmations = false;
                 localStorage.setItem('hw_planner_has_new_confirmations', 'false');
                 updateNotificationUI();
@@ -627,8 +624,6 @@
         const taskIndex = tasks.findIndex(t => t.id === id);
         if (taskIndex === -1) return;
 
-        const task = tasks[taskIndex];
-
         if (currentRole === 'student' && selectedStudent === 'all') {
             alert('Bitte wähle deinen Namen oben im Filter aus, um Aufgaben abzuhaken.');
             renderTasks();
@@ -641,19 +636,23 @@
             return;
         }
 
-        // Logic for handling individual completion
+        const task = tasks[taskIndex];
+        
         if (task.who === 'Ganze Klasse') {
+            // Logic for Individual Task Completion for Group Tasks
+            if (!task.completedBy) task.completedBy = {};
+            
+            // In teacher mode, we might want to toggle the global status or just ignore individual?
+            // Requirement says "done" must be unique to selected student.
             if (currentRole === 'teacher') {
-                // In teacher mode, toggling a "Ganze Klasse" task resets it or clears it for all? 
-                // Let's make it toggle the 'base' done status, but effectively 
-                // students have their own state.
                 task.done = !task.done;
             } else {
-                const key = `${task.id}_${selectedStudent}`;
-                classTaskCompletions[key] = !classTaskCompletions[key];
+                task.completedBy[selectedStudent] = !task.completedBy[selectedStudent];
+                // For backward compatibility and UI, we can set 'done' based on current view
+                task.done = task.completedBy[selectedStudent];
             }
         } else {
-            // Task assigned to specific person or a teacher's view of individual tasks
+            // Direct assignment
             task.done = !task.done;
         }
         
@@ -686,11 +685,13 @@
             const tr = document.createElement('tr');
             const subjectColor = subjectColorCodes[task.subject] || '#717786';
             
-            // Check individual completion if it's a class task and a student is selected
+            // Calculate status based on individual completion for "Ganze Klasse"
             let done = !!task.done;
             if (task.who === 'Ganze Klasse' && currentRole === 'student' && selectedStudent !== 'all') {
-                const key = `${task.id}_${selectedStudent}`;
-                done = !!classTaskCompletions[key];
+                done = !!(task.completedBy && task.completedBy[selectedStudent]);
+            } else if (task.who === 'Ganze Klasse' && selectedStudent === 'all') {
+                // If showing all, teacher status or general 'done' is used
+                done = !!task.done;
             }
 
             const canToggle = (selectedStudent !== 'all' && !isLocked) || (currentRole === 'teacher');
@@ -710,16 +711,6 @@
                     <span class="material-icons text-[16px]">radio_button_unchecked</span> Offen
                    </div>`;
 
-            // For teacher mode: if Ganze Klasse, show completion ratio?
-            let whoCellContent = task.who;
-            if (currentRole === 'teacher' && task.who === 'Ganze Klasse') {
-                const completedCount = students.filter(s => classTaskCompletions[`${task.id}_${s}`]).length;
-                whoCellContent = `<div class="flex flex-col">
-                                    <span>${task.who}</span>
-                                    <span class="text-[10px] text-primary font-bold uppercase tracking-tight">${completedCount} / ${students.length} erledigt</span>
-                                  </div>`;
-            }
-
             tr.innerHTML = `
                 <td class="p-5 text-center relative">
                     <div class="subject-bar" style="background-color: ${subjectColor}"></div>
@@ -727,7 +718,7 @@
                         <input type="checkbox" ${done ? 'checked' : ''} onchange="toggleTask(${task.id})" class="w-6 h-6 rounded-full border-2 border-outline text-primary focus:ring-primary transition-transform active:scale-125 cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed" ${!canToggle ? 'disabled' : ''}>
                     </div>
                 </td>
-                <td class="p-5 font-semibold text-on-surface">${whoCellContent}</td>
+                <td class="p-5 font-semibold text-on-surface">${task.who}</td>
                 <td class="p-5">
                     <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase text-white shadow-sm" style="background-color: ${subjectColor}">${(task.subject || '??').toUpperCase()}</span>
                 </td>
@@ -828,6 +819,7 @@
             return;
         }
 
+        // Set notification flag if parent confirms
         if (isChecked) {
             hasNewConfirmations = true;
             localStorage.setItem('hw_planner_has_new_confirmations', 'true');
@@ -932,9 +924,11 @@
         if (confirm(`Soll "${name}" wirklich aus der Klassenliste gelöscht werden?`)) {
             students = students.filter(s => s !== name);
             delete studentConfirmations[name];
-            // Clear completions for this student
-            Object.keys(classTaskCompletions).forEach(key => {
-                if (key.endsWith(`_${name}`)) delete classTaskCompletions[key];
+            // Also clean up individual completions
+            tasks.forEach(t => {
+                if (t.completedBy && t.completedBy[name] !== undefined) {
+                    delete t.completedBy[name];
+                }
             });
             save();
             updateUI();
@@ -994,7 +988,6 @@
         localStorage.setItem('hw_planner_tasks', JSON.stringify(tasks));
         localStorage.setItem('hw_planner_students', JSON.stringify(students));
         localStorage.setItem('hw_planner_confirmations_map', JSON.stringify(studentConfirmations));
-        localStorage.setItem('hw_planner_class_completions', JSON.stringify(classTaskCompletions));
         localStorage.setItem('hw_planner_has_new_confirmations', hasNewConfirmations.toString());
     }
 
@@ -1004,7 +997,21 @@
         const taskDesc = document.getElementById('task-desc').value.trim();
         const due = document.getElementById('task-date').value;
         if(!taskDesc || !due) { alert('Bitte alle Felder ausfüllen.'); return; }
-        tasks.push({ id: Date.now(), who, subject, task: taskDesc, due, done: false });
+        
+        const newTask = { 
+            id: Date.now(), 
+            who, 
+            subject, 
+            task: taskDesc, 
+            due, 
+            done: false 
+        };
+        
+        if (who === 'Ganze Klasse') {
+            newTask.completedBy = {};
+        }
+        
+        tasks.push(newTask);
         document.getElementById('task-desc').value = '';
         save();
         renderTasks();
@@ -1013,10 +1020,6 @@
     function deleteTask(id) {
         if(confirm('Aufgabe löschen?')) {
             tasks = tasks.filter(t => t.id !== id);
-            // Cleanup completions
-            Object.keys(classTaskCompletions).forEach(key => {
-                if (key.startsWith(`${id}_`)) delete classTaskCompletions[key];
-            });
             save();
             renderTasks();
         }
@@ -1033,8 +1036,7 @@
         const exportData = {
             tasks,
             students,
-            confirmations: studentConfirmations,
-            completions: classTaskCompletions
+            confirmations: studentConfirmations
         };
         const dataStr = JSON.stringify(exportData, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
@@ -1056,15 +1058,29 @@
                         tasks = [...tasks, ...imported.tasks];
                         students = Array.from(new Set([...students, ...imported.students])).sort();
                         studentConfirmations = {...studentConfirmations, ...(imported.confirmations || {})};
-                        classTaskCompletions = {...classTaskCompletions, ...(imported.completions || {})};
                     } else {
                         tasks = imported.tasks;
                         students = imported.students;
                         studentConfirmations = imported.confirmations || {};
-                        classTaskCompletions = imported.completions || {};
                     }
                 }
                 save();
                 updateUI();
                 alert('Daten erfolgreich importiert.');
-            } catch (err) { alert('Fehler beim Import der Datei.');</script></body></html>
+            } catch (err) { alert('Fehler beim Import der Datei.'); }
+            event.target.value = '';
+        };
+        reader.readAsText(file);
+    }
+
+    function printQRCode() {
+        const style = document.createElement('style');
+        style.id = 'temp-qr-print-style';
+        style.innerHTML = `@media print { body * { visibility: hidden !important; } #teacher-qr-section, #teacher-qr-section *, .qr-print-only, .qr-print-only * { visibility: visible !important; } #teacher-qr-section { position: absolute; left: 0; top: 0; width: 100%; border: none !important; box-shadow: none !important; padding: 2cm !important; } }`;
+        document.head.appendChild(style);
+        window.print();
+        style.remove();
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+</script</script></body></html>
