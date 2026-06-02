@@ -1,7 +1,5 @@
-<html class="light" lang="de-CH"><head></head><body class="bg-surface text-on-surface font-body-md min-h-screen">```html
-
-
-    <meta charset="utf-8"/>
+<html class="light" lang="de-CH"><head>
+<meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Wer – Was – Bis wann | Digitaler Planer</title>
 <!-- PWA Meta Tags -->
@@ -166,14 +164,8 @@
         .qr-print-only { display: none; }
         @media print { .qr-print-only { display: block !important; } }
     </style>
-<noscript>
-<div class="fixed inset-0 flex items-center justify-center bg-white z-[9999] p-8 text-center">
-<div class="max-w-md">
-<h1 class="text-2xl font-bold mb-4">JavaScript benötigt</h1>
-<p>Bitte aktiviere JavaScript in deinem Browser, um den digitalen Planer nutzen zu können.</p>
-</div>
-</div>
-</noscript>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen">
 <main class="max-w-7xl mx-auto px-gutter py-8 md:py-12 space-y-12">
 <!-- Header -->
 <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -190,7 +182,6 @@
 <button class="px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 text-on-surface-variant hover:bg-surface-container-highest cursor-pointer z-30 relative" id="btn-teacher" onclick="setMode('teacher')" type="button">
 <span class="material-icons">lock</span>
 <span>Lehrer-Modus</span>
-<!-- Notification Badge -->
 <span class="absolute top-0.5 right-0.5 w-3 h-3 bg-error rounded-full border-2 border-white hidden" id="teacher-notification-badge"></span>
 </button>
 </div>
@@ -376,23 +367,23 @@
 <h2 class="font-h2 text-h2 mb-6" id="instruction-title">Anleitung für Schüler</h2>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" id="instruction-grid">
 <div class="flex flex-col gap-3">
-<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold">1</div>
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold bg-primary text-on-primary">1</div>
 <h4 class="font-bold text-on-surface">Erfassen</h4>
 <p class="text-sm text-on-surface-variant" id="step-1-text">Trage deine Hausaufgaben täglich ein.</p>
 </div>
 <div class="flex flex-col gap-3">
-<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold">2</div>
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold bg-primary text-on-primary">2</div>
 <h4 class="font-bold text-on-surface">Erledigen</h4>
 <p class="text-sm text-on-surface-variant">Hake Aufgaben ab, sobald du sie fertig hast.</p>
 </div>
 <div class="flex flex-col gap-3">
-<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold">3</div>
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold bg-primary text-on-primary">3</div>
 <h4 class="font-bold text-on-surface">Bestätigen lassen</h4>
 <p class="text-sm text-on-surface-variant">Zeige die Liste am Ende der Woche deinen Eltern.</p>
 </div>
 <!-- PWA Install Info -->
-<div class="flex flex-col gap-3 bg-white/50 p-4 rounded-xl border border-primary/10">
-<div class="w-10 h-10 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold">4</div>
+<div class="flex flex-col gap-3 bg-surface-container-highest/50 p-4 rounded-xl border border-primary/10">
+<div class="w-10 h-10 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold bg-primary text-on-primary">4</div>
 <h4 class="font-bold text-on-surface">App installieren</h4>
 <p class="text-xs text-on-surface-variant">
 <b>iOS:</b> Teilen <span class="material-icons text-[14px]">ios_share</span> -&gt; Zum Home-Bildschirm.<br/>
@@ -407,7 +398,7 @@
 <span class="material-icons text-primary text-3xl" id="confirm-icon">verified_user</span>
 <h2 class="font-h2 text-h2 text-primary" id="confirm-heading">Bestätigung der Eltern</h2>
 </div>
-<div class="hidden mb-4 text-xs font-bold text-on-primary uppercase bg-primary/20 p-2 rounded text-center" id="confirmation-ui-locked-hint">Gesperrt: Ein Schüler muss ausgewählt sein</div>
+<div class="hidden mb-4 text-xs font-bold text-on-primary uppercase bg-primary/20 p-2 rounded text-center" id="confirmation-ui-locked-hint">Gesperrt: Ein Name muss ausgewählt sein</div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 <div class="flex flex-col gap-2">
 <label class="font-label-caps text-label-caps text-outline uppercase" id="label-confirm-date">Datum</label>
@@ -470,20 +461,14 @@
 
         let tasks = [];
         let students = ['Anna', 'Ben', 'Lara', 'Mark', 'Sophie'];
-        let studentConfirmations = {}; // Map: studentName -> {date, signature, checked}
+        let studentConfirmations = {}; 
         let currentRole = 'student';
         let qrCodeInstance = null;
         let hasNewConfirmations = false;
 
         function init() {
             try {
-                if ('serviceWorker' in navigator) {
-                    const swCode = `self.addEventListener('fetch', function(event) {});`;
-                    const blob = new Blob([swCode], {type: 'application/javascript'});
-                    const swUrl = URL.createObjectURL(blob);
-                    navigator.serviceWorker.register(swUrl).catch(e => console.log('SW registration skipped', e));
-                }
-
+                // Initialize default local state if empty
                 const storedTasks = localStorage.getItem('hw_planner_tasks');
                 if (storedTasks) tasks = JSON.parse(storedTasks);
                 
@@ -519,7 +504,6 @@
                 const password = prompt("Bitte gib das Lehrer-Passwort ein:");
                 if (password === 'lehrer123') {
                     setRole('teacher');
-                    // Reset notifications when successfully entering teacher mode
                     hasNewConfirmations = false;
                     localStorage.setItem('hw_planner_has_new_confirmations', 'false');
                     updateNotificationUI();
@@ -614,7 +598,7 @@
                     div.innerHTML = `
                         <span class="w-3 h-3 rounded-full" style="background-color: ${subjectColorCodes[sub]}"></span>
                         <span class="text-xs font-bold text-on-surface">${sub.toUpperCase()}</span>
-                        <span class="text-[10px] text-on-surface-variant opacity-70">${subjectNames[sub]}</span>
+                        <span class="text-[10px] text-on-surface-variant opacity-70 ml-1">${subjectNames[sub]}</span>
                     `;
                     container.appendChild(div);
                 });
@@ -623,7 +607,6 @@
 
         function toggleTask(id) {
             const selectedStudent = document.getElementById('student-filter')?.value || 'all';
-            
             const taskIndex = tasks.findIndex(t => t.id === id);
             if (taskIndex === -1) return;
 
@@ -640,7 +623,6 @@
             }
 
             const task = tasks[taskIndex];
-            
             if (task.who === 'Ganze Klasse') {
                 if (!task.completedBy) task.completedBy = {};
                 if (currentRole === 'teacher') {
@@ -687,10 +669,8 @@
                 }
 
                 const canToggle = (selectedStudent !== 'all' && !isLocked) || (currentRole === 'teacher');
-                
                 tr.className = `relative border-b border-outline-variant transition-all ${done ? 'task-row-done' : 'bg-white hover:bg-surface-container-low/50'}`;
                 
-                // Format date as Swiss DD.MM.YYYY
                 const dateObj = new Date(task.due);
                 const formattedDate = !isNaN(dateObj.getTime()) 
                     ? dateObj.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -750,11 +730,11 @@
             }
 
             const data = studentConfirmations[student] || { date: new Date().toISOString().split('T')[0], signature: '', checked: false };
-            if (check) check.checked = data.checked;
+            if (check) check.checked = !!data.checked;
             if (sig) sig.value = data.signature || '';
             if (date) date.value = data.date || new Date().toISOString().split('T')[0];
 
-            applyVisualLock(data.checked);
+            applyVisualLock(!!data.checked);
         }
 
         function applyVisualLock(isLocked) {
@@ -767,7 +747,8 @@
             const btnText = isLocked ? "Bestätigt ✓" : "Gesehen ☑";
 
             if(isLocked) {
-                parentCard.className = "bg-primary border-2 border-primary border-dashed p-8 rounded-lg shadow-sm text-white transition-all duration-300";
+                parentCard.classList.add('bg-primary', 'text-white');
+                parentCard.classList.remove('bg-surface-container-lowest');
                 heading.className = "font-h2 text-h2 text-white";
                 icon.className = "material-icons text-white text-3xl";
                 text.className = "font-bold text-white";
@@ -775,7 +756,8 @@
                 label.className = "flex items-center justify-center gap-3 cursor-pointer select-none bg-white/20 p-3 rounded-lg border border-white/30 w-full transition-all";
                 inputs.forEach(i => i.disabled = true);
             } else {
-                parentCard.className = "bg-surface-container-lowest border-2 border-primary border-dashed p-8 rounded-lg shadow-sm transition-all duration-300";
+                parentCard.classList.remove('bg-primary', 'text-white');
+                parentCard.classList.add('bg-surface-container-lowest');
                 heading.className = "font-h2 text-h2 text-primary";
                 icon.className = "material-icons text-primary text-3xl";
                 text.className = "font-bold text-on-surface";
@@ -812,7 +794,6 @@
                 return;
             }
 
-            // Set notification flag if parent confirms
             if (isChecked) {
                 hasNewConfirmations = true;
                 localStorage.setItem('hw_planner_has_new_confirmations', 'true');
@@ -851,77 +832,43 @@
         function importStudents() {
             const input = document.getElementById('bulk-student-input');
             if (!input) return;
-            
             const rawValue = input.value.trim();
-            if (!rawValue) {
-                alert('Bitte geben Sie mindestens einen Namen ein.');
-                return;
-            }
-            
-            const newNames = rawValue.split(/[,\n;]/)
-                .map(n => n.trim())
-                .filter(n => n.length > 0);
-                
+            if (!rawValue) return;
+            const newNames = rawValue.split(/[,\n;]/).map(n => n.trim()).filter(n => n.length > 0);
             if (newNames.length > 0) {
                 students = Array.from(new Set([...students, ...newNames])).sort();
                 input.value = '';
                 save();
                 updateUI();
-                if (currentRole === 'teacher') renderTeacherConfirmations();
-                alert(`${newNames.length} Schüler wurden erfolgreich hinzugefügt.`);
-            } else {
-                alert('Keine gültigen Namen gefunden.');
             }
         }
 
         function importStudentList(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
             const reader = new FileReader();
             reader.onload = function(e) {
                 const content = e.target.result;
                 let newStudents = null;
-
                 try {
                     const parsed = JSON.parse(content);
                     newStudents = parsed.students || (Array.isArray(parsed) ? parsed : null);
                 } catch (err) {
-                    newStudents = content.split(/[,\n;\r]/)
-                        .map(n => n.trim())
-                        .filter(n => n.length > 0);
+                    newStudents = content.split(/[,\n;\r]/).map(n => n.trim()).filter(n => n.length > 0);
                 }
-                    
-                if (newStudents && Array.isArray(newStudents) && newStudents.length > 0) {
-                    if (confirm(`Sollen ${newStudents.length} Schüler importiert werden? Bestehende Namen bleiben erhalten.`)) {
-                        students = Array.from(new Set([...students, ...newStudents])).sort();
-                        save();
-                        updateUI();
-                        alert('Klassenliste erfolgreich importiert.');
-                    }
-                } else {
-                    alert('Fehler beim Lesen der Datei: Keine gültigen Namen gefunden.');
+                if (newStudents && Array.isArray(newStudents)) {
+                    students = Array.from(new Set([...students, ...newStudents])).sort();
+                    save();
+                    updateUI();
                 }
-                event.target.value = '';
             };
-            
-            reader.onerror = function() {
-                alert('Fehler beim Lesen der Datei.');
-                event.target.value = '';
-            };
-            
             reader.readAsText(file);
         }
 
         function deleteStudent(name) {
-            if (confirm(`Soll "${name}" wirklich aus der Klassenliste gelöscht werden?`)) {
+            if (confirm(`Soll "${name}" gelöscht werden?`)) {
                 students = students.filter(s => s !== name);
                 delete studentConfirmations[name];
-                tasks.forEach(t => {
-                    if (t.completedBy && t.completedBy[name] !== undefined) {
-                        delete t.completedBy[name];
-                    }
-                });
                 save();
                 updateUI();
             }
@@ -956,24 +903,17 @@
             const studentFilter = document.getElementById('student-filter');
             if (!taskWho || !studentFilter) return;
 
-            const taskWhoVal = taskWho.value;
-            const taskWhoOpts = '<option value="Ganze Klasse">Ganze Klasse</option>' + 
-                                 students.map(s => `<option value="${s}">${s}</option>`).join('');
-            taskWho.innerHTML = taskWhoOpts;
-            if (taskWhoVal && (taskWhoVal === 'Ganze Klasse' || students.includes(taskWhoVal))) {
-                taskWho.value = taskWhoVal;
-            }
-
             const filterVal = studentFilter.value;
             const filterOpts = '<option value="all">Alle anzeigen</option>' + 
                                students.map(s => `<option value="${s}">${s}</option>`).join('');
             studentFilter.innerHTML = filterOpts;
-            
-            if (filterVal && (filterVal === 'all' || students.includes(filterVal))) {
-                studentFilter.value = filterVal;
-            } else {
-                studentFilter.value = 'all';
-            }
+            studentFilter.value = (filterVal && (filterVal === 'all' || students.includes(filterVal))) ? filterVal : 'all';
+
+            const whoVal = taskWho.value;
+            const whoOpts = '<option value="Ganze Klasse">Ganze Klasse</option>' + 
+                            students.map(s => `<option value="${s}">${s}</option>`).join('');
+            taskWho.innerHTML = whoOpts;
+            if (whoVal && (whoVal === 'Ganze Klasse' || students.includes(whoVal))) taskWho.value = whoVal;
         }
 
         function save() {
@@ -988,20 +928,10 @@
             const subject = document.getElementById('task-subject').value;
             const taskDesc = document.getElementById('task-desc').value.trim();
             const due = document.getElementById('task-date').value;
-            if(!taskDesc || !due) { alert('Bitte alle Felder ausfüllen.'); return; }
+            if(!taskDesc || !due) return;
             
-            const newTask = { 
-                id: Date.now(), 
-                who, 
-                subject, 
-                task: taskDesc, 
-                due, 
-                done: false 
-            };
-            
-            if (who === 'Ganze Klasse') {
-                newTask.completedBy = {};
-            }
+            const newTask = { id: Date.now(), who, subject, task: taskDesc, due, done: false };
+            if (who === 'Ganze Klasse') newTask.completedBy = {};
             
             tasks.push(newTask);
             document.getElementById('task-desc').value = '';
@@ -1018,18 +948,14 @@
         }
 
         function resetTemplate() {
-            if(confirm('Alles löschen? Die Seite wird neu geladen.')) {
+            if(confirm('Alles löschen?')) {
                 localStorage.clear();
                 window.location.reload();
             }
         }
 
         function exportTasks() {
-            const exportData = {
-                tasks,
-                students,
-                confirmations: studentConfirmations
-            };
+            const exportData = { tasks, students, confirmations: studentConfirmations };
             const dataStr = JSON.stringify(exportData, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
             const linkElement = document.createElement('a');
@@ -1046,23 +972,23 @@
                 try {
                     const imported = JSON.parse(e.target.result);
                     if (imported.tasks && imported.students) {
-                        if (confirm('Daten mit bestehenden mischen?')) {
-                            tasks = [...tasks, ...imported.tasks];
-                            students = Array.from(new Set([...students, ...imported.students])).sort();
-                            studentConfirmations = {...studentConfirmations, ...(imported.confirmations || {})};
-                        } else {
-                            tasks = imported.tasks;
-                            students = imported.students;
-                            studentConfirmations = imported.confirmations || {};
-                        }
+                        tasks = imported.tasks;
+                        students = imported.students;
+                        studentConfirmations = imported.confirmations || {};
+                        save();
+                        updateUI();
                     }
-                    save();
-                    updateUI();
-                    alert('Daten erfolgreich importiert.');
-                } catch (err) { alert('Fehler beim Import der Datei.'); }
+                } catch (err) { alert('Fehler beim Import.'); }
                 event.target.value = '';
             };
             reader.readAsText(file);
         }
 
-        </script></body></html>
+        function printQRCode() {
+            window.print();
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body></html>
