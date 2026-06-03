@@ -21,7 +21,6 @@
             body { background: white !important; }
             .worksheet-pattern { background-image: none !important; }
         }
-        /* Ensure layout is robust */
         #app {
             display: flex;
             flex-direction: column;
@@ -136,7 +135,7 @@
 <span>Lokal aktiv</span>
 </span>
 <button class="p-2 hover:bg-surface-container-high rounded-full transition-colors" onclick="app.toggleLehrerModus()" title="Lehrer-Bereich">
-<span class="material-symbols-outlined text-on-surface-variant">admin_panel_settings</span>
+<span class="material-symbols-outlined text-on-surface-variant" id="lehrer-icon">lock_open</span>
 </button>
 </div>
 </div>
@@ -147,6 +146,9 @@
 <nav class="space-y-2 flex-1">
 <button class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container rounded-lg w-full text-left font-label-caps text-label-caps uppercase" id="nav-Planer" onclick="app.setTab('Planer')">
 <span class="material-symbols-outlined">calendar_today</span> Planer
+                </button>
+<button class="hidden flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg w-full text-left font-label-caps text-label-caps uppercase" id="nav-Dashboard" onclick="app.setTab('Dashboard')">
+<span class="material-symbols-outlined">dashboard</span> Lehrer-Modus
                 </button>
 <button class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg w-full text-left font-label-caps text-label-caps uppercase" id="nav-Anleitung" onclick="app.setTab('Anleitung')">
 <span class="material-symbols-outlined">help_outline</span> Anleitung
@@ -192,14 +194,9 @@
 <p class="font-body-md text-body-md text-on-surface-variant" id="current-date-range">01.04.2024 – 05.04.2024</p>
 </div>
 </div>
-<div class="space-y-6" id="task-container">
-<!-- Tasks dynamically injected -->
+<div class="space-y-6" id="task-container"></div>
 </div>
-<button class="hidden fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-40 no-print" id="add-task-btn" onclick="alert('Funktion: Neue Aufgabe hinzufügen (in Entwicklung)')">
-<span class="material-symbols-outlined">add</span>
-</button>
-</div>
-<!-- Content Area: Dashboard (Lehrer only) -->
+<!-- Content Area: Dashboard (Comprehensive Teacher Dashboard) -->
 <div class="hidden" id="content-dashboard">
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
 <h2 class="font-h1 text-h1">Klassen-Dashboard</h2>
@@ -212,7 +209,8 @@
                         </button>
 </div>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Stats Overview -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
 <div class="bg-surface border border-outline-variant p-6 rounded-lg">
 <p class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-2">Erledigungsquote</p>
 <div class="text-h1 font-h1 text-primary" id="dashboard-quote">0%</div>
@@ -232,20 +230,73 @@
 <p class="font-label-caps text-label-caps uppercase">Klassen-Login QR</p>
 </div>
 </div>
-<div class="mt-12 bg-surface border border-outline-variant rounded-lg overflow-x-auto">
+<!-- Neue Aufgabe zuteilen -->
+<div class="bg-surface border border-outline-variant rounded-lg p-6 mb-12">
+<h3 class="font-h2 text-h2 mb-6">Neue Aufgabe zuteilen</h3>
+<form class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="add-task-form" onsubmit="app.addTask(event)">
+<div>
+<label class="block font-label-caps text-label-caps mb-1 uppercase text-outline">Schüler</label>
+<select class="w-full bg-surface-container-low border-none rounded-lg p-2 focus:ring-2 focus:ring-primary" id="task-student">
+<option value="all">Alle Schüler</option>
+</select>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps mb-1 uppercase text-outline">Fach</label>
+<select class="w-full bg-surface-container-low border-none rounded-lg p-2 focus:ring-2 focus:ring-primary" id="task-subject">
+<option value="Deutsch">Deutsch</option>
+<option value="Mathematik">Mathematik</option>
+<option value="Sachunterricht">Sachunterricht</option>
+<option value="Englisch">Englisch</option>
+</select>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps mb-1 uppercase text-outline">Datum (TT.MM.JJJJ)</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg p-2 focus:ring-2 focus:ring-primary" id="task-deadline" placeholder="15.04.2024" required="" type="text"/>
+</div>
+<div class="md:col-span-2 lg:col-span-3">
+<label class="block font-label-caps text-label-caps mb-1 uppercase text-outline">Beschreibung</label>
+<input class="w-full bg-surface-container-low border-none rounded-lg p-2 focus:ring-2 focus:ring-primary" id="task-description" placeholder="Aufgabe beschreiben..." required="" type="text"/>
+</div>
+<div class="flex items-end">
+<button class="w-full py-2 bg-primary text-on-primary rounded-lg font-bold uppercase tracking-wider hover:opacity-90 transition-opacity" type="submit">
+                                Hinzufügen
+                            </button>
+</div>
+</form>
+</div>
+<!-- Fortschritts-Übersicht & Klassenliste -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-2">
+<h3 class="font-h2 text-h2 mb-4">Fortschritts-Übersicht</h3>
+<div class="bg-surface border border-outline-variant rounded-lg overflow-x-auto">
 <table class="w-full text-left min-w-[600px]">
 <thead class="bg-surface-container-low border-b border-outline-variant">
 <tr>
 <th class="px-6 py-4 font-label-caps text-label-caps">Schüler Name</th>
 <th class="px-6 py-4 font-label-caps text-label-caps">Status</th>
-<th class="px-6 py-4 font-label-caps text-label-caps">Letzte Bestätigung</th>
+<th class="px-6 py-4 font-label-caps text-label-caps">Bestätigung</th>
 <th class="px-6 py-4 font-label-caps text-label-caps">Aktionen</th>
 </tr>
 </thead>
-<tbody id="student-table-body">
-<!-- Dynamic rows -->
-</tbody>
+<tbody id="student-table-body"></tbody>
 </table>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-h2 text-h2">Klassenliste</h3>
+<button class="text-primary text-[12px] font-bold uppercase tracking-wider hover:underline" onclick="app.importStudentList()">Liste importieren (.txt)</button>
+</div>
+<div class="bg-surface border border-outline-variant rounded-lg p-4">
+<div class="space-y-2 mb-4 max-h-60 overflow-y-auto" id="student-management-list"></div>
+<div class="flex gap-2">
+<input class="flex-1 bg-surface-container-low border-none rounded-lg p-2 text-sm focus:ring-2 focus:ring-primary" id="new-student-name" placeholder="Neuer Schüler..." type="text"/>
+<button class="p-2 bg-secondary text-white rounded-lg" onclick="app.addStudent()">
+<span class="material-symbols-outlined">person_add</span>
+</button>
+</div>
+</div>
+</div>
 </div>
 </div>
 <!-- Content Area: Anleitung -->
@@ -303,9 +354,7 @@
 </div>
 <p class="text-sm italic">Gedruckt am: <span id="print-date"></span></p>
 </div>
-<div class="space-y-4" id="print-content">
-<!-- Content mirrored here via JS -->
-</div>
+<div class="space-y-4" id="print-content"></div>
 <div class="mt-20 border-t border-black pt-4 grid grid-cols-2 gap-8">
 <div class="h-12 border-b border-black">Unterschrift Schüler/in</div>
 <div class="h-12 border-b border-black">Unterschrift Eltern</div>
@@ -332,7 +381,7 @@
 
     const app = {
         state: null,
-        STORAGE_KEY: 'doeltschi_v11_data',
+        STORAGE_KEY: 'doeltschi_ultra_stable_v11',
 
         init() {
             try {
@@ -344,7 +393,6 @@
                     this.persist();
                 }
                 
-                // Extra safety: ensure essential data structures exist
                 if (!this.state.tasks) this.state.tasks = [];
                 if (!this.state.students) this.state.students = [];
 
@@ -352,7 +400,7 @@
                 document.getElementById('print-date').textContent = new Date().toLocaleDateString('de-CH');
             } catch (error) {
                 console.error("Initialization Failed:", error);
-                this.showError("Die App konnte nicht korrekt gestartet werden. Bitte laden Sie die Seite neu.");
+                this.showError("Die App konnte nicht korrekt gestartet werden.");
             }
         },
 
@@ -365,11 +413,9 @@
         },
 
         resetSystem() {
-            try {
+            if (confirm("Möchten Sie wirklich alle Daten löschen?")) {
                 localStorage.removeItem(this.STORAGE_KEY);
                 window.location.reload();
-            } catch (e) {
-                alert("Reset fehlgeschlagen. Bitte löschen Sie Ihren Browser-Cache manuell.");
             }
         },
 
@@ -435,27 +481,33 @@
                 this.renderFilters();
                 this.renderTasks();
                 this.renderDashboard();
+                this.renderStudentManagement();
                 
                 const planner = document.getElementById('content-planner');
                 const dashboard = document.getElementById('content-dashboard');
                 const guide = document.getElementById('content-guide');
-                const fab = document.getElementById('add-task-btn');
+                const lehrerIcon = document.getElementById('lehrer-icon');
 
                 if (planner) planner.classList.toggle('hidden', this.state.currentTab !== 'Planer');
                 if (dashboard) dashboard.classList.toggle('hidden', this.state.currentTab !== 'Dashboard');
                 if (guide) guide.classList.toggle('hidden', this.state.currentTab !== 'Anleitung');
 
-                if (fab) {
-                    fab.classList.toggle('hidden', !this.state.isLehrer || this.state.currentTab !== 'Planer');
+                if (lehrerIcon) {
+                    lehrerIcon.textContent = this.state.isLehrer ? 'admin_panel_settings' : 'lock_open';
+                }
+
+                // Show/hide teacher-only nav item
+                const navDashboard = document.getElementById('nav-Dashboard');
+                if (navDashboard) {
+                    navDashboard.classList.toggle('hidden', !this.state.isLehrer);
                 }
             } catch (error) {
                 console.error("Render Error:", error);
-                this.showError("Fehler beim Zeichnen der Oberfläche.");
             }
         },
 
         updateNavigation() {
-            const tabs = ['Planer', 'Anleitung'];
+            const tabs = ['Planer', 'Dashboard', 'Anleitung'];
             tabs.forEach(t => {
                 const desktopNav = document.getElementById(`nav-${t}`);
                 const mobileNav = document.getElementById(`mobile-nav-${t}`);
@@ -475,14 +527,20 @@
 
         renderFilters() {
             const select = document.getElementById('student-filter');
+            const taskStudentSelect = document.getElementById('task-student');
             if (!select) return;
             
             const current = this.state.selectedStudentId;
             let options = `<option value="all" ${current === 'all' ? 'selected' : ''}>Alle Schüler</option>`;
+            let taskOptions = `<option value="all">Alle Schüler</option>`;
+            
             this.state.students.forEach(s => {
                 options += `<option value="${s.id}" ${current === s.id ? 'selected' : ''}>${s.name}</option>`;
+                taskOptions += `<option value="${s.id}">${s.name}</option>`;
             });
+            
             select.innerHTML = options;
+            if (taskStudentSelect) taskStudentSelect.innerHTML = taskOptions;
         },
 
         renderTasks() {
@@ -499,7 +557,6 @@
                     <div class="py-20 text-center border-2 border-dashed border-outline-variant rounded-xl bg-surface/50">
                         <span class="material-symbols-outlined text-5xl text-outline-variant mb-4">task_alt</span>
                         <p class="text-on-surface-variant font-body-lg text-body-lg">Keine Aufgaben für diese Woche gefunden.</p>
-                        ${this.state.isLehrer ? '<p class="text-primary mt-2 text-label-caps font-bold">Klicken Sie unten auf +, um Aufgaben zu erstellen.</p>' : ''}
                     </div>
                 `;
             } else {
@@ -509,12 +566,12 @@
                     
                     return `
                         <div class="bg-surface border border-outline-variant rounded-lg overflow-hidden flex transition-all ${isDone ? 'opacity-70 grayscale-[0.2]' : 'hover:shadow-md'}">
-                            <div class="w-2 shrink-0" style="background-color: ${task.color}"></div>
+                            <div class="w-2 shrink-0" style="background-color: ${task.color || '#0058bc'}"></div>
                             <div class="flex-1 p-6 grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
                                 <div class="md:col-span-1">
                                     <p class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-1">Wer</p>
                                     <p class="font-subject-tag text-subject-tag truncate">${student ? student.name : 'Unbekannt'}</p>
-                                    <span class="inline-block mt-2 px-3 py-1 rounded-full text-[12px] font-bold" style="background-color: ${task.color}20; color: ${task.color}">
+                                    <span class="inline-block mt-2 px-3 py-1 rounded-full text-[12px] font-bold" style="background-color: ${task.color || '#0058bc'}20; color: ${task.color || '#0058bc'}">
                                         ${task.subject}
                                     </span>
                                 </div>
@@ -540,7 +597,6 @@
                 }).join('');
             }
 
-            // Student confirmation panel
             if (filterId !== 'all') {
                 const student = this.state.students.find(s => s.id === filterId);
                 if (student) {
@@ -563,27 +619,6 @@
                         </div>
                     `;
                 }
-            }
-        },
-
-        toggleTaskStatus(taskId) {
-            const task = this.state.tasks.find(t => t.id === taskId);
-            if (task) {
-                task.status = task.status === 'erledigt' ? 'offen' : 'erledigt';
-                this.persist();
-                this.renderTasks();
-                this.renderDashboard();
-            }
-        },
-
-        confirmStudent(studentId) {
-            const student = this.state.students.find(s => s.id === studentId);
-            if (student) {
-                student.confirmed = !student.confirmed;
-                student.lastConfirmed = student.confirmed ? new Date().toLocaleDateString('de-CH') : '-';
-                this.persist();
-                this.renderTasks();
-                this.renderDashboard();
             }
         },
 
@@ -613,7 +648,8 @@
             tbody.innerHTML = this.state.students.map(s => {
                 const tasksForStudent = this.state.tasks.filter(t => t.studentId === s.id);
                 const doneCount = tasksForStudent.filter(t => t.status === 'erledigt').length;
-                const progress = tasksForStudent.length > 0 ? (doneCount / tasksForStudent.length) * 100 : 0;
+                const totalCount = tasksForStudent.length;
+                const progress = totalCount > 0 ? (doneCount / totalCount) * 100 : 0;
 
                 return `
                     <tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
@@ -621,18 +657,137 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-24 bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                                    <div class="bg-primary h-full" style="width: ${progress}%"></div>
+                                    <div class="bg-primary h-full transition-all duration-300" style="width: ${progress}%"></div>
                                 </div>
-                                <span class="text-label-caps font-label-caps text-outline whitespace-nowrap">${Math.round(progress)}%</span>
+                                <span class="text-label-caps font-label-caps text-outline whitespace-nowrap">${doneCount}/${totalCount}</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-on-surface-variant text-body-md">${s.lastConfirmed}</td>
+                        <td class="px-6 py-4 text-on-surface-variant text-body-md">
+                            ${s.confirmed ? '<span class="text-primary font-bold">✓ Bestätigt</span>' : '<span class="text-outline">Ausstehend</span>'}
+                        </td>
                         <td class="px-6 py-4">
-                            <button onclick="app.viewDetails('${s.id}')" class="text-primary hover:underline font-label-caps text-label-caps uppercase font-bold">Details</button>
+                            <button onclick="app.viewDetails('${s.id}')" class="text-primary hover:underline font-label-caps text-label-caps uppercase font-bold">Ansehen</button>
                         </td>
                     </tr>
                 `;
             }).join('');
+        },
+
+        renderStudentManagement() {
+            const list = document.getElementById('student-management-list');
+            if (!list) return;
+
+            list.innerHTML = this.state.students.map(s => `
+                <div class="flex items-center justify-between p-2 bg-surface border border-outline-variant rounded-lg">
+                    <span class="text-sm font-body-md truncate">${s.name}</span>
+                    <button onclick="app.removeStudent('${s.id}')" class="text-error hover:bg-error/10 p-1 rounded">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                </div>
+            `).join('');
+        },
+
+        addStudent() {
+            const nameInput = document.getElementById('new-student-name');
+            const name = nameInput.value.trim();
+            if (name) {
+                const newStudent = {
+                    id: 's' + Date.now(),
+                    name: name,
+                    confirmed: false,
+                    lastConfirmed: '-'
+                };
+                this.state.students.push(newStudent);
+                nameInput.value = '';
+                this.persist();
+                this.renderAll();
+            }
+        },
+
+        removeStudent(id) {
+            if (confirm("Diesen Schüler wirklich entfernen? Alle zugehörigen Aufgaben bleiben erhalten, werden aber 'Unbekannt' zugeordnet.")) {
+                this.state.students = this.state.students.filter(s => s.id !== id);
+                this.persist();
+                this.renderAll();
+            }
+        },
+
+        addTask(e) {
+            e.preventDefault();
+            const studentId = document.getElementById('task-student').value;
+            const subject = document.getElementById('task-subject').value;
+            const deadline = document.getElementById('task-deadline').value;
+            const description = document.getElementById('task-description').value;
+
+            const colors = {
+                'Deutsch': '#ba1a1a',
+                'Mathematik': '#0058bc',
+                'Sachunterricht': '#9e3d00',
+                'Englisch': '#4c4aca'
+            };
+
+            const studentsToAssign = studentId === 'all' 
+                ? this.state.students 
+                : [this.state.students.find(s => s.id === studentId)];
+
+            studentsToAssign.forEach(student => {
+                const newTask = {
+                    id: 't' + Math.random().toString(36).substr(2, 9),
+                    studentId: student.id,
+                    subject: subject,
+                    description: description,
+                    deadline: deadline,
+                    status: 'offen',
+                    color: colors[subject] || '#717786'
+                };
+                this.state.tasks.push(newTask);
+            });
+
+            document.getElementById('task-description').value = '';
+            this.persist();
+            this.renderAll();
+            alert(`Aufgabe für ${studentId === 'all' ? 'alle Schüler' : 'ausgewählten Schüler'} hinzugefügt.`);
+        },
+
+        importStudentList() {
+            const input = prompt("Bitte geben Sie die Namen der Schüler ein (einen pro Zeile):");
+            if (input) {
+                const names = input.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+                if (names.length > 0) {
+                    names.forEach(name => {
+                        this.state.students.push({
+                            id: 's' + Math.random().toString(36).substr(2, 9),
+                            name: name,
+                            confirmed: false,
+                            lastConfirmed: '-'
+                        });
+                    });
+                    this.persist();
+                    this.renderAll();
+                    alert(`${names.length} Schüler wurden importiert.`);
+                }
+            }
+        },
+
+        toggleTaskStatus(taskId) {
+            const task = this.state.tasks.find(t => t.id === taskId);
+            if (task) {
+                task.status = task.status === 'erledigt' ? 'offen' : 'erledigt';
+                this.persist();
+                this.renderTasks();
+                this.renderDashboard();
+            }
+        },
+
+        confirmStudent(studentId) {
+            const student = this.state.students.find(s => s.id === studentId);
+            if (student) {
+                student.confirmed = !student.confirmed;
+                student.lastConfirmed = student.confirmed ? new Date().toLocaleDateString('de-CH') : '-';
+                this.persist();
+                this.renderTasks();
+                this.renderDashboard();
+            }
         },
 
         viewDetails(studentId) {
