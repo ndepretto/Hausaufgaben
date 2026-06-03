@@ -115,21 +115,20 @@
 <header class="bg-white/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50 no-print">
 <div class="flex justify-between items-center w-full px-gutter max-w-[1100px] mx-auto h-20">
 <div class="flex items-center gap-6">
-<!-- Click handler on title triggers admin access -->
-<h1 class="text-3xl font-black tracking-tight text-primary cursor-pointer select-none active:scale-95 transition-transform" onclick="app.handleTitleClick()">doeltschi</h1>
+<h1 class="text-3xl font-black tracking-tight text-primary cursor-pointer select-none active:scale-95 transition-transform" onclick="app.setTab('Planer')">doeltschi</h1>
 <div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container rounded-full text-[10px] font-bold uppercase text-on-surface-variant animate-pulse-soft">
 <span class="material-symbols-outlined text-[14px]">bolt</span>
 <span>Lokal aktiv</span>
 </div>
 </div>
 <div class="flex items-center gap-4">
-<nav class="hidden md:flex mr-4 gap-2">
+<nav class="hidden md:flex gap-2">
 <button class="px-5 py-2.5 rounded-full text-sm font-bold bg-primary text-on-primary shadow-lg shadow-primary/20" id="nav-Planer" onclick="app.setTab('Planer')">Schüler-Ansicht</button>
-<button class="hidden px-5 py-2.5 rounded-full text-sm font-bold text-on-surface-variant hover:bg-surface-container transition-all" id="nav-Dashboard" onclick="app.setTab('Dashboard')">Lehrer-Modus</button>
+<button class="px-5 py-2.5 rounded-full text-sm font-bold text-on-surface-variant hover:bg-surface-container transition-all" id="nav-Dashboard" onclick="app.handleLehrerNavClick()">Lehrer-Modus</button>
 <button class="px-5 py-2.5 rounded-full text-sm font-bold text-on-surface-variant hover:bg-surface-container transition-all" id="nav-Anleitung" onclick="app.setTab('Anleitung')">Anleitung</button>
 </nav>
-<button class="hidden flex items-center gap-2 px-5 py-2.5 bg-surface-container hover:bg-outline-variant text-on-surface rounded-full transition-colors text-sm font-bold uppercase shadow-sm" id="lehrer-access-btn" onclick="app.handleLehrerButtonClick()">
-<span class="material-symbols-outlined text-[18px]">lock_open</span>
+<button class="hidden flex items-center gap-2 px-5 py-2.5 bg-surface-container hover:bg-outline-variant text-on-surface rounded-full transition-colors text-sm font-bold uppercase shadow-sm" id="lehrer-access-btn" onclick="app.logoutLehrer()">
+<span class="material-symbols-outlined text-[18px]">lock</span>
 <span class="hidden sm:inline">Abmelden</span>
 </button>
 </div>
@@ -216,9 +215,6 @@
                     </button>
 <button class="px-5 py-2.5 border border-outline-variant bg-white rounded-full text-xs font-bold uppercase text-on-surface flex items-center gap-2 hover:bg-surface-container transition-colors" onclick="app.exportData()">
 <span class="material-symbols-outlined text-[18px]">download</span> Export
-                    </button>
-<button class="px-5 py-2.5 bg-on-surface text-white rounded-full text-xs font-bold uppercase flex items-center gap-2 hover:bg-on-surface/90 transition-colors" onclick="app.handleLehrerButtonClick()">
-<span class="material-symbols-outlined text-[18px]">logout</span> Abmelden
                     </button>
 </div>
 </div>
@@ -353,7 +349,7 @@
 <div class="text-center md:text-left">
 <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
 <div class="flex items-center justify-center md:justify-start gap-3 mt-2">
-<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 18 • Repair Complete</p>
+<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 18 • Secure Access</p>
 <button class="text-[9px] text-on-surface-variant/30 hover:text-red-400 underline font-mono uppercase transition-colors" onclick="app.resetSystem()">App zurücksetzen</button>
 </div>
 </div>
@@ -383,7 +379,6 @@
         isLehrer: false,
         currentTab: 'Planer',
         selectedStudentId: 'all',
-        titleClicks: 0,
         students: [
             { id: 's1', name: 'Lukas Müller', confirmed: false, lastConfirmed: '-' },
             { id: 's2', name: 'Sophie Fischer', confirmed: true, lastConfirmed: '12.03.2024' },
@@ -399,7 +394,7 @@
 
     const app = {
         state: null,
-        STORAGE_KEY: 'doeltschi_v18_final_app',
+        STORAGE_KEY: 'doeltschi_v18_secure_app',
 
         init() {
             try {
@@ -429,21 +424,9 @@
             }
         },
 
-        handleTitleClick() {
-            this.state.titleClicks = (this.state.titleClicks || 0) + 1;
-            if (this.state.titleClicks >= 3) {
-                this.state.titleClicks = 0;
-                this.openLehrerModal();
-            }
-            clearTimeout(this.titleTimeout);
-            this.titleTimeout = setTimeout(() => { this.state.titleClicks = 0; }, 2000);
-        },
-
-        handleLehrerButtonClick() {
+        handleLehrerNavClick() {
             if (this.state.isLehrer) {
-                this.state.isLehrer = false;
-                this.state.currentTab = 'Planer';
-                this.renderAll();
+                this.setTab('Dashboard');
             } else {
                 this.openLehrerModal();
             }
@@ -475,6 +458,12 @@
             }
         },
 
+        logoutLehrer() {
+            this.state.isLehrer = false;
+            this.state.currentTab = 'Planer';
+            this.renderAll();
+        },
+
         setTab(tab) {
             this.state.currentTab = tab;
             this.renderAll();
@@ -490,14 +479,12 @@
             const planner = document.getElementById('content-planner');
             const dashboard = document.getElementById('content-dashboard');
             const guide = document.getElementById('content-guide');
-            const navDashboard = document.getElementById('nav-Dashboard');
             const lehrerBtn = document.getElementById('lehrer-access-btn');
 
             if (planner) planner.classList.toggle('hidden', this.state.currentTab !== 'Planer');
             if (dashboard) dashboard.classList.toggle('hidden', this.state.currentTab !== 'Dashboard');
             if (guide) guide.classList.toggle('hidden', this.state.currentTab !== 'Anleitung');
 
-            if (navDashboard) navDashboard.classList.toggle('hidden', !this.state.isLehrer);
             if (lehrerBtn) lehrerBtn.classList.toggle('hidden', !this.state.isLehrer);
 
             this.updateNavStyles();
@@ -513,8 +500,6 @@
             const steps = [1, 2, 3, 4].map(i => document.getElementById(`step-${i}`));
             if (!steps[0]) return;
             const studentSelected = this.state.selectedStudentId !== 'all';
-            
-            // Logic for stepper progress
             const filteredTasks = studentSelected ? this.state.tasks.filter(t => t.studentId === this.state.selectedStudentId || t.studentId === 'all') : [];
             const anyDone = filteredTasks.some(t => t.status === 'erledigt');
             const allDone = filteredTasks.length > 0 && filteredTasks.every(t => t.status === 'erledigt');
@@ -571,9 +556,6 @@
             if (!container) return;
             const filterId = this.state.selectedStudentId;
             
-            // Logic updated per request: 
-            // If "all", only show tasks assigned to 'all' (Ganze Klasse).
-            // If specific student, show tasks assigned to 'all' AND those assigned to the student.
             let displayTasks = [];
             if (filterId === 'all') {
                 displayTasks = this.state.tasks.filter(t => t.studentId === 'all');
@@ -649,7 +631,6 @@
             document.getElementById('dashboard-pending-text').textContent = `Noch ${totalCount - confirmedCount} ausstehend`;
             const sortedStudents = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
             tbody.innerHTML = sortedStudents.map(s => {
-                // For the dashboard, we show progress including 'all' tasks and specific tasks
                 const sTasks = this.state.tasks.filter(t => t.studentId === s.id || t.studentId === 'all');
                 const doneCount = sTasks.filter(t => t.status === 'erledigt').length;
                 const taskTotal = sTasks.length;
@@ -725,7 +706,6 @@
                     deadline: dead, 
                     status: 'offen' 
                 });
-                // When a global task is added, reset confirmations
                 this.state.students.forEach(s => s.confirmed = false);
             } else {
                 const s = this.state.students.find(st => st.id === sid);
