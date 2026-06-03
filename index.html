@@ -193,6 +193,10 @@
 <p class="text-on-surface-variant font-semibold mt-2" id="current-date-range">01.04.2024 – 05.04.2024</p>
 </div>
 </div>
+<!-- Status Notification -->
+<div class="hidden no-print" id="status-notification-container">
+<!-- Rendered via JS -->
+</div>
 <!-- Task List -->
 <div class="space-y-6" id="task-container">
 <!-- Task items rendered via JS -->
@@ -372,7 +376,7 @@
 <div class="text-center md:text-left">
 <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
 <div class="flex items-center justify-center md:justify-start gap-3 mt-2">
-<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 20 • Individual State Logic</p>
+<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 21 • Interaction Lock Logic</p>
 <button class="text-[9px] text-on-surface-variant/30 hover:text-red-400 underline font-mono uppercase transition-colors" onclick="app.resetSystem()">App zurücksetzen</button>
 </div>
 </div>
@@ -421,7 +425,7 @@
 
     const app = {
         state: null,
-        STORAGE_KEY: 'doeltschi_v20_individual_app',
+        STORAGE_KEY: 'doeltschi_v21_lock_logic',
 
         init() {
             try {
@@ -501,6 +505,7 @@
             this.state.selectedStudentId = document.getElementById('student-filter').value;
             this.renderTasks();
             this.updateInstructions();
+            this.renderStatusNotification();
         },
 
         renderAll() {
@@ -518,11 +523,35 @@
             this.updateNavStyles();
             this.renderFilters();
             this.renderTasks();
+            this.renderStatusNotification();
             this.renderDashboard();
             this.renderStudentManagement();
             this.renderLegend();
             this.renderManageTasks();
             this.updateInstructions();
+        },
+
+        renderStatusNotification() {
+            const container = document.getElementById('status-notification-container');
+            if (!container) return;
+            
+            const sid = this.state.selectedStudentId;
+            const student = this.state.students.find(s => s.id === sid);
+            
+            if (sid !== 'all' && student && student.confirmed) {
+                container.classList.remove('hidden');
+                container.innerHTML = `
+                    <div class="mb-8 flex items-center gap-4 p-5 bg-primary/10 border border-primary/30 rounded-2xl text-primary">
+                        <span class="material-symbols-outlined text-3xl">lock_person</span>
+                        <div>
+                            <p class="font-bold text-sm">Plan abgeschlossen</p>
+                            <p class="text-xs opacity-80">Dieser Plan wurde bereits von den Eltern bestätigt und ist für Änderungen gesperrt.</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.classList.add('hidden');
+            }
         },
 
         updateInstructions() {
@@ -598,7 +627,16 @@
             const container = document.getElementById('task-container');
             if (!container) return;
             const filterId = this.state.selectedStudentId;
+            const studentData = this.state.students.find(s => s.id === filterId);
+            const isConfirmed = studentData && studentData.confirmed;
             
+            // Interaction is locked if: 
+            // 1. "all" is selected (preview only)
+            // 2. A student is selected AND their parents have confirmed (lock logic)
+            // UNLESS we are in teacher mode
+            const isStudentLockActive = filterId !== 'all' && isConfirmed && !this.state.isLehrer;
+            const isInteractionDisabled = filterId === 'all' || isStudentLockActive;
+
             let displayTasks = [];
             if (filterId === 'all') {
                 displayTasks = this.state.tasks.filter(t => t.studentId === 'all');
@@ -613,8 +651,7 @@
                     const student = t.studentId === 'all' ? { name: 'Ganze Klasse' } : this.state.students.find(s => s.id === t.studentId);
                     const done = this.isTaskDone(t.id, filterId);
                     const config = SUBJECT_CONFIG[t.subjectCode] || { name: 'Divers', color: '#64748b' };
-                    const isInteractionDisabled = filterId === 'all';
-
+                    
                     return `
                         <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-60 grayscale' : 'hover:border-primary/40 hover:shadow-md'}">
                             <div class="w-2.5" style="background-color: ${config.color}"></div>
@@ -637,9 +674,9 @@
                                             <span class="text-[11px] font-black uppercase tracking-widest ${done ? 'text-primary' : 'text-on-surface-variant'}">${done ? 'Erledigt' : 'Offen'}</span>
                                         </button>
                                     ` : `
-                                        <div class="mt-6 flex items-center justify-end gap-3 opacity-30 grayscale">
-                                            <span class="material-symbols-outlined text-3xl text-outline-variant">info</span>
-                                            <span class="text-[11px] font-black uppercase tracking-widest text-on-surface-variant">Vorschau</span>
+                                        <div class="mt-6 flex items-center justify-end gap-3 ${filterId === 'all' ? 'opacity-30 grayscale' : 'opacity-60 cursor-not-allowed'}">
+                                            <span class="material-symbols-outlined text-3xl ${done ? 'text-primary fill-1' : 'text-outline-variant'}">${done ? 'check_circle' : 'lock'}</span>
+                                            <span class="text-[11px] font-black uppercase tracking-widest ${done ? 'text-primary' : 'text-on-surface-variant'}">${done ? 'Erledigt' : 'Gesperrt'}</span>
                                         </div>
                                     `}
                                 </div>
@@ -652,6 +689,9 @@
             if (filterId !== 'all') {
                 const s = this.state.students.find(st => st.id === filterId);
                 if (s) {
+                    // Parent confirmation button is disabled if confirmed AND not in teacher mode
+                    const isBtnDisabled = s.confirmed && !this.state.isLehrer;
+
                     container.innerHTML += `
                         <div class="mt-16 bg-white border-4 ${s.confirmed ? 'border-primary' : 'border-dashed border-outline-variant/50'} p-12 rounded-3xl flex flex-col items-center text-center shadow-xl">
                             <div class="w-20 h-20 ${s.confirmed ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant/30'} rounded-full flex items-center justify-center mb-8 shadow-inner transition-all">
@@ -659,10 +699,19 @@
                             </div>
                             <h3 class="text-3xl font-black text-on-surface mb-4">Bestätigung der Eltern</h3>
                             <p class="text-on-surface-variant mb-10 max-w-md mx-auto text-base font-medium leading-relaxed">Ich bestätige hiermit, dass ich die oben aufgeführten Hausaufgaben gesehen habe.</p>
-                            <button onclick="app.confirmStudent('${s.id}')" class="px-12 py-5 ${s.confirmed ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-surface-container hover:bg-outline-variant text-on-surface'} rounded-full font-black uppercase tracking-[0.15em] transition-all transform hover:scale-[1.02]">
+                            
+                            <button 
+                                onclick="app.confirmStudent('${s.id}')" 
+                                ${isBtnDisabled ? 'disabled' : ''}
+                                class="px-12 py-5 ${s.confirmed ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-surface-container hover:bg-outline-variant text-on-surface'} rounded-full font-black uppercase tracking-[0.15em] transition-all transform ${isBtnDisabled ? 'opacity-90 cursor-default' : 'hover:scale-[1.02]'}">
                                 ${s.confirmed ? 'Bestätigt ✓' : 'Jetzt Bestätigen'}
                             </button>
+                            
                             ${s.confirmed ? `<div class="flex items-center gap-2 mt-6 text-primary"><span class="material-symbols-outlined text-sm">schedule</span><p class="text-[10px] font-bold uppercase tracking-widest">Am ${s.lastConfirmed} bestätigt</p></div>` : ''}
+                            
+                            ${this.state.isLehrer && s.confirmed ? `
+                                <button onclick="app.confirmStudent('${s.id}')" class="mt-4 text-[10px] font-bold uppercase text-red-500 hover:underline">Sperre als Lehrperson aufheben</button>
+                            ` : ''}
                         </div>
                     `;
                 }
@@ -836,12 +885,9 @@
         deleteTask(taskId) {
             if (confirm("Aufgabe wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.")) {
                 this.state.tasks = this.state.tasks.filter(t => t.id !== taskId);
-                
-                // Also remove from individual completed lists if needed
                 for (const sid in this.state.completedTasks) {
                     this.state.completedTasks[sid] = this.state.completedTasks[sid].filter(id => id !== taskId);
                 }
-                
                 this.persist();
                 this.renderAll();
             }
@@ -850,6 +896,10 @@
         toggleTaskStatus(taskId) {
             const studentId = this.state.selectedStudentId;
             if (studentId === 'all') return;
+
+            // Lock check: prevent toggle if confirmed and not in teacher mode
+            const s = this.state.students.find(st => st.id === studentId);
+            if (s && s.confirmed && !this.state.isLehrer) return;
 
             if (!this.state.completedTasks[studentId]) {
                 this.state.completedTasks[studentId] = [];
@@ -871,6 +921,9 @@
         confirmStudent(id) {
             const s = this.state.students.find(st => st.id === id);
             if (s) { 
+                // Teacher can always toggle. Student can only set to true (once true, locked)
+                if (s.confirmed && !this.state.isLehrer) return;
+
                 s.confirmed = !s.confirmed; 
                 s.lastConfirmed = s.confirmed ? new Date().toLocaleDateString('de-CH', {
                     day: '2-digit',
@@ -881,6 +934,7 @@
                 this.renderTasks(); 
                 this.renderDashboard(); 
                 this.updateInstructions(); 
+                this.renderStatusNotification();
             }
         },
 
