@@ -5,16 +5,23 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>doeltschi | Digitaler Aufgabenplaner</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Icons Library -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
 <style>
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .checkmark-active { font-variation-settings: 'FILL' 1; color: #0058bc; }
+        .material-icons { font-size: 20px; vertical-align: middle; }
         [v-cloak] { display: none; }
         .worksheet-pattern {
             background-color: #f8fafc;
             background-image: radial-gradient(#cbd5e1 0.5px, transparent 0.5px);
             background-size: 24px 24px;
         }
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+        }
+        .animate-pulse-soft { animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        
         @media print {
             .no-print { display: none !important; }
             .print-only { display: block !important; }
@@ -38,13 +45,14 @@
                         "on-surface-variant": "#64748b",
                     },
                     "borderRadius": {
-                        "DEFAULT": "0.75rem",
-                        "lg": "1rem",
-                        "xl": "1.5rem",
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
                     },
                     "spacing": {
                         "gutter": "1.5rem",
-                        "input-padding": "0.75rem"
+                        "input-padding": "1rem"
                     },
                     "fontFamily": {
                         "h1": ["Inter", "sans-serif"],
@@ -55,36 +63,39 @@
         }
     </script>
 </head>
-<body class="bg-background text-on-surface worksheet-pattern min-h-screen selection:bg-blue-100">
+<body class="bg-background text-on-surface worksheet-pattern min-h-screen selection:bg-blue-100 font-body">
 <div class="flex flex-col min-h-screen" id="app">
 <!-- Top App Bar -->
 <header class="bg-surface/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50 no-print">
-<div class="flex justify-between items-center w-full px-gutter max-w-[1000px] mx-auto h-16">
-<div class="flex items-center gap-4">
+<div class="flex justify-between items-center w-full px-gutter max-w-[1000px] mx-auto h-20">
+<div class="flex items-center gap-6">
 <h1 class="text-2xl font-black tracking-tight text-primary">doeltschi</h1>
-<div class="hidden md:flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold uppercase text-slate-500">
-<span class="material-symbols-outlined text-[14px]">bolt</span>
+<div class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase text-slate-500 animate-pulse-soft">
+<span class="material-icons text-[14px]">bolt</span>
 <span>Lokal aktiv</span>
 </div>
 </div>
-<div class="flex items-center gap-2">
-<nav class="hidden md:flex mr-4 gap-1">
-<button class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors" id="nav-Planer" onclick="app.setTab('Planer')">Planer</button>
-<button class="hidden px-4 py-2 rounded-lg text-sm font-semibold transition-colors" id="nav-Dashboard" onclick="app.setTab('Dashboard')">Lehrer-Modus</button>
-<button class="px-4 py-2 rounded-lg text-sm font-semibold transition-colors" id="nav-Anleitung" onclick="app.setTab('Anleitung')">Anleitung</button>
+<div class="flex items-center gap-4">
+<nav class="hidden md:flex mr-4 gap-2">
+<button class="px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Planer" onclick="app.setTab('Planer')">Planer</button>
+<button class="hidden px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Dashboard" onclick="app.setTab('Dashboard')">Lehrer-Modus</button>
+<button class="px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Anleitung" onclick="app.setTab('Anleitung')">Anleitung</button>
 </nav>
-<button class="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors text-sm font-bold uppercase" onclick="app.toggleLehrerModus()">
-<span id="lehrer-icon-emoji">🔒</span>
+<button class="flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full transition-colors text-sm font-bold uppercase shadow-sm" onclick="app.toggleLehrerModus()">
+<span class="material-icons text-[18px]" id="lehrer-icon-type">lock_outline</span>
 <span class="hidden sm:inline" id="lehrer-text">Lehrer-Bereich</span>
 </button>
 </div>
 </div>
 </header>
-<main class="flex-1 w-full max-w-[1000px] mx-auto px-gutter py-8">
+<main class="flex-1 w-full max-w-[1000px] mx-auto px-gutter py-12">
 <!-- Lehrer Login Modal -->
 <div class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm no-print" id="lehrer-modal">
 <div class="bg-surface rounded-2xl p-8 max-w-md w-full shadow-2xl border border-outline-variant">
-<h3 class="text-xl font-bold mb-4">Lehrer-Bereich</h3>
+<div class="flex items-center gap-3 mb-4">
+<span class="material-icons text-primary">lock</span>
+<h3 class="text-xl font-bold">Lehrer-Bereich</h3>
+</div>
 <p class="text-on-surface-variant mb-6 text-sm">Bitte geben Sie das Passwort ein, um die Klassenliste und Aufgaben zu verwalten.</p>
 <input class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none" id="lehrer-password" placeholder="Passwort (lehrer123)" type="password"/>
 <div class="flex justify-end gap-3">
@@ -96,88 +107,97 @@
 <!-- Content Area: Planer -->
 <div class="space-y-12" id="content-planner">
 <!-- Instructions Row (Steps 1-4) -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 no-print">
-<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center transition-all" id="step-1">
-<div class="w-8 h-8 rounded-full bg-blue-100 text-primary font-bold flex items-center justify-center mb-2">1</div>
-<p class="text-[11px] font-bold uppercase text-slate-400">Name wählen</p>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 no-print">
+<div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center transition-all" id="step-1">
+<div class="w-10 h-10 rounded-full bg-blue-100 text-primary font-bold flex items-center justify-center mb-3">1</div>
+<p class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Name wählen</p>
 </div>
-<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center transition-all opacity-50" id="step-2">
-<div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-2">2</div>
-<p class="text-[11px] font-bold uppercase text-slate-400">Aufgaben prüfen</p>
+<div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center transition-all opacity-50" id="step-2">
+<div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-3">2</div>
+<p class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Aufgaben prüfen</p>
 </div>
-<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center transition-all opacity-50" id="step-3">
-<div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-2">3</div>
-<p class="text-[11px] font-bold uppercase text-slate-400">Erledigen</p>
+<div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center transition-all opacity-50" id="step-3">
+<div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-3">3</div>
+<p class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Erledigen</p>
 </div>
-<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center transition-all opacity-50" id="step-4">
-<div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-2">4</div>
-<p class="text-[11px] font-bold uppercase text-slate-400">Eltern zeigen</p>
+<div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center transition-all opacity-50" id="step-4">
+<div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-3">4</div>
+<p class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Eltern zeigen</p>
 </div>
 </div>
-<div class="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-slate-200 pb-8">
-<div class="w-full md:w-72">
-<label class="block text-[10px] font-black uppercase text-primary mb-2 tracking-widest">👤 Schüler auswählen</label>
-<select class="w-full bg-white border border-slate-300 rounded-xl font-semibold py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none appearance-none" id="student-filter" onchange="app.handleFilterChange()">
+<div class="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-slate-200 pb-10">
+<div class="w-full md:w-80">
+<label class="flex items-center gap-2 text-[10px] font-black uppercase text-primary mb-3 tracking-widest">
+<span class="material-icons text-[14px]">person_outline</span> Schüler auswählen
+                    </label>
+<div class="relative">
+<select class="w-full bg-white border border-slate-300 rounded-xl font-semibold py-4 px-5 focus:ring-2 focus:ring-primary focus:border-transparent outline-none appearance-none shadow-sm pr-12" id="student-filter" onchange="app.handleFilterChange()">
 <option value="all">Alle Schüler</option>
 </select>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+<span class="material-icons">expand_more</span>
+</div>
+</div>
 </div>
 <div class="text-right w-full md:w-auto">
-<h2 class="text-4xl font-black text-slate-900 leading-none" id="current-week-display">Woche 14</h2>
-<p class="text-slate-500 font-medium mt-1" id="current-date-range">01.04.2024 – 05.04.2024</p>
+<h2 class="text-5xl font-black text-slate-900 leading-none tracking-tight" id="current-week-display">Woche 14</h2>
+<p class="text-slate-500 font-semibold mt-2" id="current-date-range">01.04.2024 – 05.04.2024</p>
 </div>
 </div>
-<div class="space-y-4" id="task-container"></div>
+<div class="space-y-6" id="task-container"></div>
 <!-- Color Legend -->
-<div class="no-print mt-12 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-<h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Farblegende der Fächer</h3>
-<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="color-legend-planner"></div>
+<div class="no-print mt-16 bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+<h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Farblegende der Fächer</h3>
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4" id="color-legend-planner"></div>
 </div>
 </div>
 <!-- Content Area: Dashboard -->
 <div class="hidden space-y-8" id="content-dashboard">
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 <h2 class="text-3xl font-black text-slate-900">Klassen-Dashboard</h2>
-<div class="flex gap-2">
-<button class="px-4 py-2 border border-slate-200 bg-white rounded-lg text-xs font-bold uppercase text-slate-600 flex items-center gap-2 hover:bg-slate-50" onclick="window.print()">
-<span class="material-symbols-outlined text-[18px]">print</span> Drucken
+<div class="flex gap-3">
+<button class="px-5 py-2.5 border border-slate-200 bg-white rounded-lg text-xs font-bold uppercase text-slate-600 flex items-center gap-2 hover:bg-slate-50 transition-colors" onclick="window.print()">
+<span class="material-icons text-[18px]">print</span> Drucken
                     </button>
-<button class="px-4 py-2 border border-slate-200 bg-white rounded-lg text-xs font-bold uppercase text-slate-600 flex items-center gap-2 hover:bg-slate-50" onclick="app.exportData()">
-<span class="material-symbols-outlined text-[18px]">download</span> Export
+<button class="px-5 py-2.5 border border-slate-200 bg-white rounded-lg text-xs font-bold uppercase text-slate-600 flex items-center gap-2 hover:bg-slate-50 transition-colors" onclick="app.exportData()">
+<span class="material-icons text-[18px]">download</span> Export
                     </button>
 </div>
 </div>
 <!-- Stats -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-<p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Erledigungsquote</p>
-<div class="text-3xl font-black text-primary" id="dashboard-quote">0%</div>
-<div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
-<div class="bg-primary h-full transition-all duration-500" id="dashboard-progress-bar" style="width: 0%"></div>
+<p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Erledigungsquote</p>
+<div class="text-4xl font-black text-primary" id="dashboard-quote">0%</div>
+<div class="w-full bg-slate-100 h-2.5 rounded-full mt-4 overflow-hidden">
+<div class="bg-primary h-full transition-all duration-700" id="dashboard-progress-bar" style="width: 0%"></div>
 </div>
 </div>
 <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-<p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Elternbestätigungen</p>
-<div class="text-3xl font-black text-slate-700" id="dashboard-confirmations">0/0</div>
-<p class="text-xs text-slate-400 mt-1" id="dashboard-pending-text">Berechne...</p>
+<p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Elternbestätigungen</p>
+<div class="text-4xl font-black text-slate-700" id="dashboard-confirmations">0/0</div>
+<p class="text-xs text-slate-400 mt-2 font-semibold" id="dashboard-pending-text">Berechne...</p>
 </div>
-<div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center">
-<div class="w-12 h-12 bg-slate-50 rounded-lg flex items-center justify-center mb-1 text-slate-400">
-<span class="material-symbols-outlined text-3xl">qr_code_2</span>
+<div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center text-center">
+<div class="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mb-2 text-slate-400">
+<span class="material-icons text-3xl">qr_code_2</span>
 </div>
-<p class="text-[10px] font-bold uppercase text-slate-400">Klassen-Login</p>
+<p class="text-[10px] font-bold uppercase text-slate-400 tracking-widest">Klassen-Login</p>
 </div>
 </div>
 <!-- Add Task Form -->
-<div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-<h3 class="text-lg font-bold mb-6 text-slate-800">Neue Aufgabe zuteilen</h3>
-<form class="grid grid-cols-1 md:grid-cols-3 gap-4" id="add-task-form" onsubmit="app.addTask(event)">
+<div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+<h3 class="text-lg font-bold mb-6 text-slate-800 flex items-center gap-2">
+<span class="material-icons text-primary">add_task</span> Neue Aufgabe zuteilen
+                </h3>
+<form class="grid grid-cols-1 md:grid-cols-3 gap-6" id="add-task-form" onsubmit="app.addTask(event)">
 <div>
-<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Schüler</label>
-<select class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary" id="task-student"></select>
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Schüler</label>
+<select class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary outline-none" id="task-student"></select>
 </div>
 <div>
-<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Fach</label>
-<select class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary" id="task-subject">
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Fach</label>
+<select class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary outline-none" id="task-subject">
 <option value="DE">Deutsch (DE)</option>
 <option value="MA">Mathematik (MA)</option>
 <option value="E">Englisch (E)</option>
@@ -191,47 +211,45 @@
 </select>
 </div>
 <div>
-<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Datum</label>
-<input class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary" id="task-deadline" placeholder="15.04.2024" required="" type="text"/>
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Datum</label>
+<input class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary outline-none" id="task-deadline" placeholder="15.04.2024" required="" type="text"/>
 </div>
 <div class="md:col-span-2">
-<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Beschreibung</label>
-<input class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary" id="task-description" placeholder="Aufgabe beschreiben..." required="" type="text"/>
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Beschreibung</label>
+<input class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary outline-none" id="task-description" placeholder="Aufgabe beschreiben..." required="" type="text"/>
 </div>
 <div class="flex items-end">
-<button class="w-full py-2 bg-primary text-white rounded-lg font-bold text-sm uppercase" type="submit">Hinzufügen</button>
+<button class="w-full py-3.5 bg-primary text-white rounded-xl font-bold text-sm uppercase shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all" type="submit">Hinzufügen</button>
 </div>
 </form>
 </div>
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 <div class="lg:col-span-2 space-y-8">
-<!-- Progress Table -->
 <section class="space-y-4">
 <h3 class="text-xl font-bold text-slate-800">Fortschritt pro Schüler</h3>
 <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
 <table class="w-full text-left text-sm">
 <thead class="bg-slate-50 border-b border-slate-200">
 <tr>
-<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Schüler</th>
-<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Aufgaben</th>
-<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Zuletzt</th>
-<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Aktion</th>
+<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px] tracking-widest">Schüler</th>
+<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px] tracking-widest">Aufgaben</th>
+<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px] tracking-widest">Zuletzt</th>
+<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px] tracking-widest">Aktion</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-slate-100" id="student-table-body"></tbody>
 </table>
 </div>
 </section>
-<!-- Parent Confirmation Table -->
 <section class="space-y-4">
 <h3 class="text-xl font-bold text-slate-800">Eltern-Bestätigungen</h3>
 <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
 <table class="w-full text-left text-sm">
 <thead class="bg-slate-50 border-b border-slate-200">
 <tr>
-<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Schüler</th>
-<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Status</th>
-<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Bestätigt am</th>
+<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px] tracking-widest">Schüler</th>
+<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px] tracking-widest">Status</th>
+<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px] tracking-widest">Bestätigt am</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-slate-100" id="confirmation-table-body"></tbody>
@@ -242,14 +260,16 @@
 <div class="space-y-4">
 <div class="flex justify-between items-center">
 <h3 class="text-xl font-bold text-slate-800">Klassenliste</h3>
-<button class="text-primary text-[10px] font-bold uppercase hover:underline" onclick="app.importStudentList()">Import (.txt)</button>
+<button class="flex items-center gap-1 text-primary text-[10px] font-bold uppercase hover:underline" onclick="app.importStudentList()">
+<span class="material-icons text-[14px]">upload_file</span> Import (.txt)
+                        </button>
 </div>
-<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
-<div class="space-y-2 max-h-60 overflow-y-auto" id="student-management-list"></div>
+<div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+<div class="space-y-2 max-h-60 overflow-y-auto pr-2" id="student-management-list"></div>
 <div class="flex gap-2">
-<input class="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-primary" id="new-student-name" placeholder="Name..." type="text"/>
-<button class="p-2 bg-slate-800 text-white rounded-lg" onclick="app.addStudent()">
-<span class="material-symbols-outlined text-[20px]">person_add</span>
+<input class="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary" id="new-student-name" placeholder="Name..." type="text"/>
+<button class="p-3 bg-slate-800 text-white rounded-xl hover:bg-slate-700 transition-colors" onclick="app.addStudent()">
+<span class="material-icons">person_add</span>
 </button>
 </div>
 </div>
@@ -257,14 +277,20 @@
 </div>
 </div>
 <!-- Content Area: Anleitung -->
-<div class="hidden space-y-6" id="content-guide">
+<div class="hidden space-y-8" id="content-guide">
 <h2 class="text-3xl font-black text-slate-900">Anleitung</h2>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-<div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="bg-white border border-slate-200 p-8 rounded-2xl shadow-sm">
+<div class="w-12 h-12 bg-blue-50 text-primary rounded-xl flex items-center justify-center mb-6">
+<span class="material-icons text-3xl">school</span>
+</div>
 <h3 class="text-xl font-bold mb-3 text-slate-800">Schüler &amp; Eltern</h3>
 <p class="text-slate-600 text-sm leading-relaxed">Wählen Sie Ihren Namen aus dem Menü. Erledigen Sie Aufgaben und haken Sie diese ab. Am Ende der Woche können die Eltern die Liste direkt auf dem Gerät bestätigen.</p>
 </div>
-<div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+<div class="bg-white border border-slate-200 p-8 rounded-2xl shadow-sm">
+<div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center mb-6">
+<span class="material-icons text-3xl">supervisor_account</span>
+</div>
 <h3 class="text-xl font-bold mb-3 text-slate-800">Lehrpersonen</h3>
 <p class="text-slate-600 text-sm leading-relaxed">Nutzen Sie den Lehrer-Bereich (Passwort: lehrer123) um Aufgaben für die ganze Klasse oder einzelne Schüler zu erstellen und den Fortschritt zu überwachen.</p>
 </div>
@@ -272,51 +298,60 @@
 </div>
 </main>
 <!-- Footer -->
-<footer class="bg-white border-t border-slate-200 no-print py-10">
-<div class="max-w-[1000px] mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-6">
+<footer class="bg-white border-t border-slate-200 no-print py-12 mt-12">
+<div class="max-w-[1000px] mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-8">
 <div class="text-center md:text-left">
-<p class="text-xs font-bold text-slate-400 uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
-<div class="flex items-center justify-center md:justify-start gap-2 mt-1">
-<p class="text-[9px] text-slate-300 font-mono uppercase">Version 15 • Ultimate Fix</p>
-<button class="text-[9px] text-slate-200 hover:text-red-300 underline font-mono uppercase ml-2" onclick="app.resetSystem()">App zurücksetzen</button>
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
+<div class="flex items-center justify-center md:justify-start gap-3 mt-2">
+<p class="text-[9px] text-slate-300 font-mono uppercase">Version 16 • Icon Fix</p>
+<button class="text-[9px] text-slate-200 hover:text-red-400 underline font-mono uppercase transition-colors" onclick="app.resetSystem()">App zurücksetzen</button>
 </div>
 </div>
-<div class="flex gap-8">
-<a class="text-xs font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Datenschutz</a>
-<a class="text-xs font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Impressum</a>
-<a class="text-xs font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Hilfe</a>
+<div class="flex gap-10">
+<a class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Datenschutz</a>
+<a class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Impressum</a>
+<a class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Hilfe</a>
 </div>
 </div>
 </footer>
 <!-- Mobile Nav -->
-<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-3 z-50 no-print">
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-200 flex justify-around py-4 z-50 no-print shadow-2xl">
 <button class="flex flex-col items-center gap-1 text-slate-400" id="mobile-nav-Planer" onclick="app.setTab('Planer')">
-<span class="material-symbols-outlined">calendar_today</span>
-<span class="text-[9px] font-bold uppercase">Planer</span>
+<span class="material-icons">calendar_today</span>
+<span class="text-[9px] font-bold uppercase tracking-wider">Planer</span>
 </button>
 <button class="flex flex-col items-center gap-1 text-slate-400" id="mobile-nav-Dashboard" onclick="app.toggleLehrerModus()">
-<span class="material-symbols-outlined">settings_suggest</span>
-<span class="text-[9px] font-bold uppercase">Admin</span>
+<span class="material-icons">admin_panel_settings</span>
+<span class="text-[9px] font-bold uppercase tracking-wider">Admin</span>
 </button>
 <button class="flex flex-col items-center gap-1 text-slate-400" id="mobile-nav-Anleitung" onclick="app.setTab('Anleitung')">
-<span class="material-symbols-outlined">help</span>
-<span class="text-[9px] font-bold uppercase">Hilfe</span>
+<span class="material-icons">help_outline</span>
+<span class="text-[9px] font-bold uppercase tracking-wider">Hilfe</span>
 </button>
 </nav>
 </div>
 <!-- Print View -->
-<div class="hidden print-only bg-white p-10 min-h-screen text-black">
-<div class="flex justify-between items-end border-b-2 border-black pb-4 mb-8">
+<div class="hidden print-only bg-white p-12 min-h-screen text-black">
+<div class="flex justify-between items-end border-b-4 border-black pb-6 mb-10">
 <div>
-<h1 class="text-3xl font-bold">doeltschi Hausaufgaben</h1>
-<p class="text-lg">Wochenplan | <span id="print-student-name">Alle</span></p>
+<h1 class="text-4xl font-black uppercase">doeltschi</h1>
+<p class="text-xl font-bold mt-2">Hausaufgaben Wochenplan | <span id="print-student-name">Alle</span></p>
 </div>
+<div class="text-right">
 <p class="text-sm italic">Gedruckt am: <span id="print-date"></span></p>
+<p class="text-sm font-bold mt-1" id="print-week-range"></p>
 </div>
-<div class="space-y-4" id="print-content"></div>
-<div class="mt-20 border-t border-black pt-4 grid grid-cols-2 gap-8 text-center">
-<div class="h-12 border-b border-black">Unterschrift Schüler/in</div>
-<div class="h-12 border-b border-black">Unterschrift Eltern</div>
+</div>
+<div class="space-y-6" id="print-content"></div>
+<div class="mt-24 border-t-2 border-black pt-8 grid grid-cols-2 gap-12 text-center">
+<div>
+<div class="h-20 border-b border-black"></div>
+<p class="mt-3 text-sm font-bold uppercase tracking-wider">Unterschrift Schüler/in</p>
+</div>
+<div>
+<div class="h-20 border-b border-black"></div>
+<p class="mt-3 text-sm font-bold uppercase tracking-wider">Unterschrift Eltern</p>
+</div>
 </div>
 </div>
 <script>
@@ -351,31 +386,27 @@
 
     const app = {
         state: null,
-        STORAGE_KEY: 'doeltschi_v15_ultimate',
+        STORAGE_KEY: 'doeltschi_v16_icons',
 
         init() {
-            // STABILITY FIX: Try-catch around data loading
             try {
                 const savedData = localStorage.getItem(this.STORAGE_KEY);
                 if (savedData) {
                     const parsed = JSON.parse(savedData);
-                    // Minimal validation: Ensure basic structure exists
                     if (Array.isArray(parsed.students) && Array.isArray(parsed.tasks)) {
                         this.state = { ...INITIAL_STATE, ...parsed, isLehrer: false, currentTab: 'Planer' };
-                    } else {
-                        throw new Error("Invalid structure");
-                    }
+                    } else { throw new Error("Invalid structure"); }
                 } else {
                     this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
                 }
             } catch (error) {
-                console.error("Critical: Data corruption detected. Resetting to defaults.", error);
-                localStorage.removeItem(this.STORAGE_KEY);
+                console.error("Critical Data Error. Resetting.", error);
                 this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
             }
             
             this.renderAll();
             document.getElementById('print-date').textContent = new Date().toLocaleDateString('de-CH');
+            document.getElementById('print-week-range').textContent = '01.04.2024 – 05.04.2024';
         },
 
         persist() {
@@ -384,7 +415,7 @@
 
         resetSystem() {
             if (confirm("Möchten Sie wirklich alle Daten löschen? Dies setzt die App komplett zurück.")) {
-                localStorage.clear(); // Clear everything just in case
+                localStorage.removeItem(this.STORAGE_KEY);
                 window.location.reload();
             }
         },
@@ -440,7 +471,7 @@
             const dashboard = document.getElementById('content-dashboard');
             const guide = document.getElementById('content-guide');
             const navDashboard = document.getElementById('nav-Dashboard');
-            const lehrerEmoji = document.getElementById('lehrer-icon-emoji');
+            const lehrerIcon = document.getElementById('lehrer-icon-type');
             const lehrerText = document.getElementById('lehrer-text');
 
             planner.classList.toggle('hidden', this.state.currentTab !== 'Planer');
@@ -448,7 +479,7 @@
             guide.classList.toggle('hidden', this.state.currentTab !== 'Anleitung');
 
             navDashboard.classList.toggle('hidden', !this.state.isLehrer);
-            lehrerEmoji.textContent = this.state.isLehrer ? '🔓' : '🔒';
+            lehrerIcon.textContent = this.state.isLehrer ? 'lock_open' : 'lock_outline';
             lehrerText.textContent = this.state.isLehrer ? 'Abmelden' : 'Lehrer-Bereich';
 
             this.updateNavStyles();
@@ -461,43 +492,31 @@
         },
 
         updateInstructions() {
-            const s1 = document.getElementById('step-1');
-            const s2 = document.getElementById('step-2');
-            const s3 = document.getElementById('step-3');
-            const s4 = document.getElementById('step-4');
-            
+            const steps = [1, 2, 3, 4].map(i => document.getElementById(`step-${i}`));
             const studentSelected = this.state.selectedStudentId !== 'all';
             const student = studentSelected ? this.state.students.find(s => s.id === this.state.selectedStudentId) : null;
-            
             const filteredTasks = studentSelected ? this.state.tasks.filter(t => t.studentId === this.state.selectedStudentId) : [];
             const anyDone = filteredTasks.some(t => t.status === 'erledigt');
             const allDone = filteredTasks.length > 0 && filteredTasks.every(t => t.status === 'erledigt');
-            const isConfirmed = student && student.confirmed;
 
-            [s1, s2, s3, s4].forEach(el => el.classList.add('opacity-50'));
+            steps.forEach(el => el.classList.add('opacity-50'));
 
-            if (!studentSelected) {
-                s1.classList.remove('opacity-50');
-            } else if (!anyDone) {
-                s2.classList.remove('opacity-50');
-            } else if (!allDone) {
-                s3.classList.remove('opacity-50');
-            } else {
-                s4.classList.remove('opacity-50');
-            }
+            if (!studentSelected) steps[0].classList.remove('opacity-50');
+            else if (!anyDone) steps[1].classList.remove('opacity-50');
+            else if (!allDone) steps[2].classList.remove('opacity-50');
+            else steps[3].classList.remove('opacity-50');
         },
 
         renderLegend() {
             const legendHtml = Object.keys(SUBJECT_CONFIG).map(code => {
                 const cfg = SUBJECT_CONFIG[code];
                 return `
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 rounded-full" style="background-color: ${cfg.color}"></div>
-                        <span class="text-[10px] font-bold text-slate-600 uppercase tracking-tight">${cfg.name}</span>
+                    <div class="flex items-center gap-3">
+                        <div class="w-3.5 h-3.5 rounded-full shadow-sm" style="background-color: ${cfg.color}"></div>
+                        <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">${cfg.name}</span>
                     </div>
                 `;
             }).join('');
-            
             const lp = document.getElementById('color-legend-planner');
             if (lp) lp.innerHTML = legendHtml;
         },
@@ -511,8 +530,8 @@
 
                 if (desktop) {
                     desktop.className = isActive 
-                        ? "px-4 py-2 rounded-lg text-sm font-bold bg-primary text-white" 
-                        : "px-4 py-2 rounded-lg text-sm font-semibold text-slate-500 hover:bg-slate-50";
+                        ? "px-5 py-2.5 rounded-full text-sm font-bold bg-primary text-white shadow-lg shadow-primary/20" 
+                        : "px-5 py-2.5 rounded-full text-sm font-bold text-slate-500 hover:bg-slate-100 transition-all";
                 }
                 if (mobile) {
                     mobile.classList.toggle('text-primary', isActive);
@@ -544,7 +563,7 @@
             const filtered = filterId === 'all' ? this.state.tasks : this.state.tasks.filter(t => t.studentId === filterId);
 
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="py-20 text-center border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold uppercase tracking-widest text-xs">Keine Aufgaben geplant</div>`;
+                container.innerHTML = `<div class="py-24 text-center border-4 border-dashed border-slate-100 rounded-3xl text-slate-300 font-black uppercase tracking-[0.2em] text-sm">Keine Aufgaben geplant</div>`;
             } else {
                 container.innerHTML = filtered.map(t => {
                     const student = this.state.students.find(s => s.id === t.studentId);
@@ -553,24 +572,24 @@
                     const subj = t.subject || (SUBJECT_CONFIG[t.subjectCode] ? SUBJECT_CONFIG[t.subjectCode].name : '???');
                     
                     return `
-                        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-50 grayscale' : 'hover:border-primary/30'}">
-                            <div class="w-2" style="background-color: ${color}"></div>
-                            <div class="flex-1 p-6 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-60 grayscale' : 'hover:border-primary/40 hover:shadow-md'}">
+                            <div class="w-3" style="background-color: ${color}"></div>
+                            <div class="flex-1 p-8 grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
                                 <div>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Wer</p>
-                                    <p class="font-bold text-slate-800">${student ? student.name : 'Unbekannt'}</p>
-                                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" style="background-color: ${color}20; color: ${color}">${subj}</span>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Wer</p>
+                                    <p class="font-bold text-slate-900 text-lg">${student ? student.name : 'Unbekannt'}</p>
+                                    <span class="inline-block mt-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style="background-color: ${color}15; color: ${color}">${subj}</span>
                                 </div>
                                 <div class="md:col-span-2">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Aufgabe</p>
-                                    <p class="text-sm font-medium text-slate-700">${t.description}</p>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Aufgabe</p>
+                                    <p class="text-base font-medium text-slate-700 leading-relaxed">${t.description}</p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Bis</p>
-                                    <p class="text-sm font-black text-slate-900">${t.deadline}</p>
-                                    <button onclick="app.toggleTaskStatus('${t.id}')" class="mt-4 flex items-center justify-end gap-2 group ml-auto">
-                                        <span class="material-symbols-outlined ${done ? 'checkmark-active text-primary' : 'text-slate-200'}">${done ? 'check_circle' : 'radio_button_unchecked'}</span>
-                                        <span class="text-[10px] font-bold uppercase ${done ? 'text-primary' : 'text-slate-400'}">${done ? 'Erledigt' : 'Offen'}</span>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Bis</p>
+                                    <p class="text-base font-black text-slate-900">${t.deadline}</p>
+                                    <button onclick="app.toggleTaskStatus('${t.id}')" class="mt-6 flex items-center justify-end gap-3 group ml-auto">
+                                        <span class="material-icons text-2xl ${done ? 'text-primary' : 'text-slate-200'} transition-all">${done ? 'check_circle' : 'radio_button_unchecked'}</span>
+                                        <span class="text-[11px] font-black uppercase tracking-widest ${done ? 'text-primary' : 'text-slate-400'}">${done ? 'Erledigt' : 'Offen'}</span>
                                     </button>
                                 </div>
                             </div>
@@ -583,16 +602,16 @@
                 const s = this.state.students.find(st => st.id === filterId);
                 if (s) {
                     container.innerHTML += `
-                        <div class="mt-12 bg-white border-2 ${s.confirmed ? 'border-primary' : 'border-dashed border-slate-300'} p-10 rounded-2xl flex flex-col items-center text-center shadow-md">
-                            <div class="w-16 h-16 bg-blue-50 text-primary rounded-full flex items-center justify-center mb-6">
-                                <span class="material-symbols-outlined text-4xl">${s.confirmed ? 'verified' : 'signature'}</span>
+                        <div class="mt-16 bg-white border-4 ${s.confirmed ? 'border-primary' : 'border-dashed border-slate-200'} p-12 rounded-3xl flex flex-col items-center text-center shadow-xl">
+                            <div class="w-20 h-20 ${s.confirmed ? 'bg-primary text-white' : 'bg-slate-50 text-slate-300'} rounded-full flex items-center justify-center mb-8 shadow-inner transition-all">
+                                <span class="material-icons text-5xl">${s.confirmed ? 'verified_user' : 'draw'}</span>
                             </div>
-                            <h3 class="text-2xl font-black text-slate-900 mb-2">Bestätigung der Eltern</h3>
-                            <p class="text-slate-500 mb-8 max-w-md mx-auto text-sm font-medium">Ich bestätige hiermit, dass ich die oben aufgeführten Hausaufgaben gesehen habe.</p>
-                            <button onclick="app.confirmStudent('${s.id}')" class="px-10 py-4 ${s.confirmed ? 'bg-primary text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-800'} rounded-xl font-black uppercase tracking-widest transition-all">
+                            <h3 class="text-3xl font-black text-slate-900 mb-4">Bestätigung der Eltern</h3>
+                            <p class="text-slate-500 mb-10 max-w-md mx-auto text-base font-medium leading-relaxed">Ich bestätige hiermit, dass ich die oben aufgeführten Hausaufgaben gesehen habe.</p>
+                            <button onclick="app.confirmStudent('${s.id}')" class="px-12 py-5 ${s.confirmed ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-slate-100 hover:bg-slate-200 text-slate-800'} rounded-2xl font-black uppercase tracking-[0.15em] transition-all transform hover:scale-[1.02]">
                                 ${s.confirmed ? 'Bestätigt ✓' : 'Jetzt Bestätigen'}
                             </button>
-                            ${s.confirmed ? `<p class="mt-4 text-[10px] font-bold text-primary uppercase">Erfolgreich bestätigt am ${s.lastConfirmed}</p>` : ''}
+                            ${s.confirmed ? `<div class="flex items-center gap-2 mt-6 text-primary"><span class="material-icons text-sm">schedule</span><p class="text-[10px] font-bold uppercase tracking-widest">Am ${s.lastConfirmed} bestätigt</p></div>` : ''}
                         </div>
                     `;
                 }
@@ -620,19 +639,20 @@
                 const doneCount = sTasks.filter(t => t.status === 'erledigt').length;
                 const totalCount = sTasks.length;
                 const progress = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
-                
                 const latestTask = sTasks[sTasks.length - 1];
                 const subjCode = latestTask ? latestTask.subjectCode : '-';
                 const subjColor = latestTask && SUBJECT_CONFIG[subjCode] ? SUBJECT_CONFIG[subjCode].color : '#e2e8f0';
 
                 return `
-                    <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-6 py-4">
-                            <p class="font-bold text-slate-800">${s.name}</p>
+                    <tr class="hover:bg-slate-50/50 transition-colors">
+                        <td class="px-6 py-5">
+                            <p class="font-bold text-slate-800 flex items-center gap-2">
+                                <span class="material-icons text-slate-300 text-lg">person</span> ${s.name}
+                            </p>
                         </td>
-                        <td class="px-6 py-4">
-                            <div class="flex flex-col gap-1">
-                                <div class="flex items-center justify-between text-[10px] font-bold uppercase text-slate-400">
+                        <td class="px-6 py-5">
+                            <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between text-[10px] font-bold uppercase text-slate-400 tracking-wider">
                                     <span>${doneCount}/${totalCount}</span>
                                     <span>${progress}%</span>
                                 </div>
@@ -641,26 +661,32 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4">
-                             <span class="inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase text-white" style="background-color: ${subjColor}">${subjCode}</span>
+                        <td class="px-6 py-5">
+                             <span class="inline-block px-3 py-1 rounded text-[9px] font-black uppercase text-white shadow-sm" style="background-color: ${subjColor}">${subjCode}</span>
                         </td>
-                        <td class="px-6 py-4">
-                            <button onclick="app.viewDetails('${s.id}')" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-md text-primary font-bold uppercase text-[10px]">Ansehen</button>
+                        <td class="px-6 py-5">
+                            <button onclick="app.viewDetails('${s.id}')" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-primary font-bold uppercase text-[10px] transition-all">
+                                <span class="material-icons text-[14px]">visibility</span> Details
+                            </button>
                         </td>
                     </tr>
                 `;
             }).join('');
 
             ctbody.innerHTML = this.state.students.map(s => `
-                <tr class="hover:bg-slate-50">
-                    <td class="px-6 py-4 font-bold text-slate-800">${s.name}</td>
-                    <td class="px-6 py-4">
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-5 font-bold text-slate-800">${s.name}</td>
+                    <td class="px-6 py-5">
                         ${s.confirmed 
-                            ? `<span class="px-2 py-1 bg-green-50 text-green-700 text-[10px] font-bold uppercase rounded-full">✓ Bestätigt</span>`
-                            : `<span class="px-2 py-1 bg-slate-50 text-slate-400 text-[10px] font-bold uppercase rounded-full">Ausstehend</span>`
+                            ? `<span class="flex items-center gap-1.5 w-fit px-3 py-1.5 bg-green-50 text-green-700 text-[10px] font-black uppercase rounded-full shadow-sm">
+                                <span class="material-icons text-[14px]">check_circle</span> Bestätigt
+                               </span>`
+                            : `<span class="flex items-center gap-1.5 w-fit px-3 py-1.5 bg-slate-50 text-slate-400 text-[10px] font-black uppercase rounded-full">
+                                <span class="material-icons text-[14px]">history</span> Ausstehend
+                               </span>`
                         }
                     </td>
-                    <td class="px-6 py-4 text-xs font-medium text-slate-500">${s.lastConfirmed}</td>
+                    <td class="px-6 py-5 text-xs font-semibold text-slate-500">${s.lastConfirmed}</td>
                 </tr>
             `).join('');
         },
@@ -669,10 +695,12 @@
             const list = document.getElementById('student-management-list');
             if (!list) return;
             list.innerHTML = this.state.students.map(s => `
-                <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
-                    <span class="text-sm font-semibold text-slate-700 truncate mr-2">👤 ${s.name}</span>
-                    <button onclick="app.removeStudent('${s.id}')" class="text-red-400 hover:text-red-600 transition-colors">
-                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                <div class="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-xl group hover:border-slate-300 transition-all">
+                    <span class="text-sm font-bold text-slate-700 truncate flex items-center gap-2">
+                        <span class="material-icons text-slate-300 text-lg">person</span> ${s.name}
+                    </span>
+                    <button onclick="app.removeStudent('${s.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <span class="material-icons text-[20px]">delete_outline</span>
                     </button>
                 </div>
             `).join('');
@@ -720,7 +748,7 @@
                     status: 'offen',
                     color: config.color
                 });
-                s.confirmed = false; // Reset confirmation if new task
+                s.confirmed = false;
             });
 
             document.getElementById('task-description').value = '';
@@ -772,7 +800,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state));
             const dl = document.createElement('a');
             dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", "doeltschi_ultimate_fix.json");
+            dl.setAttribute("download", "doeltschi_v16_data.json");
             dl.click();
         }
     };
