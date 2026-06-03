@@ -348,7 +348,7 @@
 <div class="text-center md:text-left">
 <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
 <div class="flex items-center justify-center md:justify-start gap-3 mt-2">
-<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 19 • Individual State Logic</p>
+<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 20 • Individual State Logic</p>
 <button class="text-[9px] text-on-surface-variant/30 hover:text-red-400 underline font-mono uppercase transition-colors" onclick="app.resetSystem()">App zurücksetzen</button>
 </div>
 </div>
@@ -397,7 +397,7 @@
 
     const app = {
         state: null,
-        STORAGE_KEY: 'doeltschi_v19_individual_app',
+        STORAGE_KEY: 'doeltschi_v20_individual_app',
 
         init() {
             try {
@@ -676,8 +676,8 @@
                 
                 // Parental Confirmation Badge
                 const parentalStatus = s.confirmed 
-                    ? `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest">
-                        <span class="material-symbols-outlined text-[14px]">verified</span> OK
+                    ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest">
+                        <span class="material-symbols-outlined text-[14px]">verified</span> OK <span class="opacity-60 text-[9px] font-bold ml-1">${s.lastConfirmed}</span>
                        </span>`
                     : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant/40 text-[10px] font-black uppercase tracking-widest">
                         <span class="material-symbols-outlined text-[14px]">hourglass_empty</span> –
@@ -760,10 +760,16 @@
             });
             
             if (sid === 'all') {
-                this.state.students.forEach(s => s.confirmed = false);
+                this.state.students.forEach(s => {
+                    s.confirmed = false;
+                    s.lastConfirmed = '-';
+                });
             } else {
                 const s = this.state.students.find(st => st.id === sid);
-                if (s) s.confirmed = false;
+                if (s) {
+                    s.confirmed = false;
+                    s.lastConfirmed = '-';
+                }
             }
             
             document.getElementById('task-description').value = '';
@@ -796,7 +802,11 @@
             const s = this.state.students.find(st => st.id === id);
             if (s) { 
                 s.confirmed = !s.confirmed; 
-                s.lastConfirmed = s.confirmed ? new Date().toLocaleDateString('de-CH') : '-'; 
+                s.lastConfirmed = s.confirmed ? new Date().toLocaleDateString('de-CH', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                }) : '-'; 
                 this.persist(); 
                 this.renderTasks(); 
                 this.renderDashboard(); 
