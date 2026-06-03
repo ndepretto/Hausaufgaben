@@ -131,7 +131,7 @@
 <div class="w-full md:w-80">
 <label class="flex items-center gap-2 text-[10px] font-black uppercase text-primary mb-3 tracking-widest">
 <span class="material-icons text-[14px]">person_outline</span> Schüler auswählen
-                    </label>
+                        </label>
 <div class="relative">
 <select class="w-full bg-white border border-slate-300 rounded-xl font-semibold py-4 px-5 focus:ring-2 focus:ring-primary focus:border-transparent outline-none appearance-none shadow-sm pr-12 cursor-pointer" id="student-filter" onchange="app.handleFilterChange()">
 <option value="all">Alle Schüler / Ganze Klasse</option>
@@ -161,10 +161,10 @@
 <div class="flex gap-3">
 <button class="px-5 py-2.5 border border-slate-200 bg-white rounded-lg text-xs font-bold uppercase text-slate-600 flex items-center gap-2 hover:bg-slate-50 transition-colors" onclick="window.print()">
 <span class="material-icons text-[18px]">print</span> Drucken
-                    </button>
+                        </button>
 <button class="px-5 py-2.5 border border-slate-200 bg-white rounded-lg text-xs font-bold uppercase text-slate-600 flex items-center gap-2 hover:bg-slate-50 transition-colors" onclick="app.exportData()">
 <span class="material-icons text-[18px]">download</span> Export
-                    </button>
+                        </button>
 </div>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -190,7 +190,7 @@
 <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
 <h3 class="text-lg font-bold mb-6 text-slate-800 flex items-center gap-2">
 <span class="material-icons text-primary">add_task</span> Neue Aufgabe zuteilen
-                </h3>
+                    </h3>
 <form class="grid grid-cols-1 md:grid-cols-3 gap-6" id="add-task-form" onsubmit="app.addTask(event)">
 <div>
 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 tracking-wider">Schüler</label>
@@ -263,7 +263,7 @@
 <h3 class="text-xl font-bold text-slate-800">Klassenliste</h3>
 <label class="flex items-center gap-1 text-primary text-[10px] font-bold uppercase hover:underline cursor-pointer">
 <span class="material-icons text-[14px]">upload_file</span> Import (.txt)
-                            <input accept=".txt" class="hidden" id="import-txt-input" onchange="app.importTxt(event)" type="file"/>
+                                <input accept=".txt" class="hidden" id="import-txt-input" onchange="app.importTxt(event)" type="file"/>
 </label>
 </div>
 <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
@@ -569,25 +569,56 @@
         renderTasks() {
             const container = document.getElementById('task-container');
             if (!container) return;
+            
             const filterId = this.state.selectedStudentId;
-            const filtered = filterId === 'all' ? this.state.tasks : this.state.tasks.filter(t => t.studentId === filterId);
+            let displayTasks = [];
 
-            if (filtered.length === 0) {
+            if (filterId === 'all') {
+                // Group tasks by shared properties to identify class-wide tasks
+                const classTasksMap = new Map();
+                
+                this.state.tasks.forEach(t => {
+                    if (t.isClassTask) {
+                        // If it's explicitly marked as a class task, we use its original ID as key
+                        const key = `CLASS_${t.groupId || t.description}_${t.deadline}`;
+                        if (!classTasksMap.has(key)) {
+                            classTasksMap.set(key, { ...t, _isGrouped: true });
+                        }
+                    } else {
+                        displayTasks.push(t);
+                    }
+                });
+                
+                // Add the grouped class tasks to the display list
+                classTasksMap.forEach(v => displayTasks.push(v));
+            } else {
+                // For individual students, show all tasks assigned to them
+                displayTasks = this.state.tasks.filter(t => t.studentId === filterId);
+            }
+
+            if (displayTasks.length === 0) {
                 container.innerHTML = `<div class="py-24 text-center border-4 border-dashed border-slate-100 rounded-3xl text-slate-300 font-black uppercase tracking-[0.2em] text-sm">Keine Aufgaben geplant</div>`;
             } else {
-                container.innerHTML = filtered.map(t => {
+                container.innerHTML = displayTasks.map(t => {
                     const student = this.state.students.find(s => s.id === t.studentId);
+                    const isGrouped = t._isGrouped;
                     const done = t.status === 'erledigt';
                     const config = SUBJECT_CONFIG[t.subjectCode] || { name: 'Unbekannt', color: '#64748b' };
                     const color = config.color;
                     
+                    // Label for the "Who" section
+                    let whoLabel = 'Ganze Klasse';
+                    if (!isGrouped) {
+                        whoLabel = student ? student.name : 'Ganze Klasse';
+                    }
+
                     return `
                         <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-60 grayscale' : 'hover:border-primary/40 hover:shadow-md'}">
                             <div class="w-3" style="background-color: ${color}"></div>
                             <div class="flex-1 p-8 grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
                                 <div>
                                     <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Wer</p>
-                                    <p class="font-bold text-slate-900 text-lg">${student ? student.name : 'Ganze Klasse'}</p>
+                                    <p class="font-bold text-slate-900 text-lg">${whoLabel}</p>
                                     <span class="inline-block mt-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style="background-color: ${color}15; color: ${color}">${config.name}</span>
                                 </div>
                                 <div class="md:col-span-2">
@@ -597,10 +628,17 @@
                                 <div class="text-right">
                                     <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Bis</p>
                                     <p class="text-base font-black text-slate-900">${t.deadline}</p>
-                                    <button onclick="app.toggleTaskStatus('${t.id}')" class="mt-6 flex items-center justify-end gap-3 group ml-auto">
-                                        <span class="material-icons text-2xl ${done ? 'text-primary' : 'text-slate-200'} transition-all">${done ? 'check_circle' : 'radio_button_unchecked'}</span>
-                                        <span class="text-[11px] font-black uppercase tracking-widest ${done ? 'text-primary' : 'text-slate-400'}">${done ? 'Erledigt' : 'Offen'}</span>
-                                    </button>
+                                    ${!isGrouped ? `
+                                        <button onclick="app.toggleTaskStatus('${t.id}')" class="mt-6 flex items-center justify-end gap-3 group ml-auto">
+                                            <span class="material-icons text-2xl ${done ? 'text-primary' : 'text-slate-200'} transition-all">${done ? 'check_circle' : 'radio_button_unchecked'}</span>
+                                            <span class="text-[11px] font-black uppercase tracking-widest ${done ? 'text-primary' : 'text-slate-400'}">${done ? 'Erledigt' : 'Offen'}</span>
+                                        </button>
+                                    ` : `
+                                        <div class="mt-6 flex items-center justify-end gap-3 opacity-50 cursor-default ml-auto">
+                                            <span class="material-icons text-2xl text-slate-200">info_outline</span>
+                                            <span class="text-[11px] font-black uppercase tracking-widest text-slate-400">Referenz</span>
+                                        </div>
+                                    `}
                                 </div>
                             </div>
                         </div>
@@ -766,6 +804,8 @@
             const desc = document.getElementById('task-description').value;
 
             const targetStudents = sid === 'all' ? this.state.students : [this.state.students.find(s => s.id === sid)];
+            const isClassTask = sid === 'all';
+            const groupId = isClassTask ? 'g' + Math.random().toString(36).substr(2, 9) : null;
             
             targetStudents.forEach(s => {
                 if (!s) return;
@@ -775,7 +815,9 @@
                     subjectCode: subCode,
                     description: desc,
                     deadline: dead,
-                    status: 'offen'
+                    status: 'offen',
+                    isClassTask: isClassTask,
+                    groupId: groupId
                 });
                 s.confirmed = false;
             });
