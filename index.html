@@ -390,6 +390,7 @@
             { id: 's3', name: 'Emma Weber', confirmed: false, lastConfirmed: '-' }
         ],
         tasks: [
+            { id: 't0', studentId: 'all', subjectCode: 'MA', subject: 'Mathematik', description: 'Ganze Klasse: Kapitel 5 Übung 1-5.', deadline: '15.04.2024', status: 'offen' },
             { id: 't1', studentId: 's1', subjectCode: 'DE', subject: 'Deutsch', description: 'Arbeitsheft S. 42-43 lesen und Übung 4 bearbeiten.', deadline: '15.04.2024', status: 'offen' },
             { id: 't2', studentId: 's1', subjectCode: 'MA', subject: 'Mathematik', description: 'Einmaleins-Tabelle vervollständigen.', deadline: '16.04.2024', status: 'erledigt' },
             { id: 't3', studentId: 's2', subjectCode: 'DE', subject: 'Deutsch', description: 'Diktat vorbereiten: "Der Frühling kommt".', deadline: '15.04.2024', status: 'erledigt' }
@@ -512,9 +513,12 @@
             const steps = [1, 2, 3, 4].map(i => document.getElementById(`step-${i}`));
             if (!steps[0]) return;
             const studentSelected = this.state.selectedStudentId !== 'all';
-            const filteredTasks = studentSelected ? this.state.tasks.filter(t => t.studentId === this.state.selectedStudentId) : [];
+            
+            // Logic for stepper progress
+            const filteredTasks = studentSelected ? this.state.tasks.filter(t => t.studentId === this.state.selectedStudentId || t.studentId === 'all') : [];
             const anyDone = filteredTasks.some(t => t.status === 'erledigt');
             const allDone = filteredTasks.length > 0 && filteredTasks.every(t => t.status === 'erledigt');
+            
             steps.forEach(el => el && el.classList.add('opacity-50'));
             if (!studentSelected) steps[0].classList.remove('opacity-50');
             else if (!anyDone) steps[1].classList.remove('opacity-50');
@@ -566,13 +570,22 @@
             const container = document.getElementById('task-container');
             if (!container) return;
             const filterId = this.state.selectedStudentId;
-            let displayTasks = filterId === 'all' ? this.state.tasks : this.state.tasks.filter(t => t.studentId === filterId);
+            
+            // Logic updated per request: 
+            // If "all", only show tasks assigned to 'all' (Ganze Klasse).
+            // If specific student, show tasks assigned to 'all' AND those assigned to the student.
+            let displayTasks = [];
+            if (filterId === 'all') {
+                displayTasks = this.state.tasks.filter(t => t.studentId === 'all');
+            } else {
+                displayTasks = this.state.tasks.filter(t => t.studentId === filterId || t.studentId === 'all');
+            }
 
             if (displayTasks.length === 0) {
                 container.innerHTML = `<div class="py-24 text-center border-4 border-dashed border-outline-variant/30 rounded-3xl text-on-surface-variant/40 font-black uppercase tracking-[0.2em] text-sm">Keine Aufgaben geplant</div>`;
             } else {
                 container.innerHTML = displayTasks.map(t => {
-                    const student = this.state.students.find(s => s.id === t.studentId);
+                    const student = t.studentId === 'all' ? { name: 'Ganze Klasse' } : this.state.students.find(s => s.id === t.studentId);
                     const done = t.status === 'erledigt';
                     const config = SUBJECT_CONFIG[t.subjectCode] || { name: 'Divers', color: '#64748b' };
                     return `
@@ -636,7 +649,8 @@
             document.getElementById('dashboard-pending-text').textContent = `Noch ${totalCount - confirmedCount} ausstehend`;
             const sortedStudents = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
             tbody.innerHTML = sortedStudents.map(s => {
-                const sTasks = this.state.tasks.filter(t => t.studentId === s.id);
+                // For the dashboard, we show progress including 'all' tasks and specific tasks
+                const sTasks = this.state.tasks.filter(t => t.studentId === s.id || t.studentId === 'all');
                 const doneCount = sTasks.filter(t => t.status === 'erledigt').length;
                 const taskTotal = sTasks.length;
                 const progress = taskTotal > 0 ? Math.round((doneCount / taskTotal) * 100) : 0;
@@ -701,13 +715,33 @@
             const subCode = document.getElementById('task-subject').value;
             const dead = document.getElementById('task-deadline').value;
             const desc = document.getElementById('task-description').value;
-            const targetStudents = sid === 'all' ? this.state.students : [this.state.students.find(s => s.id === sid)];
-            targetStudents.forEach(s => {
+            
+            if (sid === 'all') {
+                this.state.tasks.push({ 
+                    id: 't' + Math.random().toString(36).substr(2, 9), 
+                    studentId: 'all', 
+                    subjectCode: subCode, 
+                    description: desc, 
+                    deadline: dead, 
+                    status: 'offen' 
+                });
+                // When a global task is added, reset confirmations
+                this.state.students.forEach(s => s.confirmed = false);
+            } else {
+                const s = this.state.students.find(st => st.id === sid);
                 if (s) {
-                    this.state.tasks.push({ id: 't' + Math.random().toString(36).substr(2, 9), studentId: s.id, subjectCode: subCode, description: desc, deadline: dead, status: 'offen' });
+                    this.state.tasks.push({ 
+                        id: 't' + Math.random().toString(36).substr(2, 9), 
+                        studentId: s.id, 
+                        subjectCode: subCode, 
+                        description: desc, 
+                        deadline: dead, 
+                        status: 'offen' 
+                    });
                     s.confirmed = false;
                 }
-            });
+            }
+            
             document.getElementById('task-description').value = '';
             this.persist();
             this.renderAll();
@@ -715,15 +749,33 @@
 
         toggleTaskStatus(id) {
             const t = this.state.tasks.find(tk => tk.id === id);
-            if (t) { t.status = t.status === 'erledigt' ? 'offen' : 'erledigt'; this.persist(); this.renderTasks(); this.renderDashboard(); this.updateInstructions(); }
+            if (t) { 
+                t.status = t.status === 'erledigt' ? 'offen' : 'erledigt'; 
+                this.persist(); 
+                this.renderTasks(); 
+                this.renderDashboard(); 
+                this.updateInstructions(); 
+            }
         },
 
         confirmStudent(id) {
             const s = this.state.students.find(st => st.id === id);
-            if (s) { s.confirmed = !s.confirmed; s.lastConfirmed = s.confirmed ? new Date().toLocaleDateString('de-CH') : '-'; this.persist(); this.renderTasks(); this.renderDashboard(); this.updateInstructions(); }
+            if (s) { 
+                s.confirmed = !s.confirmed; 
+                s.lastConfirmed = s.confirmed ? new Date().toLocaleDateString('de-CH') : '-'; 
+                this.persist(); 
+                this.renderTasks(); 
+                this.renderDashboard(); 
+                this.updateInstructions(); 
+            }
         },
 
-        viewDetails(id) { this.state.selectedStudentId = id; this.state.currentTab = 'Planer'; this.renderAll(); window.scrollTo({ top: 0, behavior: 'smooth' }); },
+        viewDetails(id) { 
+            this.state.selectedStudentId = id; 
+            this.state.currentTab = 'Planer'; 
+            this.renderAll(); 
+            window.scrollTo({ top: 0, behavior: 'smooth' }); 
+        },
 
         importTxt(event) {
             const file = event.target.files[0];
