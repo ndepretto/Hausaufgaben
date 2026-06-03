@@ -1,1 +1,662 @@
+<!DOCTYPE html>
 
+<html class="light" lang="de"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>doeltschi | Digitaler Aufgabenplaner</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .checkmark-active { font-variation-settings: 'FILL' 1; color: #0058bc; }
+        [v-cloak] { display: none; }
+        .worksheet-pattern {
+            background-color: #f9f9fe;
+            background-image: radial-gradient(#c1c6d7 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; }
+            .worksheet-pattern { background-image: none !important; }
+        }
+        /* Ensure layout is robust */
+        #app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#c2c1ff",
+                        "on-surface": "#1a1c1f",
+                        "on-background": "#1a1c1f",
+                        "surface-bright": "#f9f9fe",
+                        "surface-variant": "#e2e2e7",
+                        "secondary-container": "#6664e4",
+                        "inverse-primary": "#adc6ff",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#3631b4",
+                        "on-primary-container": "#fefcff",
+                        "background": "#f9f9fe",
+                        "on-tertiary-fixed-variant": "#7c2e00",
+                        "outline": "#717786",
+                        "surface-dim": "#d9dade",
+                        "secondary-fixed": "#e2dfff",
+                        "on-secondary-container": "#fffbff",
+                        "inverse-surface": "#2e3034",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#0070eb",
+                        "on-tertiary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#005bc1",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#ffb595",
+                        "surface": "#f9f9fe",
+                        "secondary": "#4c4aca",
+                        "on-primary-fixed-variant": "#004493",
+                        "surface-container-highest": "#e2e2e7",
+                        "on-primary-fixed": "#001a41",
+                        "on-secondary-fixed": "#0c006a",
+                        "tertiary": "#9e3d00",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container-high": "#e8e8ed",
+                        "surface-container-low": "#f3f3f8",
+                        "surface-container": "#ededf2",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#ffdbcc",
+                        "on-error-container": "#93000a",
+                        "inverse-on-surface": "#f0f0f5",
+                        "tertiary-container": "#c64f00",
+                        "primary-fixed-dim": "#adc6ff",
+                        "outline-variant": "#c1c6d7",
+                        "on-surface-variant": "#414755",
+                        "primary": "#0058bc",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed": "#351000",
+                        "on-tertiary-container": "#fffbff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-padding": "1.25rem",
+                        "gutter": "1.5rem",
+                        "container-margin": "2rem",
+                        "input-padding": "1rem"
+                    },
+                    "fontFamily": {
+                        "h2": ["Inter"],
+                        "h1": ["Inter"],
+                        "subject-tag": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "subject-tag": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background worksheet-pattern min-h-screen selection:bg-primary-fixed">
+<div class="flex flex-col min-h-screen" id="app">
+<!-- Error Overlay -->
+<div class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-error-container p-4" id="error-screen">
+<div class="bg-surface p-8 rounded-xl shadow-2xl max-w-md text-center border-2 border-error">
+<span class="material-symbols-outlined text-error text-6xl mb-4">report</span>
+<h2 class="font-h2 text-h2 text-on-error-container mb-2">Systemfehler</h2>
+<p class="text-on-surface-variant mb-6" id="error-message">Ein unerwarteter Fehler ist aufgetreten.</p>
+<button class="w-full py-3 bg-error text-on-error rounded-lg font-bold uppercase tracking-wider" onclick="app.resetSystem()">App Zurücksetzen</button>
+</div>
+</div>
+<!-- Top App Bar -->
+<header class="bg-surface border-b border-outline-variant sticky top-0 z-50 no-print">
+<div class="flex justify-between items-center w-full px-gutter max-w-[1100px] mx-auto h-16">
+<h1 class="font-h2 text-h2 font-bold text-on-surface">doeltschi</h1>
+<div class="flex items-center gap-4">
+<span class="flex items-center gap-2 text-label-caps font-label-caps text-outline" id="sync-status">
+<span class="material-symbols-outlined text-[14px]">bolt</span>
+<span>Lokal aktiv</span>
+</span>
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors" onclick="app.toggleLehrerModus()" title="Lehrer-Bereich">
+<span class="material-symbols-outlined text-on-surface-variant">admin_panel_settings</span>
+</button>
+</div>
+</div>
+</header>
+<div class="flex flex-1 w-full max-w-[1100px] mx-auto relative">
+<!-- Sidebar (Desktop) -->
+<aside class="hidden lg:flex flex-col h-[calc(100vh-64px)] sticky top-16 py-6 px-4 w-64 border-r border-outline-variant no-print shrink-0">
+<nav class="space-y-2 flex-1">
+<button class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container rounded-lg w-full text-left font-label-caps text-label-caps uppercase" id="nav-Planer" onclick="app.setTab('Planer')">
+<span class="material-symbols-outlined">calendar_today</span> Planer
+                </button>
+<button class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg w-full text-left font-label-caps text-label-caps uppercase" id="nav-Anleitung" onclick="app.setTab('Anleitung')">
+<span class="material-symbols-outlined">help_outline</span> Anleitung
+                </button>
+</nav>
+<div class="mt-auto pt-6 border-t border-outline-variant">
+<div class="flex items-center gap-3 px-2">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center overflow-hidden shrink-0">
+<img alt="Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBR0csWfxw9z6zYflQEcGNAtWVGfpjLkmL1Br5Qo6b3TL0sPs-0g4EyljzeHC2KfYzy2SxP1HTXK9AXx0KTgcxRDxHOE1aZD5KtkrdzMp5bCQo53w_75bmccimYkzvVNbKL1uuVRmqA9Z1_PSxva0_82GRxMujF2f3qAuXNHudxX9OufcCsMvLhbh2NC7Y-o1c8uC4ATt7bDcWAGxEPn7P5unTm93cgzhkeIrLkDA6z4JgAMOjBVae5cB2nZNRkNcvnfUs4tz5Kzv8"/>
+</div>
+<div class="min-w-0">
+<p class="font-label-caps text-label-caps font-bold truncate">Klasse 4B</p>
+<p class="text-[10px] text-on-surface-variant">Schuljahr 2023/24</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 p-gutter pb-24 lg:pb-8 overflow-y-auto">
+<!-- Lehrer Login Modal -->
+<div class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-on-surface/40 backdrop-blur-sm no-print" id="lehrer-modal">
+<div class="bg-surface rounded-xl p-8 max-w-md w-full shadow-2xl border border-outline-variant">
+<h3 class="font-h2 text-h2 mb-4">Lehrer-Bereich</h3>
+<p class="text-on-surface-variant mb-6 font-body-md text-body-md">Bitte geben Sie das Passwort ein, um die Klassenliste und Aufgaben zu verwalten.</p>
+<input class="w-full bg-surface-container-low border-none rounded-lg p-input-padding mb-4 focus:ring-2 focus:ring-primary" id="lehrer-password" placeholder="Passwort (lehrer123)" type="password"/>
+<div class="flex justify-end gap-3">
+<button class="px-4 py-2 text-on-surface-variant font-label-caps" onclick="app.closeLehrerModal()">Abbrechen</button>
+<button class="px-6 py-2 bg-primary text-on-primary rounded-lg font-label-caps" onclick="app.checkLehrerPassword()">Anmelden</button>
+</div>
+</div>
+</div>
+<!-- Content Area: Planer -->
+<div id="content-planner">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
+<div class="w-full md:w-auto">
+<p class="font-label-caps text-label-caps text-primary mb-2 uppercase">Schüler auswählen</p>
+<select class="w-full md:w-64 bg-surface border border-outline-variant rounded-lg font-body-md text-body-md py-2 px-3 focus:ring-primary focus:border-primary block" id="student-filter" onchange="app.handleFilterChange()">
+<option value="all">Alle Schüler</option>
+</select>
+</div>
+<div class="text-right w-full md:w-auto">
+<h2 class="font-h1 text-h1 text-on-surface" id="current-week-display">Woche 14</h2>
+<p class="font-body-md text-body-md text-on-surface-variant" id="current-date-range">01.04.2024 – 05.04.2024</p>
+</div>
+</div>
+<div class="space-y-6" id="task-container">
+<!-- Tasks dynamically injected -->
+</div>
+<button class="hidden fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-40 no-print" id="add-task-btn" onclick="alert('Funktion: Neue Aufgabe hinzufügen (in Entwicklung)')">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<!-- Content Area: Dashboard (Lehrer only) -->
+<div class="hidden" id="content-dashboard">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+<h2 class="font-h1 text-h1">Klassen-Dashboard</h2>
+<div class="flex gap-3 w-full md:w-auto">
+<button class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-outline rounded-lg font-label-caps text-label-caps hover:bg-surface-container-high transition-colors" onclick="window.print()">
+<span class="material-symbols-outlined text-[18px]">print</span> Drucken
+                        </button>
+<button class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-outline rounded-lg font-label-caps text-label-caps hover:bg-surface-container-high transition-colors" onclick="app.exportData()">
+<span class="material-symbols-outlined text-[18px]">download</span> Export
+                        </button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="bg-surface border border-outline-variant p-6 rounded-lg">
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-2">Erledigungsquote</p>
+<div class="text-h1 font-h1 text-primary" id="dashboard-quote">0%</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full mt-4 overflow-hidden">
+<div class="bg-primary h-full transition-all duration-500" id="dashboard-progress-bar" style="width: 0%"></div>
+</div>
+</div>
+<div class="bg-surface border border-outline-variant p-6 rounded-lg">
+<p class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-2">Elternbestätigungen</p>
+<div class="text-h1 font-h1 text-secondary" id="dashboard-confirmations">0/0</div>
+<p class="text-body-md text-on-surface-variant mt-2 italic" id="dashboard-pending-text">Berechne...</p>
+</div>
+<div class="bg-surface border border-outline-variant p-6 rounded-lg flex flex-col items-center justify-center">
+<div class="w-24 h-24 bg-on-surface-variant/10 rounded flex items-center justify-center mb-2" id="qr-placeholder">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant">qr_code_2</span>
+</div>
+<p class="font-label-caps text-label-caps uppercase">Klassen-Login QR</p>
+</div>
+</div>
+<div class="mt-12 bg-surface border border-outline-variant rounded-lg overflow-x-auto">
+<table class="w-full text-left min-w-[600px]">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="px-6 py-4 font-label-caps text-label-caps">Schüler Name</th>
+<th class="px-6 py-4 font-label-caps text-label-caps">Status</th>
+<th class="px-6 py-4 font-label-caps text-label-caps">Letzte Bestätigung</th>
+<th class="px-6 py-4 font-label-caps text-label-caps">Aktionen</th>
+</tr>
+</thead>
+<tbody id="student-table-body">
+<!-- Dynamic rows -->
+</tbody>
+</table>
+</div>
+</div>
+<!-- Content Area: Anleitung -->
+<div class="hidden" id="content-guide">
+<h2 class="font-h1 text-h1 mb-6">Anleitung</h2>
+<div class="prose max-w-none text-on-surface-variant space-y-4">
+<section class="bg-surface border border-outline-variant p-6 rounded-lg">
+<h3 class="font-h2 text-h2 mb-2 text-on-surface">Für Schüler &amp; Eltern</h3>
+<p class="font-body-md">Wählen Sie oben im Menü Ihren Namen aus, um Ihre persönlichen Hausaufgaben zu sehen. Sobald eine Aufgabe erledigt ist, können Sie den Status per Klick ändern. Am Ende der Woche können Eltern die Liste digital bestätigen.</p>
+</section>
+<section class="bg-surface border border-outline-variant p-6 rounded-lg">
+<h3 class="font-h2 text-h2 mb-2 text-on-surface">Für Lehrer</h3>
+<p class="font-body-md">Über das Schloss-Icon oben rechts gelangen Sie in den geschützten Lehrer-Bereich. Dort können Sie neue Aufgaben hinzufügen und den Fortschritt der gesamten Klasse einsehen.</p>
+</section>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="bg-surface border-t border-outline-variant no-print mt-auto">
+<div class="w-full max-w-[1100px] mx-auto py-8 px-gutter flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="flex flex-col items-center md:items-start">
+<p class="font-label-caps text-label-caps font-bold text-on-surface-variant">© 2024 doeltschi Aufgabenplaner</p>
+<p class="text-[9px] text-outline font-mono mt-1">Version 11 - Ultra Stable</p>
+</div>
+<div class="flex gap-6">
+<a class="text-body-md font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Datenschutz</a>
+<a class="text-body-md font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Impressum</a>
+<a class="text-body-md font-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Hilfe</a>
+</div>
+</div>
+</footer>
+<!-- Mobile Nav -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container border-t border-outline-variant flex justify-around py-3 z-50 no-print">
+<button class="flex flex-col items-center gap-1 text-primary" id="mobile-nav-Planer" onclick="app.setTab('Planer')">
+<span class="material-symbols-outlined">calendar_today</span>
+<span class="text-[10px] font-bold uppercase">Planer</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant" onclick="app.toggleLehrerModus()">
+<span class="material-symbols-outlined">admin_panel_settings</span>
+<span class="text-[10px] font-bold uppercase">Lehrer</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant" id="mobile-nav-Anleitung" onclick="app.setTab('Anleitung')">
+<span class="material-symbols-outlined">help_outline</span>
+<span class="text-[10px] font-bold uppercase">Hilfe</span>
+</button>
+</nav>
+</div>
+<!-- Print View Container -->
+<div class="hidden print-only bg-white p-10 min-h-screen text-black">
+<div class="flex justify-between items-end border-b-2 border-black pb-4 mb-8">
+<div>
+<h1 class="text-3xl font-bold">doeltschi Hausaufgaben</h1>
+<p class="text-lg">Klasse 4B | Woche 14 (01.04. – 05.04.2024)</p>
+</div>
+<p class="text-sm italic">Gedruckt am: <span id="print-date"></span></p>
+</div>
+<div class="space-y-4" id="print-content">
+<!-- Content mirrored here via JS -->
+</div>
+<div class="mt-20 border-t border-black pt-4 grid grid-cols-2 gap-8">
+<div class="h-12 border-b border-black">Unterschrift Schüler/in</div>
+<div class="h-12 border-b border-black">Unterschrift Eltern</div>
+</div>
+</div>
+<script>
+    const INITIAL_STATE = {
+        isLehrer: false,
+        currentTab: 'Planer',
+        selectedStudentId: 'all',
+        students: [
+            { id: 's1', name: 'Lukas Müller', confirmed: false, lastConfirmed: '-' },
+            { id: 's2', name: 'Sophie Fischer', confirmed: true, lastConfirmed: '12.03.2024' },
+            { id: 's3', name: 'Emma Weber', confirmed: false, lastConfirmed: '-' },
+            { id: 's4', name: 'Maximilian Schmidt', confirmed: false, lastConfirmed: '-' }
+        ],
+        tasks: [
+            { id: 't1', studentId: 's1', subject: 'Deutsch', description: 'Arbeitsheft S. 42-43 lesen und Übung 4 bearbeiten.', deadline: '15.04.2024', status: 'offen', color: '#ba1a1a' },
+            { id: 't2', studentId: 's1', subject: 'Mathematik', description: 'Einmaleins-Tabelle vervollständigen.', deadline: '16.04.2024', status: 'erledigt', color: '#0058bc' },
+            { id: 't3', studentId: 's2', subject: 'Deutsch', description: 'Diktat vorbereiten: "Der Frühling kommt".', deadline: '15.04.2024', status: 'erledigt', color: '#ba1a1a' },
+            { id: 't4', studentId: 's3', subject: 'Sachunterricht', description: 'Waldtagebuch Eintrag Nr. 3.', deadline: '17.04.2024', status: 'offen', color: '#9e3d00' }
+        ]
+    };
+
+    const app = {
+        state: null,
+        STORAGE_KEY: 'doeltschi_v11_data',
+
+        init() {
+            try {
+                const savedData = localStorage.getItem(this.STORAGE_KEY);
+                if (savedData) {
+                    this.state = { ...INITIAL_STATE, ...JSON.parse(savedData), isLehrer: false, currentTab: 'Planer' };
+                } else {
+                    this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
+                    this.persist();
+                }
+                
+                // Extra safety: ensure essential data structures exist
+                if (!this.state.tasks) this.state.tasks = [];
+                if (!this.state.students) this.state.students = [];
+
+                this.renderAll();
+                document.getElementById('print-date').textContent = new Date().toLocaleDateString('de-CH');
+            } catch (error) {
+                console.error("Initialization Failed:", error);
+                this.showError("Die App konnte nicht korrekt gestartet werden. Bitte laden Sie die Seite neu.");
+            }
+        },
+
+        persist() {
+            try {
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
+            } catch (error) {
+                console.warn("Storage Persistence Failed:", error);
+            }
+        },
+
+        resetSystem() {
+            try {
+                localStorage.removeItem(this.STORAGE_KEY);
+                window.location.reload();
+            } catch (e) {
+                alert("Reset fehlgeschlagen. Bitte löschen Sie Ihren Browser-Cache manuell.");
+            }
+        },
+
+        showError(msg) {
+            const screen = document.getElementById('error-screen');
+            const message = document.getElementById('error-message');
+            if (screen && message) {
+                message.textContent = msg;
+                screen.classList.remove('hidden');
+            }
+        },
+
+        toggleLehrerModus() {
+            if (this.state.isLehrer) {
+                this.state.isLehrer = false;
+                this.state.currentTab = 'Planer';
+                this.renderAll();
+            } else {
+                const modal = document.getElementById('lehrer-modal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    document.getElementById('lehrer-password').focus();
+                }
+            }
+        },
+
+        closeLehrerModal() {
+            const modal = document.getElementById('lehrer-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.getElementById('lehrer-password').value = '';
+            }
+        },
+
+        checkLehrerPassword() {
+            const pass = document.getElementById('lehrer-password').value;
+            if (pass === 'lehrer123') {
+                this.state.isLehrer = true;
+                this.state.currentTab = 'Dashboard';
+                this.closeLehrerModal();
+                this.renderAll();
+            } else {
+                alert('Falsches Passwort! (lehrer123)');
+            }
+        },
+
+        setTab(tab) {
+            this.state.currentTab = tab;
+            this.renderAll();
+        },
+
+        handleFilterChange() {
+            const select = document.getElementById('student-filter');
+            if (select) {
+                this.state.selectedStudentId = select.value;
+                this.renderTasks();
+            }
+        },
+
+        renderAll() {
+            try {
+                this.updateNavigation();
+                this.renderFilters();
+                this.renderTasks();
+                this.renderDashboard();
+                
+                const planner = document.getElementById('content-planner');
+                const dashboard = document.getElementById('content-dashboard');
+                const guide = document.getElementById('content-guide');
+                const fab = document.getElementById('add-task-btn');
+
+                if (planner) planner.classList.toggle('hidden', this.state.currentTab !== 'Planer');
+                if (dashboard) dashboard.classList.toggle('hidden', this.state.currentTab !== 'Dashboard');
+                if (guide) guide.classList.toggle('hidden', this.state.currentTab !== 'Anleitung');
+
+                if (fab) {
+                    fab.classList.toggle('hidden', !this.state.isLehrer || this.state.currentTab !== 'Planer');
+                }
+            } catch (error) {
+                console.error("Render Error:", error);
+                this.showError("Fehler beim Zeichnen der Oberfläche.");
+            }
+        },
+
+        updateNavigation() {
+            const tabs = ['Planer', 'Anleitung'];
+            tabs.forEach(t => {
+                const desktopNav = document.getElementById(`nav-${t}`);
+                const mobileNav = document.getElementById(`mobile-nav-${t}`);
+                const isActive = this.state.currentTab === t;
+
+                if (desktopNav) {
+                    desktopNav.className = isActive 
+                        ? "flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container rounded-lg w-full text-left font-label-caps text-label-caps uppercase"
+                        : "flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg w-full text-left font-label-caps text-label-caps uppercase";
+                }
+                if (mobileNav) {
+                    mobileNav.classList.toggle('text-primary', isActive);
+                    mobileNav.classList.toggle('text-on-surface-variant', !isActive);
+                }
+            });
+        },
+
+        renderFilters() {
+            const select = document.getElementById('student-filter');
+            if (!select) return;
+            
+            const current = this.state.selectedStudentId;
+            let options = `<option value="all" ${current === 'all' ? 'selected' : ''}>Alle Schüler</option>`;
+            this.state.students.forEach(s => {
+                options += `<option value="${s.id}" ${current === s.id ? 'selected' : ''}>${s.name}</option>`;
+            });
+            select.innerHTML = options;
+        },
+
+        renderTasks() {
+            const container = document.getElementById('task-container');
+            if (!container) return;
+
+            const filterId = this.state.selectedStudentId;
+            const filteredTasks = filterId === 'all' 
+                ? this.state.tasks 
+                : this.state.tasks.filter(t => t.studentId === filterId);
+
+            if (filteredTasks.length === 0) {
+                container.innerHTML = `
+                    <div class="py-20 text-center border-2 border-dashed border-outline-variant rounded-xl bg-surface/50">
+                        <span class="material-symbols-outlined text-5xl text-outline-variant mb-4">task_alt</span>
+                        <p class="text-on-surface-variant font-body-lg text-body-lg">Keine Aufgaben für diese Woche gefunden.</p>
+                        ${this.state.isLehrer ? '<p class="text-primary mt-2 text-label-caps font-bold">Klicken Sie unten auf +, um Aufgaben zu erstellen.</p>' : ''}
+                    </div>
+                `;
+            } else {
+                container.innerHTML = filteredTasks.map(task => {
+                    const student = this.state.students.find(s => s.id === task.studentId);
+                    const isDone = task.status === 'erledigt';
+                    
+                    return `
+                        <div class="bg-surface border border-outline-variant rounded-lg overflow-hidden flex transition-all ${isDone ? 'opacity-70 grayscale-[0.2]' : 'hover:shadow-md'}">
+                            <div class="w-2 shrink-0" style="background-color: ${task.color}"></div>
+                            <div class="flex-1 p-6 grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
+                                <div class="md:col-span-1">
+                                    <p class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-1">Wer</p>
+                                    <p class="font-subject-tag text-subject-tag truncate">${student ? student.name : 'Unbekannt'}</p>
+                                    <span class="inline-block mt-2 px-3 py-1 rounded-full text-[12px] font-bold" style="background-color: ${task.color}20; color: ${task.color}">
+                                        ${task.subject}
+                                    </span>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <p class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-1">Was</p>
+                                    <p class="font-body-md text-body-md text-on-surface leading-snug">${task.description}</p>
+                                </div>
+                                <div class="md:col-span-1 flex flex-col items-end">
+                                    <p class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-1">Bis wann</p>
+                                    <p class="font-body-md text-body-md font-bold">${task.deadline}</p>
+                                    <button onclick="app.toggleTaskStatus('${task.id}')" class="mt-4 flex items-center gap-2 group cursor-pointer focus:outline-none">
+                                        <span class="material-symbols-outlined ${isDone ? 'checkmark-active' : 'text-outline-variant'} group-hover:scale-110 transition-transform">
+                                            ${isDone ? 'check_circle' : 'radio_button_unchecked'}
+                                        </span>
+                                        <span class="font-label-caps text-label-caps ${isDone ? 'text-primary' : 'text-on-surface-variant'}">
+                                            ${isDone ? 'ERLEDIGT' : 'OFFEN'}
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Student confirmation panel
+            if (filterId !== 'all') {
+                const student = this.state.students.find(s => s.id === filterId);
+                if (student) {
+                    container.innerHTML += `
+                        <div class="mt-12 p-8 rounded-lg border-2 border-dashed ${student.confirmed ? 'bg-primary-container/10 border-primary' : 'bg-surface-container-low border-outline-variant'} transition-colors no-print">
+                            <div class="flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+                                <div>
+                                    <h3 class="font-h2 text-h2 mb-2">Bestätigung der Eltern</h3>
+                                    <p class="text-on-surface-variant text-body-md">Hiermit bestätigen wir die Kenntnisnahme der Hausaufgaben für diese Woche.</p>
+                                </div>
+                                <button onclick="app.confirmStudent('${student.id}')" class="whitespace-nowrap px-8 py-3 rounded-lg font-bold uppercase tracking-wider transition-all shadow-sm ${student.confirmed ? 'bg-primary text-on-primary' : 'bg-surface border border-outline text-on-surface-variant hover:border-primary'}">
+                                    ${student.confirmed ? 'Bestätigt ✓' : 'Jetzt Bestätigen'}
+                                </button>
+                            </div>
+                            ${student.confirmed ? `
+                                <div class="mt-4 pt-4 border-t border-primary/20 text-on-surface text-center md:text-left">
+                                    <p class="font-label-caps text-label-caps uppercase text-primary">Bestätigt am: <span class="font-bold">${student.lastConfirmed}</span></p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+            }
+        },
+
+        toggleTaskStatus(taskId) {
+            const task = this.state.tasks.find(t => t.id === taskId);
+            if (task) {
+                task.status = task.status === 'erledigt' ? 'offen' : 'erledigt';
+                this.persist();
+                this.renderTasks();
+                this.renderDashboard();
+            }
+        },
+
+        confirmStudent(studentId) {
+            const student = this.state.students.find(s => s.id === studentId);
+            if (student) {
+                student.confirmed = !student.confirmed;
+                student.lastConfirmed = student.confirmed ? new Date().toLocaleDateString('de-CH') : '-';
+                this.persist();
+                this.renderTasks();
+                this.renderDashboard();
+            }
+        },
+
+        renderDashboard() {
+            const tbody = document.getElementById('student-table-body');
+            if (!tbody) return;
+
+            const totalTasks = this.state.tasks.length;
+            const doneTasks = this.state.tasks.filter(t => t.status === 'erledigt').length;
+            const quote = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+            
+            const qEl = document.getElementById('dashboard-quote');
+            if (qEl) qEl.textContent = `${quote}%`;
+            
+            const pb = document.getElementById('dashboard-progress-bar');
+            if (pb) pb.style.width = `${quote}%`;
+            
+            const confirmedCount = this.state.students.filter(s => s.confirmed).length;
+            const studentCount = this.state.students.length;
+            
+            const confEl = document.getElementById('dashboard-confirmations');
+            if (confEl) confEl.textContent = `${confirmedCount}/${studentCount}`;
+            
+            const pendEl = document.getElementById('dashboard-pending-text');
+            if (pendEl) pendEl.textContent = `Noch ${studentCount - confirmedCount} ausstehend`;
+
+            tbody.innerHTML = this.state.students.map(s => {
+                const tasksForStudent = this.state.tasks.filter(t => t.studentId === s.id);
+                const doneCount = tasksForStudent.filter(t => t.status === 'erledigt').length;
+                const progress = tasksForStudent.length > 0 ? (doneCount / tasksForStudent.length) * 100 : 0;
+
+                return `
+                    <tr class="border-b border-outline-variant hover:bg-surface-container-low transition-colors">
+                        <td class="px-6 py-4 font-body-md text-body-md font-bold text-on-surface truncate max-w-[200px]">${s.name}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+                                    <div class="bg-primary h-full" style="width: ${progress}%"></div>
+                                </div>
+                                <span class="text-label-caps font-label-caps text-outline whitespace-nowrap">${Math.round(progress)}%</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-on-surface-variant text-body-md">${s.lastConfirmed}</td>
+                        <td class="px-6 py-4">
+                            <button onclick="app.viewDetails('${s.id}')" class="text-primary hover:underline font-label-caps text-label-caps uppercase font-bold">Details</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        },
+
+        viewDetails(studentId) {
+            this.state.selectedStudentId = studentId;
+            this.setTab('Planer');
+        },
+
+        exportData() {
+            try {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "doeltschi_planer_export.json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+            } catch (e) {
+                alert("Export fehlgeschlagen.");
+            }
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        app.init();
+    });
+</script>
+</body></html>
