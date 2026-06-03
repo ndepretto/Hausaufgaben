@@ -1,9 +1,7 @@
-<html class="light" lang="de-CH"><head></head><body class="bg-surface text-on-surface font-body-md min-h-screen">```html
-
-
-    <meta charset="utf-8"/>
+<html class="light" lang="de-CH"><head>
+<meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>doeltschi – Digitaler Planer</title>
+<title>Wer – Was – Bis wann | Digitaler Planer</title>
 <!-- PWA Meta Tags -->
 <meta content="yes" name="mobile-web-app-capable"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
@@ -11,7 +9,7 @@
 <meta content="Planer" name="apple-mobile-web-app-title"/>
 <meta content="#0058bc" name="theme-color"/>
 <!-- Inline Web App Manifest -->
-<link href='data:application/manifest+json,{"name":"Digitaler Planer","short_name":"Planer","start_url":".","display":"standalone","background_color":"#f9f9fe","theme_color":"#0058bc","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3652/3652191.png","sizes":"512x512","type":"image/png"}]}' rel="manifest"/>
+<link href='data:application/manifest+json,{"name":"Digitaler Planer","short_name":"Planer","start_url":".","display":"standalone","background_color":"#f9f9fe","theme_color":"#005bc1","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3652/3652191.png","sizes":"512x512","type":"image/png"}]}' rel="manifest"/>
 <!-- External Resources -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -21,53 +19,26 @@
             theme: {
                 extend: {
                     "colors": {
-                        "surface-container": "#ededf2",
-                        "background": "#f9f9fe",
-                        "tertiary": "#9e3d00",
-                        "outline": "#717786",
-                        "on-tertiary": "#ffffff",
-                        "surface-variant": "#e2e2e7",
-                        "on-background": "#1a1c1f",
-                        "inverse-surface": "#2e3034",
-                        "on-secondary-container": "#fffbff",
-                        "surface-bright": "#f9f9fe",
-                        "surface-dim": "#d9dade",
-                        "on-secondary": "#ffffff",
-                        "secondary-fixed-dim": "#c2c1ff",
-                        "on-error": "#ffffff",
-                        "error": "#ba1a1a",
-                        "tertiary-fixed-dim": "#ffb595",
-                        "on-primary-container": "#fefcff",
-                        "surface-container-lowest": "#ffffff",
-                        "outline-variant": "#c1c6d7",
-                        "on-primary-fixed-variant": "#004493",
-                        "inverse-on-surface": "#f0f0f5",
-                        "tertiary-container": "#c64f00",
-                        "secondary-fixed": "#e2dfff",
-                        "on-secondary-fixed-variant": "#3631b4",
-                        "on-primary-fixed": "#001a41",
-                        "inverse-primary": "#adc6ff",
-                        "primary-fixed-dim": "#adc6ff",
-                        "surface-container-low": "#f3f3f8",
-                        "primary-fixed": "#d8e2ff",
-                        "on-secondary-fixed": "#0c006a",
-                        "secondary": "#4c4aca",
-                        "on-tertiary-fixed-variant": "#7c2e00",
+                        "primary": "#005bc1",
+                        "primary-container": "#0070eb",
                         "on-primary": "#ffffff",
-                        "surface-container-highest": "#e2e2e7",
-                        "surface-tint": "#005bc1",
+                        "secondary": "#4c4aca",
+                        "on-secondary": "#ffffff",
                         "surface": "#f9f9fe",
-                        "on-tertiary-fixed": "#351000",
-                        "on-surface": "#1a1c1f",
-                        "tertiary-fixed": "#ffdbcc",
-                        "secondary-container": "#6664e4",
-                        "on-surface-variant": "#414755",
-                        "error-container": "#ffdad6",
-                        "on-error-container": "#93000a",
-                        "primary": "#0058bc",
-                        "on-tertiary-container": "#fffbff",
+                        "surface-dim": "#d9dade",
+                        "surface-bright": "#f9f9fe",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f3f3f8",
+                        "surface-container": "#ededf2",
                         "surface-container-high": "#e8e8ed",
-                        "primary-container": "#0070eb"
+                        "surface-container-highest": "#e2e2e7",
+                        "on-surface": "#1a1c1f",
+                        "on-surface-variant": "#414755",
+                        "outline": "#717786",
+                        "outline-variant": "#c1c6d7",
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "error-container": "#ffdad6"
                     },
                     "borderRadius": {
                         "DEFAULT": "1rem",
@@ -76,101 +47,61 @@
                         "full": "9999px"
                     },
                     "spacing": {
-                        "stack-padding": "1.25rem",
-                        "container-margin": "2rem",
                         "input-padding": "1rem",
-                        "gutter": "1.5rem"
+                        "gutter": "1.5rem",
+                        "stack-padding": "1.25rem",
+                        "container-margin": "2rem"
                     },
                     "fontFamily": {
-                        "h2": ["Inter"],
-                        "h1": ["Inter"],
-                        "label-caps": ["Inter"],
-                        "body-lg": ["Inter"],
-                        "subject-tag": ["Inter"],
-                        "h1-mobile": ["Inter"],
-                        "body-md": ["Inter"]
-                    },
-                    "fontSize": {
-                        "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
-                        "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
-                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
-                        "subject-tag": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
-                        "h1-mobile": ["26px", {"lineHeight": "32px", "fontWeight": "700"}],
-                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                        "body": ["Inter", "sans-serif"],
+                        "h1": ["Inter", "sans-serif"],
+                        "h2": ["Inter", "sans-serif"]
                     }
-                },
-            },
+                }
+            }
         }
     </script>
 <style>
-        .task-row-done {
-            opacity: 0.6;
-            background-color: #f1f5f9 !important;
-        }
-        .task-row-done .task-text {
-            text-decoration: line-through;
-        }
-        .subject-bar {
-            width: 6px;
-            height: 100%;
-            position: absolute;
-            left: 0;
-            top: 0;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .task-row-done { opacity: 0.6; background-color: #f1f5f9 !important; }
+        .task-row-done .task-text { text-decoration: line-through; }
+        .subject-bar { width: 6px; height: 100%; position: absolute; left: 0; top: 0; }
         @media print {
-            .print-hide, #role-switcher, #student-filter-container, #reset-btn, #teacher-tools, #action-buttons, .instructions-section, #qr-section {
-                display: none !important;
-            }
-            .print-only {
-                display: block !important;
-            }
-            main {
-                max-width: 100% !important;
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            body {
-                background: white !important;
-            }
+            .print-hide { display: none !important; }
+            main { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+            body { background: white !important; }
         }
-        .dashboard-scrollbar::-webkit-scrollbar {
-            height: 8px;
-        }
-        .dashboard-scrollbar::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        .dashboard-scrollbar::-webkit-scrollbar-thumb {
-            background: #ccc;
-            border-radius: 10px;
-        }
+        .dashboard-scrollbar::-webkit-scrollbar { height: 8px; }
+        .dashboard-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .dashboard-scrollbar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
     </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen">
 <main class="max-w-7xl mx-auto px-gutter py-8 md:py-12 space-y-12">
 <!-- Header -->
 <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 <div>
-<h1 class="font-h1 text-h1 text-on-surface">doeltschi</h1>
-<p class="text-on-surface-variant">Wer macht was bis wann?</p>
+<h1 class="text-3xl font-bold text-on-surface">doeltschi</h1>
+<p class="text-on-surface-variant">Wer – Was – Bis wann</p>
 </div>
-<div class="flex flex-col items-end gap-2 print-hide" id="role-switcher">
-<div class="bg-surface-container-high p-1 rounded-full flex gap-1 border border-outline-variant relative">
-<button class="role-btn px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 cursor-pointer" id="btn-student" onclick="toggleMode('student')">
-<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<div class="flex flex-col items-end gap-2 print-hide" id="role-switcher-container">
+<div class="bg-surface-container-high p-1 rounded-full flex gap-1 border border-outline-variant">
+<button class="px-5 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 cursor-pointer" id="btn-student-view">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
 <span class="hidden sm:inline">Schüler-Ansicht</span>
 </button>
-<button class="role-btn px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 cursor-pointer" id="btn-teacher" onclick="toggleMode('teacher')">
-<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<button class="px-5 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 cursor-pointer" id="btn-teacher-view">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
 <span class="hidden sm:inline">Lehrer-Modus</span>
 </button>
 </div>
-<button class="hidden flex items-center gap-2 px-4 py-2 text-primary border border-primary/20 hover:bg-primary/5 rounded-full transition-colors font-label-caps text-label-caps uppercase text-[10px] cursor-pointer" id="reset-btn" onclick="resetTemplate()">
+<button class="hidden flex items-center gap-2 px-4 py-2 text-primary border border-primary/20 hover:bg-primary/5 rounded-full transition-colors text-[10px] font-bold uppercase cursor-pointer" id="reset-app-btn">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
                 Zurücksetzen
             </button>
 </div>
 </header>
-<!-- Anleitung für Schüler -->
+<!-- Student Instructions -->
 <section class="instructions-section" id="student-instructions">
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
 <div class="bg-white p-6 rounded-xl border border-outline-variant shadow-sm flex flex-col items-center text-center">
@@ -188,7 +119,7 @@
 <h4 class="font-bold text-on-surface mb-2">Bestätigen</h4>
 <p class="text-sm text-on-surface-variant">Lass deine Eltern die erledigte Liste bestätigen.</p>
 </div>
-<div class="bg-white p-6 rounded-xl border border-outline-variant shadow-sm flex flex-col items-center text-center border-dashed border-2 border-primary/30">
+<div class="bg-white p-6 rounded-xl border border-dashed border-2 border-primary/30 shadow-sm flex flex-col items-center text-center">
 <div class="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-xl mb-4">4</div>
 <h4 class="font-bold text-on-surface mb-2">App installieren</h4>
 <p class="text-sm text-on-surface-variant">Als Web-App auf dem Homescreen speichern.</p>
@@ -198,19 +129,19 @@
 <!-- Status Banner -->
 <div class="bg-surface-container-low border border-outline-variant p-6 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-6" id="status-banner">
 <div class="flex items-start gap-4">
-<div class="mt-1 text-primary" id="banner-icon-container">
+<div class="mt-1 text-primary" id="banner-icon">
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
 </div>
 <div>
-<h3 class="font-bold text-primary font-body-lg" id="banner-title">Schüleransicht</h3>
-<p class="text-on-surface-variant font-body-md mt-1" id="banner-desc">Du siehst die aktuelle Aufgabenliste. Deine Erledigungen werden lokal gespeichert.</p>
+<h3 class="font-bold text-primary text-lg" id="banner-title">Schüleransicht</h3>
+<p class="text-on-surface-variant mt-1" id="banner-desc">Du siehst die aktuelle Aufgabenliste. Deine Erledigungen werden lokal gespeichert.</p>
 </div>
 </div>
 <!-- Student filter -->
 <div class="flex flex-col gap-2 min-w-[200px]" id="student-filter-container">
-<label class="font-label-caps text-label-caps text-outline uppercase text-[10px]" for="student-filter">Mein Name:</label>
+<label class="text-[10px] font-bold uppercase text-outline tracking-wider" for="student-selector">Mein Name:</label>
 <div class="relative">
-<select class="w-full bg-surface-container-lowest border border-outline-variant rounded-full pl-4 pr-10 py-2 focus:ring-2 focus:ring-primary focus:border-primary appearance-none outline-none text-sm font-semibold cursor-pointer" id="student-filter" onchange="renderTasks()">
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded-full pl-4 pr-10 py-2 focus:ring-2 focus:ring-primary focus:border-primary appearance-none outline-none text-sm font-semibold cursor-pointer" id="student-selector">
 <option value="all">Alle anzeigen</option>
 </select>
 <svg class="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
@@ -219,9 +150,9 @@
 </div>
 <!-- Teacher Specific Sections -->
 <div class="space-y-8 hidden" id="teacher-tools">
-<!-- Kurzanleitung -->
-<section class="instructions-section">
-<h2 class="font-h2 text-h2 mb-6">Erste Schritte</h2>
+<!-- Quick Instructions -->
+<section>
+<h2 class="text-xl font-bold mb-6">Erste Schritte</h2>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant flex gap-4">
 <div class="shrink-0 w-10 h-10 bg-primary text-on-primary rounded-full flex items-center justify-center font-bold">1</div>
@@ -246,44 +177,42 @@
 </div>
 </div>
 </section>
-<!-- QR-Code Section -->
-<section class="bg-surface-container-lowest border border-outline-variant p-8 rounded-lg shadow-sm" id="qr-section">
+<!-- QR-Code -->
+<section class="bg-surface-container-lowest border border-outline-variant p-8 rounded-lg shadow-sm">
 <div class="flex flex-col md:flex-row items-center gap-8">
 <div class="bg-white p-4 rounded-lg shadow-inner border border-outline-variant">
 <img alt="QR Code" class="w-48 h-48" id="qr-code-img" src=""/>
 </div>
 <div class="flex-1 space-y-4">
-<h2 class="font-h2 text-h2">Direktzugriff teilen</h2>
+<h2 class="text-xl font-bold">Direktzugriff teilen</h2>
 <p class="text-on-surface-variant">Lassen Sie Ihre Schüler oder Eltern diesen QR-Code scannen, um direkt zu diesem Planer zu gelangen.</p>
-<div class="flex flex-wrap gap-4">
-<button class="px-6 py-3 bg-primary text-on-primary rounded-full font-bold hover:bg-primary/90 transition-all flex items-center gap-2 cursor-pointer shadow-sm" onclick="window.print()">
+<button class="px-6 py-3 bg-primary text-on-primary rounded-full font-bold hover:bg-primary/90 transition-all flex items-center gap-2 shadow-sm" onclick="window.print()">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-                            QR-Code drucken
-                        </button>
-</div>
+                        QR-Code drucken
+                    </button>
 </div>
 </div>
 </section>
-<!-- Dashboard Progress -->
+<!-- Teacher Dashboard -->
 <section class="bg-surface-container-lowest border border-outline-variant p-8 rounded-lg shadow-sm">
 <div class="flex items-center justify-between mb-8">
 <div>
-<h2 class="font-h2 text-h2">Dashboard der Lehrperson</h2>
-<p class="text-on-surface-variant text-sm mt-1">Status-Übersicht aller Aufgaben und Eltern-Bestätigungen pro Schüler.</p>
+<h2 class="text-xl font-bold">Dashboard der Lehrperson</h2>
+<p class="text-on-surface-variant text-sm mt-1">Status-Übersicht aller Aufgaben und Eltern-Bestätigungen.</p>
 </div>
 <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
 </div>
 <div class="overflow-x-auto dashboard-scrollbar">
 <table class="w-full text-left border-collapse min-w-[800px]">
 <thead>
-<tr class="bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">
+<tr class="bg-surface-container-low text-on-surface-variant text-[10px] font-bold uppercase tracking-wider">
 <th class="p-4 border-b border-outline-variant">Schüler</th>
-<th class="p-4 border-b border-outline-variant text-center">Quote</th>
+<th class="p-4 border-b border-outline-variant text-center">Fortschritt</th>
 <th class="p-4 border-b border-outline-variant text-center">Eltern</th>
-<th class="p-4 border-b border-outline-variant" id="dashboard-tasks-header">Aufgaben-Check</th>
+<th class="p-4 border-b border-outline-variant">Check</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-outline-variant" id="teacher-dashboard-body"></tbody>
+<tbody class="divide-y divide-outline-variant" id="dashboard-body"></tbody>
 </table>
 </div>
 </section>
@@ -291,42 +220,35 @@
 <section class="bg-surface-container-lowest border border-outline-variant p-8 rounded-lg shadow-sm">
 <div class="flex items-center justify-between mb-8">
 <div>
-<h2 class="font-h2 text-h2">Schülerliste verwalten</h2>
+<h2 class="text-xl font-bold">Schülerliste verwalten</h2>
 <p class="text-on-surface-variant text-sm mt-1">Geben Sie Namen getrennt durch Kommas oder Zeilen ein.</p>
 </div>
-<svg class="w-8 h-8 text-secondary" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
 </div>
 <div class="flex flex-col md:flex-row gap-4 mb-6">
-<textarea class="flex-1 bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-2 focus:ring-secondary focus:border-secondary outline-none min-h-[100px]" id="bulk-student-input" placeholder="Anna, Ben, Lara..."></textarea>
+<textarea class="flex-1 bg-surface-container-low border border-outline-variant rounded-lg p-4 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none min-h-[100px]" id="bulk-input" placeholder="Anna, Ben, Lara..."></textarea>
 <div class="flex flex-col gap-3">
-<button class="px-8 py-3 bg-secondary text-on-secondary rounded-full font-bold hover:bg-secondary/90 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm min-w-[200px]" onclick="addBulkStudents()">
-<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<button class="px-8 py-3 bg-secondary text-on-secondary rounded-full font-bold hover:bg-secondary/90 flex items-center justify-center gap-2 shadow-sm min-w-[200px]" id="add-bulk-btn">
                         Hinzufügen
                     </button>
-<button class="px-8 py-3 bg-primary text-on-primary rounded-full font-bold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm min-w-[200px]" onclick="document.getElementById('import-file').click()">
-<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<button class="px-8 py-3 bg-primary text-on-primary rounded-full font-bold hover:bg-primary/90 flex items-center justify-center gap-2 shadow-sm min-w-[200px]" onclick="document.getElementById('file-import').click()">
                         Importieren (.txt)
                     </button>
-<input accept=".txt" class="hidden" id="import-file" onchange="importStudentsFromFile(event)" type="file"/>
+<input accept=".txt" class="hidden" id="file-import" type="file"/>
 </div>
 </div>
-<div class="flex flex-wrap gap-3 pt-6 border-t border-outline-variant" id="student-badges-container"></div>
+<div class="flex flex-wrap gap-3 pt-6 border-t border-outline-variant" id="student-badges"></div>
 </section>
-<!-- Task Form -->
+<!-- Add Task Form -->
 <section class="bg-surface-container-lowest border border-outline-variant p-8 rounded-lg shadow-sm">
-<h2 class="font-h2 text-h2 mb-8">Neue Aufgabe zuteilen</h2>
+<h2 class="text-xl font-bold mb-8">Neue Aufgabe zuteilen</h2>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 <div class="flex flex-col gap-2">
-<label class="font-label-caps text-label-caps text-outline uppercase">Wer?</label>
-<div class="relative">
-<select class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-2 focus:ring-primary appearance-none outline-none" id="task-who"></select>
-<svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-</div>
+<label class="text-[10px] font-bold uppercase text-outline">Wer?</label>
+<select class="bg-surface-container-low border border-outline-variant rounded-lg p-4 focus:ring-2 focus:ring-primary outline-none" id="task-assignee"></select>
 </div>
 <div class="flex flex-col gap-2">
-<label class="font-label-caps text-label-caps text-outline uppercase">Fach</label>
-<div class="relative">
-<select class="w-full bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-2 focus:ring-primary appearance-none outline-none" id="task-subject">
+<label class="text-[10px] font-bold uppercase text-outline">Fach</label>
+<select class="bg-surface-container-low border border-outline-variant rounded-lg p-4 focus:ring-2 focus:ring-primary outline-none" id="task-subject">
 <option value="de">Deutsch (DE)</option>
 <option value="ma">Mathematik (MA)</option>
 <option value="e">Englisch (E)</option>
@@ -338,19 +260,17 @@
 <option value="mi">Medien (MI)</option>
 <option value="wah">WAH</option>
 </select>
-<svg class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-</div>
 </div>
 <div class="flex flex-col gap-2">
-<label class="font-label-caps text-label-caps text-outline uppercase">Aufgabe</label>
-<input class="bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-2 focus:ring-primary outline-none" id="task-desc" placeholder="Was ist zu tun?" type="text"/>
+<label class="text-[10px] font-bold uppercase text-outline">Aufgabe</label>
+<input class="bg-surface-container-low border border-outline-variant rounded-lg p-4 focus:ring-2 focus:ring-primary outline-none" id="task-content" placeholder="Was ist zu tun?" type="text"/>
 </div>
 <div class="flex flex-col gap-2">
-<label class="font-label-caps text-label-caps text-outline uppercase">Bis wann</label>
-<input class="bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-2 focus:ring-primary outline-none" id="task-date" type="date"/>
+<label class="text-[10px] font-bold uppercase text-outline">Bis wann</label>
+<input class="bg-surface-container-low border border-outline-variant rounded-lg p-4 focus:ring-2 focus:ring-primary outline-none" id="task-deadline" type="date"/>
 </div>
 </div>
-<button class="w-full md:w-auto px-10 py-4 bg-primary text-on-primary rounded-full font-bold hover:bg-surface-tint active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md" onclick="addTask()">
+<button class="w-full md:w-auto px-10 py-4 bg-primary text-on-primary rounded-full font-bold hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-md" id="create-task-btn">
 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
                 Zuweisen
             </button>
@@ -361,7 +281,7 @@
 <div class="overflow-x-auto rounded-xl border border-outline-variant bg-surface-container-lowest shadow-sm">
 <table class="w-full text-left border-collapse min-w-[600px]">
 <thead>
-<tr class="bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">
+<tr class="bg-surface-container-low text-on-surface-variant text-[10px] font-bold uppercase tracking-wider">
 <th class="p-5 border-b border-outline-variant w-16 text-center">Status</th>
 <th class="p-5 border-b border-outline-variant">Wer</th>
 <th class="p-5 border-b border-outline-variant">Fach</th>
@@ -370,201 +290,294 @@
 <th class="p-5 border-b border-outline-variant w-40 text-center print-hide">Aktion</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-outline-variant" id="task-list-body"></tbody>
+<tbody class="divide-y divide-outline-variant" id="task-list"></tbody>
 </table>
 </div>
 </section>
-<!-- Parent Confirmation (INDIVIDUAL) -->
-<section class="bg-surface-container-lowest border-2 border-primary border-dashed p-8 rounded-lg shadow-sm transition-all" id="parent-confirmation">
+<!-- Parent Confirmation -->
+<section class="bg-surface-container-lowest border-2 border-primary border-dashed p-8 rounded-lg shadow-sm transition-all" id="parent-lock-section">
 <div class="flex items-center gap-3 mb-8">
-<svg class="w-8 h-8 text-primary" fill="none" id="confirm-icon" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-<h2 class="font-h2 text-h2 text-primary" id="confirm-heading">Bestätigung der Eltern</h2>
+<svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+<h2 class="text-xl font-bold text-primary">Bestätigung der Eltern</h2>
 </div>
-<div class="hidden mb-4 text-xs font-bold text-error uppercase bg-error/10 p-2 rounded text-center" id="confirmation-ui-locked-hint">Bitte wähle oben deinen Namen aus, um die Liste zu bestätigen.</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="confirmation-controls">
+<div class="hidden mb-4 text-[10px] font-bold text-error uppercase bg-error/10 p-2 rounded text-center" id="lock-hint">Bitte wähle oben deinen Namen aus.</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="lock-controls">
 <div class="flex flex-col gap-2">
-<label class="font-label-caps text-label-caps text-outline uppercase">Datum</label>
-<input class="bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-primary outline-none text-black" id="confirm-date" onchange="saveConfirmationData()" type="date"/>
+<label class="text-[10px] font-bold uppercase text-outline">Datum</label>
+<input class="bg-surface-container-low border border-outline-variant rounded-lg p-4 outline-none" id="parent-date" type="date"/>
 </div>
 <div class="flex flex-col gap-2">
-<label class="font-label-caps text-label-caps text-outline uppercase">Unterschrift (Name)</label>
-<input class="bg-surface-container-low border border-outline-variant rounded-lg p-input-padding focus:ring-primary outline-none text-black" id="confirm-sig" oninput="saveConfirmationData()" placeholder="Vorname Nachname" type="text"/>
+<label class="text-[10px] font-bold uppercase text-outline">Unterschrift (Name)</label>
+<input class="bg-surface-container-low border border-outline-variant rounded-lg p-4 outline-none" id="parent-sig" placeholder="Vorname Nachname" type="text"/>
 </div>
 <div class="flex items-end">
-<label class="flex items-center justify-center gap-3 cursor-pointer select-none bg-surface-container-low p-3 rounded-lg border border-outline-variant w-full hover:bg-surface-container-high transition-all" id="confirm-label">
-<input class="w-6 h-6 text-primary rounded-full border-outline-variant focus:ring-primary cursor-pointer" id="confirm-check" onchange="toggleParentLock()" type="checkbox"/>
-<span class="font-bold text-black" id="confirm-text">Gesehen ☑</span>
+<label class="flex items-center justify-center gap-3 cursor-pointer select-none bg-surface-container-low p-3 rounded-lg border border-outline-variant w-full hover:bg-surface-container-high transition-all" id="parent-check-label">
+<input class="w-6 h-6 text-primary rounded-full border-outline-variant focus:ring-primary cursor-pointer" id="parent-check" type="checkbox"/>
+<span class="font-bold text-black" id="parent-check-text">Gesehen ☑</span>
 </label>
 </div>
 </div>
 </section>
 <!-- Color Legend -->
-<section class="bg-surface-container-lowest border border-outline-variant p-6 rounded-lg" id="color-legend-section">
-<h3 class="font-label-caps text-label-caps text-outline uppercase mb-4">Farblegende der Fächer</h3>
-<div class="flex flex-wrap gap-4" id="color-legend-container"></div>
+<section class="bg-surface-container-lowest border border-outline-variant p-6 rounded-lg">
+<h3 class="text-[10px] font-bold text-outline uppercase mb-4 tracking-wider">Farblegende der Fächer</h3>
+<div class="flex flex-wrap gap-4" id="color-legend"></div>
 </section>
-<!-- Footer Actions -->
-<section class="flex flex-wrap gap-4 justify-center py-8 border-t border-outline-variant print-hide" id="action-buttons">
+<!-- Action Buttons -->
+<section class="flex flex-wrap gap-4 justify-center py-8 border-t border-outline-variant print-hide">
 <button class="px-6 py-3 bg-surface-container-low border border-outline-variant rounded-full font-bold text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-2 cursor-pointer" onclick="window.print()">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
             PDF / Drucken
         </button>
-<button class="px-6 py-3 bg-surface-container-low border border-outline-variant rounded-full font-bold text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-2 cursor-pointer" onclick="exportData()">
+<button class="px-6 py-3 bg-surface-container-low border border-outline-variant rounded-full font-bold text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-2 cursor-pointer" id="export-json-btn">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
             Export (.json)
         </button>
 </section>
 <!-- Footer -->
-<footer class="w-full py-10 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-6 text-on-surface-variant font-body-md print-hide">
+<footer class="w-full py-10 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-6 text-on-surface-variant print-hide">
 <div class="flex flex-col items-center md:items-start gap-1">
 <span class="font-bold text-on-surface">doeltschi</span>
 <span class="text-xs">© 2024 Digitaler Planer</span>
 </div>
-<div class="flex gap-8">
-<a class="hover:text-primary transition-colors text-sm font-semibold" href="#">Datenschutz</a>
-<a class="hover:text-primary transition-colors text-sm font-semibold" href="#">Impressum</a>
-<a class="hover:text-primary transition-colors text-sm font-semibold" href="#">Hilfe</a>
+<div class="flex gap-8 text-sm font-semibold">
+<a class="hover:text-primary transition-colors" href="#">Datenschutz</a>
+<a class="hover:text-primary transition-colors" href="#">Impressum</a>
+<a class="hover:text-primary transition-colors" href="#">Hilfe</a>
 </div>
 </footer>
 </main>
 <script>
-    const subjectColorCodes = {
-        'de': '#ef4444', 'ma': '#3b82f6', 'e': '#eab308', 'f': '#22c55e',
-        'rzg': '#f97316', 'nt': '#06b6d4', 'mu': '#a855f7', 'bs': '#f59e0b',
-        'mi': '#64748b', 'wah': '#ff5722'
+    // Constants
+    const SUBJECT_DATA = {
+        'de': { name: 'Deutsch', color: '#ef4444' },
+        'ma': { name: 'Mathematik', color: '#3b82f6' },
+        'e': { name: 'Englisch', color: '#eab308' },
+        'f': { name: 'Französisch', color: '#22c55e' },
+        'rzg': { name: 'RZG', color: '#f97316' },
+        'nt': { name: 'NT', color: '#06b6d4' },
+        'mu': { name: 'Musik', color: '#a855f7' },
+        'bs': { name: 'Sport', color: '#f59e0b' },
+        'mi': { name: 'Medien', color: '#64748b' },
+        'wah': { name: 'WAH', color: '#ff5722' }
     };
 
-    const subjectNames = {
-        'de': 'Deutsch', 'ma': 'Mathematik', 'e': 'Englisch', 'f': 'Französisch',
-        'rzg': 'RZG', 'nt': 'NT', 'mu': 'Musik', 'bs': 'Sport',
-        'mi': 'Medien', 'wah': 'WAH'
+    // State
+    let state = {
+        currentMode: 'student', // 'student' or 'teacher'
+        selectedStudent: 'all',
+        students: ['Anna', 'Ben', 'Lara', 'Mark', 'Sophie'],
+        tasks: [],
+        confirmations: {} // { 'StudentName': { date: '', signature: '', checked: false } }
     };
 
-    let tasks = [];
-    let students = ['Anna', 'Ben', 'Lara', 'Mark', 'Sophie'];
-    let studentConfirmations = {}; 
-    let currentMode = 'student';
+    // DOM Elements
+    const elements = {
+        btnStudent: document.getElementById('btn-student-view'),
+        btnTeacher: document.getElementById('btn-teacher-view'),
+        teacherTools: document.getElementById('teacher-tools'),
+        studentInstructions: document.getElementById('student-instructions'),
+        studentSelector: document.getElementById('student-selector'),
+        taskList: document.getElementById('task-list'),
+        dashboardBody: document.getElementById('dashboard-body'),
+        studentBadges: document.getElementById('student-badges'),
+        taskAssignee: document.getElementById('task-assignee'),
+        parentLockSection: document.getElementById('parent-lock-section'),
+        parentDate: document.getElementById('parent-date'),
+        parentSig: document.getElementById('parent-sig'),
+        parentCheck: document.getElementById('parent-check'),
+        parentCheckLabel: document.getElementById('parent-check-label'),
+        parentCheckText: document.getElementById('parent-check-text'),
+        lockControls: document.getElementById('lock-controls'),
+        lockHint: document.getElementById('lock-hint'),
+        resetBtn: document.getElementById('reset-app-btn'),
+        bulkInput: document.getElementById('bulk-input'),
+        addBulkBtn: document.getElementById('add-bulk-btn'),
+        createTaskBtn: document.getElementById('create-task-btn'),
+        exportBtn: document.getElementById('export-json-btn'),
+        qrImg: document.getElementById('qr-code-img')
+    };
 
-    window.onload = init;
-
+    // Initialize
     function init() {
-        const storedTasks = localStorage.getItem('hw_planner_tasks');
-        if (storedTasks) tasks = JSON.parse(storedTasks);
-        
-        const storedStudents = localStorage.getItem('hw_planner_students');
-        if (storedStudents) students = JSON.parse(storedStudents);
-
-        const storedConfirmations = localStorage.getItem('hw_planner_confirmations_map');
-        if (storedConfirmations) studentConfirmations = JSON.parse(storedConfirmations);
-
-        const today = new Date().toISOString().split('T')[0];
-        if (document.getElementById('task-date')) document.getElementById('task-date').value = today;
-        if (document.getElementById('confirm-date')) document.getElementById('confirm-date').value = today;
-
-        // QR Code init
-        updateQRCode();
-
-        renderColorLegend();
+        loadFromStorage();
+        attachEventListeners();
         updateUI();
-        setRoleState('student');
+        syncQRCode();
     }
 
-    function updateQRCode() {
-        const currentUrl = window.location.href;
-        const qrImg = document.getElementById('qr-code-img');
-        if (qrImg) {
-            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}`;
+    function loadFromStorage() {
+        const saved = localStorage.getItem('doeltschi_v1_state');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                state = { ...state, ...parsed };
+            } catch (e) { console.error("Storage load error", e); }
         }
+        // Always default to student on fresh load
+        state.currentMode = 'student';
     }
 
-    function toggleMode(mode) {
-        if (mode === 'teacher') {
+    function saveToStorage() {
+        localStorage.setItem('doeltschi_v1_state', JSON.stringify(state));
+    }
+
+    function attachEventListeners() {
+        elements.btnStudent.addEventListener('click', () => setMode('student'));
+        elements.btnTeacher.addEventListener('click', () => {
             const pw = prompt("Bitte Lehrer-Passwort eingeben:");
-            if (pw === 'lehrer123') {
-                setRoleState('teacher');
-            } else if (pw !== null) {
-                alert("Falsches Passwort.");
+            if (pw === 'lehrer123') setMode('teacher');
+            else if (pw !== null) alert("Falsches Passwort.");
+        });
+
+        elements.studentSelector.addEventListener('change', (e) => {
+            state.selectedStudent = e.target.value;
+            renderTasks();
+            renderParentConfirmation();
+        });
+
+        elements.addBulkBtn.addEventListener('click', () => {
+            const val = elements.bulkInput.value.trim();
+            if (!val) return;
+            const names = val.split(/[,\n;]+/).map(n => n.trim()).filter(n => n && !state.students.includes(n));
+            state.students = [...state.students, ...names].sort();
+            elements.bulkInput.value = '';
+            saveToStorage();
+            updateUI();
+        });
+
+        elements.createTaskBtn.addEventListener('click', () => {
+            const assignee = elements.taskAssignee.value;
+            const subject = document.getElementById('task-subject').value;
+            const content = document.getElementById('task-content').value.trim();
+            const deadline = document.getElementById('task-deadline').value;
+
+            if (!content || !deadline) return alert("Bitte fülle alle Felder aus.");
+
+            state.tasks.push({
+                id: Date.now(),
+                who: assignee,
+                subject,
+                task: content,
+                due: deadline,
+                done: false,
+                completedBy: assignee === 'Ganze Klasse' ? {} : null
+            });
+
+            document.getElementById('task-content').value = '';
+            saveToStorage();
+            renderTasks();
+            renderDashboard();
+        });
+
+        elements.parentCheck.addEventListener('change', (e) => {
+            if (state.selectedStudent === 'all') return;
+            const sig = elements.parentSig.value.trim();
+            if (e.target.checked && !sig) {
+                alert("Bitte geben Sie einen Namen als Unterschrift ein.");
+                e.target.checked = false;
+                return;
             }
-        } else {
-            setRoleState('student');
-        }
+            updateConfirmationState();
+        });
+
+        elements.parentDate.addEventListener('change', updateConfirmationState);
+        elements.parentSig.addEventListener('input', updateConfirmationState);
+
+        elements.resetBtn.addEventListener('click', () => {
+            if (confirm("Wirklich alles zurücksetzen?")) {
+                localStorage.removeItem('doeltschi_v1_state');
+                window.location.reload();
+            }
+        });
+
+        elements.exportBtn.addEventListener('click', () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "doeltschi_export.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        });
     }
 
-    function setRoleState(role) {
-        currentMode = role;
-        const studentBtn = document.getElementById('btn-student');
-        const teacherBtn = document.getElementById('btn-teacher');
-        const teacherTools = document.getElementById('teacher-tools');
-        const resetBtn = document.getElementById('reset-btn');
-        const studentFilterCont = document.getElementById('student-filter-container');
-        const studentInstructions = document.getElementById('student-instructions');
-        
-        if (role === 'teacher') {
-            studentBtn.className = "role-btn px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 text-on-surface-variant hover:bg-surface-container-highest cursor-pointer";
-            teacherBtn.className = "role-btn px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 bg-primary text-on-primary shadow-sm cursor-pointer";
-            teacherTools.classList.remove('hidden');
-            resetBtn.classList.remove('hidden');
-            studentFilterCont.classList.add('hidden');
-            studentInstructions.classList.add('hidden');
-            updateBanner('Lehrer-Modus', 'Als Lehrkraft kannst du Aufgaben erstellen und den Fortschritt überwachen.', 'text-primary', 'lock');
-            renderTeacherDashboard();
-        } else {
-            teacherBtn.className = "role-btn px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 text-on-surface-variant hover:bg-surface-container-highest cursor-pointer";
-            studentBtn.className = "role-btn px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 bg-primary text-on-primary shadow-sm cursor-pointer";
-            teacherTools.classList.add('hidden');
-            resetBtn.classList.add('hidden');
-            studentFilterCont.classList.remove('hidden');
-            studentInstructions.classList.remove('hidden');
-            updateBanner('Schüleransicht', 'Du siehst die aktuelle Aufgabenliste. Deine Erledigungen werden lokal gespeichert.', 'text-primary', 'info');
-        }
-        
+    function setMode(mode) {
+        state.currentMode = mode;
         updateUI();
-        renderTasks();
     }
 
-    function updateBanner(title, desc, colorClass, iconType) {
-        const titleEl = document.getElementById('banner-title');
-        const descEl = document.getElementById('banner-desc');
-        const iconContainer = document.getElementById('banner-icon-container');
+    function updateUI() {
+        // Mode specific visibility
+        if (state.currentMode === 'teacher') {
+            elements.btnStudent.className = "px-5 py-2 rounded-full text-sm font-bold text-on-surface-variant hover:bg-surface-container-highest cursor-pointer transition-all";
+            elements.btnTeacher.className = "px-5 py-2 rounded-full text-sm font-bold bg-primary text-on-primary shadow-sm cursor-pointer transition-all";
+            elements.teacherTools.classList.remove('hidden');
+            elements.resetBtn.classList.remove('hidden');
+            elements.studentInstructions.classList.add('hidden');
+            document.getElementById('student-filter-container').classList.add('hidden');
+            updateBanner('Lehrer-Modus', 'Erstellen Sie Aufgaben und überwachen Sie den Fortschritt.', 'lock');
+            renderDashboard();
+        } else {
+            elements.btnTeacher.className = "px-5 py-2 rounded-full text-sm font-bold text-on-surface-variant hover:bg-surface-container-highest cursor-pointer transition-all";
+            elements.btnStudent.className = "px-5 py-2 rounded-full text-sm font-bold bg-primary text-on-primary shadow-sm cursor-pointer transition-all";
+            elements.teacherTools.classList.add('hidden');
+            elements.resetBtn.classList.add('hidden');
+            elements.studentInstructions.classList.remove('hidden');
+            document.getElementById('student-filter-container').classList.remove('hidden');
+            updateBanner('Schüleransicht', 'Deine aktuelle Aufgabenliste. Deine Erledigungen werden lokal gespeichert.', 'info');
+        }
+
+        // Dropdowns & Badges
+        elements.studentSelector.innerHTML = '<option value="all">Alle anzeigen</option>';
+        elements.taskAssignee.innerHTML = '<option value="Ganze Klasse">Ganze Klasse</option>';
+        elements.studentBadges.innerHTML = '';
         
-        titleEl.innerText = title;
-        titleEl.className = `font-bold font-body-lg ${colorClass}`;
-        descEl.innerText = desc;
-        iconContainer.className = `mt-1 ${colorClass}`;
-        
-        const svgInfo = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
-        const svgLock = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>';
-        
-        iconContainer.innerHTML = iconType === 'info' ? svgInfo : svgLock;
+        state.students.forEach(s => {
+            elements.studentSelector.innerHTML += `<option value="${s}" ${state.selectedStudent === s ? 'selected' : ''}>${s}</option>`;
+            elements.taskAssignee.innerHTML += `<option value="${s}">${s}</option>`;
+            
+            const badge = document.createElement('div');
+            badge.className = "flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-full text-sm font-semibold border border-outline-variant";
+            badge.innerHTML = `<span>${s}</span><button class="text-error hover:scale-110 transition-transform" data-name="${s}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>`;
+            badge.querySelector('button').onclick = () => deleteStudent(s);
+            elements.studentBadges.appendChild(badge);
+        });
+
+        renderTasks();
+        renderParentConfirmation();
+        renderColorLegend();
+    }
+
+    function updateBanner(title, desc, iconType) {
+        document.getElementById('banner-title').innerText = title;
+        document.getElementById('banner-desc').innerText = desc;
+        const iconContainer = document.getElementById('banner-icon');
+        const infoSvg = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>';
+        const lockSvg = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>';
+        iconContainer.innerHTML = iconType === 'info' ? infoSvg : lockSvg;
     }
 
     function renderTasks() {
-        const body = document.getElementById('task-list-body');
-        const selectedStudent = document.getElementById('student-filter')?.value || 'all';
-        const isLocked = (selectedStudent !== 'all' && studentConfirmations[selectedStudent]?.checked);
-        
-        updateConfirmationUI(selectedStudent);
-        
-        body.innerHTML = '';
-        let filteredTasks = tasks.filter(t => {
-            if (currentMode === 'teacher' || selectedStudent === 'all') return true;
-            return t.who === 'Ganze Klasse' || t.who === selectedStudent;
+        elements.taskList.innerHTML = '';
+        const filter = state.selectedStudent;
+        const isLocked = filter !== 'all' && state.confirmations[filter]?.checked;
+
+        let filtered = state.tasks.filter(t => {
+            if (state.currentMode === 'teacher' || filter === 'all') return true;
+            return t.who === 'Ganze Klasse' || t.who === filter;
         });
 
-        if (filteredTasks.length === 0) {
-            body.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-on-surface-variant italic">Keine Aufgaben vorhanden.</td></tr>';
+        if (filtered.length === 0) {
+            elements.taskList.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-on-surface-variant italic">Keine Aufgaben vorhanden.</td></tr>';
             return;
         }
 
-        filteredTasks.forEach(task => {
+        filtered.forEach(task => {
             let done = false;
             if (task.who === 'Ganze Klasse') {
-                if (selectedStudent !== 'all') {
-                    done = !!(task.completedBy && task.completedBy[selectedStudent]);
-                } else {
-                    // In teacher mode or "all", we show overall status or just neutral
-                    done = task.done;
-                }
+                if (filter !== 'all') done = !!(task.completedBy && task.completedBy[filter]);
+                else done = task.done;
             } else {
                 done = task.done;
             }
@@ -572,277 +585,187 @@
             const tr = document.createElement('tr');
             tr.className = `relative border-b border-outline-variant transition-all ${done ? 'task-row-done' : 'bg-white hover:bg-surface-container-low/50'}`;
             
-            const color = subjectColorCodes[task.subject] || '#717786';
-            const canEdit = (currentMode === 'teacher') || (selectedStudent !== 'all' && !isLocked);
+            const subj = SUBJECT_DATA[task.subject] || { color: '#ccc', name: '?' };
+            const canToggle = (state.currentMode === 'teacher') || (filter !== 'all' && !isLocked);
 
             tr.innerHTML = `
                 <td class="p-5 text-center relative">
-                    <div class="subject-bar" style="background-color: ${color}"></div>
-                    <div class="flex items-center justify-center">
-                        <button onclick="toggleTaskCompletion(${task.id})" ${!canEdit ? 'disabled' : ''} class="w-6 h-6 rounded-full border-2 border-outline flex items-center justify-center transition-all ${done ? 'bg-primary border-primary' : 'hover:border-primary'} ${!canEdit ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}">
-                            ${done ? '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : ''}
-                        </button>
-                    </div>
+                    <div class="subject-bar" style="background-color: ${subj.color}"></div>
+                    <button class="w-6 h-6 rounded-full border-2 border-outline flex items-center justify-center transition-all ${done ? 'bg-primary border-primary' : 'hover:border-primary'} ${!canToggle ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}" ${!canToggle ? 'disabled' : ''}>
+                        ${done ? '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                    </button>
                 </td>
-                <td class="p-5 font-semibold text-on-surface">${task.who}</td>
+                <td class="p-5 font-semibold text-on-surface text-sm">${task.who}</td>
                 <td class="p-5">
-                    <span class="px-3 py-1 rounded-full text-[11px] font-bold uppercase text-white shadow-sm" style="background-color: ${color}">${task.subject.toUpperCase()}</span>
+                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase text-white shadow-sm" style="background-color: ${subj.color}">${task.subject.toUpperCase()}</span>
                 </td>
-                <td class="p-5 font-body-md text-on-surface-variant task-text">${task.task}</td>
-                <td class="p-5 text-sm font-semibold text-on-surface">${formatSwissDate(task.due)}</td>
+                <td class="p-5 font-medium text-on-surface-variant task-text text-sm">${task.task}</td>
+                <td class="p-5 text-sm font-semibold text-on-surface">${formatDate(task.due)}</td>
                 <td class="p-5 text-center print-hide">
                     <div class="flex items-center justify-center gap-2">
-                        ${currentMode === 'teacher' ? `<button onclick="deleteTask(${task.id})" class="text-error hover:bg-error-container p-2 rounded-full transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` : (done ? '<span class="text-green-600 text-xs font-bold uppercase">Fertig</span>' : '<span class="text-on-surface-variant text-xs font-bold uppercase">Offen</span>')}
+                        ${state.currentMode === 'teacher' ? `<button class="text-error hover:bg-error-container p-2 rounded-full transition-colors delete-task-btn" data-id="${task.id}"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` : `<span class="text-[10px] font-bold uppercase ${done ? 'text-green-600' : 'text-on-surface-variant'}">${done ? 'Erledigt' : 'Offen'}</span>`}
                     </div>
                 </td>
             `;
-            body.appendChild(tr);
+
+            tr.querySelector('button').onclick = () => toggleTask(task.id);
+            if (state.currentMode === 'teacher') {
+                tr.querySelector('.delete-task-btn').onclick = () => deleteTask(task.id);
+            }
+            elements.taskList.appendChild(tr);
         });
     }
 
-    function toggleTaskCompletion(id) {
-        const student = document.getElementById('student-filter')?.value;
-        if (currentMode === 'student' && (!student || student === 'all')) {
+    function toggleTask(id) {
+        if (state.currentMode === 'student' && state.selectedStudent === 'all') {
             alert("Wähle bitte erst deinen Namen aus.");
             return;
         }
 
-        const task = tasks.find(t => t.id === id);
+        const task = state.tasks.find(t => t.id === id);
         if (!task) return;
 
-        if (task.who === 'Ganze Klasse' && currentMode === 'student') {
+        if (task.who === 'Ganze Klasse' && state.currentMode === 'student') {
             if (!task.completedBy) task.completedBy = {};
+            const student = state.selectedStudent;
             task.completedBy[student] = !task.completedBy[student];
         } else {
             task.done = !task.done;
         }
         
-        saveData();
+        saveToStorage();
         renderTasks();
-        if (currentMode === 'teacher') renderTeacherDashboard();
-    }
-
-    function updateUI() {
-        const studentFilter = document.getElementById('student-filter');
-        const taskWho = document.getElementById('task-who');
-        const studentBadges = document.getElementById('student-badges-container');
-        
-        const currentFilterVal = studentFilter.value;
-        
-        studentFilter.innerHTML = '<option value="all">Alle anzeigen</option>';
-        taskWho.innerHTML = '<option value="Ganze Klasse">Ganze Klasse</option>';
-        studentBadges.innerHTML = '';
-        
-        students.sort().forEach(s => {
-            studentFilter.innerHTML += `<option value="${s}">${s}</option>`;
-            taskWho.innerHTML += `<option value="${s}">${s}</option>`;
-            
-            const badge = document.createElement('div');
-            badge.className = "flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-full text-sm font-semibold border border-outline-variant";
-            badge.innerHTML = `
-                <span>${s}</span>
-                <button onclick="deleteStudent('${s}')" class="text-error hover:scale-110 transition-transform">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            `;
-            studentBadges.appendChild(badge);
-        });
-        
-        if (currentFilterVal && [...studentFilter.options].some(o => o.value === currentFilterVal)) {
-            studentFilter.value = currentFilterVal;
-        }
-        
-        renderColorLegend();
-    }
-
-    function renderColorLegend() {
-        const container = document.getElementById('color-legend-container');
-        if (!container) return;
-        container.innerHTML = '';
-        Object.entries(subjectNames).forEach(([code, name]) => {
-            const div = document.createElement('div');
-            div.className = "flex items-center gap-2 px-3 py-1 bg-white border border-outline-variant rounded-full text-xs font-semibold";
-            div.innerHTML = `<span class="w-3 h-3 rounded-full" style="background-color: ${subjectColorCodes[code]}"></span> ${name} (${code.toUpperCase()})`;
-            container.appendChild(div);
-        });
-    }
-
-    function addTask() {
-        const who = document.getElementById('task-who').value;
-        const subject = document.getElementById('task-subject').value;
-        const desc = document.getElementById('task-desc').value.trim();
-        const due = document.getElementById('task-date').value;
-
-        if (!desc || !due) return alert("Bitte fülle alle Felder aus.");
-
-        tasks.push({
-            id: Date.now(),
-            who, 
-            subject, 
-            task: desc, 
-            due, 
-            done: false,
-            completedBy: who === 'Ganze Klasse' ? {} : null
-        });
-
-        document.getElementById('task-desc').value = '';
-        saveData();
-        renderTasks();
-        if (currentMode === 'teacher') renderTeacherDashboard();
+        if (state.currentMode === 'teacher') renderDashboard();
     }
 
     function deleteTask(id) {
         if (!confirm("Aufgabe wirklich löschen?")) return;
-        tasks = tasks.filter(t => t.id !== id);
-        saveData();
+        state.tasks = state.tasks.filter(t => t.id !== id);
+        saveToStorage();
         renderTasks();
-        if (currentMode === 'teacher') renderTeacherDashboard();
-    }
-
-    function formatSwissDate(isoDate) {
-        if (!isoDate) return '-';
-        const [y, m, d] = isoDate.split('-');
-        return `${d}.${m}.${y}`;
-    }
-
-    function addBulkStudents() {
-        const val = document.getElementById('bulk-student-input').value;
-        if (!val.trim()) return;
-        const names = val.split(/[,\n;]+/).map(n => n.trim()).filter(n => n && !students.includes(n));
-        if (names.length > 0) {
-            students = [...students, ...names];
-            document.getElementById('bulk-student-input').value = '';
-            saveData();
-            updateUI();
-            if (currentMode === 'teacher') renderTeacherDashboard();
-        }
-    }
-
-    function importStudentsFromFile(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const content = e.target.result;
-            if (content) {
-                const names = content.split(/[,\n;]+/).map(n => n.trim()).filter(n => n && !students.includes(n));
-                if (names.length > 0) {
-                    students = [...students, ...names];
-                    saveData();
-                    updateUI();
-                    if (currentMode === 'teacher') renderTeacherDashboard();
-                }
-            }
-            event.target.value = '';
-        };
-        reader.readAsText(file);
+        renderDashboard();
     }
 
     function deleteStudent(name) {
-        if (!confirm(`Schüler "${name}" entfernen?`)) return;
-        students = students.filter(s => s !== name);
-        delete studentConfirmations[name];
-        saveData();
+        if (!confirm(`Schüler "${name}" wirklich entfernen?`)) return;
+        state.students = state.students.filter(s => s !== name);
+        delete state.confirmations[name];
+        saveToStorage();
         updateUI();
-        if (currentMode === 'teacher') renderTeacherDashboard();
     }
 
-    function toggleParentLock() {
-        const student = document.getElementById('student-filter').value;
-        if (student === 'all') return;
-
-        const isChecked = document.getElementById('confirm-check').checked;
-        const sig = document.getElementById('confirm-sig').value.trim();
-
-        if (isChecked && !sig) {
-            alert("Bitte geben Sie einen Namen als Unterschrift ein.");
-            document.getElementById('confirm-check').checked = false;
-            return;
-        }
-
-        saveConfirmationData();
-        renderTasks();
-    }
-
-    function saveConfirmationData() {
-        const student = document.getElementById('student-filter').value;
-        if (student === 'all') return;
-
-        studentConfirmations[student] = {
-            date: document.getElementById('confirm-date').value,
-            signature: document.getElementById('confirm-sig').value,
-            checked: document.getElementById('confirm-check').checked
-        };
-        saveData();
-        if (currentMode === 'teacher') renderTeacherDashboard();
-    }
-
-    function updateConfirmationUI(student) {
-        const card = document.getElementById('parent-confirmation');
-        const hint = document.getElementById('confirmation-ui-locked-hint');
-        const controls = document.getElementById('confirmation-controls');
-        const inputs = controls.querySelectorAll('input:not([type="checkbox"])');
+    function renderParentConfirmation() {
+        const student = state.selectedStudent;
         
         if (student === 'all') {
-            controls.classList.add('opacity-40', 'pointer-events-none');
-            hint.classList.remove('hidden');
-            document.getElementById('confirm-check').checked = false;
-            document.getElementById('confirm-check').disabled = true;
+            elements.lockControls.classList.add('opacity-40', 'pointer-events-none');
+            elements.lockHint.classList.remove('hidden');
+            elements.parentCheck.disabled = true;
+            elements.parentCheck.checked = false;
             return;
         }
 
-        controls.classList.remove('opacity-40', 'pointer-events-none');
-        hint.classList.add('hidden');
-        document.getElementById('confirm-check').disabled = false;
+        elements.lockControls.classList.remove('opacity-40', 'pointer-events-none');
+        elements.lockHint.classList.add('hidden');
+        elements.parentCheck.disabled = false;
 
-        const data = studentConfirmations[student] || { date: new Date().toISOString().split('T')[0], signature: '', checked: false };
-        document.getElementById('confirm-date').value = data.date || new Date().toISOString().split('T')[0];
-        document.getElementById('confirm-sig').value = data.signature || '';
-        document.getElementById('confirm-check').checked = !!data.checked;
+        const data = state.confirmations[student] || { date: new Date().toISOString().split('T')[0], signature: '', checked: false };
+        elements.parentDate.value = data.date || new Date().toISOString().split('T')[0];
+        elements.parentSig.value = data.signature || '';
+        elements.parentCheck.checked = !!data.checked;
 
         const isLocked = !!data.checked;
-        inputs.forEach(i => i.disabled = isLocked);
-        
-        const btnText = document.getElementById('confirm-text');
-        const label = document.getElementById('confirm-label');
+        elements.parentDate.disabled = isLocked;
+        elements.parentSig.disabled = isLocked;
 
         if (isLocked) {
-            card.classList.add('bg-primary/5');
-            label.className = "flex items-center justify-center gap-3 cursor-pointer select-none bg-primary text-white p-3 rounded-lg border border-primary w-full";
-            btnText.innerText = "Bestätigt ✓";
-            btnText.className = "font-bold text-white";
+            elements.parentLockSection.classList.add('bg-primary/5');
+            elements.parentCheckLabel.className = "flex items-center justify-center gap-3 cursor-pointer select-none bg-primary text-white p-3 rounded-lg border border-primary w-full";
+            elements.parentCheckText.innerText = "Bestätigt ✓";
+            elements.parentCheckText.className = "font-bold text-white";
         } else {
-            card.classList.remove('bg-primary/5');
-            label.className = "flex items-center justify-center gap-3 cursor-pointer select-none bg-surface-container-low p-3 rounded-lg border border-outline-variant w-full hover:bg-surface-container-high transition-all";
-            btnText.innerText = "Gesehen ☑";
-            btnText.className = "font-bold text-black";
+            elements.parentLockSection.classList.remove('bg-primary/5');
+            elements.parentCheckLabel.className = "flex items-center justify-center gap-3 cursor-pointer select-none bg-surface-container-low p-3 rounded-lg border border-outline-variant w-full hover:bg-surface-container-high transition-all";
+            elements.parentCheckText.innerText = "Gesehen ☑";
+            elements.parentCheckText.className = "font-bold text-black";
         }
     }
 
-    function renderTeacherDashboard() {
-        const body = document.getElementById('teacher-dashboard-body');
-        if (!body) return;
-        body.innerHTML = '';
+    function updateConfirmationState() {
+        const student = state.selectedStudent;
+        if (student === 'all') return;
 
-        students.sort().forEach(s => {
-            let doneCount = 0;
-            let totalCount = 0;
-            
-            tasks.forEach(t => {
-                const assigned = t.who === 'Ganze Klasse' || t.who === s;
-                if (assigned) {
-                    totalCount++;
-                    const done = t.who === 'Ganze Klasse' ? !!(t.completedBy && t.completedBy[s]) : !!t.done;
-                    if (done) doneCount++;
+        state.confirmations[student] = {
+            date: elements.parentDate.value,
+            signature: elements.parentSig.value,
+            checked: elements.parentCheck.checked
+        };
+        saveToStorage();
+        renderTasks();
+        renderParentConfirmation();
+    }
+
+    function renderDashboard() {
+        if (!elements.dashboardBody) return;
+        elements.dashboardBody.innerHTML = '';
+
+        state.students.forEach(s => {
+            let done = 0, total = 0;
+            state.tasks.forEach(t => {
+                if (t.who === 'Ganze Klasse' || t.who === s) {
+                    total++;
+                    const isDone = t.who === 'Ganze Klasse' ? !!(t.completedBy && t.completedBy[s]) : !!t.done;
+                    if (isDone) done++;
                 }
             });
-            
-            const perc = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
-            const confirmData = studentConfirmations[s];
-            const isConfirmed = !!confirmData?.checked;
-            
+
+            const perc = total > 0 ? Math.round((done / total) * 100) : 0;
+            const confirmed = !!state.confirmations[s]?.checked;
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td class="p-4 font-bold text-sm text-on-surface">${s}</td>
-                <td class="p-4"></script></body></html>
+                <td class="p-4 text-center">
+                    <div class="flex items-center justify-center gap-2">
+                        <div class="w-24 h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                            <div class="h-full bg-primary" style="width: ${perc}%"></div>
+                        </div>
+                        <span class="text-xs font-bold">${perc}%</span>
+                    </div>
+                </td>
+                <td class="p-4 text-center">
+                    ${confirmed ? '<span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded">OK</span>' : '<span class="px-2 py-1 bg-surface-container-highest text-on-surface-variant text-[10px] font-bold rounded">AUSSTEHEND</span>'}
+                </td>
+                <td class="p-4">
+                    <span class="text-[10px] font-medium">${done} von ${total} erledigt</span>
+                </td>
+            `;
+            elements.dashboardBody.appendChild(tr);
+        });
+    }
+
+    function renderColorLegend() {
+        const container = document.getElementById('color-legend');
+        container.innerHTML = '';
+        Object.entries(SUBJECT_DATA).forEach(([code, data]) => {
+            const div = document.createElement('div');
+            div.className = "flex items-center gap-2 px-3 py-1 bg-white border border-outline-variant rounded-full text-[10px] font-bold";
+            div.innerHTML = `<span class="w-3 h-3 rounded-full" style="background-color: ${data.color}"></span> ${data.name} (${code.toUpperCase()})`;
+            container.appendChild(div);
+        });
+    }
+
+    function formatDate(iso) {
+        if (!iso) return '-';
+        const [y, m, d] = iso.split('-');
+        return `${d}.${m}.${y}`;
+    }
+
+    function syncQRCode() {
+        const url = window.location.href;
+        elements.qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+    }
+
+    window.onload = init;
+</script>
+</body></html>
