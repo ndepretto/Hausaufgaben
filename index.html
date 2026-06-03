@@ -6,7 +6,6 @@
 <title>doeltschi | Digitaler Aufgabenplaner</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
-<!-- Material Icons Library -->
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
 <style>
         .material-icons { font-size: 20px; vertical-align: middle; }
@@ -28,6 +27,9 @@
             body { background: white !important; }
             .worksheet-pattern { background-image: none !important; }
         }
+
+        /* Stability fix: Ensure app is hidden until init */
+        #app { display: block; }
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -96,7 +98,7 @@
 <span class="material-icons text-primary">lock</span>
 <h3 class="text-xl font-bold">Lehrer-Bereich</h3>
 </div>
-<p class="text-on-surface-variant mb-6 text-sm">Bitte geben Sie das Passwort ein, um die Klassenliste und Aufgaben zu verwalten.</p>
+<p class="text-on-surface-variant mb-6 text-sm">Bitte geben Sie das Passwort ein, um den Lehrer-Modus freizuschalten.</p>
 <input class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none" id="lehrer-password" placeholder="Passwort (lehrer123)" type="password"/>
 <div class="flex justify-end gap-3">
 <button class="px-4 py-2 text-slate-500 font-bold text-sm uppercase" onclick="app.closeLehrerModal()">Abbrechen</button>
@@ -303,7 +305,7 @@
 <div class="text-center md:text-left">
 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
 <div class="flex items-center justify-center md:justify-start gap-3 mt-2">
-<p class="text-[9px] text-slate-300 font-mono uppercase">Version 16 • Icon Fix</p>
+<p class="text-[9px] text-slate-300 font-mono uppercase">Version 16 • Stable Fix</p>
 <button class="text-[9px] text-slate-200 hover:text-red-400 underline font-mono uppercase transition-colors" onclick="app.resetSystem()">App zurücksetzen</button>
 </div>
 </div>
@@ -386,31 +388,44 @@
 
     const app = {
         state: null,
-        STORAGE_KEY: 'doeltschi_v16_icons',
+        STORAGE_KEY: 'doeltschi_v16_stable',
 
         init() {
             try {
                 const savedData = localStorage.getItem(this.STORAGE_KEY);
                 if (savedData) {
                     const parsed = JSON.parse(savedData);
-                    if (Array.isArray(parsed.students) && Array.isArray(parsed.tasks)) {
+                    // Robust check
+                    if (parsed && Array.isArray(parsed.students) && Array.isArray(parsed.tasks)) {
                         this.state = { ...INITIAL_STATE, ...parsed, isLehrer: false, currentTab: 'Planer' };
-                    } else { throw new Error("Invalid structure"); }
+                    } else {
+                        throw new Error("Corrupted Data");
+                    }
                 } else {
                     this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
                 }
             } catch (error) {
-                console.error("Critical Data Error. Resetting.", error);
+                console.error("Data Restore Error. Resetting to defaults.", error);
                 this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
+                this.persist();
             }
             
+            // Set static content
+            const printDate = document.getElementById('print-date');
+            if (printDate) printDate.textContent = new Date().toLocaleDateString('de-CH');
+            
+            const printWeek = document.getElementById('print-week-range');
+            if (printWeek) printWeek.textContent = '01.04.2024 – 05.04.2024';
+
             this.renderAll();
-            document.getElementById('print-date').textContent = new Date().toLocaleDateString('de-CH');
-            document.getElementById('print-week-range').textContent = '01.04.2024 – 05.04.2024';
         },
 
         persist() {
-            try { localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state)); } catch (e) {}
+            try {
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
+            } catch (e) {
+                console.error("Storage Persist Error", e);
+            }
         },
 
         resetSystem() {
@@ -429,7 +444,8 @@
                 const modal = document.getElementById('lehrer-modal');
                 if (modal) {
                     modal.classList.remove('hidden');
-                    document.getElementById('lehrer-password').focus();
+                    const passInput = document.getElementById('lehrer-password');
+                    if (passInput) passInput.focus();
                 }
             }
         },
@@ -438,18 +454,21 @@
             const modal = document.getElementById('lehrer-modal');
             if (modal) {
                 modal.classList.add('hidden');
-                document.getElementById('lehrer-password').value = '';
+                const passInput = document.getElementById('lehrer-password');
+                if (passInput) passInput.value = '';
             }
         },
 
         checkLehrerPassword() {
-            const pass = document.getElementById('lehrer-password').value;
-            if (pass === 'lehrer123') {
+            const passInput = document.getElementById('lehrer-password');
+            if (passInput && passInput.value === 'lehrer123') {
                 this.state.isLehrer = true;
                 this.state.currentTab = 'Dashboard';
                 this.closeLehrerModal();
                 this.renderAll();
-            } else { alert('Falsches Passwort! (lehrer123)'); }
+            } else {
+                alert('Falsches Passwort! (Tipp: lehrer123)');
+            }
         },
 
         setTab(tab) {
@@ -474,13 +493,13 @@
             const lehrerIcon = document.getElementById('lehrer-icon-type');
             const lehrerText = document.getElementById('lehrer-text');
 
-            planner.classList.toggle('hidden', this.state.currentTab !== 'Planer');
-            dashboard.classList.toggle('hidden', this.state.currentTab !== 'Dashboard');
-            guide.classList.toggle('hidden', this.state.currentTab !== 'Anleitung');
+            if (planner) planner.classList.toggle('hidden', this.state.currentTab !== 'Planer');
+            if (dashboard) dashboard.classList.toggle('hidden', this.state.currentTab !== 'Dashboard');
+            if (guide) guide.classList.toggle('hidden', this.state.currentTab !== 'Anleitung');
 
-            navDashboard.classList.toggle('hidden', !this.state.isLehrer);
-            lehrerIcon.textContent = this.state.isLehrer ? 'lock_open' : 'lock_outline';
-            lehrerText.textContent = this.state.isLehrer ? 'Abmelden' : 'Lehrer-Bereich';
+            if (navDashboard) navDashboard.classList.toggle('hidden', !this.state.isLehrer);
+            if (lehrerIcon) lehrerIcon.textContent = this.state.isLehrer ? 'lock_open' : 'lock_outline';
+            if (lehrerText) lehrerText.textContent = this.state.isLehrer ? 'Abmelden' : 'Lehrer-Bereich';
 
             this.updateNavStyles();
             this.renderFilters();
@@ -493,22 +512,25 @@
 
         updateInstructions() {
             const steps = [1, 2, 3, 4].map(i => document.getElementById(`step-${i}`));
+            if (!steps[0]) return;
+
             const studentSelected = this.state.selectedStudentId !== 'all';
-            const student = studentSelected ? this.state.students.find(s => s.id === this.state.selectedStudentId) : null;
             const filteredTasks = studentSelected ? this.state.tasks.filter(t => t.studentId === this.state.selectedStudentId) : [];
             const anyDone = filteredTasks.some(t => t.status === 'erledigt');
             const allDone = filteredTasks.length > 0 && filteredTasks.every(t => t.status === 'erledigt');
 
-            steps.forEach(el => el.classList.add('opacity-50'));
+            steps.forEach(el => el && el.classList.add('opacity-50'));
 
-            if (!studentSelected) steps[0].classList.remove('opacity-50');
-            else if (!anyDone) steps[1].classList.remove('opacity-50');
-            else if (!allDone) steps[2].classList.remove('opacity-50');
-            else steps[3].classList.remove('opacity-50');
+            if (!studentSelected) steps[0] && steps[0].classList.remove('opacity-50');
+            else if (!anyDone) steps[1] && steps[1].classList.remove('opacity-50');
+            else if (!allDone) steps[2] && steps[2].classList.remove('opacity-50');
+            else steps[3] && steps[3].classList.remove('opacity-50');
         },
 
         renderLegend() {
-            const legendHtml = Object.keys(SUBJECT_CONFIG).map(code => {
+            const lp = document.getElementById('color-legend-planner');
+            if (!lp) return;
+            lp.innerHTML = Object.keys(SUBJECT_CONFIG).map(code => {
                 const cfg = SUBJECT_CONFIG[code];
                 return `
                     <div class="flex items-center gap-3">
@@ -517,8 +539,6 @@
                     </div>
                 `;
             }).join('');
-            const lp = document.getElementById('color-legend-planner');
-            if (lp) lp.innerHTML = legendHtml;
         },
 
         updateNavStyles() {
@@ -559,6 +579,7 @@
 
         renderTasks() {
             const container = document.getElementById('task-container');
+            if (!container) return;
             const filterId = this.state.selectedStudentId;
             const filtered = filterId === 'all' ? this.state.tasks : this.state.tasks.filter(t => t.studentId === filterId);
 
@@ -568,8 +589,9 @@
                 container.innerHTML = filtered.map(t => {
                     const student = this.state.students.find(s => s.id === t.studentId);
                     const done = t.status === 'erledigt';
-                    const color = t.color || (SUBJECT_CONFIG[t.subjectCode] ? SUBJECT_CONFIG[t.subjectCode].color : '#64748b');
-                    const subj = t.subject || (SUBJECT_CONFIG[t.subjectCode] ? SUBJECT_CONFIG[t.subjectCode].name : '???');
+                    const config = SUBJECT_CONFIG[t.subjectCode] || { name: 'Unbekannt', color: '#64748b' };
+                    const color = t.color || config.color;
+                    const subj = t.subject || config.name;
                     
                     return `
                         <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-60 grayscale' : 'hover:border-primary/40 hover:shadow-md'}">
@@ -577,7 +599,7 @@
                             <div class="flex-1 p-8 grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
                                 <div>
                                     <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Wer</p>
-                                    <p class="font-bold text-slate-900 text-lg">${student ? student.name : 'Unbekannt'}</p>
+                                    <p class="font-bold text-slate-900 text-lg">${student ? student.name : 'Gelöscht'}</p>
                                     <span class="inline-block mt-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style="background-color: ${color}15; color: ${color}">${subj}</span>
                                 </div>
                                 <div class="md:col-span-2">
@@ -626,6 +648,7 @@
             const totalTasks = this.state.tasks.length;
             const doneTasks = this.state.tasks.filter(t => t.status === 'erledigt').length;
             const quote = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+            
             document.getElementById('dashboard-quote').textContent = `${quote}%`;
             document.getElementById('dashboard-progress-bar').style.width = `${quote}%`;
             
@@ -708,6 +731,7 @@
 
         addStudent() {
             const input = document.getElementById('new-student-name');
+            if (!input) return;
             const name = input.value.trim();
             if (name) {
                 this.state.students.push({ id: 's' + Date.now(), name: name, confirmed: false, lastConfirmed: '-' });
@@ -800,11 +824,14 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state));
             const dl = document.createElement('a');
             dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", "doeltschi_v16_data.json");
+            dl.setAttribute("download", "doeltschi_data_export.json");
             dl.click();
         }
     };
 
-    document.addEventListener('DOMContentLoaded', () => app.init());
+    // Ensure the application initializes on load
+    document.addEventListener('DOMContentLoaded', () => {
+        app.init();
+    });
 </script>
 </body></html>
