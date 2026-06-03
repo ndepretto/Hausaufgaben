@@ -70,7 +70,7 @@
 <header class="bg-surface/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50 no-print">
 <div class="flex justify-between items-center w-full px-gutter max-w-[1000px] mx-auto h-20">
 <div class="flex items-center gap-6">
-<!-- Hidden click handler on title to access teacher mode -->
+<!-- Secret trigger to access teacher mode -->
 <h1 class="text-2xl font-black tracking-tight text-primary cursor-default select-none" onclick="app.handleTitleClick()">doeltschi</h1>
 <div class="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full text-[10px] font-bold uppercase text-slate-500 animate-pulse-soft">
 <span class="material-symbols-outlined text-[14px]">bolt</span>
@@ -83,7 +83,7 @@
 <button class="hidden px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Dashboard" onclick="app.setTab('Dashboard')">Lehrer-Modus</button>
 <button class="px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Anleitung" onclick="app.setTab('Anleitung')">Anleitung</button>
 </nav>
-<!-- Lehrer buttons removed from public header view -->
+<!-- Logout/Teacher button - only visible when logged in -->
 <button class="hidden flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full transition-colors text-sm font-bold uppercase shadow-sm" id="lehrer-access-btn" onclick="app.handleLehrerButtonClick()">
 <span class="material-symbols-outlined text-[18px]" id="lehrer-icon-type">lock</span>
 <span class="hidden sm:inline" id="lehrer-text">Lehrer-Bereich</span>
@@ -100,7 +100,6 @@
 <h3 class="text-xl font-bold">Lehrer-Bereich</h3>
 </div>
 <p class="text-on-surface-variant mb-6 text-sm">Bitte geben Sie das Passwort ein, um den Lehrer-Modus freizuschalten.</p>
-<!-- Input type set to password and generic placeholder used -->
 <input class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none" id="lehrer-password" onkeyup="if(event.key === 'Enter') app.checkLehrerPassword()" placeholder="Passwort eingeben" type="password"/>
 <div class="flex justify-end gap-3">
 <button class="px-4 py-2 text-slate-500 font-bold text-sm uppercase" onclick="app.closeLehrerModal()">Abbrechen</button>
@@ -108,7 +107,7 @@
 </div>
 </div>
 </div>
-<!-- Content Area: Planer (Primary Entry Point) -->
+<!-- Content Area: Planer (Primary Entry Point - Student View) -->
 <div class="space-y-12" id="content-planner">
 <!-- 4-Step Info Cards (Step 1-4) -->
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 no-print">
@@ -157,7 +156,7 @@
 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4" id="color-legend-planner"></div>
 </div>
 </div>
-<!-- Content Area: Dashboard (Teacher View) -->
+<!-- Content Area: Dashboard (Teacher View) - Hidden by default -->
 <div class="hidden space-y-8" id="content-dashboard">
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 <h2 class="text-3xl font-black text-slate-900">Klassen-Dashboard</h2>
@@ -232,7 +231,7 @@
 </div>
 </form>
 </div>
-<!-- Student Lists -->
+<!-- Dashboard Lists -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 <div class="lg:col-span-2 space-y-8">
 <section class="space-y-4">
@@ -314,7 +313,7 @@
 <div class="text-center md:text-left">
 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
 <div class="flex items-center justify-center md:justify-start gap-3 mt-2">
-<p class="text-[9px] text-slate-300 font-mono uppercase">Version 17 • Optimized</p>
+<p class="text-[9px] text-slate-300 font-mono uppercase">Version 17 • Student Default View</p>
 <button class="text-[9px] text-slate-200 hover:text-red-400 underline font-mono uppercase transition-colors" onclick="app.resetSystem()">App zurücksetzen</button>
 </div>
 </div>
@@ -331,7 +330,6 @@
 <span class="material-symbols-outlined">calendar_today</span>
 <span class="text-[9px] font-bold uppercase tracking-wider">Planer</span>
 </button>
-<!-- Hidden button for admin via help or hidden click -->
 <button class="hidden flex flex-col items-center gap-1 text-slate-400" id="mobile-nav-Dashboard" onclick="app.handleLehrerButtonClick()">
 <span class="material-symbols-outlined">admin_panel_settings</span>
 <span class="text-[9px] font-bold uppercase tracking-wider">Admin</span>
@@ -407,6 +405,7 @@
                 if (savedData) {
                     const parsed = JSON.parse(savedData);
                     if (parsed && Array.isArray(parsed.students)) {
+                        // Ensure state loads into 'Planer' (Student View) regardless of last state
                         this.state = { ...INITIAL_STATE, ...parsed, isLehrer: false, currentTab: 'Planer' };
                     } else {
                         throw new Error("Invalid format");
@@ -446,7 +445,6 @@
                 this.state.titleClicks = 0;
                 this.openLehrerModal();
             }
-            // Reset counter after 2 seconds of inactivity
             clearTimeout(this.titleTimeout);
             this.titleTimeout = setTimeout(() => { this.state.titleClicks = 0; }, 2000);
         },
@@ -494,10 +492,7 @@
         },
 
         setTab(tab) {
-            if (tab === 'Dashboard' && !this.state.isLehrer) {
-                // Should not happen as button is hidden, but for security:
-                return;
-            }
+            if (tab === 'Dashboard' && !this.state.isLehrer) return;
             this.state.currentTab = tab;
             this.renderAll();
         },
@@ -524,11 +519,8 @@
             if (dashboard) dashboard.classList.toggle('hidden', this.state.currentTab !== 'Dashboard');
             if (guide) guide.classList.toggle('hidden', this.state.currentTab !== 'Anleitung');
 
-            // Dashboard link only visible if logged in
             if (navDashboard) navDashboard.classList.toggle('hidden', !this.state.isLehrer);
             
-            // Header button hidden by default (only teacher knows interaction)
-            // But we show it if they ARE logged in to allow logout
             if (lehrerBtn) lehrerBtn.classList.toggle('hidden', !this.state.isLehrer);
             if (lehrerIcon) lehrerIcon.textContent = this.state.isLehrer ? 'lock_open' : 'lock';
             if (lehrerText) lehrerText.textContent = this.state.isLehrer ? 'Abmelden' : 'Lehrer-Bereich';
