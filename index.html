@@ -530,7 +530,7 @@
             iconContainer.className = `mt-1 ${colorClass}`;
             
             const svgInfo = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
-            const svgLock = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>';
+            const svgLock = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>';
             
             iconContainer.innerHTML = iconType === 'info' ? svgInfo : svgLock;
         }
@@ -792,12 +792,10 @@
         }
 
         function renderTeacherDashboard() {
-            const header = document.getElementById('dashboard-tasks-header');
             const body = document.getElementById('teacher-dashboard-body');
-            
-            header.innerHTML = `Aufgaben-Check`;
+            body.innerHTML = '';
 
-            body.innerHTML = students.map(s => {
+            students.sort().forEach(s => {
                 let doneCount = 0;
                 let totalCount = 0;
                 
@@ -814,7 +812,8 @@
                 const confirmData = studentConfirmations[s];
                 const isConfirmed = !!confirmData?.checked;
                 
-                return `<tr>
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
                     <td class="p-4 font-bold text-sm text-on-surface">${s}</td>
                     <td class="p-4">
                         <div class="flex items-center gap-3">
@@ -827,4 +826,11 @@
                     <td class="p-4 text-center">
                         <div class="flex flex-col items-center gap-1">
                             <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase ${isConfirmed ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'}">
-                                ${isConfirmed ? 'Bestätigt' : 'Ausstehend</script></body></html>
+                                ${isConfirmed ? 'Bestätigt' : 'Ausstehend'}
+                            </span>
+                            ${isConfirmed ? `<span class="text-[9px] text-on-surface-variant">${confirmData.signature} (${formatSwissDate(confirmData.date)})</span>` : ''}
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex flex-wrap gap-1">
+                            ${tasks.filter(t => t.who === 'Ganze Klasse' || t.who === s).</script></body></html>
