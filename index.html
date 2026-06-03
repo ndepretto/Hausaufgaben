@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+<html class="light" lang="de"><head></head><body class="bg-background text-on-surface worksheet-pattern min-h-screen selection:bg-blue-100">```html
 
-<html class="light" lang="de"><head>
-<meta charset="utf-8"/>
+
+
+    <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>doeltschi | Wer – Was – Bis wann</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -108,8 +109,6 @@
             },
         }
     </script>
-</head>
-<body class="bg-background text-on-surface worksheet-pattern min-h-screen selection:bg-blue-100">
 <div class="flex flex-col min-h-screen" id="app">
 <!-- Top App Bar -->
 <header class="bg-white/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50 no-print">
@@ -152,6 +151,23 @@
 </div>
 </div>
 </div>
+<!-- Student Login Modal -->
+<div class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm no-print" id="student-modal">
+<div class="bg-surface rounded-2xl p-8 max-w-md w-full shadow-2xl border border-outline-variant mx-4">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 bg-secondary/10 rounded-full flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">person</span>
+</div>
+<h3 class="text-xl font-bold" id="student-modal-title">Schüler-Login</h3>
+</div>
+<p class="text-on-surface-variant mb-6 text-sm">Gib dein persönliches Passwort ein (Standard: 1234).</p>
+<input class="w-full bg-surface-container border border-outline-variant rounded-xl p-3 mb-4 focus:ring-2 focus:ring-secondary focus:border-transparent outline-none transition-all" id="student-password" onkeyup="if(event.key === 'Enter') app.checkStudentPassword()" placeholder="Passwort" type="password"/>
+<div class="flex justify-end gap-3">
+<button class="px-4 py-2 text-on-surface-variant font-bold text-sm uppercase hover:text-on-surface transition-colors" onclick="app.closeStudentModal()">Abbrechen</button>
+<button class="px-6 py-2 bg-secondary text-on-primary rounded-full font-bold text-sm uppercase shadow-md hover:bg-secondary/90 transition-all" onclick="app.checkStudentPassword()">Anmelden</button>
+</div>
+</div>
+</div>
 <!-- Content Area: Planer -->
 <div class="space-y-12" id="content-planner">
 <!-- 4-Step Info Cards -->
@@ -180,12 +196,17 @@
 <span class="material-symbols-outlined text-[14px]">person</span> Schüler auswählen
                     </label>
 <div class="relative">
-<select class="w-full bg-white border border-outline-variant rounded-xl font-semibold py-4 px-5 focus:ring-2 focus:ring-primary focus:border-transparent outline-none appearance-none shadow-sm pr-12 cursor-pointer" id="student-filter" onchange="app.handleFilterChange()">
+<select class="w-full bg-white border border-outline-variant rounded-xl font-semibold py-4 px-5 focus:ring-2 focus:ring-primary focus:border-transparent outline-none appearance-none shadow-sm pr-12 cursor-pointer" id="student-filter" onchange="app.handleFilterChangeRequest()">
 <option selected="" value="all">Alle Schüler / Ganze Klasse</option>
 </select>
 <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">
 <span class="material-symbols-outlined">expand_more</span>
 </div>
+</div>
+<div class="mt-4 hidden no-print" id="student-auth-status">
+<button class="flex items-center gap-2 text-[10px] font-bold text-red-500 uppercase tracking-widest hover:underline" onclick="app.logoutStudent()">
+<span class="material-symbols-outlined text-[14px]">logout</span> Abmelden
+                         </button>
 </div>
 </div>
 <div class="text-right w-full md:w-auto">
@@ -358,7 +379,7 @@
 <span class="material-symbols-outlined text-3xl">school</span>
 </div>
 <h3 class="text-xl font-bold mb-3 text-on-surface">Schüler &amp; Eltern</h3>
-<p class="text-on-surface-variant text-sm leading-relaxed">Wählen Sie Ihren Namen aus dem Menü. Erledigen Sie Aufgaben und haken Sie diese ab. Am Ende der Woche können die Eltern die Liste direkt auf dem Gerät bestätigen.</p>
+<p class="text-on-surface-variant text-sm leading-relaxed">Wählen Sie Ihren Namen aus dem Menü. Erledigen Sie Aufgaben und haken Sie diese ab. Am Ende der Woche können die Eltern die Liste direkt auf dem Gerät bestätigen. <b>Wichtig:</b> Der Zugriff auf das eigene Profil ist mit einem Passwort geschützt.</p>
 </div>
 <div class="bg-white border border-outline-variant p-8 rounded-2xl shadow-sm">
 <div class="w-12 h-12 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center mb-6">
@@ -376,7 +397,7 @@
 <div class="text-center md:text-left">
 <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
 <div class="flex items-center justify-center md:justify-start gap-3 mt-2">
-<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 21 • Interaction Lock Logic</p>
+<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 22 • Secure Student Access</p>
 <button class="text-[9px] text-on-surface-variant/30 hover:text-red-400 underline font-mono uppercase transition-colors" onclick="app.resetSystem()">App zurücksetzen</button>
 </div>
 </div>
@@ -404,12 +425,13 @@
 
     const INITIAL_STATE = {
         isLehrer: false,
+        authenticatedStudentId: null,
         currentTab: 'Planer',
         selectedStudentId: 'all',
         students: [
-            { id: 's1', name: 'Lukas Müller', confirmed: false, lastConfirmed: '-' },
-            { id: 's2', name: 'Sophie Fischer', confirmed: true, lastConfirmed: '12.03.2024' },
-            { id: 's3', name: 'Emma Weber', confirmed: false, lastConfirmed: '-' }
+            { id: 's1', name: 'Lukas Müller', confirmed: false, lastConfirmed: '-', pin: '1234' },
+            { id: 's2', name: 'Sophie Fischer', confirmed: true, lastConfirmed: '12.03.2024', pin: '1234' },
+            { id: 's3', name: 'Emma Weber', confirmed: false, lastConfirmed: '-', pin: '1234' }
         ],
         tasks: [
             { id: 't0', studentId: 'all', subjectCode: 'MA', description: 'Ganze Klasse: Kapitel 5 Übung 1-5.', deadline: '15.04.2024' },
@@ -425,7 +447,8 @@
 
     const app = {
         state: null,
-        STORAGE_KEY: 'doeltschi_v21_lock_logic',
+        STORAGE_KEY: 'doeltschi_v22_secure_access',
+        pendingStudentSwitchId: null,
 
         init() {
             try {
@@ -433,7 +456,7 @@
                 if (savedData) {
                     const parsed = JSON.parse(savedData);
                     if (!parsed.completedTasks) parsed.completedTasks = {};
-                    this.state = { ...INITIAL_STATE, ...parsed, isLehrer: false, currentTab: 'Planer' };
+                    this.state = { ...INITIAL_STATE, ...parsed, isLehrer: false, authenticatedStudentId: null, currentTab: 'Planer', selectedStudentId: 'all' };
                 } else {
                     this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
                 }
@@ -445,7 +468,12 @@
 
         persist() {
             try {
-                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
+                // We don't persist authentication state (isLehrer, authenticatedStudentId)
+                const toSave = { ...this.state };
+                delete toSave.isLehrer;
+                delete toSave.authenticatedStudentId;
+                delete toSave.currentTab;
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(toSave));
             } catch (e) { console.error("Storage Error", e); }
         },
 
@@ -496,16 +524,72 @@
             this.renderAll();
         },
 
-        setTab(tab) {
-            this.state.currentTab = tab;
+        handleFilterChangeRequest() {
+            const selectedId = document.getElementById('student-filter').value;
+            
+            // If selecting "all", no auth needed
+            if (selectedId === 'all') {
+                this.state.selectedStudentId = 'all';
+                this.renderAll();
+                return;
+            }
+
+            // If already authenticated as this student or is teacher, just switch
+            if (this.state.isLehrer || this.state.authenticatedStudentId === selectedId) {
+                this.state.selectedStudentId = selectedId;
+                this.renderAll();
+                return;
+            }
+
+            // Otherwise, prompt for password
+            this.pendingStudentSwitchId = selectedId;
+            this.openStudentModal(selectedId);
+        },
+
+        openStudentModal(studentId) {
+            const student = this.state.students.find(s => s.id === studentId);
+            if (!student) return;
+
+            const modal = document.getElementById('student-modal');
+            document.getElementById('student-modal-title').textContent = `${student.name} Login`;
+            modal.classList.remove('hidden');
+            const passInput = document.getElementById('student-password');
+            passInput.value = '';
+            passInput.focus();
+        },
+
+        closeStudentModal() {
+            document.getElementById('student-modal').classList.add('hidden');
+            // Reset filter to previous or "all" if they cancelled
+            document.getElementById('student-filter').value = this.state.selectedStudentId;
+            this.pendingStudentSwitchId = null;
+        },
+
+        checkStudentPassword() {
+            const passInput = document.getElementById('student-password');
+            const student = this.state.students.find(s => s.id === this.pendingStudentSwitchId);
+            
+            if (student && passInput.value === (student.pin || '1234')) {
+                this.state.authenticatedStudentId = student.id;
+                this.state.selectedStudentId = student.id;
+                this.pendingStudentSwitchId = null;
+                document.getElementById('student-modal').classList.add('hidden');
+                this.renderAll();
+            } else {
+                passInput.classList.add('ring-2', 'ring-red-500');
+                setTimeout(() => passInput.classList.remove('ring-2', 'ring-red-500'), 1000);
+            }
+        },
+
+        logoutStudent() {
+            this.state.authenticatedStudentId = null;
+            this.state.selectedStudentId = 'all';
             this.renderAll();
         },
 
-        handleFilterChange() {
-            this.state.selectedStudentId = document.getElementById('student-filter').value;
-            this.renderTasks();
-            this.updateInstructions();
-            this.renderStatusNotification();
+        setTab(tab) {
+            this.state.currentTab = tab;
+            this.renderAll();
         },
 
         renderAll() {
@@ -529,6 +613,17 @@
             this.renderLegend();
             this.renderManageTasks();
             this.updateInstructions();
+            this.renderAuthStatus();
+        },
+
+        renderAuthStatus() {
+            const container = document.getElementById('student-auth-status');
+            if (!container) return;
+            if (this.state.authenticatedStudentId && this.state.selectedStudentId === this.state.authenticatedStudentId) {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
         },
 
         renderStatusNotification() {
@@ -630,11 +725,12 @@
             const studentData = this.state.students.find(s => s.id === filterId);
             const isConfirmed = studentData && studentData.confirmed;
             
-            // Interaction is locked if: 
+            // SECURITY CHECK: Interaction is locked if: 
             // 1. "all" is selected (preview only)
             // 2. A student is selected AND their parents have confirmed (lock logic)
-            // UNLESS we are in teacher mode
-            const isStudentLockActive = filterId !== 'all' && isConfirmed && !this.state.isLehrer;
+            // 3. A student is selected BUT the user is NOT authenticated as that student (and not teacher)
+            const isAuthenticated = this.state.isLehrer || (this.state.authenticatedStudentId === filterId);
+            const isStudentLockActive = filterId !== 'all' && (isConfirmed || !isAuthenticated);
             const isInteractionDisabled = filterId === 'all' || isStudentLockActive;
 
             let displayTasks = [];
@@ -652,6 +748,18 @@
                     const done = this.isTaskDone(t.id, filterId);
                     const config = SUBJECT_CONFIG[t.subjectCode] || { name: 'Divers', color: '#64748b' };
                     
+                    let lockIcon = done ? 'check_circle' : 'lock';
+                    let lockText = done ? 'Erledigt' : 'Gesperrt';
+                    
+                    if (filterId === 'all') {
+                         lockIcon = 'visibility';
+                         lockText = 'Nur Ansicht';
+                    } else if (!isAuthenticated) {
+                         lockText = 'Login nötig';
+                    } else if (isConfirmed) {
+                         lockText = 'Bestätigt';
+                    }
+
                     return `
                         <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-60 grayscale' : 'hover:border-primary/40 hover:shadow-md'}">
                             <div class="w-2.5" style="background-color: ${config.color}"></div>
@@ -674,9 +782,9 @@
                                             <span class="text-[11px] font-black uppercase tracking-widest ${done ? 'text-primary' : 'text-on-surface-variant'}">${done ? 'Erledigt' : 'Offen'}</span>
                                         </button>
                                     ` : `
-                                        <div class="mt-6 flex items-center justify-end gap-3 ${filterId === 'all' ? 'opacity-30 grayscale' : 'opacity-60 cursor-not-allowed'}">
-                                            <span class="material-symbols-outlined text-3xl ${done ? 'text-primary fill-1' : 'text-outline-variant'}">${done ? 'check_circle' : 'lock'}</span>
-                                            <span class="text-[11px] font-black uppercase tracking-widest ${done ? 'text-primary' : 'text-on-surface-variant'}">${done ? 'Erledigt' : 'Gesperrt'}</span>
+                                        <div class="mt-6 flex items-center justify-end gap-3 ${filterId === 'all' || !isAuthenticated ? 'opacity-30 grayscale' : 'opacity-60 cursor-not-allowed'}">
+                                            <span class="material-symbols-outlined text-3xl ${done ? 'text-primary fill-1' : 'text-outline-variant'}">${lockIcon}</span>
+                                            <span class="text-[11px] font-black uppercase tracking-widest ${done ? 'text-primary' : 'text-on-surface-variant'}">${lockText}</span>
                                         </div>
                                     `}
                                 </div>
@@ -689,8 +797,10 @@
             if (filterId !== 'all') {
                 const s = this.state.students.find(st => st.id === filterId);
                 if (s) {
-                    // Parent confirmation button is disabled if confirmed AND not in teacher mode
-                    const isBtnDisabled = s.confirmed && !this.state.isLehrer;
+                    // Parent confirmation button is disabled if:
+                    // 1. Confirmed AND not in teacher mode
+                    // 2. Student NOT authenticated AND not in teacher mode
+                    const isBtnDisabled = (s.confirmed && !this.state.isLehrer) || (!isAuthenticated && !this.state.isLehrer);
 
                     container.innerHTML += `
                         <div class="mt-16 bg-white border-4 ${s.confirmed ? 'border-primary' : 'border-dashed border-outline-variant/50'} p-12 rounded-3xl flex flex-col items-center text-center shadow-xl">
@@ -703,7 +813,7 @@
                             <button 
                                 onclick="app.confirmStudent('${s.id}')" 
                                 ${isBtnDisabled ? 'disabled' : ''}
-                                class="px-12 py-5 ${s.confirmed ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-surface-container hover:bg-outline-variant text-on-surface'} rounded-full font-black uppercase tracking-[0.15em] transition-all transform ${isBtnDisabled ? 'opacity-90 cursor-default' : 'hover:scale-[1.02]'}">
+                                class="px-12 py-5 ${s.confirmed ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-surface-container hover:bg-outline-variant text-on-surface'} rounded-full font-black uppercase tracking-[0.15em] transition-all transform ${isBtnDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}">
                                 ${s.confirmed ? 'Bestätigt ✓' : 'Jetzt Bestätigen'}
                             </button>
                             
@@ -711,6 +821,10 @@
                             
                             ${this.state.isLehrer && s.confirmed ? `
                                 <button onclick="app.confirmStudent('${s.id}')" class="mt-4 text-[10px] font-bold uppercase text-red-500 hover:underline">Sperre als Lehrperson aufheben</button>
+                            ` : ''}
+                            
+                            ${!isAuthenticated && !this.state.isLehrer ? `
+                                <p class="mt-4 text-[10px] font-bold text-red-500 uppercase tracking-widest">Bitte zuerst einloggen</p>
                             ` : ''}
                         </div>
                     `;
@@ -815,160 +929,4 @@
             if (!list) return;
             const sorted = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
             list.innerHTML = sorted.map(s => `
-                <div class="flex items-center justify-between p-3.5 bg-surface-container border border-outline-variant rounded-xl group transition-all">
-                    <span class="text-sm font-bold text-on-surface truncate flex items-center gap-2">
-                        <span class="material-symbols-outlined text-on-surface-variant/30 text-lg">person</span> ${s.name}
-                    </span>
-                    <button onclick="app.removeStudent('${s.id}')" class="text-on-surface-variant/30 hover:text-red-500 transition-colors">
-                        <span class="material-symbols-outlined text-[20px]">delete</span>
-                    </button>
-                </div>
-            `).join('');
-        },
-
-        addStudent() {
-            const input = document.getElementById('new-student-name');
-            const name = input.value.trim();
-            if (name) {
-                const newId = 's' + Date.now();
-                this.state.students.push({ id: newId, name, confirmed: false, lastConfirmed: '-' });
-                this.state.completedTasks[newId] = [];
-                input.value = '';
-                this.persist();
-                this.renderAll();
-            }
-        },
-
-        removeStudent(id) {
-            if (confirm("Schüler/in löschen?")) {
-                this.state.students = this.state.students.filter(s => s.id !== id);
-                this.state.tasks = this.state.tasks.filter(t => t.studentId !== id);
-                delete this.state.completedTasks[id];
-                this.persist();
-                this.renderAll();
-            }
-        },
-
-        addTask(e) {
-            e.preventDefault();
-            const sid = document.getElementById('task-student').value;
-            const subCode = document.getElementById('task-subject').value;
-            const dead = document.getElementById('task-deadline').value;
-            const desc = document.getElementById('task-description').value;
-            
-            this.state.tasks.push({ 
-                id: 't' + Math.random().toString(36).substr(2, 9), 
-                studentId: sid, 
-                subjectCode: subCode, 
-                description: desc, 
-                deadline: dead 
-            });
-            
-            if (sid === 'all') {
-                this.state.students.forEach(s => {
-                    s.confirmed = false;
-                    s.lastConfirmed = '-';
-                });
-            } else {
-                const s = this.state.students.find(st => st.id === sid);
-                if (s) {
-                    s.confirmed = false;
-                    s.lastConfirmed = '-';
-                }
-            }
-            
-            document.getElementById('task-description').value = '';
-            this.persist();
-            this.renderAll();
-        },
-
-        deleteTask(taskId) {
-            if (confirm("Aufgabe wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.")) {
-                this.state.tasks = this.state.tasks.filter(t => t.id !== taskId);
-                for (const sid in this.state.completedTasks) {
-                    this.state.completedTasks[sid] = this.state.completedTasks[sid].filter(id => id !== taskId);
-                }
-                this.persist();
-                this.renderAll();
-            }
-        },
-
-        toggleTaskStatus(taskId) {
-            const studentId = this.state.selectedStudentId;
-            if (studentId === 'all') return;
-
-            // Lock check: prevent toggle if confirmed and not in teacher mode
-            const s = this.state.students.find(st => st.id === studentId);
-            if (s && s.confirmed && !this.state.isLehrer) return;
-
-            if (!this.state.completedTasks[studentId]) {
-                this.state.completedTasks[studentId] = [];
-            }
-
-            const index = this.state.completedTasks[studentId].indexOf(taskId);
-            if (index > -1) {
-                this.state.completedTasks[studentId].splice(index, 1);
-            } else {
-                this.state.completedTasks[studentId].push(taskId);
-            }
-
-            this.persist(); 
-            this.renderTasks(); 
-            this.renderDashboard(); 
-            this.updateInstructions(); 
-        },
-
-        confirmStudent(id) {
-            const s = this.state.students.find(st => st.id === id);
-            if (s) { 
-                // Teacher can always toggle. Student can only set to true (once true, locked)
-                if (s.confirmed && !this.state.isLehrer) return;
-
-                s.confirmed = !s.confirmed; 
-                s.lastConfirmed = s.confirmed ? new Date().toLocaleDateString('de-CH', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                }) : '-'; 
-                this.persist(); 
-                this.renderTasks(); 
-                this.renderDashboard(); 
-                this.updateInstructions(); 
-                this.renderStatusNotification();
-            }
-        },
-
-        viewDetails(id) { 
-            this.state.selectedStudentId = id; 
-            this.state.currentTab = 'Planer'; 
-            this.renderAll(); 
-            window.scrollTo({ top: 0, behavior: 'smooth' }); 
-        },
-
-        importTxt(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const names = e.target.result.split(/[\n,]/).map(n => n.trim()).filter(n => n.length > 0);
-                names.forEach(name => {
-                    if (!this.state.students.find(s => s.name === name)) {
-                        const newId = 's' + Math.random().toString(36).substr(2, 9);
-                        this.state.students.push({ id: newId, name, confirmed: false, lastConfirmed: '-' });
-                        this.state.completedTasks[newId] = [];
-                    }
-                });
-                this.persist(); this.renderAll();
-            };
-            reader.readAsText(file);
-        },
-
-        exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state));
-            const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", `doeltschi_data.json`); dl.click();
-        }
-    };
-
-    document.addEventListener('DOMContentLoaded', () => app.init());
-</script>
-</body></html>
+                <div class="flex items-center justify-between p-3.5 bg-surface-container border border</script></body></html>
