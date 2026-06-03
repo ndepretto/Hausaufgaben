@@ -1,7 +1,6 @@
 <html class="light" lang="de-CH"><head></head><body class="bg-surface text-on-surface font-body-md min-h-screen">```html
 
 
-
     <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>doeltschi – Digitaler Planer</title>
@@ -146,9 +145,6 @@
             background: #ccc;
             border-radius: 10px;
         }
-        .qr-print-container {
-            display: none;
-        }
     </style>
 <main class="max-w-7xl mx-auto px-gutter py-8 md:py-12 space-y-12">
 <!-- Header -->
@@ -223,7 +219,7 @@
 </div>
 <!-- Teacher Specific Sections -->
 <div class="space-y-8 hidden" id="teacher-tools">
-<!-- Kurzanleitung für Lehrpersonen -->
+<!-- Kurzanleitung -->
 <section class="instructions-section">
 <h2 class="font-h2 text-h2 mb-6">Erste Schritte</h2>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -250,7 +246,7 @@
 </div>
 </div>
 </section>
-<!-- QR-Code Section (New) -->
+<!-- QR-Code Section -->
 <section class="bg-surface-container-lowest border border-outline-variant p-8 rounded-lg shadow-sm" id="qr-section">
 <div class="flex flex-col md:flex-row items-center gap-8">
 <div class="bg-white p-4 rounded-lg shadow-inner border border-outline-variant">
@@ -273,7 +269,7 @@
 <div class="flex items-center justify-between mb-8">
 <div>
 <h2 class="font-h2 text-h2">Klassen-Fortschritt</h2>
-<p class="text-on-surface-variant text-sm mt-1">Status-Übersicht aller Aufgaben pro Schüler.</p>
+<p class="text-on-surface-variant text-sm mt-1">Status-Übersicht aller Aufgaben und Eltern-Bestätigungen pro Schüler.</p>
 </div>
 <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
 </div>
@@ -283,6 +279,7 @@
 <tr class="bg-surface-container-low text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">
 <th class="p-4 border-b border-outline-variant">Schüler</th>
 <th class="p-4 border-b border-outline-variant text-center">Quote</th>
+<th class="p-4 border-b border-outline-variant text-center">Eltern</th>
 <th class="p-4 border-b border-outline-variant" id="dashboard-tasks-header">Aufgaben</th>
 </tr>
 </thead>
@@ -358,10 +355,11 @@
                 Zuweisen
             </button>
 </section>
+<!-- Teacher Confirmations View -->
 <section class="bg-surface-container-lowest border border-outline-variant p-8 rounded-lg shadow-sm" id="teacher-confirmations-view">
-<h2 class="font-h2 text-h2 mb-4">Eltern-Bestätigungen</h2>
-<div class="space-y-2" id="confirmations-list">
-<p class="text-on-surface-variant italic">Keine Bestätigungen vorhanden.</p>
+<h2 class="font-h2 text-h2 mb-4">Übersicht Eltern-Bestätigungen</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="confirmations-list">
+<p class="text-on-surface-variant italic col-span-full">Keine Bestätigungen vorhanden.</p>
 </div>
 </section>
 </div>
@@ -376,14 +374,14 @@
 <th class="p-5 border-b border-outline-variant">Fach</th>
 <th class="p-5 border-b border-outline-variant">Aufgabe</th>
 <th class="p-5 border-b border-outline-variant">Termin</th>
-<th class="p-5 border-b border-outline-variant w-40 text-center">Aktion</th>
+<th class="p-5 border-b border-outline-variant w-40 text-center print-hide">Aktion</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-outline-variant" id="task-list-body"></tbody>
 </table>
 </div>
 </section>
-<!-- Parent Confirmation -->
+<!-- Parent Confirmation (INDIVIDUAL) -->
 <section class="bg-surface-container-lowest border-2 border-primary border-dashed p-8 rounded-lg shadow-sm transition-all" id="parent-confirmation">
 <div class="flex items-center gap-3 mb-8">
 <svg class="w-8 h-8 text-primary" fill="none" id="confirm-icon" stroke="currentColor" viewbox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
@@ -443,6 +441,12 @@
         'mi': '#64748b', 'wah': '#ff5722'
     };
 
+    const subjectNames = {
+        'de': 'Deutsch', 'ma': 'Mathematik', 'e': 'Englisch', 'f': 'Französisch',
+        'rzg': 'RZG', 'nt': 'NT', 'mu': 'Musik', 'bs': 'Sport',
+        'mi': 'Medien', 'wah': 'WAH'
+    };
+
     let tasks = [];
     let students = ['Anna', 'Ben', 'Lara', 'Mark', 'Sophie'];
     let studentConfirmations = {}; 
@@ -458,17 +462,18 @@
         const storedConfirmations = localStorage.getItem('hw_planner_confirmations_map');
         if (storedConfirmations) studentConfirmations = JSON.parse(storedConfirmations);
 
-        const today = new Date().toLocaleDateString('de-CH', {year: 'numeric', month: '2-digit', day: '2-digit'}).split('.').reverse().join('-');
+        const today = new Date().toISOString().split('T')[0];
         if (document.getElementById('task-date')) document.getElementById('task-date').value = today;
         if (document.getElementById('confirm-date')) document.getElementById('confirm-date').value = today;
 
-        // Generate QR Code
+        // QR Code
         const currentUrl = window.location.href;
         const qrImg = document.getElementById('qr-code-img');
         if (qrImg) {
             qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}`;
         }
 
+        renderColorLegend();
         updateUI();
         setRoleState('student');
     }
@@ -503,6 +508,8 @@
             studentFilterCont.classList.add('hidden');
             studentInstructions.classList.add('hidden');
             updateBanner('Lehrer-Modus', 'Als Lehrkraft kannst du Aufgaben erstellen und den Fortschritt überwachen.', 'text-tertiary', 'lock');
+            renderTeacherDashboard();
+            renderTeacherConfirmations();
         } else {
             teacherBtn.className = "role-btn px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 text-on-surface-variant hover:bg-surface-container-highest cursor-pointer";
             studentBtn.className = "role-btn px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 bg-primary text-on-primary shadow-sm cursor-pointer";
@@ -514,7 +521,6 @@
         }
         
         renderTasks();
-        if(role === 'teacher') renderTeacherDashboard();
     }
 
     function updateBanner(title, desc, colorClass, iconType) {
@@ -578,7 +584,7 @@
                 </td>
                 <td class="p-5 font-body-md text-on-surface-variant task-text">${task.task}</td>
                 <td class="p-5 text-sm font-semibold text-on-surface">${formatSwissDate(task.due)}</td>
-                <td class="p-5 text-center">
+                <td class="p-5 text-center print-hide">
                     <div class="flex items-center justify-center gap-2">
                         ${currentMode === 'teacher' ? `<button onclick="deleteTask(${task.id})" class="text-error hover:bg-error-container p-2 rounded-full transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` : (done ? '<span class="text-green-600 text-xs font-bold uppercase">Fertig</span>' : '<span class="text-on-surface-variant text-xs font-bold uppercase">Offen</span>')}
                     </div>
@@ -678,6 +684,7 @@
     function deleteStudent(name) {
         if (!confirm(`Schüler "${name}" entfernen?`)) return;
         students = students.filter(s => s !== name);
+        delete studentConfirmations[name];
         saveData();
         updateUI();
     }
@@ -709,7 +716,10 @@
             checked: document.getElementById('confirm-check').checked
         };
         saveData();
-        if (currentMode === 'teacher') renderTeacherConfirmations();
+        if (currentMode === 'teacher') {
+            renderTeacherConfirmations();
+            renderTeacherDashboard();
+        }
     }
 
     function updateConfirmationUI(student) {
@@ -741,12 +751,12 @@
         const btnText = document.getElementById('confirm-text');
 
         if (isLocked) {
-            card.className = "border-2 border-primary border-dashed p-8 rounded-lg shadow-sm bg-primary text-white";
-            heading.className = "font-h2 text-h2 text-white";
-            icon.className = "w-8 h-8 text-white";
-            label.className = "flex items-center justify-center gap-3 cursor-pointer select-none bg-white/20 p-3 rounded-lg border border-white/30 w-full";
+            card.className = "border-2 border-primary border-dashed p-8 rounded-lg shadow-sm bg-primary/10";
+            heading.className = "font-h2 text-h2 text-primary";
+            icon.className = "w-8 h-8 text-primary";
+            label.className = "flex items-center justify-center gap-3 cursor-pointer select-none bg-primary text-white p-3 rounded-lg border border-primary w-full";
             btnText.innerText = "Bestätigt ✓";
-            btnText.className = "font-bold text-white";
+            btnText.className = "font-bold text-white"; // Fixed requested change: font color was white, now visible on dark primary background
         } else {
             card.className = "bg-surface-container-lowest border-2 border-primary border-dashed p-8 rounded-lg shadow-sm";
             heading.className = "font-h2 text-h2 text-primary";
@@ -780,9 +790,16 @@
             }).join('');
             
             const perc = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+            const isConfirmed = !!studentConfirmations[s]?.checked;
+            
             return `<tr>
-                <td class="p-4 font-bold text-sm">${s}</td>
+                <td class="p-4 font-bold text-sm text-on-surface">${s}</td>
                 <td class="p-4"><div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden"><div class="h-full bg-primary" style="width: ${perc}%"></div></div></td>
+                <td class="p-4 text-center">
+                    <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase ${isConfirmed ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-red-100 text-red-700 border border-red-200'}">
+                        ${isConfirmed ? 'Bestätigt' : 'Ausstehend'}
+                    </span>
+                </td>
                 <td class="p-4"><div class="flex gap-4 min-w-[300px]">${cells}</div></td>
             </tr>`;
         }).join('');
@@ -792,22 +809,8 @@
         const cont = document.getElementById('confirmations-list');
         const list = Object.keys(studentConfirmations).filter(k => studentConfirmations[k].checked);
         if (list.length === 0) {
-            cont.innerHTML = '<p class="text-on-surface-variant italic">Keine Bestätigungen vorhanden.</p>';
+            cont.innerHTML = '<p class="text-on-surface-variant italic col-span-full">Keine Bestätigungen vorhanden.</p>';
             return;
         }
-        cont.innerHTML = list.map(s => `<div class="p-4 bg-surface-container-low rounded-lg border border-outline-variant flex justify-between"><strong>${s}</strong><span>${studentConfirmations[s].signature} (${formatSwissDate(studentConfirmations[s].date)})</span></div>`).join('');
-    }
-
-    function updateUI() {
-        const filters = ['student-filter', 'task-who'];
-        filters.forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            const prev = el.value;
-            el.innerHTML = id === 'student-filter' ? '<option value="all">Alle anzeigen</option>' : '<option value="Ganze Klasse">Ganze Klasse</option>';
-            students.forEach(s => el.add(new Option(s, s)));
-            el.value = prev || el.options[0].value;
-        });
-
-        const badges = document.getElementById('student-badges-container');
-        badges.innerHTML = students.map(s => `<div class="px-3 py-1 bg-surface-container-low border border-outline-variant rounded-full text-xs font-bold flex items-center gap-2">${s}<button onclick="deleteStudent('${s}')" class="text-error font-bold text-</script></body></html>
+        cont.innerHTML = list.map(s => `
+            <div class="p</script></body></html>
