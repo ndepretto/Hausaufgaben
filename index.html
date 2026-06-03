@@ -221,7 +221,7 @@
 <!-- Statistics Cards -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 <div class="bg-white border border-outline-variant p-6 rounded-2xl shadow-sm">
-<p class="text-[10px] font-bold text-on-surface-variant uppercase mb-2 tracking-widest">Erledigungsquote</p>
+<p class="text-[10px] font-bold text-on-surface-variant uppercase mb-2 tracking-widest">Erledigungsquote (Global)</p>
 <div class="text-4xl font-black text-primary" id="dashboard-quote">0%</div>
 <div class="w-full bg-surface-container h-2.5 rounded-full mt-4 overflow-hidden">
 <div class="bg-primary h-full transition-all duration-700" id="dashboard-progress-bar" style="width: 0%;"></div>
@@ -349,7 +349,7 @@
 <div class="text-center md:text-left">
 <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
 <div class="flex items-center justify-center md:justify-start gap-3 mt-2">
-<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 18 • Secure Access</p>
+<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 19 • Individual State Logic</p>
 <button class="text-[9px] text-on-surface-variant/30 hover:text-red-400 underline font-mono uppercase transition-colors" onclick="app.resetSystem()">App zurücksetzen</button>
 </div>
 </div>
@@ -385,22 +385,30 @@
             { id: 's3', name: 'Emma Weber', confirmed: false, lastConfirmed: '-' }
         ],
         tasks: [
-            { id: 't0', studentId: 'all', subjectCode: 'MA', subject: 'Mathematik', description: 'Ganze Klasse: Kapitel 5 Übung 1-5.', deadline: '15.04.2024', status: 'offen' },
-            { id: 't1', studentId: 's1', subjectCode: 'DE', subject: 'Deutsch', description: 'Arbeitsheft S. 42-43 lesen und Übung 4 bearbeiten.', deadline: '15.04.2024', status: 'offen' },
-            { id: 't2', studentId: 's1', subjectCode: 'MA', subject: 'Mathematik', description: 'Einmaleins-Tabelle vervollständigen.', deadline: '16.04.2024', status: 'erledigt' },
-            { id: 't3', studentId: 's2', subjectCode: 'DE', subject: 'Deutsch', description: 'Diktat vorbereiten: "Der Frühling kommt".', deadline: '15.04.2024', status: 'erledigt' }
-        ]
+            { id: 't0', studentId: 'all', subjectCode: 'MA', description: 'Ganze Klasse: Kapitel 5 Übung 1-5.', deadline: '15.04.2024' },
+            { id: 't1', studentId: 's1', subjectCode: 'DE', description: 'Arbeitsheft S. 42-43 lesen und Übung 4 bearbeiten.', deadline: '15.04.2024' },
+            { id: 't2', studentId: 's1', subjectCode: 'MA', description: 'Einmaleins-Tabelle vervollständigen.', deadline: '16.04.2024' },
+            { id: 't3', studentId: 's2', subjectCode: 'DE', description: 'Diktat vorbereiten: "Der Frühling kommt".', deadline: '15.04.2024' }
+        ],
+        // Logic: completion is stored per student ID. For 'all' studentId tasks, we check this object.
+        // For individual tasks, we also store them here for consistency.
+        completedTasks: {
+            's1': ['t2'],
+            's2': ['t3']
+        }
     };
 
     const app = {
         state: null,
-        STORAGE_KEY: 'doeltschi_v18_secure_app',
+        STORAGE_KEY: 'doeltschi_v19_individual_app',
 
         init() {
             try {
                 const savedData = localStorage.getItem(this.STORAGE_KEY);
                 if (savedData) {
                     const parsed = JSON.parse(savedData);
+                    // Migration helper: if old status was used, we ignore it and rely on completedTasks
+                    if (!parsed.completedTasks) parsed.completedTasks = {};
                     this.state = { ...INITIAL_STATE, ...parsed, isLehrer: false, currentTab: 'Planer' };
                 } else {
                     this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
@@ -500,9 +508,17 @@
             const steps = [1, 2, 3, 4].map(i => document.getElementById(`step-${i}`));
             if (!steps[0]) return;
             const studentSelected = this.state.selectedStudentId !== 'all';
-            const filteredTasks = studentSelected ? this.state.tasks.filter(t => t.studentId === this.state.selectedStudentId || t.studentId === 'all') : [];
-            const anyDone = filteredTasks.some(t => t.status === 'erledigt');
-            const allDone = filteredTasks.length > 0 && filteredTasks.every(t => t.status === 'erledigt');
+            
+            let anyDone = false;
+            let allDone = false;
+
+            if (studentSelected) {
+                const filteredTasks = this.state.tasks.filter(t => t.studentId === this.state.selectedStudentId || t.studentId === 'all');
+                const completedList = this.state.completedTasks[this.state.selectedStudentId] || [];
+                const doneTasks = filteredTasks.filter(t => completedList.includes(t.id));
+                anyDone = doneTasks.length > 0;
+                allDone = filteredTasks.length > 0 && doneTasks.length === filteredTasks.length;
+            }
             
             steps.forEach(el => el && el.classList.add('opacity-50'));
             if (!studentSelected) steps[0].classList.remove('opacity-50');
@@ -551,6 +567,12 @@
             if (taskSelect) taskSelect.innerHTML = taskHtml;
         },
 
+        isTaskDone(taskId, studentId) {
+            if (studentId === 'all') return false; // Overview shows nothing checked
+            const completed = this.state.completedTasks[studentId] || [];
+            return completed.includes(taskId);
+        },
+
         renderTasks() {
             const container = document.getElementById('task-container');
             if (!container) return;
@@ -568,8 +590,12 @@
             } else {
                 container.innerHTML = displayTasks.map(t => {
                     const student = t.studentId === 'all' ? { name: 'Ganze Klasse' } : this.state.students.find(s => s.id === t.studentId);
-                    const done = t.status === 'erledigt';
+                    const done = this.isTaskDone(t.id, filterId);
                     const config = SUBJECT_CONFIG[t.subjectCode] || { name: 'Divers', color: '#64748b' };
+                    
+                    // Interaction disabled if in "All students" view
+                    const isInteractionDisabled = filterId === 'all';
+
                     return `
                         <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-60 grayscale' : 'hover:border-primary/40 hover:shadow-md'}">
                             <div class="w-2.5" style="background-color: ${config.color}"></div>
@@ -586,10 +612,17 @@
                                 <div class="text-right">
                                     <p class="text-[10px] font-bold text-on-surface-variant uppercase mb-2 tracking-widest">Bis</p>
                                     <p class="text-base font-black text-on-surface">${t.deadline}</p>
-                                    <button onclick="app.toggleTaskStatus('${t.id}')" class="mt-6 flex items-center justify-end gap-3 group ml-auto">
-                                        <span class="material-symbols-outlined text-3xl ${done ? 'text-primary fill-1' : 'text-outline-variant'} transition-all">${done ? 'check_circle' : 'radio_button_unchecked'}</span>
-                                        <span class="text-[11px] font-black uppercase tracking-widest ${done ? 'text-primary' : 'text-on-surface-variant'}">${done ? 'Erledigt' : 'Offen'}</span>
-                                    </button>
+                                    ${!isInteractionDisabled ? `
+                                        <button onclick="app.toggleTaskStatus('${t.id}')" class="mt-6 flex items-center justify-end gap-3 group ml-auto">
+                                            <span class="material-symbols-outlined text-3xl ${done ? 'text-primary fill-1' : 'text-outline-variant'} transition-all">${done ? 'check_circle' : 'radio_button_unchecked'}</span>
+                                            <span class="text-[11px] font-black uppercase tracking-widest ${done ? 'text-primary' : 'text-on-surface-variant'}">${done ? 'Erledigt' : 'Offen'}</span>
+                                        </button>
+                                    ` : `
+                                        <div class="mt-6 flex items-center justify-end gap-3 opacity-30 grayscale">
+                                            <span class="material-symbols-outlined text-3xl text-outline-variant">info</span>
+                                            <span class="text-[11px] font-black uppercase tracking-widest text-on-surface-variant">Vorschau</span>
+                                        </div>
+                                    `}
                                 </div>
                             </div>
                         </div>
@@ -620,19 +653,32 @@
         renderDashboard() {
             const tbody = document.getElementById('student-table-body');
             if (!tbody) return;
-            const totalTasks = this.state.tasks.length;
-            const doneTasks = this.state.tasks.filter(t => t.status === 'erledigt').length;
-            const quote = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
-            document.getElementById('dashboard-quote').textContent = `${quote}%`;
-            document.getElementById('dashboard-progress-bar').style.width = `${quote}%`;
+
+            const totalGlobalTasks = this.state.tasks.length;
+            // Completion rate calculation updated: we average the individual completion rates
+            let totalDonePercentage = 0;
+            this.state.students.forEach(s => {
+                const sTasks = this.state.tasks.filter(t => t.studentId === s.id || t.studentId === 'all');
+                const completedList = this.state.completedTasks[s.id] || [];
+                const doneCount = sTasks.filter(t => completedList.includes(t.id)).length;
+                totalDonePercentage += (sTasks.length > 0 ? (doneCount / sTasks.length) : 1);
+            });
+
+            const avgQuote = this.state.students.length > 0 ? Math.round((totalDonePercentage / this.state.students.length) * 100) : 0;
+            
+            document.getElementById('dashboard-quote').textContent = `${avgQuote}%`;
+            document.getElementById('dashboard-progress-bar').style.width = `${avgQuote}%`;
+            
             const confirmedCount = this.state.students.filter(s => s.confirmed).length;
             const totalCount = this.state.students.length;
             document.getElementById('dashboard-confirmations').textContent = `${confirmedCount}/${totalCount}`;
             document.getElementById('dashboard-pending-text').textContent = `Noch ${totalCount - confirmedCount} ausstehend`;
+            
             const sortedStudents = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
             tbody.innerHTML = sortedStudents.map(s => {
                 const sTasks = this.state.tasks.filter(t => t.studentId === s.id || t.studentId === 'all');
-                const doneCount = sTasks.filter(t => t.status === 'erledigt').length;
+                const completedList = this.state.completedTasks[s.id] || [];
+                const doneCount = sTasks.filter(t => completedList.includes(t.id)).length;
                 const taskTotal = sTasks.length;
                 const progress = taskTotal > 0 ? Math.round((doneCount / taskTotal) * 100) : 0;
                 return `
@@ -674,7 +720,9 @@
             const input = document.getElementById('new-student-name');
             const name = input.value.trim();
             if (name) {
-                this.state.students.push({ id: 's' + Date.now(), name, confirmed: false, lastConfirmed: '-' });
+                const newId = 's' + Date.now();
+                this.state.students.push({ id: newId, name, confirmed: false, lastConfirmed: '-' });
+                this.state.completedTasks[newId] = [];
                 input.value = '';
                 this.persist();
                 this.renderAll();
@@ -685,6 +733,7 @@
             if (confirm("Schüler/in löschen?")) {
                 this.state.students = this.state.students.filter(s => s.id !== id);
                 this.state.tasks = this.state.tasks.filter(t => t.studentId !== id);
+                delete this.state.completedTasks[id];
                 this.persist();
                 this.renderAll();
             }
@@ -697,29 +746,20 @@
             const dead = document.getElementById('task-deadline').value;
             const desc = document.getElementById('task-description').value;
             
+            this.state.tasks.push({ 
+                id: 't' + Math.random().toString(36).substr(2, 9), 
+                studentId: sid, 
+                subjectCode: subCode, 
+                description: desc, 
+                deadline: dead 
+            });
+            
+            // New task resets all confirmations for relevant group
             if (sid === 'all') {
-                this.state.tasks.push({ 
-                    id: 't' + Math.random().toString(36).substr(2, 9), 
-                    studentId: 'all', 
-                    subjectCode: subCode, 
-                    description: desc, 
-                    deadline: dead, 
-                    status: 'offen' 
-                });
                 this.state.students.forEach(s => s.confirmed = false);
             } else {
                 const s = this.state.students.find(st => st.id === sid);
-                if (s) {
-                    this.state.tasks.push({ 
-                        id: 't' + Math.random().toString(36).substr(2, 9), 
-                        studentId: s.id, 
-                        subjectCode: subCode, 
-                        description: desc, 
-                        deadline: dead, 
-                        status: 'offen' 
-                    });
-                    s.confirmed = false;
-                }
+                if (s) s.confirmed = false;
             }
             
             document.getElementById('task-description').value = '';
@@ -727,15 +767,25 @@
             this.renderAll();
         },
 
-        toggleTaskStatus(id) {
-            const t = this.state.tasks.find(tk => tk.id === id);
-            if (t) { 
-                t.status = t.status === 'erledigt' ? 'offen' : 'erledigt'; 
-                this.persist(); 
-                this.renderTasks(); 
-                this.renderDashboard(); 
-                this.updateInstructions(); 
+        toggleTaskStatus(taskId) {
+            const studentId = this.state.selectedStudentId;
+            if (studentId === 'all') return; // Should not happen with UI logic
+
+            if (!this.state.completedTasks[studentId]) {
+                this.state.completedTasks[studentId] = [];
             }
+
+            const index = this.state.completedTasks[studentId].indexOf(taskId);
+            if (index > -1) {
+                this.state.completedTasks[studentId].splice(index, 1);
+            } else {
+                this.state.completedTasks[studentId].push(taskId);
+            }
+
+            this.persist(); 
+            this.renderTasks(); 
+            this.renderDashboard(); 
+            this.updateInstructions(); 
         },
 
         confirmStudent(id) {
@@ -765,7 +815,9 @@
                 const names = e.target.result.split(/[\n,]/).map(n => n.trim()).filter(n => n.length > 0);
                 names.forEach(name => {
                     if (!this.state.students.find(s => s.name === name)) {
-                        this.state.students.push({ id: 's' + Math.random().toString(36).substr(2, 9), name, confirmed: false, lastConfirmed: '-' });
+                        const newId = 's' + Math.random().toString(36).substr(2, 9);
+                        this.state.students.push({ id: newId, name, confirmed: false, lastConfirmed: '-' });
+                        this.state.completedTasks[newId] = [];
                     }
                 });
                 this.persist(); this.renderAll();
