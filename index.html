@@ -206,7 +206,7 @@
 </div>
 </div>
 <!-- Content Area: Dashboard (Teacher View) -->
-<div class="hidden space-y-8" id="content-dashboard">
+<div class="hidden space-y-12" id="content-dashboard">
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 <h2 class="text-3xl font-black text-on-surface">Klassen-Dashboard</h2>
 <div class="flex gap-3">
@@ -267,7 +267,7 @@
 </select>
 </div>
 <div>
-<label class="block text-[10px] font-bold text-on-surface-variant uppercase mb-1.5 tracking-wider">Datum</label>
+<label class="block text-[10px] font-bold text-on-surface-variant uppercase mb-1.5 tracking-wider">Termin</label>
 <input class="w-full bg-surface-container border border-outline-variant rounded-xl p-3 text-sm focus:ring-2 focus:ring-primary outline-none" id="task-deadline" placeholder="15.04.2024" required="" type="text"/>
 </div>
 <div class="md:col-span-2">
@@ -278,6 +278,30 @@
 <button class="w-full py-3.5 bg-primary text-white rounded-xl font-bold text-sm uppercase shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all" type="submit">Hinzufügen</button>
 </div>
 </form>
+</div>
+<!-- Manage Tasks Section -->
+<div class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+<div class="p-6 border-b border-outline-variant flex justify-between items-center">
+<h3 class="text-xl font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">assignment</span> Zugeteilte Aufgaben verwalten
+                    </h3>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm">
+<thead class="bg-surface-container border-b border-outline-variant">
+<tr>
+<th class="px-6 py-4 font-bold text-on-surface-variant uppercase text-[10px] tracking-widest">Wer</th>
+<th class="px-6 py-4 font-bold text-on-surface-variant uppercase text-[10px] tracking-widest">Fach</th>
+<th class="px-6 py-4 font-bold text-on-surface-variant uppercase text-[10px] tracking-widest">Aufgabe</th>
+<th class="px-6 py-4 font-bold text-on-surface-variant uppercase text-[10px] tracking-widest">Termin</th>
+<th class="px-6 py-4 font-bold text-on-surface-variant uppercase text-[10px] tracking-widest text-right">Aktion</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container" id="manage-tasks-body">
+<!-- Populated via JS -->
+</tbody>
+</table>
+</div>
 </div>
 <!-- Student Lists -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -497,6 +521,7 @@
             this.renderDashboard();
             this.renderStudentManagement();
             this.renderLegend();
+            this.renderManageTasks();
             this.updateInstructions();
         },
 
@@ -674,7 +699,6 @@
                 const taskTotal = sTasks.length;
                 const progress = taskTotal > 0 ? Math.round((doneCount / taskTotal) * 100) : 0;
                 
-                // Parental Confirmation Badge
                 const parentalStatus = s.confirmed 
                     ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest">
                         <span class="material-symbols-outlined text-[14px]">verified</span> OK <span class="opacity-60 text-[9px] font-bold ml-1">${s.lastConfirmed}</span>
@@ -699,6 +723,38 @@
                         </td>
                         <td class="px-6 py-5">
                             <button onclick="app.viewDetails('${s.id}')" class="text-primary font-bold uppercase text-[10px] hover:underline">Details</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        },
+
+        renderManageTasks() {
+            const tbody = document.getElementById('manage-tasks-body');
+            if (!tbody) return;
+
+            if (this.state.tasks.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-on-surface-variant font-medium italic opacity-50">Keine Aufgaben vorhanden</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = this.state.tasks.map(t => {
+                const student = t.studentId === 'all' ? 'Ganze Klasse' : (this.state.students.find(s => s.id === t.studentId)?.name || 'Unbekannt');
+                const config = SUBJECT_CONFIG[t.subjectCode] || { name: 'Divers', color: '#64748b' };
+                return `
+                    <tr class="hover:bg-surface-container/50 transition-colors">
+                        <td class="px-6 py-4 font-bold text-on-surface whitespace-nowrap">${student}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style="background-color: ${config.color}15; color: ${config.color}">
+                                ${config.name}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-on-surface-variant max-w-md truncate">${t.description}</td>
+                        <td class="px-6 py-4 font-bold text-on-surface whitespace-nowrap">${t.deadline}</td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="app.deleteTask('${t.id}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant/40 hover:text-red-500 hover:bg-red-50 transition-all ml-auto">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -775,6 +831,20 @@
             document.getElementById('task-description').value = '';
             this.persist();
             this.renderAll();
+        },
+
+        deleteTask(taskId) {
+            if (confirm("Aufgabe wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.")) {
+                this.state.tasks = this.state.tasks.filter(t => t.id !== taskId);
+                
+                // Also remove from individual completed lists if needed
+                for (const sid in this.state.completedTasks) {
+                    this.state.completedTasks[sid] = this.state.completedTasks[sid].filter(id => id !== taskId);
+                }
+                
+                this.persist();
+                this.renderAll();
+            }
         },
 
         toggleTaskStatus(taskId) {
