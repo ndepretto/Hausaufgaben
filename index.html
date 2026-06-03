@@ -1,7 +1,8 @@
-<html class="light" lang="de-CH"><head>
+<html class="light" lang="de-CH"><head></head><body class="bg-surface text-on-surface min-h-screen">```html
+
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Wer – Was – Bis wann | Digitaler Planer</title>
+<title>doeltschi | Digitaler Planer (Import Fix)</title>
 <!-- PWA Meta Tags -->
 <meta content="yes" name="mobile-web-app-capable"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
@@ -75,8 +76,6 @@
         .dashboard-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         .dashboard-scrollbar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
     </style>
-</head>
-<body class="bg-surface text-on-surface min-h-screen">
 <main class="max-w-7xl mx-auto px-gutter py-8 md:py-12 space-y-12">
 <!-- Header -->
 <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -230,7 +229,7 @@
 <button class="px-8 py-3 bg-secondary text-on-secondary rounded-full font-bold hover:bg-secondary/90 flex items-center justify-center gap-2 shadow-sm min-w-[200px]" id="add-bulk-btn">
                         Hinzufügen
                     </button>
-<button class="px-8 py-3 bg-primary text-on-primary rounded-full font-bold hover:bg-primary/90 flex items-center justify-center gap-2 shadow-sm min-w-[200px]" onclick="document.getElementById('file-import').click()">
+<button class="px-8 py-3 bg-primary text-on-primary rounded-full font-bold hover:bg-primary/90 flex items-center justify-center gap-2 shadow-sm min-w-[200px]" id="trigger-file-import">
                         Importieren (.txt)
                     </button>
 <input accept=".txt" class="hidden" id="file-import" type="file"/>
@@ -393,6 +392,8 @@
         resetBtn: document.getElementById('reset-app-btn'),
         bulkInput: document.getElementById('bulk-input'),
         addBulkBtn: document.getElementById('add-bulk-btn'),
+        triggerFileImport: document.getElementById('trigger-file-import'),
+        fileInput: document.getElementById('file-import'),
         createTaskBtn: document.getElementById('create-task-btn'),
         exportBtn: document.getElementById('export-json-btn'),
         qrImg: document.getElementById('qr-code-img')
@@ -439,11 +440,28 @@
         elements.addBulkBtn.addEventListener('click', () => {
             const val = elements.bulkInput.value.trim();
             if (!val) return;
-            const names = val.split(/[,\n;]+/).map(n => n.trim()).filter(n => n && !state.students.includes(n));
-            state.students = [...state.students, ...names].sort();
+            processAndAddNames(val);
             elements.bulkInput.value = '';
-            saveToStorage();
-            updateUI();
+        });
+
+        // Trigger hidden file input
+        elements.triggerFileImport.addEventListener('click', () => {
+            elements.fileInput.click();
+        });
+
+        // Handle file change
+        elements.fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const content = event.target.result;
+                processAndAddNames(content);
+                // Reset file input so same file can be imported again if needed
+                elements.fileInput.value = '';
+            };
+            reader.readAsText(file);
         });
 
         elements.createTaskBtn.addEventListener('click', () => {
@@ -500,6 +518,16 @@
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
         });
+    }
+
+    function processAndAddNames(rawText) {
+        if (!rawText) return;
+        const names = rawText.split(/[,\n\r;]+/).map(n => n.trim()).filter(n => n && !state.students.includes(n));
+        if (names.length > 0) {
+            state.students = [...state.students, ...names].sort();
+            saveToStorage();
+            updateUI();
+        }
     }
 
     function setMode(mode) {
@@ -768,4 +796,4 @@
 
     window.onload = init;
 </script>
-</body></html>
+```</body></html>
