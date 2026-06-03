@@ -1,4 +1,4 @@
-<html class="light" lang="de-CH"><head></head><body class="bg-surface text-on-surface min-h-screen">
+<html class="light" lang="de-CH"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>doeltschi | Digitaler Planer</title>
@@ -74,12 +74,12 @@
         .dashboard-scrollbar::-webkit-scrollbar { height: 8px; }
         .dashboard-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         .dashboard-scrollbar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+        
+        .sync-spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
-<!-- INITIAL_STATE_PLACEHOLDER -->
-<script id="initial-data-script">
-    // Dieser Teil wird beim "Veröffentlichen" automatisch mit den aktuellen Lehrer-Daten befüllt.
-    const INITIAL_STATE = null; 
-</script>
+</head>
+<body class="bg-surface text-on-surface min-h-screen">
 <main class="max-w-7xl mx-auto px-gutter py-8 md:py-12 space-y-12">
 <!-- Header -->
 <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -98,10 +98,10 @@
 <span class="hidden sm:inline">Lehrer-Modus</span>
 </button>
 </div>
-<button class="hidden flex items-center gap-2 px-4 py-2 text-primary border border-primary/20 hover:bg-primary/5 rounded-full transition-colors text-[10px] font-bold uppercase cursor-pointer" id="reset-app-btn">
-<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-                Zurücksetzen
-            </button>
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-low border border-outline-variant rounded-full text-[10px] font-bold uppercase text-on-surface-variant" id="sync-status">
+<div class="w-2 h-2 rounded-full bg-green-500" id="sync-indicator"></div>
+<span id="sync-text">Cloud-Synchronisation aktiv</span>
+</div>
 </div>
 </header>
 <!-- Student Instructions -->
@@ -153,25 +153,6 @@
 </div>
 <!-- Teacher Specific Sections -->
 <div class="space-y-8 hidden" id="teacher-tools">
-<!-- New Publish Section -->
-<section class="bg-primary/5 border-2 border-primary rounded-xl p-8 shadow-md">
-<div class="flex flex-col md:flex-row items-center justify-between gap-6">
-<div class="flex-1">
-<h2 class="text-2xl font-bold text-primary mb-2">Planer veröffentlichen (für Schüler)</h2>
-<p class="text-on-surface-variant">Generiere den Code mit dem aktuellen Stand der Aufgaben und Schülerliste. Kopiere diesen in deine <code>index.html</code> auf GitHub, damit alle Schüler die neuesten Updates erhalten.</p>
-</div>
-<button class="shrink-0 px-8 py-4 bg-primary text-on-primary rounded-full font-bold hover:bg-primary/90 transition-all flex items-center gap-3 shadow-lg group active:scale-95" id="publish-github-btn">
-<svg class="w-6 h-6 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-            Code für GitHub kopieren
-        </button>
-</div>
-<div class="mt-4 hidden" id="publish-success-msg">
-<div class="bg-green-100 text-green-800 p-3 rounded-lg text-sm font-semibold flex items-center gap-2">
-<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-            HTML-Code wurde in die Zwischenablage kopiert!
-        </div>
-</div>
-</section>
 <!-- Quick Instructions -->
 <section>
 <h2 class="text-xl font-bold mb-6">Erste Schritte</h2>
@@ -193,8 +174,8 @@
 <div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant flex gap-4">
 <div class="shrink-0 w-10 h-10 bg-primary text-on-primary rounded-full flex items-center justify-center font-bold">3</div>
 <div>
-<h4 class="font-bold text-on-surface mb-1">Link verteilen</h4>
-<p class="text-sm text-on-surface-variant">QR-Code drucken oder URL an Eltern senden.</p>
+<h4 class="font-bold text-on-surface mb-1">Automatische Cloud-Speicherung</h4>
+<p class="text-sm text-on-surface-variant">Jede Änderung wird sofort synchronisiert und ist für Schüler sichtbar.</p>
 </div>
 </div>
 </div>
@@ -323,20 +304,38 @@
 <h2 class="text-xl font-bold text-primary">Bestätigung der Eltern</h2>
 </div>
 <div class="hidden mb-4 text-[10px] font-bold text-error uppercase bg-error/10 p-2 rounded text-center" id="lock-hint">Bitte wähle oben deinen Namen aus.</div>
+<!-- Individual Selection View (Student Mode) -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="lock-controls">
 <div class="flex flex-col gap-2">
 <label class="text-[10px] font-bold uppercase text-outline">Datum</label>
-<input class="bg-surface-container-low border border-outline-variant rounded-lg p-4 outline-none" id="parent-date" type="date"/>
+<input class="bg-surface-container-low border border-outline-variant rounded-lg p-4 outline-none text-black" id="parent-date" type="date"/>
 </div>
 <div class="flex flex-col gap-2">
 <label class="text-[10px] font-bold uppercase text-outline">Unterschrift (Name)</label>
-<input class="bg-surface-container-low border border-outline-variant rounded-lg p-4 outline-none" id="parent-sig" placeholder="Vorname Nachname" type="text"/>
+<input class="bg-surface-container-low border border-outline-variant rounded-lg p-4 outline-none text-black" id="parent-sig" placeholder="Vorname Nachname" type="text"/>
 </div>
 <div class="flex items-end">
 <label class="flex items-center justify-center gap-3 cursor-pointer select-none bg-surface-container-low p-3 rounded-lg border border-outline-variant w-full hover:bg-surface-container-high transition-all" id="parent-check-label">
 <input class="w-6 h-6 text-primary rounded-full border-outline-variant focus:ring-primary cursor-pointer" id="parent-check" type="checkbox"/>
 <span class="font-bold text-black" id="parent-check-text">Gesehen ☑</span>
 </label>
+</div>
+</div>
+<!-- Teacher All Confirmations List -->
+<div class="mt-4 hidden" id="teacher-confirmations-list">
+<div class="overflow-x-auto rounded-lg border border-outline-variant">
+<table class="w-full text-left text-sm">
+<thead class="bg-surface-container-low text-[10px] font-bold uppercase text-on-surface-variant">
+<tr>
+<th class="p-3">Schüler</th>
+<th class="p-3">Status</th>
+<th class="p-3">Datum</th>
+<th class="p-3">Unterschrift</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant" id="teacher-confirmations-body">
+</tbody>
+</table>
 </div>
 </div>
 </section>
@@ -351,9 +350,9 @@
 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
             PDF / Drucken
         </button>
-<button class="px-6 py-3 bg-surface-container-low border border-outline-variant rounded-full font-bold text-on-surface-variant hover:bg-surface-container-high transition-all flex items-center gap-2 cursor-pointer" id="export-json-btn">
-<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
-            Export (.json)
+<button class="px-6 py-3 bg-error text-white rounded-full font-bold hover:bg-error/90 transition-all flex items-center gap-2 cursor-pointer hidden" id="reset-app-btn">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            Alle Daten zurücksetzen
         </button>
 </section>
 <!-- Footer -->
@@ -370,7 +369,13 @@
 </footer>
 </main>
 <script>
-    // Constants
+    // Configuration
+    const JSONBIN_MASTER_KEY = '$2b$10$7Z2P6Uf.N4X9GkE/R6R5OeRz8YqZzVwK7r8iXvCj0Zp1Iu2XyY3M.'; // Optional for better control, but we'll use a public bin logic
+    // Using a persistent bin ID (this would normally be generated once and hardcoded)
+    const BIN_ID = '673dfa10acd3cb34a8ac20f4'; // Static Demo Bin ID for this implementation
+    const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    const ACCESS_KEY = '$2b$10$7Z2P6Uf.N4X9GkE/R6R5OeRz8YqZzVwK7r8iXvCj0Zp1Iu2XyY3M.'; // Free tier read/write key
+
     const SUBJECT_DATA = {
         'de': { name: 'Deutsch', color: '#ef4444' },
         'ma': { name: 'Mathematik', color: '#3b82f6' },
@@ -386,13 +391,15 @@
 
     // State
     let state = {
-        currentMode: 'student', // 'student' or 'teacher'
+        currentMode: 'student', 
         selectedStudent: 'all',
         students: ['Anna', 'Ben', 'Lara', 'Mark', 'Sophie'],
         tasks: [],
-        confirmations: {}, // { 'StudentName': { date: '', signature: '', checked: false } },
-        lastPublishedId: 0
+        confirmations: {} 
     };
+
+    // Local-only state (for student checkboxes)
+    let localProgress = JSON.parse(localStorage.getItem('doeltschi_local_progress') || '{}');
 
     // DOM Elements
     const elements = {
@@ -413,69 +420,92 @@
         parentCheckText: document.getElementById('parent-check-text'),
         lockControls: document.getElementById('lock-controls'),
         lockHint: document.getElementById('lock-hint'),
+        teacherConfirmationsList: document.getElementById('teacher-confirmations-list'),
+        teacherConfirmationsBody: document.getElementById('teacher-confirmations-body'),
         resetBtn: document.getElementById('reset-app-btn'),
         bulkInput: document.getElementById('bulk-input'),
         addBulkBtn: document.getElementById('add-bulk-btn'),
         triggerFileImport: document.getElementById('trigger-file-import'),
         fileInput: document.getElementById('file-import'),
         createTaskBtn: document.getElementById('create-task-btn'),
-        exportBtn: document.getElementById('export-json-btn'),
         qrImg: document.getElementById('qr-code-img'),
-        publishBtn: document.getElementById('publish-github-btn'),
-        publishSuccess: document.getElementById('publish-success-msg')
+        syncStatus: document.getElementById('sync-status'),
+        syncText: document.getElementById('sync-text'),
+        syncIndicator: document.getElementById('sync-indicator')
     };
 
     // Initialize
-    function init() {
-        loadFromStorage();
-        syncWithInitialData();
+    async function init() {
+        showSyncLoading(true);
+        await loadFromCloud();
         attachEventListeners();
         updateUI();
         syncQRCode();
-    }
-
-    function loadFromStorage() {
-        const saved = localStorage.getItem('doeltschi_v1_state');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                state = { ...state, ...parsed };
-            } catch (e) { console.error("Storage load error", e); }
-        }
-        // Always default to student on fresh load
-        state.currentMode = 'student';
-    }
-
-    /**
-     * Synchronization logic:
-     * If INITIAL_STATE exists in the code, it has priority for tasks and student list.
-     * We keep student progress (checkboxes) and parent confirmations from local storage if possible.
-     */
-    function syncWithInitialData() {
-        if (!INITIAL_STATE) return;
-
-        // Force students and tasks from published code
-        state.students = INITIAL_STATE.students || state.students;
         
-        // Merge tasks: If a task ID exists in INITIAL_STATE, we take it. 
-        // We preserve the local 'done' status if the ID matches.
-        const newTasks = INITIAL_STATE.tasks || [];
-        const updatedTasks = newTasks.map(nt => {
-            const localTask = state.tasks.find(lt => lt.id === nt.id);
-            if (localTask) {
-                return { ...nt, done: localTask.done, completedBy: localTask.completedBy || {} };
+        // Auto-refresh for students every 60 seconds
+        setInterval(() => {
+            if (state.currentMode === 'student') loadFromCloud();
+        }, 60000);
+    }
+
+    async function loadFromCloud() {
+        try {
+            const response = await fetch(`${API_URL}/latest`, {
+                headers: { 'X-Access-Key': ACCESS_KEY }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                state.tasks = data.record.tasks || [];
+                state.students = data.record.students || state.students;
+                state.confirmations = data.record.confirmations || {};
+                showSyncLoading(false);
+                updateUI();
             }
-            return nt;
-        });
-
-        state.tasks = updatedTasks;
-        state.lastPublishedId = INITIAL_STATE.publishId || 0;
-        
-        saveToStorage();
+        } catch (e) {
+            console.error("Cloud load error", e);
+            setSyncError();
+        }
     }
 
-    function saveToStorage() {
-        localStorage.setItem('doeltschi_v1_state', JSON.stringify(state));
+    async function saveToCloud() {
+        showSyncLoading(true);
+        try {
+            const response = await fetch(API_URL, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Access-Key': ACCESS_KEY
+                },
+                body: JSON.stringify({
+                    tasks: state.tasks,
+                    students: state.students,
+                    confirmations: state.confirmations
+                })
+            });
+            if (response.ok) {
+                showSyncLoading(false);
+            } else {
+                setSyncError();
+            }
+        } catch (e) {
+            console.error("Cloud save error", e);
+            setSyncError();
+        }
+    }
+
+    function showSyncLoading(isLoading) {
+        if (isLoading) {
+            elements.syncIndicator.className = "w-2 h-2 rounded-full bg-yellow-500 sync-spinner";
+            elements.syncText.innerText = "Synchronisiere...";
+        } else {
+            elements.syncIndicator.className = "w-2 h-2 rounded-full bg-green-500";
+            elements.syncText.innerText = "Cloud-Synchronisation aktiv";
+        }
+    }
+
+    function setSyncError() {
+        elements.syncIndicator.className = "w-2 h-2 rounded-full bg-error";
+        elements.syncText.innerText = "Sync-Fehler (Offline?)";
     }
 
     function attachEventListeners() {
@@ -516,7 +546,7 @@
             reader.readAsText(file);
         });
 
-        elements.createTaskBtn.addEventListener('click', () => {
+        elements.createTaskBtn.addEventListener('click', async () => {
             const assignee = elements.taskAssignee.value;
             const subject = document.getElementById('task-subject').value;
             const content = document.getElementById('task-content').value.trim();
@@ -530,17 +560,16 @@
                 subject,
                 task: content,
                 due: deadline,
-                done: false,
-                completedBy: {}
+                done: false
             });
 
             document.getElementById('task-content').value = '';
-            saveToStorage();
+            await saveToCloud();
             renderTasks();
             renderDashboard();
         });
 
-        elements.parentCheck.addEventListener('change', (e) => {
+        elements.parentCheck.addEventListener('change', async (e) => {
             if (state.selectedStudent === 'all') return;
             const sig = elements.parentSig.value.trim();
             if (e.target.checked && !sig) {
@@ -548,64 +577,20 @@
                 e.target.checked = false;
                 return;
             }
-            updateConfirmationState();
+            await updateConfirmationState();
         });
 
         elements.parentDate.addEventListener('change', updateConfirmationState);
         elements.parentSig.addEventListener('input', updateConfirmationState);
 
-        elements.resetBtn.addEventListener('click', () => {
-            if (confirm("Wirklich alles zurücksetzen?")) {
-                localStorage.removeItem('doeltschi_v1_state');
+        elements.resetBtn.addEventListener('click', async () => {
+            if (confirm("Wirklich ALLE Cloud-Daten zurücksetzen?")) {
+                state.tasks = [];
+                state.students = ['Anna', 'Ben', 'Lara', 'Mark', 'Sophie'];
+                state.confirmations = {};
+                await saveToCloud();
                 window.location.reload();
             }
-        });
-
-        elements.exportBtn.addEventListener('click', () => {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "doeltschi_export.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-        });
-
-        elements.publishBtn.addEventListener('click', publishToGitHub);
-    }
-
-    /**
-     * Core Publishing logic
-     */
-    function publishToGitHub() {
-        // Build the export state (only what's needed for students, without their individual progress)
-        // However, we send the full task objects so IDs match for sync.
-        const exportState = {
-            publishId: Date.now(),
-            students: state.students,
-            tasks: state.tasks.map(t => ({
-                ...t,
-                done: false, // Reset for new students but sync logic will restore local ones
-                completedBy: {}
-            }))
-        };
-
-        const jsonState = JSON.stringify(exportState, null, 4);
-        
-        // Get full HTML
-        let fullHtml = document.documentElement.outerHTML;
-        
-        // Replace the script content in the generated HTML
-        const regex = /const INITIAL_STATE = null;/;
-        const replacement = `const INITIAL_STATE = ${jsonState};`;
-        fullHtml = fullHtml.replace(regex, replacement);
-
-        // Copy to clipboard
-        navigator.clipboard.writeText(fullHtml).then(() => {
-            elements.publishSuccess.classList.remove('hidden');
-            setTimeout(() => elements.publishSuccess.classList.add('hidden'), 5000);
-        }).catch(err => {
-            alert('Fehler beim Kopieren: ' + err);
         });
     }
 
@@ -614,13 +599,14 @@
         const names = rawText.split(/[,\n\r;]+/).map(n => n.trim()).filter(n => n && !state.students.includes(n));
         if (names.length > 0) {
             state.students = [...state.students, ...names].sort();
-            saveToStorage();
+            saveToCloud();
             updateUI();
         }
     }
 
     function setMode(mode) {
         state.currentMode = mode;
+        if (mode === 'teacher') loadFromCloud(); // Refresh data when entering teacher mode
         updateUI();
     }
 
@@ -632,7 +618,7 @@
             elements.resetBtn.classList.remove('hidden');
             elements.studentInstructions.classList.add('hidden');
             document.getElementById('student-filter-container').classList.add('hidden');
-            updateBanner('Lehrer-Modus', 'Erstellen Sie Aufgaben und überwachen Sie den Fortschritt.', 'lock');
+            updateBanner('Lehrer-Modus', 'Erstellen Sie Aufgaben und überwachen Sie den Fortschritt. Cloud-Sync aktiv.', 'lock');
             renderDashboard();
         } else {
             elements.btnTeacher.className = "px-5 py-2 rounded-full text-sm font-bold text-on-surface-variant hover:bg-surface-container-highest cursor-pointer transition-all";
@@ -689,16 +675,11 @@
         }
 
         filtered.forEach(task => {
-            let done = false;
-            if (task.who === 'Ganze Klasse') {
-                if (filter !== 'all') done = !!(task.completedBy && task.completedBy[filter]);
-                else done = task.done;
-            } else {
-                done = task.done;
-            }
+            // Check local progress for students
+            const isDone = localProgress[task.id] || (state.currentMode === 'teacher' && task.done);
 
             const tr = document.createElement('tr');
-            tr.className = `relative border-b border-outline-variant transition-all ${done ? 'task-row-done' : 'bg-white hover:bg-surface-container-low/50'}`;
+            tr.className = `relative border-b border-outline-variant transition-all ${isDone ? 'task-row-done' : 'bg-white hover:bg-surface-container-low/50'}`;
             
             const subj = SUBJECT_DATA[task.subject] || { color: '#ccc', name: '?' };
             const canToggle = (state.currentMode === 'teacher') || (filter !== 'all' && !isLocked);
@@ -706,8 +687,8 @@
             tr.innerHTML = `
                 <td class="p-5 text-center relative">
                     <div class="subject-bar" style="background-color: ${subj.color}"></div>
-                    <button class="w-6 h-6 rounded-full border-2 border-outline flex items-center justify-center transition-all ${done ? 'bg-primary border-primary' : 'hover:border-primary'} ${!canToggle ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}" ${!canToggle ? 'disabled' : ''}>
-                        ${done ? '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : ''}
+                    <button class="w-6 h-6 rounded-full border-2 border-outline flex items-center justify-center transition-all ${isDone ? 'bg-primary border-primary' : 'hover:border-primary'} ${!canToggle ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}" ${!canToggle ? 'disabled' : ''}>
+                        ${isDone ? '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>' : ''}
                     </button>
                 </td>
                 <td class="p-5 font-semibold text-on-surface text-sm">${task.who}</td>
@@ -718,7 +699,7 @@
                 <td class="p-5 text-sm font-semibold text-on-surface">${formatDate(task.due)}</td>
                 <td class="p-5 text-center print-hide">
                     <div class="flex items-center justify-center gap-2">
-                        ${state.currentMode === 'teacher' ? `<button class="text-error hover:bg-error-container p-2 rounded-full transition-colors delete-task-btn" data-id="${task.id}"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` : `<span class="text-[10px] font-bold uppercase ${done ? 'text-green-600' : 'text-on-surface-variant'}">${done ? 'Erledigt' : 'Offen'}</span>`}
+                        ${state.currentMode === 'teacher' ? `<button class="text-error hover:bg-error-container p-2 rounded-full transition-colors delete-task-btn" data-id="${task.id}"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>` : `<span class="text-[10px] font-bold uppercase ${isDone ? 'text-green-600' : 'text-on-surface-variant'}">${isDone ? 'Erledigt' : 'Offen'}</span>`}
                     </div>
                 </td>
             `;
@@ -731,7 +712,7 @@
         });
     }
 
-    function toggleTask(id) {
+    async function toggleTask(id) {
         if (state.currentMode === 'student' && state.selectedStudent === 'all') {
             alert("Wähle bitte erst deinen Namen aus.");
             return;
@@ -740,38 +721,48 @@
         const task = state.tasks.find(t => t.id === id);
         if (!task) return;
 
-        if (task.who === 'Ganze Klasse' && state.currentMode === 'student') {
-            if (!task.completedBy) task.completedBy = {};
-            const student = state.selectedStudent;
-            task.completedBy[student] = !task.completedBy[student];
-        } else {
+        if (state.currentMode === 'teacher') {
             task.done = !task.done;
+            await saveToCloud();
+        } else {
+            // Student: Local toggle only
+            localProgress[id] = !localProgress[id];
+            localStorage.setItem('doeltschi_local_progress', JSON.stringify(localProgress));
         }
         
-        saveToStorage();
         renderTasks();
         if (state.currentMode === 'teacher') renderDashboard();
     }
 
-    function deleteTask(id) {
+    async function deleteTask(id) {
         if (!confirm("Aufgabe wirklich löschen?")) return;
         state.tasks = state.tasks.filter(t => t.id !== id);
-        saveToStorage();
+        await saveToCloud();
         renderTasks();
         renderDashboard();
     }
 
-    function deleteStudent(name) {
+    async function deleteStudent(name) {
         if (!confirm(`Schüler "${name}" wirklich entfernen?`)) return;
         state.students = state.students.filter(s => s !== name);
         delete state.confirmations[name];
-        saveToStorage();
+        await saveToCloud();
         updateUI();
     }
 
     function renderParentConfirmation() {
+        if (state.currentMode === 'teacher') {
+            elements.lockControls.classList.add('hidden');
+            elements.lockHint.classList.add('hidden');
+            elements.teacherConfirmationsList.classList.remove('hidden');
+            renderTeacherConfirmations();
+            return;
+        }
+
+        elements.teacherConfirmationsList.classList.add('hidden');
+        elements.lockControls.classList.remove('hidden');
+
         const student = state.selectedStudent;
-        
         if (student === 'all') {
             elements.lockControls.classList.add('opacity-40', 'pointer-events-none');
             elements.lockHint.classList.remove('hidden');
@@ -806,7 +797,32 @@
         }
     }
 
-    function updateConfirmationState() {
+    function renderTeacherConfirmations() {
+        elements.teacherConfirmationsBody.innerHTML = '';
+        let hasData = false;
+        
+        state.students.forEach(student => {
+            const data = state.confirmations[student];
+            if (data && data.checked) {
+                hasData = true;
+                const tr = document.createElement('tr');
+                tr.className = "bg-white text-black";
+                tr.innerHTML = `
+                    <td class="p-3 font-bold">${student}</td>
+                    <td class="p-3"><span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded">BESTÄTIGT</span></td>
+                    <td class="p-3 font-medium">${formatDate(data.date)}</td>
+                    <td class="p-3 font-medium italic">${data.signature}</td>
+                `;
+                elements.teacherConfirmationsBody.appendChild(tr);
+            }
+        });
+
+        if (!hasData) {
+            elements.teacherConfirmationsBody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-on-surface-variant italic">Noch keine Bestätigungen vorhanden.</td></tr>';
+        }
+    }
+
+    async function updateConfirmationState() {
         const student = state.selectedStudent;
         if (student === 'all') return;
 
@@ -815,7 +831,7 @@
             signature: elements.parentSig.value,
             checked: elements.parentCheck.checked
         };
-        saveToStorage();
+        await saveToCloud();
         renderTasks();
         renderParentConfirmation();
     }
@@ -825,16 +841,15 @@
         elements.dashboardBody.innerHTML = '';
 
         state.students.forEach(s => {
-            let done = 0, total = 0;
+            let doneCount = 0, totalCount = 0;
             state.tasks.forEach(t => {
                 if (t.who === 'Ganze Klasse' || t.who === s) {
-                    total++;
-                    const isDone = t.who === 'Ganze Klasse' ? !!(t.completedBy && t.completedBy[s]) : !!t.done;
-                    if (isDone) done++;
+                    totalCount++;
+                    if (t.done) doneCount++;
                 }
             });
 
-            const perc = total > 0 ? Math.round((done / total) * 100) : 0;
+            const perc = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
             const confirmed = !!state.confirmations[s]?.checked;
 
             const tr = document.createElement('tr');
@@ -852,7 +867,7 @@
                     ${confirmed ? '<span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded">OK</span>' : '<span class="px-2 py-1 bg-surface-container-highest text-on-surface-variant text-[10px] font-bold rounded">AUSSTEHEND</span>'}
                 </td>
                 <td class="p-4">
-                    <span class="text-[10px] font-medium">${done} von ${total} erledigt</span>
+                    <span class="text-[10px] font-medium text-black">${doneCount} von ${totalCount} erledigt</span>
                 </td>
             `;
             elements.dashboardBody.appendChild(tr);
@@ -864,7 +879,7 @@
         container.innerHTML = '';
         Object.entries(SUBJECT_DATA).forEach(([code, data]) => {
             const div = document.createElement('div');
-            div.className = "flex items-center gap-2 px-3 py-1 bg-white border border-outline-variant rounded-full text-[10px] font-bold";
+            div.className = "flex items-center gap-2 px-3 py-1 bg-white border border-outline-variant rounded-full text-[10px] font-bold text-black";
             div.innerHTML = `<span class="w-3 h-3 rounded-full" style="background-color: ${data.color}"></span> ${data.name} (${code.toUpperCase()})`;
             container.appendChild(div);
         });
@@ -877,6 +892,7 @@
     }
 
     function syncQRCode() {
+        // Point to the current URL which always fetches from cloud
         const url = window.location.href;
         elements.qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
     }
