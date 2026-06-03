@@ -36,7 +36,7 @@
             theme: {
                 extend: {
                     "colors": {
-                        "primary": "#0058bc",
+                        "primary": "#007aff",
                         "on-primary": "#ffffff",
                         "background": "#f8fafc",
                         "surface": "#ffffff",
@@ -105,9 +105,10 @@
 </div>
 </div>
 </div>
-<!-- Content Area: Planer -->
+<!-- Content Area: Planer (Primary Entry Point) -->
 <div class="space-y-12" id="content-planner">
-<div class="grid grid-cols-1 md:grid-cols-4 gap-6 no-print">
+<!-- 4-Step Info Cards (Step 1-4) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 no-print">
 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center transition-all" id="step-1">
 <div class="w-10 h-10 rounded-full bg-blue-100 text-primary font-bold flex items-center justify-center mb-3">1</div>
 <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Name wählen</p>
@@ -125,6 +126,7 @@
 <p class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Eltern zeigen</p>
 </div>
 </div>
+<!-- Student Filter and Header -->
 <div class="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-slate-200 pb-10">
 <div class="w-full md:w-80">
 <label class="flex items-center gap-2 text-[10px] font-black uppercase text-primary mb-3 tracking-widest">
@@ -132,7 +134,7 @@
                     </label>
 <div class="relative">
 <select class="w-full bg-white border border-slate-300 rounded-xl font-semibold py-4 px-5 focus:ring-2 focus:ring-primary focus:border-transparent outline-none appearance-none shadow-sm pr-12 cursor-pointer" id="student-filter" onchange="app.handleFilterChange()">
-<option value="all">Alle Schüler</option>
+<option value="all">Alle Schüler / Ganze Klasse</option>
 </select>
 <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
 <span class="material-icons">expand_more</span>
@@ -144,13 +146,15 @@
 <p class="text-slate-500 font-semibold mt-2" id="current-date-range">01.04.2024 – 05.04.2024</p>
 </div>
 </div>
+<!-- Task List -->
 <div class="space-y-6" id="task-container"></div>
+<!-- Color Legend -->
 <div class="no-print mt-16 bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
 <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Farblegende der Fächer</h3>
 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4" id="color-legend-planner"></div>
 </div>
 </div>
-<!-- Content Area: Dashboard -->
+<!-- Content Area: Dashboard (Teacher View) -->
 <div class="hidden space-y-8" id="content-dashboard">
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 <h2 class="text-3xl font-black text-slate-900">Klassen-Dashboard</h2>
@@ -301,7 +305,7 @@
 <div class="text-center md:text-left">
 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
 <div class="flex items-center justify-center md:justify-start gap-3 mt-2">
-<p class="text-[9px] text-slate-300 font-mono uppercase">Version 16 • Fixed</p>
+<p class="text-[9px] text-slate-300 font-mono uppercase">Version 17 • Optimized</p>
 <button class="text-[9px] text-slate-200 hover:text-red-400 underline font-mono uppercase transition-colors" onclick="app.resetSystem()">App zurücksetzen</button>
 </div>
 </div>
@@ -337,7 +341,7 @@
 </div>
 <div class="text-right">
 <p class="text-sm italic">Gedruckt am: <span id="print-date"></span></p>
-<p class="text-sm font-bold mt-1" id="print-week-range"></p>
+<p class="text-sm font-bold mt-1" id="print-week-range">01.04.2024 – 05.04.2024</p>
 </div>
 </div>
 <div class="space-y-6" id="print-content"></div>
@@ -376,25 +380,25 @@
             { id: 's3', name: 'Emma Weber', confirmed: false, lastConfirmed: '-' }
         ],
         tasks: [
-            { id: 't1', studentId: 's1', subjectCode: 'DE', subject: 'Deutsch', description: 'Arbeitsheft S. 42-43 lesen und Übung 4 bearbeiten.', deadline: '15.04.2024', status: 'offen', color: '#dc2626' },
-            { id: 't2', studentId: 's1', subjectCode: 'MA', subject: 'Mathematik', description: 'Einmaleins-Tabelle vervollständigen.', deadline: '16.04.2024', status: 'erledigt', color: '#2563eb' },
-            { id: 't3', studentId: 's2', subjectCode: 'DE', subject: 'Deutsch', description: 'Diktat vorbereiten: "Der Frühling kommt".', deadline: '15.04.2024', status: 'erledigt', color: '#dc2626' }
+            { id: 't1', studentId: 's1', subjectCode: 'DE', subject: 'Deutsch', description: 'Arbeitsheft S. 42-43 lesen und Übung 4 bearbeiten.', deadline: '15.04.2024', status: 'offen' },
+            { id: 't2', studentId: 's1', subjectCode: 'MA', subject: 'Mathematik', description: 'Einmaleins-Tabelle vervollständigen.', deadline: '16.04.2024', status: 'erledigt' },
+            { id: 't3', studentId: 's2', subjectCode: 'DE', subject: 'Deutsch', description: 'Diktat vorbereiten: "Der Frühling kommt".', deadline: '15.04.2024', status: 'erledigt' }
         ]
     };
 
     const app = {
         state: null,
-        STORAGE_KEY: 'doeltschi_v16_stable',
+        STORAGE_KEY: 'doeltschi_v17_optimized',
 
         init() {
             try {
                 const savedData = localStorage.getItem(this.STORAGE_KEY);
                 if (savedData) {
                     const parsed = JSON.parse(savedData);
-                    if (parsed && Array.isArray(parsed.students) && Array.isArray(parsed.tasks)) {
+                    if (parsed && Array.isArray(parsed.students)) {
                         this.state = { ...INITIAL_STATE, ...parsed, isLehrer: false, currentTab: 'Planer' };
                     } else {
-                        throw new Error("Corrupted Data");
+                        throw new Error("Invalid format");
                     }
                 } else {
                     this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
@@ -407,9 +411,6 @@
             const printDate = document.getElementById('print-date');
             if (printDate) printDate.textContent = new Date().toLocaleDateString('de-CH');
             
-            const printWeek = document.getElementById('print-week-range');
-            if (printWeek) printWeek.textContent = '01.04.2024 – 05.04.2024';
-
             this.renderAll();
         },
 
@@ -417,12 +418,12 @@
             try {
                 localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
             } catch (e) {
-                console.error("Storage Persist Error", e);
+                console.error("Storage Error", e);
             }
         },
 
         resetSystem() {
-            if (confirm("Möchten Sie wirklich alle Daten löschen? Dies setzt die App komplett zurück.")) {
+            if (confirm("Wirklich alle Daten löschen?")) {
                 localStorage.removeItem(this.STORAGE_KEY);
                 window.location.reload();
             }
@@ -437,19 +438,14 @@
                 const modal = document.getElementById('lehrer-modal');
                 if (modal) {
                     modal.classList.remove('hidden');
-                    const passInput = document.getElementById('lehrer-password');
-                    if (passInput) passInput.focus();
+                    document.getElementById('lehrer-password').focus();
                 }
             }
         },
 
         closeLehrerModal() {
-            const modal = document.getElementById('lehrer-modal');
-            if (modal) {
-                modal.classList.add('hidden');
-                const passInput = document.getElementById('lehrer-password');
-                if (passInput) passInput.value = '';
-            }
+            document.getElementById('lehrer-modal').classList.add('hidden');
+            document.getElementById('lehrer-password').value = '';
         },
 
         checkLehrerPassword() {
@@ -558,7 +554,7 @@
             const taskSelect = document.getElementById('task-student');
             if (!select) return;
 
-            let html = `<option value="all" ${this.state.selectedStudentId === 'all' ? 'selected' : ''}>Alle Schüler</option>`;
+            let html = `<option value="all" ${this.state.selectedStudentId === 'all' ? 'selected' : ''}>Alle Schüler / Ganze Klasse</option>`;
             let taskHtml = `<option value="all">Ganze Klasse</option>`;
 
             this.state.students.sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
@@ -583,8 +579,7 @@
                     const student = this.state.students.find(s => s.id === t.studentId);
                     const done = t.status === 'erledigt';
                     const config = SUBJECT_CONFIG[t.subjectCode] || { name: 'Unbekannt', color: '#64748b' };
-                    const color = t.color || config.color;
-                    const subj = t.subject || config.name;
+                    const color = config.color;
                     
                     return `
                         <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-60 grayscale' : 'hover:border-primary/40 hover:shadow-md'}">
@@ -592,8 +587,8 @@
                             <div class="flex-1 p-8 grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
                                 <div>
                                     <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Wer</p>
-                                    <p class="font-bold text-slate-900 text-lg">${student ? student.name : 'Gelöscht'}</p>
-                                    <span class="inline-block mt-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style="background-color: ${color}15; color: ${color}">${subj}</span>
+                                    <p class="font-bold text-slate-900 text-lg">${student ? student.name : 'Ganze Klasse'}</p>
+                                    <span class="inline-block mt-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest" style="background-color: ${color}15; color: ${color}">${config.name}</span>
                                 </div>
                                 <div class="md:col-span-2">
                                     <p class="text-[10px] font-bold text-slate-400 uppercase mb-2 tracking-widest">Aufgabe</p>
@@ -657,9 +652,6 @@
                 const doneCount = sTasks.filter(t => t.status === 'erledigt').length;
                 const taskTotal = sTasks.length;
                 const progress = taskTotal > 0 ? Math.round((doneCount / taskTotal) * 100) : 0;
-                const latestTask = sTasks[sTasks.length - 1];
-                const subjCode = latestTask ? latestTask.subjectCode : '-';
-                const subjColor = latestTask && SUBJECT_CONFIG[subjCode] ? SUBJECT_CONFIG[subjCode].color : '#e2e8f0';
 
                 return `
                     <tr class="hover:bg-slate-50/50 transition-colors">
@@ -679,9 +671,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-5">
-                             <span class="inline-block px-3 py-1 rounded text-[9px] font-black uppercase text-white shadow-sm" style="background-color: ${subjColor}">${subjCode}</span>
-                        </td>
+                        <td class="px-6 py-5 text-slate-400 text-xs">-</td>
                         <td class="px-6 py-5">
                             <button onclick="app.viewDetails('${s.id}')" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-primary font-bold uppercase text-[10px] transition-all">
                                 <span class="material-icons text-[14px]">visibility</span> Details
@@ -730,7 +720,7 @@
             if (!input) return;
             const name = input.value.trim();
             if (name) {
-                this.state.students.push({ id: 's' + Date.now() + Math.random().toString(36).substr(2, 5), name: name, confirmed: false, lastConfirmed: '-' });
+                this.state.students.push({ id: 's' + Date.now(), name: name, confirmed: false, lastConfirmed: '-' });
                 input.value = '';
                 this.persist();
                 this.renderAll();
@@ -740,39 +730,27 @@
         importTxt(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = (e) => {
-                const text = e.target.result;
-                // Split by newline or comma
-                const names = text.split(/[\n,]/).map(n => n.trim()).filter(n => n.length > 0);
-                
+                const names = e.target.result.split(/[\n,]/).map(n => n.trim()).filter(n => n.length > 0);
                 if (names.length > 0) {
                     names.forEach(name => {
                         const exists = this.state.students.find(s => s.name.toLowerCase() === name.toLowerCase());
                         if (!exists) {
-                            this.state.students.push({ 
-                                id: 's' + Date.now() + Math.random().toString(36).substr(2, 5), 
-                                name: name, 
-                                confirmed: false, 
-                                lastConfirmed: '-' 
-                            });
+                            this.state.students.push({ id: 's' + Math.random().toString(36).substr(2, 9), name, confirmed: false, lastConfirmed: '-' });
                         }
                     });
                     this.persist();
                     this.renderAll();
-                    alert(`${names.length} Namen importiert.`);
-                } else {
-                    alert("Keine gültigen Namen in der Datei gefunden.");
+                    alert(`${names.length} Schüler importiert.`);
                 }
-                // Reset input
                 event.target.value = '';
             };
             reader.readAsText(file);
         },
 
         removeStudent(id) {
-            if (confirm("Schüler/in wirklich löschen?")) {
+            if (confirm("Schüler/in löschen?")) {
                 this.state.students = this.state.students.filter(s => s.id !== id);
                 this.state.tasks = this.state.tasks.filter(t => t.studentId !== id);
                 this.persist();
@@ -786,21 +764,18 @@
             const subCode = document.getElementById('task-subject').value;
             const dead = document.getElementById('task-deadline').value;
             const desc = document.getElementById('task-description').value;
-            const config = SUBJECT_CONFIG[subCode];
 
-            const studentsToUpdate = sid === 'all' ? this.state.students : [this.state.students.find(s => s.id === sid)];
+            const targetStudents = sid === 'all' ? this.state.students : [this.state.students.find(s => s.id === sid)];
             
-            studentsToUpdate.forEach(s => {
+            targetStudents.forEach(s => {
                 if (!s) return;
                 this.state.tasks.push({
                     id: 't' + Math.random().toString(36).substr(2, 9),
                     studentId: s.id,
                     subjectCode: subCode,
-                    subject: config.name,
                     description: desc,
                     deadline: dead,
-                    status: 'offen',
-                    color: config.color
+                    status: 'offen'
                 });
                 s.confirmed = false;
             });
@@ -844,13 +819,11 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state));
             const dl = document.createElement('a');
             dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", `doeltschi_export_${new Date().toISOString().split('T')[0]}.json`);
+            dl.setAttribute("download", `doeltschi_export.json`);
             dl.click();
         }
     };
 
-    document.addEventListener('DOMContentLoaded', () => {
-        app.init();
-    });
+    document.addEventListener('DOMContentLoaded', () => app.init());
 </script>
 </body></html>
