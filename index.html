@@ -1,8 +1,7 @@
-<html class="light" lang="de-CH"><head></head><body class="bg-surface text-on-surface min-h-screen">```html
-
+<html class="light" lang="de-CH"><head></head><body class="bg-surface text-on-surface min-h-screen">
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>doeltschi | Digitaler Planer (Import Fix)</title>
+<title>doeltschi | Digitaler Planer</title>
 <!-- PWA Meta Tags -->
 <meta content="yes" name="mobile-web-app-capable"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
@@ -76,6 +75,11 @@
         .dashboard-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         .dashboard-scrollbar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
     </style>
+<!-- INITIAL_STATE_PLACEHOLDER -->
+<script id="initial-data-script">
+    // Dieser Teil wird beim "Veröffentlichen" automatisch mit den aktuellen Lehrer-Daten befüllt.
+    const INITIAL_STATE = null; 
+</script>
 <main class="max-w-7xl mx-auto px-gutter py-8 md:py-12 space-y-12">
 <!-- Header -->
 <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -149,6 +153,25 @@
 </div>
 <!-- Teacher Specific Sections -->
 <div class="space-y-8 hidden" id="teacher-tools">
+<!-- New Publish Section -->
+<section class="bg-primary/5 border-2 border-primary rounded-xl p-8 shadow-md">
+<div class="flex flex-col md:flex-row items-center justify-between gap-6">
+<div class="flex-1">
+<h2 class="text-2xl font-bold text-primary mb-2">Planer veröffentlichen (für Schüler)</h2>
+<p class="text-on-surface-variant">Generiere den Code mit dem aktuellen Stand der Aufgaben und Schülerliste. Kopiere diesen in deine <code>index.html</code> auf GitHub, damit alle Schüler die neuesten Updates erhalten.</p>
+</div>
+<button class="shrink-0 px-8 py-4 bg-primary text-on-primary rounded-full font-bold hover:bg-primary/90 transition-all flex items-center gap-3 shadow-lg group active:scale-95" id="publish-github-btn">
+<svg class="w-6 h-6 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            Code für GitHub kopieren
+        </button>
+</div>
+<div class="mt-4 hidden" id="publish-success-msg">
+<div class="bg-green-100 text-green-800 p-3 rounded-lg text-sm font-semibold flex items-center gap-2">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            HTML-Code wurde in die Zwischenablage kopiert!
+        </div>
+</div>
+</section>
 <!-- Quick Instructions -->
 <section>
 <h2 class="text-xl font-bold mb-6">Erste Schritte</h2>
@@ -367,7 +390,8 @@
         selectedStudent: 'all',
         students: ['Anna', 'Ben', 'Lara', 'Mark', 'Sophie'],
         tasks: [],
-        confirmations: {} // { 'StudentName': { date: '', signature: '', checked: false } }
+        confirmations: {}, // { 'StudentName': { date: '', signature: '', checked: false } },
+        lastPublishedId: 0
     };
 
     // DOM Elements
@@ -396,12 +420,15 @@
         fileInput: document.getElementById('file-import'),
         createTaskBtn: document.getElementById('create-task-btn'),
         exportBtn: document.getElementById('export-json-btn'),
-        qrImg: document.getElementById('qr-code-img')
+        qrImg: document.getElementById('qr-code-img'),
+        publishBtn: document.getElementById('publish-github-btn'),
+        publishSuccess: document.getElementById('publish-success-msg')
     };
 
     // Initialize
     function init() {
         loadFromStorage();
+        syncWithInitialData();
         attachEventListeners();
         updateUI();
         syncQRCode();
@@ -417,6 +444,34 @@
         }
         // Always default to student on fresh load
         state.currentMode = 'student';
+    }
+
+    /**
+     * Synchronization logic:
+     * If INITIAL_STATE exists in the code, it has priority for tasks and student list.
+     * We keep student progress (checkboxes) and parent confirmations from local storage if possible.
+     */
+    function syncWithInitialData() {
+        if (!INITIAL_STATE) return;
+
+        // Force students and tasks from published code
+        state.students = INITIAL_STATE.students || state.students;
+        
+        // Merge tasks: If a task ID exists in INITIAL_STATE, we take it. 
+        // We preserve the local 'done' status if the ID matches.
+        const newTasks = INITIAL_STATE.tasks || [];
+        const updatedTasks = newTasks.map(nt => {
+            const localTask = state.tasks.find(lt => lt.id === nt.id);
+            if (localTask) {
+                return { ...nt, done: localTask.done, completedBy: localTask.completedBy || {} };
+            }
+            return nt;
+        });
+
+        state.tasks = updatedTasks;
+        state.lastPublishedId = INITIAL_STATE.publishId || 0;
+        
+        saveToStorage();
     }
 
     function saveToStorage() {
@@ -444,12 +499,10 @@
             elements.bulkInput.value = '';
         });
 
-        // Trigger hidden file input
         elements.triggerFileImport.addEventListener('click', () => {
             elements.fileInput.click();
         });
 
-        // Handle file change
         elements.fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -458,7 +511,6 @@
             reader.onload = (event) => {
                 const content = event.target.result;
                 processAndAddNames(content);
-                // Reset file input so same file can be imported again if needed
                 elements.fileInput.value = '';
             };
             reader.readAsText(file);
@@ -479,7 +531,7 @@
                 task: content,
                 due: deadline,
                 done: false,
-                completedBy: assignee === 'Ganze Klasse' ? {} : null
+                completedBy: {}
             });
 
             document.getElementById('task-content').value = '';
@@ -518,6 +570,43 @@
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
         });
+
+        elements.publishBtn.addEventListener('click', publishToGitHub);
+    }
+
+    /**
+     * Core Publishing logic
+     */
+    function publishToGitHub() {
+        // Build the export state (only what's needed for students, without their individual progress)
+        // However, we send the full task objects so IDs match for sync.
+        const exportState = {
+            publishId: Date.now(),
+            students: state.students,
+            tasks: state.tasks.map(t => ({
+                ...t,
+                done: false, // Reset for new students but sync logic will restore local ones
+                completedBy: {}
+            }))
+        };
+
+        const jsonState = JSON.stringify(exportState, null, 4);
+        
+        // Get full HTML
+        let fullHtml = document.documentElement.outerHTML;
+        
+        // Replace the script content in the generated HTML
+        const regex = /const INITIAL_STATE = null;/;
+        const replacement = `const INITIAL_STATE = ${jsonState};`;
+        fullHtml = fullHtml.replace(regex, replacement);
+
+        // Copy to clipboard
+        navigator.clipboard.writeText(fullHtml).then(() => {
+            elements.publishSuccess.classList.remove('hidden');
+            setTimeout(() => elements.publishSuccess.classList.add('hidden'), 5000);
+        }).catch(err => {
+            alert('Fehler beim Kopieren: ' + err);
+        });
     }
 
     function processAndAddNames(rawText) {
@@ -536,7 +625,6 @@
     }
 
     function updateUI() {
-        // Mode specific visibility
         if (state.currentMode === 'teacher') {
             elements.btnStudent.className = "px-5 py-2 rounded-full text-sm font-bold text-on-surface-variant hover:bg-surface-container-highest cursor-pointer transition-all";
             elements.btnTeacher.className = "px-5 py-2 rounded-full text-sm font-bold bg-primary text-on-primary shadow-sm cursor-pointer transition-all";
@@ -556,7 +644,6 @@
             updateBanner('Schüleransicht', 'Deine aktuelle Aufgabenliste. Deine Erledigungen werden lokal gespeichert.', 'info');
         }
 
-        // Dropdowns & Badges
         elements.studentSelector.innerHTML = '<option value="all">Alle anzeigen</option>';
         elements.taskAssignee.innerHTML = '<option value="Ganze Klasse">Ganze Klasse</option>';
         elements.studentBadges.innerHTML = '';
@@ -796,4 +883,4 @@
 
     window.onload = init;
 </script>
-```</body></html>
+</body></html>
