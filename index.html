@@ -1,7 +1,6 @@
 <html class="light" lang="de"><head></head><body class="bg-background text-on-surface worksheet-pattern min-h-screen">```html
 
 
-
     <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>doeltschi | Hausaufgabenplaner</title>
@@ -103,6 +102,12 @@
 </div>
 </header>
 <main class="flex-1 w-full max-w-[1100px] mx-auto px-gutter py-8 md:py-12">
+<!-- Alert Area -->
+<div class="hidden mb-8 p-4 bg-red-100 border border-red-200 text-red-700 rounded-xl flex items-center gap-3" id="error-alert">
+<span class="material-symbols-outlined">error</span>
+<span id="error-alert-text">Ein Fehler ist aufgetreten.</span>
+<button class="ml-auto text-xs font-bold uppercase underline" onclick="document.getElementById('error-alert').classList.add('hidden')">Schliessen</button>
+</div>
 <!-- Login Modal -->
 <div class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm no-print" id="lehrer-modal">
 <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl border border-outline-variant mx-4">
@@ -175,7 +180,7 @@
 <div class="w-full md:w-80">
 <label class="flex items-center gap-2 text-[10px] font-black uppercase text-primary mb-3 tracking-widest">
 <span class="material-symbols-outlined text-[14px]">person</span> Schüler auswählen
-                    </label>
+                        </label>
 <div class="relative">
 <select class="w-full bg-white border border-outline-variant rounded-xl font-semibold py-4 px-5 focus:ring-2 focus:ring-primary outline-none appearance-none shadow-sm pr-12 cursor-pointer" id="student-filter" onchange="app.handleFilterChange()">
 <option value="all">Klassenübersicht</option>
@@ -206,7 +211,7 @@
 </button>
 <button class="px-5 py-2.5 bg-white border border-outline-variant rounded-full text-xs font-bold uppercase flex items-center gap-2 hover:bg-surface-container" onclick="window.print()">
 <span class="material-symbols-outlined text-[18px]">print</span> Drucken
-                    </button>
+                        </button>
 </div>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -239,7 +244,7 @@
 <div class="bg-white border border-outline-variant rounded-2xl p-6 shadow-sm">
 <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
 <span class="material-symbols-outlined text-primary">add_circle</span> Aufgabe erfassen
-                </h3>
+                    </h3>
 <form class="grid grid-cols-1 md:grid-cols-6 gap-4" onsubmit="app.addTask(event)">
 <div class="md:col-span-1">
 <label class="block text-[10px] font-bold text-on-surface-variant uppercase mb-1">Empfänger</label>
@@ -288,7 +293,7 @@
 <div class="flex gap-2">
 <button class="text-[10px] font-bold text-primary uppercase border border-primary/20 bg-primary/5 px-2 py-1 rounded-md flex items-center gap-1 hover:bg-primary hover:text-white transition-colors" onclick="document.getElementById('import-txt').click()">
 <span class="material-symbols-outlined text-[14px]">upload_file</span> Import (.txt)
-                            </button>
+                                </button>
 <input accept=".txt" class="hidden" id="import-txt" onchange="app.importStudents(event)" type="file"/>
 </div>
 </div>
@@ -358,625 +363,641 @@
 </footer>
 </div>
 <script>
-    const SUBJECT_CONFIG = {
-        'DE': { name: 'Deutsch', color: '#ef4444' },
-        'MA': { name: 'Mathematik', color: '#3b82f6' },
-        'E':  { name: 'Englisch', color: '#f59e0b' },
-        'F':  { name: 'Französisch', color: '#10b981' },
-        'RZG': { name: 'RZG', color: '#f97316' },
-        'NT': { name: 'NT', color: '#06b6d4' },
-        'MU': { name: 'Musik', color: '#a855f7' },
-        'BS': { name: 'Sport', color: '#fbbf24' }
-    };
+        const SUBJECT_CONFIG = {
+            'DE': { name: 'Deutsch', color: '#ef4444' },
+            'MA': { name: 'Mathematik', color: '#3b82f6' },
+            'E':  { name: 'Englisch', color: '#f59e0b' },
+            'F':  { name: 'Französisch', color: '#10b981' },
+            'RZG': { name: 'RZG', color: '#f97316' },
+            'NT': { name: 'NT', color: '#06b6d4' },
+            'MU': { name: 'Musik', color: '#a855f7' },
+            'BS': { name: 'Sport', color: '#fbbf24' }
+        };
 
-    const INITIAL_STATE = {
-        classId: 'demo-klasse',
-        isLehrer: false,
-        currentTab: 'Planer',
-        selectedStudentId: 'all',
-        verifiedStudentId: null,
-        lastPublished: null,
-        hasUnpublishedChanges: false,
-        isFromUrlSync: false,
-        students: [
-            { id: 's1', name: 'Lukas Müller', confirmed: false, lastConfirmed: '-' },
-            { id: 's2', name: 'Sophie Fischer', confirmed: false, lastConfirmed: '-' },
-            { id: 's3', name: 'Emma Weber', confirmed: false, lastConfirmed: '-' }
-        ],
-        tasks: [
-            { id: 't0', studentId: 'all', subjectCode: 'MA', description: 'Ganze Klasse: Buch S. 120-121.', deadline: 'Fr' }
-        ],
-        completedTasks: {} 
-    };
+        const INITIAL_STATE = {
+            classId: 'demo-klasse',
+            isLehrer: false,
+            currentTab: 'Planer',
+            selectedStudentId: 'all',
+            verifiedStudentId: null,
+            lastPublished: null,
+            hasUnpublishedChanges: false,
+            isFromUrlSync: false,
+            students: [
+                { id: 's1', name: 'Lukas Müller', confirmed: false, lastConfirmed: '-' },
+                { id: 's2', name: 'Sophie Fischer', confirmed: false, lastConfirmed: '-' },
+                { id: 's3', name: 'Emma Weber', confirmed: false, lastConfirmed: '-' }
+            ],
+            tasks: [
+                { id: 't0', studentId: 'all', subjectCode: 'MA', description: 'Ganze Klasse: Buch S. 120-121.', deadline: 'Fr' }
+            ],
+            completedTasks: {} 
+        };
 
-    const app = {
-        state: null,
-        STORAGE_KEY: 'doeltschi_v24_urlsync',
-        _qrcode: null,
+        const app = {
+            state: null,
+            STORAGE_KEY: 'doeltschi_v24_urlsync',
+            _qrcode: null,
 
-        async init() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const dataParam = urlParams.get('d');
-            
-            const saved = localStorage.getItem(this.STORAGE_KEY);
-            if (saved) {
-                try {
-                    this.state = JSON.parse(saved);
-                    this.state.isLehrer = false;
-                    this.state.currentTab = 'Planer';
-                } catch(e) { this.state = JSON.parse(JSON.stringify(INITIAL_STATE)); }
-            } else {
-                this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
-            }
-
-            // Check for URL-based data (Import)
-            if (dataParam) {
-                try {
-                    const decoded = JSON.parse(atob(dataParam));
-                    if (decoded.tasks && decoded.students) {
-                        this.state.tasks = decoded.tasks;
-                        this.state.students = decoded.students;
-                        this.state.lastPublished = decoded.lp;
-                        this.state.isFromUrlSync = true;
-                        this.persist();
-                        // Clean URL to avoid re-importing on refresh
-                        window.history.replaceState({}, document.title, window.location.pathname);
+            async init() {
+                // Initialize default state first to ensure no null errors during boot
+                const saved = localStorage.getItem(this.STORAGE_KEY);
+                if (saved) {
+                    try {
+                        this.state = JSON.parse(saved);
+                    } catch(e) { 
+                        this.state = JSON.parse(JSON.stringify(INITIAL_STATE)); 
                     }
-                } catch (e) {
-                    console.error("Fehler beim Dekodieren der URL-Daten", e);
-                }
-            }
-
-            this.updateDateDisplay();
-            this.renderAll();
-            this.initQRCode();
-        },
-
-        generateShareLink() {
-            const payload = {
-                tasks: this.state.tasks,
-                students: this.state.students.map(s => ({ id: s.id, name: s.name })), // Only essential student info
-                lp: new Date().toISOString()
-            };
-            const encoded = btoa(JSON.stringify(payload));
-            return `${window.location.origin}${window.location.pathname}?d=${encoded}`;
-        },
-
-        async publishData() {
-            const btn = document.getElementById('publish-btn');
-            const originalContent = btn.innerHTML;
-            
-            try {
-                btn.disabled = true;
-                btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span> Vorbereiten...';
-                
-                await new Promise(r => setTimeout(r, 800));
-                
-                this.state.hasUnpublishedChanges = false;
-                this.state.lastPublished = new Date().toISOString();
-                this.persist();
-                
-                const shareLink = this.generateShareLink();
-                this.initQRCode(shareLink);
-
-                // Show modal with link
-                document.getElementById('share-link-input').value = shareLink;
-                document.getElementById('publish-modal').classList.remove('hidden');
-
-                btn.classList.replace('bg-success', 'bg-primary');
-                btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">verified</span> Aktualisiert!';
-
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.classList.replace('bg-primary', 'bg-success');
-                    btn.innerHTML = originalContent;
-                    this.renderAll();
-                }, 3000);
-
-            } catch (error) {
-                console.error('Publishing failed:', error);
-                btn.innerHTML = 'Fehler';
-                setTimeout(() => { btn.disabled = false; btn.innerHTML = originalContent; }, 3000);
-            }
-        },
-
-        copyShareLink() {
-            const input = document.getElementById('share-link-input');
-            input.select();
-            document.execCommand('copy');
-            alert('Link in Zwischenablage kopiert!');
-        },
-
-        updateSyncUI(status) {
-            const el = document.getElementById('sync-status');
-            const txt = document.getElementById('sync-status-text');
-            const icon = document.getElementById('sync-icon');
-            const indicator = document.getElementById('sync-indicator');
-            const lastSyncEl = document.getElementById('last-sync-time');
-            
-            if (el) el.classList.remove('hidden');
-
-            if (this.state.isFromUrlSync && !this.state.isLehrer) {
-                txt.textContent = 'Daten vom Lehrer geladen';
-                icon.textContent = 'cloud_done';
-                el.classList.add('bg-green-100', 'text-green-700');
-            } else {
-                txt.textContent = status;
-                icon.textContent = 'sync';
-                el.classList.remove('bg-green-100', 'text-green-700');
-            }
-
-            if (indicator) {
-                if (this.state.hasUnpublishedChanges) {
-                    indicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span><span class="text-sm font-bold text-yellow-600">Änderungen bereit</span>`;
                 } else {
-                    indicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm font-bold text-green-600">Bereit zum Teilen</span>`;
+                    this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
                 }
-            }
 
-            if (lastSyncEl && this.state.lastPublished) {
-                const date = new Date(this.state.lastPublished);
-                lastSyncEl.textContent = `Letzte Veröffentlichung: ${date.toLocaleDateString('de-CH')} ${date.toLocaleTimeString('de-CH', {hour: '2-digit', minute:'2-digit'})}`;
-            }
-        },
+                // Reset temporary session flags
+                this.state.isLehrer = false;
+                this.state.currentTab = 'Planer';
 
-        persist() {
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
-        },
+                // Check for URL-based data (Import)
+                const urlParams = new URLSearchParams(window.location.search);
+                const dataParam = urlParams.get('d');
+                
+                if (dataParam) {
+                    try {
+                        // Using a safer b64 decoding that handles UTF-8 characters if any
+                        const decodedString = decodeURIComponent(escape(atob(dataParam)));
+                        const decoded = JSON.parse(decodedString);
+                        
+                        if (decoded && decoded.tasks && decoded.students) {
+                            // Merge URL data into state
+                            this.state.tasks = decoded.tasks;
+                            this.state.students = decoded.students;
+                            this.state.lastPublished = decoded.lp;
+                            this.state.isFromUrlSync = true;
+                            this.state.hasUnpublishedChanges = false;
+                            
+                            this.persist();
+                            // Clean URL to avoid re-importing on refresh
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                        }
+                    } catch (e) {
+                        console.error("Fehler beim Dekodieren der URL-Daten", e);
+                        this.showError("Der geteilte Link ist beschädigt oder veraltet.");
+                    }
+                }
 
-        initQRCode(customUrl) {
-            const qrContainer = document.getElementById("qrcode");
-            const shareUrl = customUrl || this.generateShareLink();
-            
-            qrContainer.innerHTML = "";
-            this._qrcode = new QRCode(qrContainer, {
-                text: shareUrl,
-                width: 128,
-                height: 128,
-                colorDark : "#0058bc",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.L // Low correction to keep QR size manageable with large URLs
-            });
-
-            const printQrContainer = document.getElementById("print-qrcode-container");
-            if (printQrContainer) {
-                printQrContainer.innerHTML = "";
-                new QRCode(printQrContainer, {
-                    text: shareUrl,
-                    width: 400,
-                    height: 400,
-                    colorDark : "#000000",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.L
-                });
-            }
-            const printDateEl = document.getElementById('print-date');
-            if (printDateEl) printDateEl.textContent = new Date().toLocaleDateString('de-CH');
-        },
-
-        printQRCode() {
-            window.print();
-        },
-
-        updateDateDisplay() {
-            const now = new Date();
-            const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-            const dayNum = d.getUTCDay() || 7;
-            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-            
-            const monday = new Date(now);
-            const day = now.getDay();
-            const diff = (day === 0 ? -6 : 1) - day;
-            monday.setDate(now.getDate() + diff);
-            const friday = new Date(monday);
-            friday.setDate(monday.getDate() + 4);
-            const fmt = (date) => date.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            
-            const weekDisplay = document.getElementById('current-week-display');
-            const dateRange = document.getElementById('current-date-range');
-            if (weekDisplay) weekDisplay.textContent = `Woche ${weekNo}`;
-            if (dateRange) dateRange.textContent = `${fmt(monday)} – ${fmt(friday)}`;
-        },
-
-        setTab(tab) {
-            this.state.currentTab = tab;
-            this.renderAll();
-        },
-
-        handleLehrerNavClick() {
-            if (this.state.isLehrer) this.setTab('Dashboard');
-            else this.openLehrerModal();
-        },
-
-        openLehrerModal() {
-            document.getElementById('lehrer-modal').classList.remove('hidden');
-            document.getElementById('lehrer-password').value = '';
-            document.getElementById('lehrer-password').focus();
-        },
-
-        closeLehrerModal() {
-            document.getElementById('lehrer-modal').classList.add('hidden');
-        },
-
-        checkLehrerPassword() {
-            const input = document.getElementById('lehrer-password');
-            if (input.value === 'lehrer123') {
-                this.state.isLehrer = true;
-                this.state.currentTab = 'Dashboard';
-                this.closeLehrerModal();
+                this.updateDateDisplay();
                 this.renderAll();
-            } else {
-                input.classList.add('ring-red-500', 'ring-2');
-                setTimeout(() => input.classList.remove('ring-red-500', 'ring-2'), 800);
-            }
-        },
+                this.initQRCode();
+            },
 
-        logoutLehrer() {
-            this.state.isLehrer = false;
-            this.state.currentTab = 'Planer';
-            this.renderAll();
-        },
+            showError(msg) {
+                const alertEl = document.getElementById('error-alert');
+                const alertText = document.getElementById('error-alert-text');
+                if (alertEl && alertText) {
+                    alertText.textContent = msg;
+                    alertEl.classList.remove('hidden');
+                }
+            },
 
-        handleFilterChange() {
-            const val = document.getElementById('student-filter').value;
-            if (val !== 'all' && val !== this.state.verifiedStudentId) {
-                const s = this.state.students.find(x => x.id === val);
-                document.getElementById('confirm-name-span').textContent = s.name;
-                document.getElementById('identity-modal').classList.remove('hidden');
-                this._pendingId = val;
-            } else {
-                this.state.selectedStudentId = val;
-                this.renderAll();
-            }
-        },
+            generateShareLink() {
+                try {
+                    const payload = {
+                        tasks: this.state.tasks,
+                        students: this.state.students.map(s => ({ id: s.id, name: s.name })), 
+                        lp: new Date().toISOString()
+                    };
+                    const jsonStr = JSON.stringify(payload);
+                    const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+                    return `${window.location.origin}${window.location.pathname}?d=${encoded}`;
+                } catch(e) {
+                    console.error("Link generation failed", e);
+                    return window.location.origin + window.location.pathname;
+                }
+            },
 
-        confirmIdentity() {
-            this.state.verifiedStudentId = this._pendingId;
-            this.state.selectedStudentId = this._pendingId;
-            document.getElementById('identity-modal').classList.add('hidden');
-            this.renderAll();
-        },
+            async publishData() {
+                const btn = document.getElementById('publish-btn');
+                const originalContent = btn.innerHTML;
+                
+                try {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span> Vorbereiten...';
+                    
+                    await new Promise(r => setTimeout(r, 800));
+                    
+                    this.state.hasUnpublishedChanges = false;
+                    this.state.lastPublished = new Date().toISOString();
+                    this.persist();
+                    
+                    const shareLink = this.generateShareLink();
+                    this.initQRCode(shareLink);
 
-        cancelIdentity() {
-            document.getElementById('identity-modal').classList.add('hidden');
-            document.getElementById('student-filter').value = this.state.selectedStudentId;
-        },
+                    document.getElementById('share-link-input').value = shareLink;
+                    document.getElementById('publish-modal').classList.remove('hidden');
 
-        addTask(e) {
-            e.preventDefault();
-            const task = {
-                id: 't' + Date.now(),
-                studentId: document.getElementById('task-student').value,
-                subjectCode: document.getElementById('task-subject').value,
-                deadline: document.getElementById('task-deadline').value,
-                description: document.getElementById('task-description').value
-            };
-            this.state.tasks.push(task);
-            this.state.hasUnpublishedChanges = true;
-            e.target.reset();
-            this.persist();
-            this.renderAll();
-        },
+                    btn.classList.replace('bg-success', 'bg-primary');
+                    btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">verified</span> Aktualisiert!';
 
-        deleteTask(id) {
-            this.state.tasks = this.state.tasks.filter(t => t.id !== id);
-            this.state.hasUnpublishedChanges = true;
-            this.persist();
-            this.renderAll();
-        },
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.classList.replace('bg-primary', 'bg-success');
+                        btn.innerHTML = originalContent;
+                        this.renderAll();
+                    }, 3000);
 
-        toggleTask(taskId) {
-            const sid = this.state.selectedStudentId;
-            if (sid === 'all') return;
-            const s = this.state.students.find(x => x.id === sid);
-            if (s.confirmed) return; 
+                } catch (error) {
+                    console.error('Publishing failed:', error);
+                    btn.innerHTML = 'Fehler';
+                    setTimeout(() => { btn.disabled = false; btn.innerHTML = originalContent; }, 3000);
+                }
+            },
 
-            if (!this.state.completedTasks[sid]) this.state.completedTasks[sid] = [];
-            
-            const idx = this.state.completedTasks[sid].indexOf(taskId);
-            if (idx > -1) {
-                this.state.completedTasks[sid].splice(idx, 1);
-            } else {
-                this.state.completedTasks[sid].push(taskId);
-            }
-            
-            this.persist();
-            this.renderAll();
-        },
+            copyShareLink() {
+                const input = document.getElementById('share-link-input');
+                input.select();
+                try {
+                    document.execCommand('copy');
+                    alert('Link in Zwischenablage kopiert!');
+                } catch(e) {
+                    alert('Fehler beim Kopieren. Bitte manuell kopieren.');
+                }
+            },
 
-        confirmParental(sid) {
-            const s = this.state.students.find(x => x.id === sid);
-            if (s) {
-                s.confirmed = true;
-                s.lastConfirmed = new Date().toLocaleDateString('de-CH') + ' ' + new Date().toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
-                this.persist();
-                this.renderAll();
-            }
-        },
+            updateSyncUI(status) {
+                const el = document.getElementById('sync-status');
+                const txt = document.getElementById('sync-status-text');
+                const icon = document.getElementById('sync-icon');
+                const indicator = document.getElementById('sync-indicator');
+                const lastSyncEl = document.getElementById('last-sync-time');
+                
+                if (el) el.classList.remove('hidden');
 
-        unlockStudent(sid) {
-            const s = this.state.students.find(x => x.id === sid);
-            if (s) {
-                s.confirmed = false;
-                s.lastConfirmed = '-';
-                this.persist();
-                this.renderAll();
-            }
-        },
+                if (this.state.isFromUrlSync && !this.state.isLehrer) {
+                    txt.textContent = 'Sync: Aktiv';
+                    icon.textContent = 'cloud_done';
+                    el.classList.add('bg-green-100', 'text-green-700');
+                } else {
+                    txt.textContent = status;
+                    icon.textContent = 'sync';
+                    el.classList.remove('bg-green-100', 'text-green-700');
+                }
 
-        addStudent() {
-            const name = document.getElementById('new-student-name').value.trim();
-            if (name) {
-                this.state.students.push({ id: 's' + Date.now(), name, confirmed: false, lastConfirmed: '-' });
-                this.state.hasUnpublishedChanges = true;
-                document.getElementById('new-student-name').value = '';
-                this.persist();
-                this.renderAll();
-            }
-        },
+                if (indicator) {
+                    if (this.state.hasUnpublishedChanges) {
+                        indicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span><span class="text-sm font-bold text-yellow-600">Änderungen bereit</span>`;
+                    } else {
+                        indicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm font-bold text-green-600">Aktuell</span>`;
+                    }
+                }
 
-        importStudents(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const text = e.target.result;
-                const names = text.split('\n').map(n => n.trim()).filter(n => n.length > 0);
-                if (names.length > 0) {
-                    names.forEach(name => {
-                        this.state.students.push({ id: 's' + Math.random().toString(36).substr(2, 9), name, confirmed: false, lastConfirmed: '-' });
+                if (lastSyncEl && this.state.lastPublished) {
+                    const date = new Date(this.state.lastPublished);
+                    lastSyncEl.textContent = `Letzte Veröffentlichung: ${date.toLocaleDateString('de-CH')} ${date.toLocaleTimeString('de-CH', {hour: '2-digit', minute:'2-digit'})}`;
+                }
+            },
+
+            persist() {
+                try {
+                    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
+                } catch(e) {
+                    console.error("Persistence failed", e);
+                }
+            },
+
+            initQRCode(customUrl) {
+                const qrContainer = document.getElementById("qrcode");
+                if (!qrContainer) return;
+                
+                const shareUrl = customUrl || this.generateShareLink();
+                
+                qrContainer.innerHTML = "";
+                try {
+                    this._qrcode = new QRCode(qrContainer, {
+                        text: shareUrl,
+                        width: 128,
+                        height: 128,
+                        colorDark : "#0058bc",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.L
                     });
-                    this.state.hasUnpublishedChanges = true;
+
+                    const printQrContainer = document.getElementById("print-qrcode-container");
+                    if (printQrContainer) {
+                        printQrContainer.innerHTML = "";
+                        new QRCode(printQrContainer, {
+                            text: shareUrl,
+                            width: 400,
+                            height: 400,
+                            colorDark : "#000000",
+                            colorLight : "#ffffff",
+                            correctLevel : QRCode.CorrectLevel.L
+                        });
+                    }
+                } catch(e) {
+                    console.error("QR Code Generation failed", e);
+                    qrContainer.innerHTML = "<p class='text-[10px] text-red-500'>QR Code konnte nicht erstellt werden.</p>";
+                }
+                
+                const printDateEl = document.getElementById('print-date');
+                if (printDateEl) printDateEl.textContent = new Date().toLocaleDateString('de-CH');
+            },
+
+            printQRCode() {
+                window.print();
+            },
+
+            updateDateDisplay() {
+                const now = new Date();
+                const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+                const dayNum = d.getUTCDay() || 7;
+                d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+                const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+                const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+                
+                const monday = new Date(now);
+                const day = now.getDay();
+                const diff = (day === 0 ? -6 : 1) - day;
+                monday.setDate(now.getDate() + diff);
+                const friday = new Date(monday);
+                friday.setDate(monday.getDate() + 4);
+                const fmt = (date) => date.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                
+                const weekDisplay = document.getElementById('current-week-display');
+                const dateRange = document.getElementById('current-date-range');
+                if (weekDisplay) weekDisplay.textContent = `Woche ${weekNo}`;
+                if (dateRange) dateRange.textContent = `${fmt(monday)} – ${fmt(friday)}`;
+            },
+
+            setTab(tab) {
+                this.state.currentTab = tab;
+                this.renderAll();
+            },
+
+            handleLehrerNavClick() {
+                if (this.state.isLehrer) this.setTab('Dashboard');
+                else this.openLehrerModal();
+            },
+
+            openLehrerModal() {
+                document.getElementById('lehrer-modal').classList.remove('hidden');
+                document.getElementById('lehrer-password').value = '';
+                document.getElementById('lehrer-password').focus();
+            },
+
+            closeLehrerModal() {
+                document.getElementById('lehrer-modal').classList.add('hidden');
+            },
+
+            checkLehrerPassword() {
+                const input = document.getElementById('lehrer-password');
+                if (input.value === 'lehrer123') {
+                    this.state.isLehrer = true;
+                    this.state.currentTab = 'Dashboard';
+                    this.closeLehrerModal();
+                    this.renderAll();
+                } else {
+                    input.classList.add('ring-red-500', 'ring-2');
+                    setTimeout(() => input.classList.remove('ring-red-500', 'ring-2'), 800);
+                }
+            },
+
+            logoutLehrer() {
+                this.state.isLehrer = false;
+                this.state.currentTab = 'Planer';
+                this.renderAll();
+            },
+
+            handleFilterChange() {
+                const val = document.getElementById('student-filter').value;
+                if (val !== 'all' && val !== this.state.verifiedStudentId) {
+                    const s = this.state.students.find(x => x.id === val);
+                    if (s) {
+                        document.getElementById('confirm-name-span').textContent = s.name;
+                        document.getElementById('identity-modal').classList.remove('hidden');
+                        this._pendingId = val;
+                    }
+                } else {
+                    this.state.selectedStudentId = val;
+                    this.renderAll();
+                }
+            },
+
+            confirmIdentity() {
+                this.state.verifiedStudentId = this._pendingId;
+                this.state.selectedStudentId = this._pendingId;
+                document.getElementById('identity-modal').classList.add('hidden');
+                this.renderAll();
+            },
+
+            cancelIdentity() {
+                document.getElementById('identity-modal').classList.add('hidden');
+                document.getElementById('student-filter').value = this.state.selectedStudentId;
+            },
+
+            addTask(e) {
+                e.preventDefault();
+                const task = {
+                    id: 't' + Date.now(),
+                    studentId: document.getElementById('task-student').value,
+                    subjectCode: document.getElementById('task-subject').value,
+                    deadline: document.getElementById('task-deadline').value,
+                    description: document.getElementById('task-description').value
+                };
+                this.state.tasks.push(task);
+                this.state.hasUnpublishedChanges = true;
+                e.target.reset();
+                this.persist();
+                this.renderAll();
+            },
+
+            deleteTask(id) {
+                this.state.tasks = this.state.tasks.filter(t => t.id !== id);
+                this.state.hasUnpublishedChanges = true;
+                this.persist();
+                this.renderAll();
+            },
+
+            toggleTask(taskId) {
+                const sid = this.state.selectedStudentId;
+                if (sid === 'all') return;
+                const s = this.state.students.find(x => x.id === sid);
+                if (!s || s.confirmed) return; 
+
+                if (!this.state.completedTasks[sid]) this.state.completedTasks[sid] = [];
+                
+                const idx = this.state.completedTasks[sid].indexOf(taskId);
+                if (idx > -1) {
+                    this.state.completedTasks[sid].splice(idx, 1);
+                } else {
+                    this.state.completedTasks[sid].push(taskId);
+                }
+                
+                this.persist();
+                this.renderAll();
+            },
+
+            confirmParental(sid) {
+                const s = this.state.students.find(x => x.id === sid);
+                if (s) {
+                    s.confirmed = true;
+                    s.lastConfirmed = new Date().toLocaleDateString('de-CH') + ' ' + new Date().toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
                     this.persist();
                     this.renderAll();
                 }
-            };
-            reader.readAsText(file);
-            event.target.value = ''; 
-        },
+            },
 
-        deleteStudent(id) {
-            if (confirm('Schüler wirklich löschen?')) {
-                this.state.students = this.state.students.filter(s => s.id !== id);
-                this.state.hasUnpublishedChanges = true;
-                delete this.state.completedTasks[id];
-                this.persist();
-                this.renderAll();
-            }
-        },
+            unlockStudent(sid) {
+                const s = this.state.students.find(x => x.id === sid);
+                if (s) {
+                    s.confirmed = false;
+                    s.lastConfirmed = '-';
+                    this.persist();
+                    this.renderAll();
+                }
+            },
 
-        resetSystem() {
-            if (confirm('Wirklich alles löschen?')) {
-                localStorage.removeItem(this.STORAGE_KEY);
-                window.location.href = window.location.pathname;
-            }
-        },
+            addStudent() {
+                const name = document.getElementById('new-student-name').value.trim();
+                if (name) {
+                    this.state.students.push({ id: 's' + Date.now(), name, confirmed: false, lastConfirmed: '-' });
+                    this.state.hasUnpublishedChanges = true;
+                    document.getElementById('new-student-name').value = '';
+                    this.persist();
+                    this.renderAll();
+                }
+            },
 
-        renderAll() {
-            document.getElementById('content-planner').classList.toggle('hidden', this.state.currentTab !== 'Planer');
-            document.getElementById('content-dashboard').classList.toggle('hidden', this.state.currentTab !== 'Dashboard');
-            document.getElementById('content-guide').classList.toggle('hidden', this.state.currentTab !== 'Anleitung');
-            document.getElementById('lehrer-access-btn').classList.toggle('hidden', !this.state.isLehrer);
+            importStudents(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+                    const names = text.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+                    if (names.length > 0) {
+                        names.forEach(name => {
+                            this.state.students.push({ id: 's' + Math.random().toString(36).substr(2, 9), name, confirmed: false, lastConfirmed: '-' });
+                        });
+                        this.state.hasUnpublishedChanges = true;
+                        this.persist();
+                        this.renderAll();
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = ''; 
+            },
 
-            ['Planer', 'Dashboard', 'Anleitung'].forEach(t => {
-                const el = document.getElementById(`nav-${t}`);
-                if (!el) return;
-                if (this.state.currentTab === t) {
-                    el.className = "px-5 py-2.5 rounded-full text-sm font-bold bg-primary text-on-primary shadow-lg shadow-primary/20 transition-all";
+            deleteStudent(id) {
+                if (confirm('Schüler wirklich löschen?')) {
+                    this.state.students = this.state.students.filter(s => s.id !== id);
+                    this.state.hasUnpublishedChanges = true;
+                    delete this.state.completedTasks[id];
+                    this.persist();
+                    this.renderAll();
+                }
+            },
+
+            resetSystem() {
+                if (confirm('Wirklich alle Daten zurücksetzen? Dies kann nicht rückgängig gemacht werden.')) {
+                    localStorage.removeItem(this.STORAGE_KEY);
+                    window.location.href = window.location.origin + window.location.pathname;
+                }
+            },
+
+            renderAll() {
+                if (!this.state) return;
+
+                document.getElementById('content-planner').classList.toggle('hidden', this.state.currentTab !== 'Planer');
+                document.getElementById('content-dashboard').classList.toggle('hidden', this.state.currentTab !== 'Dashboard');
+                document.getElementById('content-guide').classList.toggle('hidden', this.state.currentTab !== 'Anleitung');
+                document.getElementById('lehrer-access-btn').classList.toggle('hidden', !this.state.isLehrer);
+
+                ['Planer', 'Dashboard', 'Anleitung'].forEach(t => {
+                    const el = document.getElementById(`nav-${t}`);
+                    if (!el) return;
+                    if (this.state.currentTab === t) {
+                        el.className = "px-5 py-2.5 rounded-full text-sm font-bold bg-primary text-on-primary shadow-lg shadow-primary/20 transition-all";
+                    } else {
+                        el.className = "px-5 py-2.5 rounded-full text-sm font-bold text-on-surface-variant hover:bg-surface-container transition-all";
+                    }
+                });
+
+                this.renderFilters();
+                this.renderTasks();
+                this.renderLegend();
+                this.renderDashboard();
+                this.renderStudentManagement();
+                this.renderManageTasks();
+                this.updateSteps();
+                this.updateSyncUI(this.state.hasUnpublishedChanges ? 'Geändert' : 'Aktuell');
+            },
+
+            updateSteps() {
+                const sid = this.state.selectedStudentId;
+                const verified = this.state.verifiedStudentId === sid;
+                const s = this.state.students.find(x => x.id === sid);
+                
+                const steps = [1, 2, 3, 4].map(i => document.getElementById(`step-${i}`));
+                steps.forEach(el => {
+                    if (!el) return;
+                    el.classList.add('opacity-50');
+                    el.querySelector('div').className = "w-8 h-8 rounded-full bg-surface-container text-on-surface-variant/40 font-bold flex items-center justify-center mb-3";
+                });
+
+                if (sid === 'all') {
+                    if (steps[0]) {
+                        steps[0].classList.remove('opacity-50');
+                        steps[0].querySelector('div').className = "w-8 h-8 rounded-full bg-primary text-on-primary font-bold flex items-center justify-center mb-3";
+                    }
+                } else if (!verified) {
+                    if (steps[0]) {
+                        steps[0].classList.remove('opacity-50');
+                        steps[0].querySelector('div').classList.add('bg-primary/20', 'text-primary');
+                    }
+                } else if (s && !s.confirmed) {
+                    if (steps[1]) {
+                        steps[1].classList.remove('opacity-50');
+                        steps[1].querySelector('div').classList.add('bg-primary/20', 'text-primary');
+                    }
+                    if (steps[2]) steps[2].classList.remove('opacity-50');
                 } else {
-                    el.className = "px-5 py-2.5 rounded-full text-sm font-bold text-on-surface-variant hover:bg-surface-container transition-all";
+                    if (steps[3]) {
+                        steps[3].classList.remove('opacity-50');
+                        steps[3].querySelector('div').classList.add('bg-primary/20', 'text-primary');
+                    }
                 }
-            });
+            },
 
-            this.renderFilters();
-            this.renderTasks();
-            this.renderLegend();
-            this.renderDashboard();
-            this.renderStudentManagement();
-            this.renderManageTasks();
-            this.updateSteps();
-            this.updateSyncUI(this.state.hasUnpublishedChanges ? 'Änderungen bereit' : 'Aktuell');
-        },
+            renderFilters() {
+                const select = document.getElementById('student-filter');
+                const taskSelect = document.getElementById('task-student');
+                if (!select) return;
+                const students = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
+                
+                const html = `<option value="all" ${this.state.selectedStudentId === 'all' ? 'selected' : ''}>Klassenübersicht</option>` + 
+                    students.map(s => `<option value="${s.id}" ${this.state.selectedStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('');
+                
+                select.innerHTML = html;
+                if(taskSelect) taskSelect.innerHTML = `<option value="all">Alle (Klasse)</option>` + students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            },
 
-        updateSteps() {
-            const sid = this.state.selectedStudentId;
-            const verified = this.state.verifiedStudentId === sid;
-            const s = this.state.students.find(x => x.id === sid);
-            
-            const steps = [1, 2, 3, 4].map(i => document.getElementById(`step-${i}`));
-            steps.forEach(el => {
-                if (!el) return;
-                el.classList.add('opacity-50');
-                el.querySelector('div').className = "w-8 h-8 rounded-full bg-surface-container text-on-surface-variant/40 font-bold flex items-center justify-center mb-3";
-            });
-
-            if (sid === 'all') {
-                if (steps[0]) {
-                    steps[0].classList.remove('opacity-50');
-                    steps[0].querySelector('div').className = "w-8 h-8 rounded-full bg-primary text-on-primary font-bold flex items-center justify-center mb-3";
-                }
-            } else if (!verified) {
-                if (steps[0]) {
-                    steps[0].classList.remove('opacity-50');
-                    steps[0].querySelector('div').classList.add('bg-primary/20', 'text-primary');
-                }
-            } else if (s && !s.confirmed) {
-                if (steps[1]) {
-                    steps[1].classList.remove('opacity-50');
-                    steps[1].querySelector('div').classList.add('bg-primary/20', 'text-primary');
-                }
-                if (steps[2]) steps[2].classList.remove('opacity-50');
-            } else {
-                if (steps[3]) {
-                    steps[3].classList.remove('opacity-50');
-                    steps[3].querySelector('div').classList.add('bg-primary/20', 'text-primary');
-                }
-            }
-        },
-
-        renderFilters() {
-            const select = document.getElementById('student-filter');
-            const taskSelect = document.getElementById('task-student');
-            if (!select) return;
-            const students = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
-            
-            const html = `<option value="all" ${this.state.selectedStudentId === 'all' ? 'selected' : ''}>Klassenübersicht</option>` + 
-                students.map(s => `<option value="${s.id}" ${this.state.selectedStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('');
-            
-            select.innerHTML = html;
-            if(taskSelect) taskSelect.innerHTML = `<option value="all">Alle (Klasse)</option>` + students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-        },
-
-        renderTasks() {
-            const container = document.getElementById('task-container');
-            if (!container) return;
-            const sid = this.state.selectedStudentId;
-            const verified = this.state.verifiedStudentId === sid;
-            const s = this.state.students.find(x => x.id === sid);
-            const isLocked = s?.confirmed || false;
-            const filtered = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === sid);
-            
-            if (filtered.length === 0) {
-                container.innerHTML = `<div class="py-16 text-center border-4 border-dashed border-outline-variant/20 rounded-2xl text-on-surface-variant/40 font-bold uppercase tracking-widest text-xs">Keine Aufgaben für diese Woche</div>`;
-            } else {
-                container.innerHTML = filtered.map(t => {
-                    const done = (this.state.completedTasks[sid] || []).includes(t.id);
-                    const cfg = SUBJECT_CONFIG[t.subjectCode] || { name: 'Divers', color: '#64748b' };
-                    const isGlobal = t.studentId === 'all';
-                    return `
-                        <div class="bg-white border border-outline-variant rounded-xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-50' : 'hover:border-primary/30'}">
-                            <div class="w-2" style="background-color: ${cfg.color}"></div>
-                            <div class="flex-1 p-5 flex flex-col md:flex-row md:items-center gap-4">
-                                <div class="md:w-32">
-                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest" style="background-color: ${cfg.color}15; color: ${cfg.color}">${cfg.name}</span>
-                                    <p class="text-[10px] text-on-surface-variant font-bold uppercase mt-1">${isGlobal ? 'Klasse' : 'Persönlich'}</p>
-                                </div>
-                                <div class="flex-1">
-                                    <p class="text-sm font-semibold text-on-surface">${t.description}</p>
-                                </div>
-                                <div class="flex items-center gap-6 justify-between md:justify-end">
-                                    <div class="text-right">
-                                        <p class="text-[9px] font-bold text-on-surface-variant uppercase">Termin</p>
-                                        <p class="text-sm font-black text-on-surface">${t.deadline}</p>
+            renderTasks() {
+                const container = document.getElementById('task-container');
+                if (!container) return;
+                const sid = this.state.selectedStudentId;
+                const verified = this.state.verifiedStudentId === sid;
+                const s = this.state.students.find(x => x.id === sid);
+                const isLocked = s?.confirmed || false;
+                const filtered = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === sid);
+                
+                if (filtered.length === 0) {
+                    container.innerHTML = `<div class="py-16 text-center border-4 border-dashed border-outline-variant/20 rounded-2xl text-on-surface-variant/40 font-bold uppercase tracking-widest text-xs">Keine Aufgaben für diese Woche</div>`;
+                } else {
+                    container.innerHTML = filtered.map(t => {
+                        const done = (this.state.completedTasks[sid] || []).includes(t.id);
+                        const cfg = SUBJECT_CONFIG[t.subjectCode] || { name: 'Divers', color: '#64748b' };
+                        const isGlobal = t.studentId === 'all';
+                        return `
+                            <div class="bg-white border border-outline-variant rounded-xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-50' : 'hover:border-primary/30'}">
+                                <div class="w-2" style="background-color: ${cfg.color}"></div>
+                                <div class="flex-1 p-5 flex flex-col md:flex-row md:items-center gap-4">
+                                    <div class="md:w-32">
+                                        <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest" style="background-color: ${cfg.color}15; color: ${cfg.color}">${cfg.name}</span>
+                                        <p class="text-[10px] text-on-surface-variant font-bold uppercase mt-1">${isGlobal ? 'Klasse' : 'Persönlich'}</p>
                                     </div>
-                                    ${sid !== 'all' ? `
-                                        <button onclick="app.toggleTask('${t.id}')" ${!verified || isLocked ? 'disabled' : ''} class="flex items-center gap-2 group">
-                                            <span class="material-symbols-outlined text-3xl ${done ? 'text-primary fill-1' : 'text-outline-variant group-hover:text-primary'}">
-                                                ${done ? 'check_circle' : 'radio_button_unchecked'}
-                                            </span>
-                                        </button>
-                                    ` : '<div class="w-8"></div>'}
+                                    <div class="flex-1">
+                                        <p class="text-sm font-semibold text-on-surface">${t.description}</p>
+                                    </div>
+                                    <div class="flex items-center gap-6 justify-between md:justify-end">
+                                        <div class="text-right">
+                                            <p class="text-[9px] font-bold text-on-surface-variant uppercase">Termin</p>
+                                            <p class="text-sm font-black text-on-surface">${t.deadline}</p>
+                                        </div>
+                                        ${sid !== 'all' ? `
+                                            <button onclick="app.toggleTask('${t.id}')" ${!verified || isLocked ? 'disabled' : ''} class="flex items-center gap-2 group">
+                                                <span class="material-symbols-outlined text-3xl ${done ? 'text-primary fill-1' : 'text-outline-variant group-hover:text-primary'}">
+                                                    ${done ? 'check_circle' : 'radio_button_unchecked'}
+                                                </span>
+                                            </button>
+                                        ` : '<div class="w-8"></div>'}
+                                    </div>
                                 </div>
                             </div>
+                        `;
+                    }).join('');
+                }
+
+                if (sid !== 'all' && s) {
+                    container.innerHTML += `
+                        <div class="mt-8 bg-white border-2 ${isLocked ? 'border-primary' : 'border-dashed border-outline-variant'} p-8 rounded-2xl flex flex-col items-center text-center">
+                            <div class="w-16 h-16 ${isLocked ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant/20'} rounded-full flex items-center justify-center mb-4 transition-all">
+                                <span class="material-symbols-outlined text-4xl ${isLocked ? 'fill-1' : ''}">${isLocked ? 'verified' : 'signature'}</span>
+                            </div>
+                            <h3 class="text-xl font-bold">Bestätigung der Eltern</h3>
+                            <p class="text-on-surface-variant text-sm mb-6 max-w-sm">Ich habe die Hausaufgaben dieser Woche gesehen und kontrolliert.</p>
+                            <button onclick="app.confirmParental('${s.id}')" ${isLocked || !verified ? 'disabled' : ''} class="px-8 py-3 rounded-full font-black uppercase text-xs tracking-widest transition-all ${isLocked ? 'bg-primary text-white cursor-default' : (!verified ? 'bg-surface-container opacity-50' : 'bg-surface-container hover:bg-primary hover:text-white')}">
+                                ${isLocked ? 'Bestätigt ✓' : 'Jetzt Bestätigen'}
+                            </button>
+                            ${isLocked ? `<p class="text-[10px] mt-4 font-bold text-primary uppercase">Gesehen am ${s.lastConfirmed}</p>` : ''}
                         </div>
                     `;
+                }
+            },
+
+            renderLegend() {
+                const lp = document.getElementById('color-legend-planner');
+                if (!lp) return;
+                lp.innerHTML = Object.keys(SUBJECT_CONFIG).map(code => {
+                    const cfg = SUBJECT_CONFIG[code];
+                    return `<div class="flex items-center gap-2">
+                        <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${cfg.color}"></div>
+                        <span class="text-[10px] font-bold text-on-surface-variant uppercase">${cfg.name}</span>
+                    </div>`;
                 }).join('');
-            }
+            },
 
-            if (sid !== 'all' && s) {
-                container.innerHTML += `
-                    <div class="mt-8 bg-white border-2 ${isLocked ? 'border-primary' : 'border-dashed border-outline-variant'} p-8 rounded-2xl flex flex-col items-center text-center">
-                        <div class="w-16 h-16 ${isLocked ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant/20'} rounded-full flex items-center justify-center mb-4 transition-all">
-                            <span class="material-symbols-outlined text-4xl ${isLocked ? 'fill-1' : ''}">${isLocked ? 'verified' : 'signature'}</span>
-                        </div>
-                        <h3 class="text-xl font-bold">Bestätigung der Eltern</h3>
-                        <p class="text-on-surface-variant text-sm mb-6 max-w-sm">Ich habe die Hausaufgaben dieser Woche gesehen und kontrolliert.</p>
-                        <button onclick="app.confirmParental('${s.id}')" ${isLocked || !verified ? 'disabled' : ''} class="px-8 py-3 rounded-full font-black uppercase text-xs tracking-widest transition-all ${isLocked ? 'bg-primary text-white cursor-default' : (!verified ? 'bg-surface-container opacity-50' : 'bg-surface-container hover:bg-primary hover:text-white')}">
-                            ${isLocked ? 'Bestätigt ✓' : 'Jetzt Bestätigen'}
-                        </button>
-                        ${isLocked ? `<p class="text-[10px] mt-4 font-bold text-primary uppercase">Gesehen am ${s.lastConfirmed}</p>` : ''}
-                    </div>
-                `;
-            }
-        },
+            renderDashboard() {
+                const tbody = document.getElementById('student-table-body');
+                if(!tbody) return;
+                const sorted = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
+                let totalPossibleTasks = 0, totalActualCompleted = 0, confirmedCount = 0;
 
-        renderLegend() {
-            const lp = document.getElementById('color-legend-planner');
-            if (!lp) return;
-            lp.innerHTML = Object.keys(SUBJECT_CONFIG).map(code => {
-                const cfg = SUBJECT_CONFIG[code];
-                return `<div class="flex items-center gap-2">
-                    <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${cfg.color}"></div>
-                    <span class="text-[10px] font-bold text-on-surface-variant uppercase">${cfg.name}</span>
-                </div>`;
-            }).join('');
-        },
-
-        renderDashboard() {
-            const tbody = document.getElementById('student-table-body');
-            if(!tbody) return;
-            const sorted = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
-            let totalPossibleTasks = 0, totalActualCompleted = 0, confirmedCount = 0;
-
-            tbody.innerHTML = sorted.map(s => {
-                const relevantTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === s.id);
-                const studentCompletions = this.state.completedTasks[s.id] || [];
-                const doneCount = studentCompletions.filter(tid => relevantTasks.some(t => t.id === tid)).length;
-                const totalCount = relevantTasks.length;
-                const perc = totalCount > 0 ? Math.round((doneCount/totalCount)*100) : 100;
-                totalPossibleTasks += totalCount;
-                totalActualCompleted += doneCount;
-                if (s.confirmed) confirmedCount++;
-                return `
-                    <tr class="hover:bg-surface-container/30">
-                        <td class="px-6 py-4 font-bold text-on-surface">${s.name}</td>
-                        <td class="px-6 py-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-20 h-1.5 bg-surface-container rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary" style="width: ${perc}%"></div>
+                tbody.innerHTML = sorted.map(s => {
+                    const relevantTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === s.id);
+                    const studentCompletions = this.state.completedTasks[s.id] || [];
+                    const doneCount = studentCompletions.filter(tid => relevantTasks.some(t => t.id === tid)).length;
+                    const totalCount = relevantTasks.length;
+                    const perc = totalCount > 0 ? Math.round((doneCount/totalCount)*100) : 100;
+                    totalPossibleTasks += totalCount;
+                    totalActualCompleted += doneCount;
+                    if (s.confirmed) confirmedCount++;
+                    return `
+                        <tr class="hover:bg-surface-container/30">
+                            <td class="px-6 py-4 font-bold text-on-surface">${s.name}</td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-20 h-1.5 bg-surface-container rounded-full overflow-hidden">
+                                        <div class="h-full bg-primary" style="width: ${perc}%"></div>
+                                    </div>
+                                    <span class="text-[10px] font-bold">${doneCount}/${totalCount}</span>
                                 </div>
-                                <span class="text-[10px] font-bold">${doneCount}/${totalCount}</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4">
-                            ${s.confirmed ? `<span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[9px] font-black uppercase">Gesehen ✓</span>` : `<span class="text-on-surface-variant/30 text-[9px] font-black uppercase">Offen</span>`}
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <button onclick="app.unlockStudent('${s.id}')" class="text-[9px] font-bold uppercase text-primary hover:underline ${!s.confirmed ? 'opacity-0 pointer-events-none' : ''}">Zurücksetzen</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
+                            </td>
+                            <td class="px-6 py-4">
+                                ${s.confirmed ? `<span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[9px] font-black uppercase">Gesehen ✓</span>` : `<span class="text-on-surface-variant/30 text-[9px] font-black uppercase">Offen</span>`}
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button onclick="app.unlockStudent('${s.id}')" class="text-[9px] font-bold uppercase text-primary hover:underline ${!s.confirmed ? 'opacity-0 pointer-events-none' : ''}">Zurücksetzen</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
 
-            const globalPerc = totalPossibleTasks > 0 ? Math.round((totalActualCompleted/totalPossibleTasks)*100) : 0;
-            const quoteEl = document.getElementById('dashboard-quote');
-            const progressEl = document.getElementById('dashboard-progress-bar');
-            const confirmationsEl = document.getElementById('dashboard-confirmations');
-            const pendingEl = document.getElementById('dashboard-pending-text');
+                const globalPerc = totalPossibleTasks > 0 ? Math.round((totalActualCompleted/totalPossibleTasks)*100) : 0;
+                const quoteEl = document.getElementById('dashboard-quote');
+                const progressEl = document.getElementById('dashboard-progress-bar');
+                const confirmationsEl = document.getElementById('dashboard-confirmations');
+                const pendingEl = document.getElementById('dashboard-pending-text');
 
-            if (quoteEl) quoteEl.textContent = `${globalPerc}%`;
-            if (progressEl) progressEl.style.width = `${globalPerc}%`;
-            if (confirmationsEl) confirmationsEl.textContent = `${confirmedCount}/${this.state.students.length}`;
-            if (pendingEl) pendingEl.textContent = `Noch ${this.state.students.length - confirmedCount} ausstehend`;
-        },
-
-        renderStudentManagement() {
-            const list = document.getElementById('student-management-list');
-            if(!list) return;
-            const sorted = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
-            list.innerHTML = sorted.map(s => `
-                <div class="flex justify-between items-center p-3 bg-surface-container rounded-xl">
-                    <span class="text-sm font-semibold">${s.name}</span>
-                    <button onclick="app.deleteStudent('${s.id}')" class="text-on-surface-variant/40 hover:text-red-500">
-                        <span class="material-symbols-outlined text-[20px]">delete</span>
-                    </button>
-                </div>
-            `).join('');
-        },
-
-        renderManageTasks() {
-            const body = document.getElementById('manage-tasks-body');
-            if(!body) return;
-            body.innerHTML = this.state.tasks.map(t => {
-                const s = t.studentId === 'all' ? 'Klasse' : (this.state.students.find(x => x.id === t.studentId)?.name || 'Gelöscht');
-                const cfg = SUBJECT_CONFIG[t.subjectCode] || { name: '?', color: '#64748b' };
-                return `
-                    <tr class="hover:bg-surface-container/30">
-                        <td class="px-6 py-3 text-[11px] font-bold uppercase text-on-surface-variant">${s}</td>
-                        <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full text-[9px] font-bold" style="background-color: ${cfg.color}15; color: ${cfg.color}">${cfg.name}</span></td>
-                        <td class="px-6 py-3 text-xs">${t.description}</td>
-                        <td class="px-6 py-3 text-xs font-bold">${t.deadline}</td>
-                        <td class="px-6 py-3 text-right">
-                            <button onclick="app.deleteTask('${t.id}')" class="text-on-</script></body></html>
+                if (quoteEl) quoteEl.textContent = `${globalPerc}%`;
+                if (progressEl) progressEl.style.width = `${globalPerc}%`;
+                if (confirmationsEl) confirmationsEl.textContent = `${confirmedCount}/${this.state.students.length}`;
+                if (pendingEl) pendingEl.textContent = `Noch ${this.state.students.</script></body></html>
