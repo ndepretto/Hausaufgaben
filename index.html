@@ -109,10 +109,10 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
-        /* Ensure QR code canvas fills the container */
         #qrcode canvas, #qrcode img {
             width: 100% !important;
             height: auto !important;
+            display: block;
         }
         @media print {
             header, footer, .action-buttons, .info-box {
@@ -139,14 +139,14 @@
 </button>
 </div>
 </header>
-<main class="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center px-gutter py-12">
+<main class="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center px-gutter py-12" id="qr-view">
 <div class="max-w-[600px] w-full text-center space-y-12">
 <!-- Header Section -->
 <div class="space-y-4">
 <h2 class="font-h1 text-h1 md:text-h1 text-on-surface tracking-tight">QR-Code scannen</h2>
 <p class="font-body-lg text-body-lg text-on-surface-variant max-w-md mx-auto">
-                    Scanne diesen Code mit deinem Smartphone, um die aktuelle Aufgabenliste direkt zu öffnen.
-                </p>
+                Scanne diesen Code mit deinem Smartphone, um die aktuelle Aufgabenliste direkt zu öffnen.
+            </p>
 </div>
 <!-- Central QR Card -->
 <div class="relative group qr-card-container">
@@ -157,11 +157,11 @@
 <span class="font-label-caps text-label-caps text-primary tracking-[0.2em]">DOELTSCHI PLANER</span>
 <!-- QR Code Area -->
 <div class="qr-gradient-border rounded-lg p-2 bg-white aspect-square w-full max-w-[280px] flex items-center justify-center overflow-hidden">
-<div class="w-full h-full flex items-center justify-center" id="qrcode"></div>
+<div class="w-full h-full flex items-center justify-center bg-white" id="qrcode"></div>
 </div>
-<div class="flex items-center gap-3 bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant">
-<span class="material-symbols-outlined text-primary text-sm" data-icon="link">link</span>
-<span class="font-subject-tag text-subject-tag text-on-surface-variant" id="display-url">doeltschi.app/share/...</span>
+<div class="flex items-center gap-3 bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant max-w-full">
+<span class="material-symbols-outlined text-primary text-sm shrink-0" data-icon="link">link</span>
+<span class="font-subject-tag text-subject-tag text-on-surface-variant truncate" id="display-url">doeltschi.app/share/...</span>
 </div>
 </div>
 </div>
@@ -170,12 +170,12 @@
 <div class="action-buttons flex flex-col sm:flex-row items-center justify-center gap-4">
 <button class="w-full sm:w-auto px-8 py-4 bg-primary text-on-primary rounded-full font-h2 text-body-lg hover:bg-primary-container transition-all active:scale-[0.98] duration-200 shadow-sm flex items-center justify-center gap-3" onclick="window.print()">
 <span class="material-symbols-outlined" data-icon="print">print</span>
-                    QR-Code drucken
-                </button>
-<button class="w-full sm:w-auto px-8 py-4 text-primary font-h2 text-body-lg hover:bg-surface-container-high rounded-full transition-all flex items-center justify-center gap-3" onclick="window.history.back()">
+                QR-Code drucken
+            </button>
+<button class="w-full sm:w-auto px-8 py-4 text-primary font-h2 text-body-lg hover:bg-surface-container-high rounded-full transition-all flex items-center justify-center gap-3" onclick="goBackToPlanner()">
 <span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
-                    Zurück zum Planer
-                </button>
+                Zurück zum Planer
+            </button>
 </div>
 <!-- Confirmation Style Box -->
 <div class="info-box mt-8 p-6 bg-primary/10 border-2 border-dashed border-primary/30 rounded-lg max-w-sm mx-auto text-left">
@@ -186,13 +186,17 @@
 <div>
 <span class="font-label-caps text-label-caps text-primary block mb-1">Sichere Verbindung</span>
 <p class="text-sm text-on-surface-variant leading-relaxed">
-                            Dieser Code ist verschlüsselt und nur für deine Klasse zugänglich. Keine Registrierung für Schüler erforderlich.
-                        </p>
+                        Dieser Code ist verschlüsselt und nur für deine Klasse zugänglich. Keine Registrierung für Schüler erforderlich.
+                    </p>
 </div>
 </div>
 </div>
 </div>
 </main>
+<!-- Placeholder for Main Planner View (hidden by default in this standalone page, but logic refers to it) -->
+<div class="hidden" id="planner-view">
+<!-- The main application content would reside here in the full app structure -->
+</div>
 <!-- Footer -->
 <footer class="bg-surface border-t border-outline-variant">
 <div class="w-full max-w-[1100px] mx-auto py-8 px-gutter flex flex-col md:flex-row justify-between items-center gap-4">
@@ -205,53 +209,73 @@
 </div>
 </footer>
 <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // 1. Handle URL Generation
-            const currentUrl = window.location.href;
-            const displayUrl = document.getElementById('display-url');
-            
-            // For display, we might want a shorter version if it's too long
-            try {
-                const url = new URL(currentUrl);
-                displayUrl.textContent = url.hostname + url.pathname.substring(0, 10) + (url.pathname.length > 10 ? '...' : '');
-            } catch(e) {
-                displayUrl.textContent = "doeltschi.app/share/current";
-            }
+    function goBackToPlanner() {
+        // Logic to return to the planner. 
+        // In a single-page app context, we toggle visibility.
+        const qrView = document.getElementById('qr-view');
+        const plannerView = document.getElementById('planner-view');
+        
+        if (plannerView && plannerView.innerHTML.trim() !== "") {
+            qrView.classList.add('hidden');
+            plannerView.classList.remove('hidden');
+        } else {
+            // Fallback: If plannerView is empty or not present in the DOM (e.g. separate URL), go back in history
+            window.history.back();
+        }
+    }
 
-            // 2. Robust QR Code Generation
-            const qrcodeContainer = document.getElementById("qrcode");
-            if (qrcodeContainer) {
-                new QRCode(qrcodeContainer, {
-                    text: currentUrl,
-                    width: 256,
-                    height: 256,
-                    colorDark : "#000000",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.H
-                });
-            }
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Handle URL Generation for Student View
+        // We ensure the URL points to a 'view' mode or contains the necessary data hash
+        let shareUrl = window.location.href;
+        
+        // If we were on the teacher's planner page, we might want to append a 'view=student' param 
+        // or ensure the URL being shared is specifically the student-facing one.
+        try {
+            const urlObj = new URL(shareUrl);
+            // Example transformation: ensure it's pointing to the live shared state
+            // If the app uses hash-based data, it's already in the URL
+            displayUrl.textContent = urlObj.hostname + (urlObj.pathname.length > 1 ? urlObj.pathname : '/share') + urlObj.search;
+        } catch(e) {
+            document.getElementById('display-url').textContent = "doeltschi.app/view/student";
+        }
 
-            // 3. Card Micro-interactions
-            const qrCardContainer = document.querySelector('.qr-card-container');
-            const qrCard = document.querySelector('.qr-card');
-            
-            if (qrCardContainer && qrCard) {
-                qrCardContainer.addEventListener('mousemove', (e) => {
-                    const rect = qrCardContainer.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
-                    const centerX = rect.width / 2;
-                    const centerY = rect.height / 2;
-                    const rotateX = (y - centerY) / 20;
-                    const rotateY = (centerX - x) / 20;
-                    
-                    qrCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-                });
+        // 2. High-Contrast QR Code Generation
+        const qrcodeContainer = document.getElementById("qrcode");
+        if (qrcodeContainer) {
+            // Clear container first to avoid duplicates
+            qrcodeContainer.innerHTML = "";
+            new QRCode(qrcodeContainer, {
+                text: shareUrl,
+                width: 256,
+                height: 256,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H // High error correction for reliable scanning
+            });
+        }
 
-                qrCardContainer.addEventListener('mouseleave', () => {
-                    qrCard.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
-                });
-            }
-        });
-    </script>
+        // 3. Card Micro-interactions
+        const qrCardContainer = document.querySelector('.qr-card-container');
+        const qrCard = document.querySelector('.qr-card');
+        
+        if (qrCardContainer && qrCard) {
+            qrCardContainer.addEventListener('mousemove', (e) => {
+                const rect = qrCardContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = (y - centerY) / 30; // Reduced sensitivity
+                const rotateY = (centerX - x) / 30;
+                
+                qrCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+
+            qrCardContainer.addEventListener('mouseleave', () => {
+                qrCard.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+            });
+        }
+    });
+</script>
 </body></html>
