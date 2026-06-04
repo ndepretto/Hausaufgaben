@@ -105,14 +105,21 @@
 <button class="w-full py-3 bg-primary text-white rounded-xl font-bold uppercase tracking-wider hover:bg-blue-700 transition-all" onclick="app.handleLogin()">Anmelden</button>
 </div>
 </div>
-<!-- Student Select View (Classic Layout) -->
+<!-- Student Select View (Dropdown Layout) -->
 <div class="hidden flex flex-col items-center py-24" id="student-select-view">
-<div class="text-center space-y-4 mb-16">
+<div class="text-center space-y-4 mb-12">
 <h2 class="text-5xl font-black text-slate-900 tracking-tight">Wer bist du?</h2>
 <p class="text-slate-500 font-medium text-lg">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
 </div>
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-4xl" id="student-grid">
-<!-- Dynamically generated buttons -->
+<div class="w-full max-w-md px-4">
+<div class="relative group">
+<select class="w-full appearance-none bg-white border-2 border-slate-200 rounded-2xl px-6 py-5 text-xl font-bold text-slate-700 shadow-sm transition-all hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none cursor-pointer" id="student-dropdown" onchange="if(this.value) app.selectStudent(this.value)">
+<option disabled="" selected="" value="">Deinen Namen auswählen...</option>
+</select>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-6 text-primary">
+<span class="material-symbols-outlined text-3xl font-bold">expand_more</span>
+</div>
+</div>
 </div>
 </div>
 <!-- Student Personal View -->
@@ -412,7 +419,6 @@
                             }
                             this.state = decoded;
                             this.persist();
-                            // Keep 's' param for auto-selection after sync
                             let nextUrl = window.location.origin + window.location.pathname + "?role=student";
                             if (sParam) nextUrl += `&s=${sParam}`;
                             window.location.href = nextUrl;
@@ -519,7 +525,7 @@
                 document.getElementById('login-view').classList.remove('hidden');
             } else if (this.currentRole === 'student') {
                 document.getElementById('student-select-view').classList.remove('hidden');
-                this.renderStudentGrid();
+                this.renderStudentDropdown();
             } else if (this.currentRole === 'student-tasks') {
                 document.getElementById('student-tasks-view').classList.remove('hidden');
                 this.renderStudentTasks();
@@ -532,13 +538,11 @@
             }
         },
 
-        renderStudentGrid() {
-            const grid = document.getElementById('student-grid');
-            grid.innerHTML = this.state.students.map(s => `
-                <button onclick="app.selectStudent('${s.id}')" class="p-10 bg-white border border-slate-200 rounded-2xl hover:border-primary hover:shadow-xl transition-all text-xl font-bold text-slate-700 shadow-sm flex items-center justify-center text-center leading-tight">
-                    ${s.name}
-                </button>
-            `).join('');
+        renderStudentDropdown() {
+            const dropdown = document.getElementById('student-dropdown');
+            dropdown.innerHTML = '<option value="" disabled selected>Deinen Namen auswählen...</option>' + 
+                this.state.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            dropdown.value = ""; // Reset value on every render of student select view
         },
 
         renderStudentTasks() {
