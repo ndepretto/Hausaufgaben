@@ -1,4 +1,4 @@
-<html class="light" lang="de"><head></head><body class="bg-background text-on-surface worksheet-pattern min-h-screen">```html
+<html class="light" lang="de"><head></head><body class="bg-background text-on-surface worksheet-pattern min-h-screen" onload="app.init()">```html
 
 
     <meta charset="utf-8"/>
@@ -83,9 +83,9 @@
 <div class="flex justify-between items-center w-full px-gutter max-w-[1100px] mx-auto h-20">
 <div class="flex items-center gap-6">
 <h1 class="text-2xl md:text-3xl font-black tracking-tight text-primary cursor-pointer select-none active:scale-95 transition-transform" onclick="app.setTab('Planer')">Döltschi Hausaufgaben</h1>
-<div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-surface-container rounded-full text-[10px] font-bold uppercase text-on-surface-variant" id="sync-status">
+<div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container rounded-full text-[10px] font-bold uppercase text-on-surface-variant" id="sync-status">
 <span class="material-symbols-outlined text-[14px]" id="sync-icon">sync</span>
-<span id="sync-status-text">Laden...</span>
+<span id="sync-status-text">Synchronisiert</span>
 </div>
 </div>
 <div class="flex items-center gap-4">
@@ -235,10 +235,10 @@
 <div class="bg-white border border-outline-variant p-6 rounded-2xl shadow-sm flex flex-col justify-center">
 <p class="text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mb-2">Sync-Modus</p>
 <div class="flex items-center gap-2" id="sync-indicator">
-<span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
-<span class="text-sm font-bold text-yellow-600">Lokal (Unveröffentlicht)</span>
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-sm font-bold text-green-600">Aktuell</span>
 </div>
-<p class="text-[9px] text-on-surface-variant mt-2 font-mono uppercase" id="last-sync-time">Letzter Sync: -</p>
+<p class="text-[9px] text-on-surface-variant mt-2 font-mono uppercase" id="last-sync-time">Letzte Veröffentlichung: -</p>
 </div>
 </div>
 <div class="bg-white border border-outline-variant rounded-2xl p-6 shadow-sm">
@@ -400,7 +400,7 @@
             _qrcode: null,
 
             async init() {
-                // Initialize default state first to ensure no null errors during boot
+                // Initialize default state
                 const saved = localStorage.getItem(this.STORAGE_KEY);
                 if (saved) {
                     try {
@@ -422,12 +422,12 @@
                 
                 if (dataParam) {
                     try {
-                        // Using a safer b64 decoding that handles UTF-8 characters if any
+                        // Safe b64 decoding for UTF-8
                         const decodedString = decodeURIComponent(escape(atob(dataParam)));
                         const decoded = JSON.parse(decodedString);
                         
                         if (decoded && decoded.tasks && decoded.students) {
-                            // Merge URL data into state
+                            // Merge URL data into state. Completions stay local.
                             this.state.tasks = decoded.tasks;
                             this.state.students = decoded.students;
                             this.state.lastPublished = decoded.lp;
@@ -435,12 +435,10 @@
                             this.state.hasUnpublishedChanges = false;
                             
                             this.persist();
-                            // Clean URL to avoid re-importing on refresh
-                            window.history.replaceState({}, document.title, window.location.pathname);
                         }
                     } catch (e) {
                         console.error("Fehler beim Dekodieren der URL-Daten", e);
-                        this.showError("Der geteilte Link ist beschädigt oder veraltet.");
+                        this.showError("Der geteilte Link konnte nicht geladen werden.");
                     }
                 }
 
@@ -460,6 +458,7 @@
 
             generateShareLink() {
                 try {
+                    // Minify data for URL: strip confirmed flags and local state
                     const payload = {
                         tasks: this.state.tasks,
                         students: this.state.students.map(s => ({ id: s.id, name: s.name })), 
@@ -480,17 +479,21 @@
                 
                 try {
                     btn.disabled = true;
-                    btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span> Vorbereiten...';
+                    btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span>...';
                     
-                    await new Promise(r => setTimeout(r, 800));
+                    await new Promise(r => setTimeout(r, 600));
                     
                     this.state.hasUnpublishedChanges = false;
                     this.state.lastPublished = new Date().toISOString();
                     this.persist();
                     
                     const shareLink = this.generateShareLink();
+                    
+                    // Update URL without refreshing
+                    window.history.replaceState({}, document.title, shareLink);
+                    
+                    // Update UI components
                     this.initQRCode(shareLink);
-
                     document.getElementById('share-link-input').value = shareLink;
                     document.getElementById('publish-modal').classList.remove('hidden');
 
@@ -502,12 +505,13 @@
                         btn.classList.replace('bg-primary', 'bg-success');
                         btn.innerHTML = originalContent;
                         this.renderAll();
-                    }, 3000);
+                    }, 2000);
 
                 } catch (error) {
                     console.error('Publishing failed:', error);
-                    btn.innerHTML = 'Fehler';
-                    setTimeout(() => { btn.disabled = false; btn.innerHTML = originalContent; }, 3000);
+                    this.showError("Veröffentlichung fehlgeschlagen.");
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
                 }
             },
 
@@ -516,9 +520,9 @@
                 input.select();
                 try {
                     document.execCommand('copy');
-                    alert('Link in Zwischenablage kopiert!');
+                    alert('Link kopiert!');
                 } catch(e) {
-                    alert('Fehler beim Kopieren. Bitte manuell kopieren.');
+                    alert('Fehler beim Kopieren.');
                 }
             },
 
@@ -529,23 +533,25 @@
                 const indicator = document.getElementById('sync-indicator');
                 const lastSyncEl = document.getElementById('last-sync-time');
                 
-                if (el) el.classList.remove('hidden');
+                if (!el) return;
 
-                if (this.state.isFromUrlSync && !this.state.isLehrer) {
-                    txt.textContent = 'Sync: Aktiv';
-                    icon.textContent = 'cloud_done';
-                    el.classList.add('bg-green-100', 'text-green-700');
+                if (this.state.hasUnpublishedChanges) {
+                    txt.textContent = 'Änderungen offen';
+                    icon.textContent = 'sync_problem';
+                    el.classList.add('bg-yellow-100', 'text-yellow-700');
+                    el.classList.remove('bg-surface-container', 'text-on-surface-variant');
                 } else {
-                    txt.textContent = status;
-                    icon.textContent = 'sync';
-                    el.classList.remove('bg-green-100', 'text-green-700');
+                    txt.textContent = 'Synchronisiert';
+                    icon.textContent = 'cloud_done';
+                    el.classList.remove('bg-yellow-100', 'text-yellow-700');
+                    el.classList.add('bg-surface-container', 'text-on-surface-variant');
                 }
 
                 if (indicator) {
                     if (this.state.hasUnpublishedChanges) {
-                        indicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span><span class="text-sm font-bold text-yellow-600">Änderungen bereit</span>`;
+                        indicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span><span class="text-sm font-bold text-yellow-600">Unveröffentlicht</span>`;
                     } else {
-                        indicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm font-bold text-green-600">Aktuell</span>`;
+                        indicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm font-bold text-green-600">Veröffentlicht</span>`;
                     }
                 }
 
@@ -594,7 +600,6 @@
                     }
                 } catch(e) {
                     console.error("QR Code Generation failed", e);
-                    qrContainer.innerHTML = "<p class='text-[10px] text-red-500'>QR Code konnte nicht erstellt werden.</p>";
                 }
                 
                 const printDateEl = document.getElementById('print-date');
@@ -797,7 +802,7 @@
             },
 
             resetSystem() {
-                if (confirm('Wirklich alle Daten zurücksetzen? Dies kann nicht rückgängig gemacht werden.')) {
+                if (confirm('Wirklich alle Daten zurücksetzen?')) {
                     localStorage.removeItem(this.STORAGE_KEY);
                     window.location.href = window.location.origin + window.location.pathname;
                 }
@@ -828,7 +833,7 @@
                 this.renderStudentManagement();
                 this.renderManageTasks();
                 this.updateSteps();
-                this.updateSyncUI(this.state.hasUnpublishedChanges ? 'Geändert' : 'Aktuell');
+                this.updateSyncUI();
             },
 
             updateSteps() {
@@ -1000,4 +1005,8 @@
                 if (quoteEl) quoteEl.textContent = `${globalPerc}%`;
                 if (progressEl) progressEl.style.width = `${globalPerc}%`;
                 if (confirmationsEl) confirmationsEl.textContent = `${confirmedCount}/${this.state.students.length}`;
-                if (pendingEl) pendingEl.textContent = `Noch ${this.state.students.</script></body></html>
+                if (pendingEl) {
+                    const pendingCount = this.state.students.length - confirmedCount;
+                    pendingEl.textContent = pendingCount === 0 ? "Alle Eltern haben bestätigt" : `${pendingCount} Bestätigung(en) ausstehend`;
+                }
+            },</script></body></html>
