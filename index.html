@@ -3,7 +3,7 @@
 <html class="light" lang="de"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>QR-Code scannen – Wer – Was – Bis wann</title>
+<title>Wer – Was – Bis wann</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <!-- QRCode.js Library -->
@@ -139,23 +139,22 @@
 </button>
 </div>
 </header>
-<main class="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center px-gutter py-12" id="qr-view">
+<!-- Main Container for all Views -->
+<div id="main-content">
+<!-- QR View Section -->
+<main class="min-h-[calc(100vh-64px)] hidden flex-col items-center justify-center px-gutter py-12" id="qr-view">
 <div class="max-w-[600px] w-full text-center space-y-12">
-<!-- Header Section -->
 <div class="space-y-4">
 <h2 class="font-h1 text-h1 md:text-h1 text-on-surface tracking-tight">QR-Code scannen</h2>
 <p class="font-body-lg text-body-lg text-on-surface-variant max-w-md mx-auto">
-                Scanne diesen Code mit deinem Smartphone, um die aktuelle Aufgabenliste direkt zu öffnen.
-            </p>
+                    Scanne diesen Code mit deinem Smartphone, um die aktuelle Aufgabenliste direkt zu öffnen.
+                </p>
 </div>
-<!-- Central QR Card -->
 <div class="relative group qr-card-container">
-<!-- Background decorative element -->
 <div class="absolute -inset-4 bg-primary/5 rounded-[4rem] blur-3xl group-hover:bg-primary/10 transition-all duration-500 -z-10"></div>
 <div class="qr-card bg-surface-container-lowest rounded-lg border border-outline-variant p-8 md:p-12 shadow-sm transition-all duration-300 hover:shadow-md max-w-sm mx-auto">
 <div class="flex flex-col items-center gap-8">
 <span class="font-label-caps text-label-caps text-primary tracking-[0.2em]">DOELTSCHI PLANER</span>
-<!-- QR Code Area -->
 <div class="qr-gradient-border rounded-lg p-2 bg-white aspect-square w-full max-w-[280px] flex items-center justify-center overflow-hidden">
 <div class="w-full h-full flex items-center justify-center bg-white" id="qrcode"></div>
 </div>
@@ -166,18 +165,16 @@
 </div>
 </div>
 </div>
-<!-- Action Buttons -->
 <div class="action-buttons flex flex-col sm:flex-row items-center justify-center gap-4">
 <button class="w-full sm:w-auto px-8 py-4 bg-primary text-on-primary rounded-full font-h2 text-body-lg hover:bg-primary-container transition-all active:scale-[0.98] duration-200 shadow-sm flex items-center justify-center gap-3" onclick="window.print()">
 <span class="material-symbols-outlined" data-icon="print">print</span>
-                QR-Code drucken
-            </button>
+                    QR-Code drucken
+                </button>
 <button class="w-full sm:w-auto px-8 py-4 text-primary font-h2 text-body-lg hover:bg-surface-container-high rounded-full transition-all flex items-center justify-center gap-3" onclick="goBackToPlanner()">
 <span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
-                Zurück zum Planer
-            </button>
+                    Zurück zum Planer
+                </button>
 </div>
-<!-- Confirmation Style Box -->
 <div class="info-box mt-8 p-6 bg-primary/10 border-2 border-dashed border-primary/30 rounded-lg max-w-sm mx-auto text-left">
 <div class="flex items-start gap-4">
 <div class="bg-primary text-on-primary p-1 rounded-full shrink-0">
@@ -186,19 +183,56 @@
 <div>
 <span class="font-label-caps text-label-caps text-primary block mb-1">Sichere Verbindung</span>
 <p class="text-sm text-on-surface-variant leading-relaxed">
-                        Dieser Code ist verschlüsselt und nur für deine Klasse zugänglich. Keine Registrierung für Schüler erforderlich.
-                    </p>
+                            Dieser Code ist verschlüsselt und nur für deine Klasse zugänglich. Keine Registrierung für Schüler erforderlich.
+                        </p>
 </div>
 </div>
 </div>
 </div>
 </main>
-<!-- Placeholder for Main Planner View (hidden by default in this standalone page, but logic refers to it) -->
-<div class="hidden" id="planner-view">
-<!-- The main application content would reside here in the full app structure -->
+<!-- Planner View Section (Teacher Mode) -->
+<main class="min-h-[calc(100vh-64px)] hidden flex-col items-center px-gutter py-8" id="planner-view">
+<div class="max-w-[800px] w-full space-y-8">
+<div class="flex justify-between items-center">
+<h2 class="font-h1 text-h1 text-on-surface">Aufgaben-Planer</h2>
+<button class="flex items-center gap-2 px-4 py-2 bg-secondary text-on-secondary rounded-full hover:bg-secondary-container transition-all" onclick="navigateTo('qr')">
+<span class="material-symbols-outlined text-sm">qr_code_2</span>
+                    Teilen
+                </button>
+</div>
+<div class="bg-surface-container p-6 rounded-lg border border-outline-variant">
+<p class="text-on-surface-variant mb-6">Willkommen im Planer. Hier kannst du Aufgaben verwalten.</p>
+<div class="space-y-4" id="teacher-task-list">
+<!-- Task items would be rendered here -->
+<div class="p-4 bg-surface rounded-md border border-outline-variant flex justify-between items-center">
+<div>
+<p class="font-bold">Hausaufgaben Mathematik</p>
+<p class="text-sm text-on-surface-variant">Bis: 24.05.2024</p>
+</div>
+<span class="px-3 py-1 bg-primary-fixed text-on-primary-fixed rounded-full text-xs">Aktiv</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Student View Section -->
+<main class="min-h-[calc(100vh-64px)] hidden flex-col items-center px-gutter py-8" id="student-view">
+<div class="max-w-[600px] w-full space-y-8">
+<div class="text-center space-y-2">
+<h2 class="font-h1 text-h1 text-on-surface">Aktuelle Aufgaben</h2>
+<p class="text-on-surface-variant" id="student-view-date">Stand: --.--.----</p>
+</div>
+<div class="space-y-4" id="student-task-list">
+<!-- Task list for students -->
+</div>
+<div class="p-4 bg-surface-container-low border border-outline-variant rounded-lg text-center text-sm text-on-surface-variant">
+                Diese Liste wird automatisch aktualisiert.
+            </div>
+</div>
+</main>
 </div>
 <!-- Footer -->
-<footer class="bg-surface border-t border-outline-variant">
+<footer class="bg-surface border-t border-outline-variant mt-auto">
 <div class="w-full max-w-[1100px] mx-auto py-8 px-gutter flex flex-col md:flex-row justify-between items-center gap-4">
 <span class="font-label-caps text-label-caps font-bold text-on-surface-variant">© 2024 Wer – Was – Bis wann</span>
 <div class="flex gap-6">
@@ -209,53 +243,149 @@
 </div>
 </footer>
 <script>
-    function goBackToPlanner() {
-        // Logic to return to the planner. 
-        // In a single-page app context, we toggle visibility.
-        const qrView = document.getElementById('qr-view');
-        const plannerView = document.getElementById('planner-view');
+    // State management
+    const state = {
+        tasks: [
+            { id: 1, title: "Hausaufgaben Mathematik", dueDate: "2024-05-24", student: "Klasse 5a", status: "open" },
+            { id: 2, title: "Vortrag Geschichte", dueDate: "2024-05-26", student: "Max", status: "open" }
+        ],
+        students: ["Klasse 5a", "Max", "Julia", "Lukas"]
+    };
+
+    function encodeData(data) {
+        try {
+            return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+        } catch (e) {
+            console.error("Encoding failed", e);
+            return "";
+        }
+    }
+
+    function decodeData(encoded) {
+        try {
+            if (!encoded) return null;
+            return JSON.parse(decodeURIComponent(escape(atob(encoded))));
+        } catch (e) {
+            console.error("Decoding failed", e);
+            return null;
+        }
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return "-";
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('de-CH'); // Switzerland format: dd.mm.yyyy
+    }
+
+    function navigateTo(view) {
+        const url = new URL(window.location);
+        url.searchParams.set('view', view);
         
-        if (plannerView && plannerView.innerHTML.trim() !== "") {
-            qrView.classList.add('hidden');
-            plannerView.classList.remove('hidden');
+        // If going to QR view, we must include the current state
+        if (view === 'qr') {
+            const dataHash = encodeData({ tasks: state.tasks, students: state.students });
+            url.searchParams.set('d', dataHash);
+        }
+        
+        window.history.pushState({}, '', url);
+        initApp();
+    }
+
+    function goBackToPlanner() {
+        // Explicitly return to teacher dashboard
+        const url = new URL(window.location);
+        url.searchParams.delete('view');
+        url.searchParams.delete('d');
+        window.history.pushState({}, '', url);
+        initApp();
+    }
+
+    function renderStudentView(data) {
+        const container = document.getElementById('student-task-list');
+        const dateLabel = document.getElementById('student-view-date');
+        
+        if (!container) return;
+        container.innerHTML = '';
+        
+        const displayData = data || state;
+        dateLabel.textContent = `Stand: ${formatDate(new Date())}`;
+
+        if (displayData.tasks && displayData.tasks.length > 0) {
+            displayData.tasks.forEach(task => {
+                const div = document.createElement('div');
+                div.className = "p-6 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm flex flex-col gap-2";
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-h2 text-primary">${task.title || 'Kein Titel'}</h3>
+                        <span class="font-label-caps text-[10px] px-2 py-1 bg-surface-container-high rounded text-on-surface-variant">OFFEN</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-sm text-on-surface-variant">
+                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">person</span> ${task.student || 'Nicht zugewiesen'}</span>
+                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">calendar_today</span> ${formatDate(task.dueDate)}</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
         } else {
-            // Fallback: If plannerView is empty or not present in the DOM (e.g. separate URL), go back in history
-            window.history.back();
+            container.innerHTML = '<div class="p-8 text-center text-on-surface-variant">Keine aktuellen Aufgaben gefunden.</div>';
+        }
+    }
+
+    function generateQRCode() {
+        const qrcodeContainer = document.getElementById("qrcode");
+        const displayUrl = document.getElementById('display-url');
+        if (!qrcodeContainer) return;
+
+        // Create student view URL
+        const currentUrl = new URL(window.location.origin + window.location.pathname);
+        currentUrl.searchParams.set('view', 'student');
+        currentUrl.searchParams.set('d', encodeData({ tasks: state.tasks, students: state.students }));
+        
+        const shareUrl = currentUrl.toString();
+        displayUrl.textContent = currentUrl.hostname + "/view/student";
+
+        qrcodeContainer.innerHTML = "";
+        new QRCode(qrcodeContainer, {
+            text: shareUrl,
+            width: 256,
+            height: 256,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+    }
+
+    function initApp() {
+        const params = new URLSearchParams(window.location.search);
+        const view = params.get('view');
+        const encodedData = params.get('d');
+        
+        // Hide all
+        document.getElementById('qr-view').classList.add('hidden');
+        document.getElementById('planner-view').classList.add('hidden');
+        document.getElementById('student-view').classList.add('hidden');
+        document.getElementById('qr-view').classList.remove('flex');
+
+        if (view === 'student') {
+            const data = decodeData(encodedData);
+            document.getElementById('student-view').classList.remove('hidden');
+            document.getElementById('student-view').classList.add('flex');
+            renderStudentView(data);
+        } else if (view === 'qr') {
+            document.getElementById('qr-view').classList.remove('hidden');
+            document.getElementById('qr-view').classList.add('flex');
+            generateQRCode();
+        } else {
+            // Default: Teacher Planner
+            document.getElementById('planner-view').classList.remove('hidden');
+            document.getElementById('planner-view').classList.add('flex');
         }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        // 1. Handle URL Generation for Student View
-        // We ensure the URL points to a 'view' mode or contains the necessary data hash
-        let shareUrl = window.location.href;
-        
-        // If we were on the teacher's planner page, we might want to append a 'view=student' param 
-        // or ensure the URL being shared is specifically the student-facing one.
-        try {
-            const urlObj = new URL(shareUrl);
-            // Example transformation: ensure it's pointing to the live shared state
-            // If the app uses hash-based data, it's already in the URL
-            displayUrl.textContent = urlObj.hostname + (urlObj.pathname.length > 1 ? urlObj.pathname : '/share') + urlObj.search;
-        } catch(e) {
-            document.getElementById('display-url').textContent = "doeltschi.app/view/student";
-        }
+        initApp();
 
-        // 2. High-Contrast QR Code Generation
-        const qrcodeContainer = document.getElementById("qrcode");
-        if (qrcodeContainer) {
-            // Clear container first to avoid duplicates
-            qrcodeContainer.innerHTML = "";
-            new QRCode(qrcodeContainer, {
-                text: shareUrl,
-                width: 256,
-                height: 256,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H // High error correction for reliable scanning
-            });
-        }
-
-        // 3. Card Micro-interactions
+        // 3D Tilt effect for QR card
         const qrCardContainer = document.querySelector('.qr-card-container');
         const qrCard = document.querySelector('.qr-card');
         
@@ -266,9 +396,8 @@
                 const y = e.clientY - rect.top;
                 const centerX = rect.width / 2;
                 const centerY = rect.height / 2;
-                const rotateX = (y - centerY) / 30; // Reduced sensitivity
-                const rotateY = (centerX - x) / 30;
-                
+                const rotateX = (y - centerY) / 35;
+                const rotateY = (centerX - x) / 35;
                 qrCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
             });
 
@@ -277,5 +406,8 @@
             });
         }
     });
+
+    // Handle browser back button
+    window.addEventListener('popstate', initApp);
 </script>
 </body></html>
