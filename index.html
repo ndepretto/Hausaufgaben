@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+<html class="light" lang="de"><head></head><body class="bg-background text-on-surface worksheet-pattern min-h-screen selection:bg-blue-100">```html
 
-<html class="light" lang="de"><head>
-<meta charset="utf-8"/>
+
+
+    <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>doeltschi | Wer – Was – Bis wann</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -108,8 +109,6 @@
             },
         }
     </script>
-</head>
-<body class="bg-background text-on-surface worksheet-pattern min-h-screen selection:bg-blue-100">
 <div class="flex flex-col min-h-screen" id="app">
 <!-- Top App Bar -->
 <header class="bg-white/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50 no-print">
@@ -413,7 +412,6 @@
             { id: 't2', studentId: 's1', subjectCode: 'MA', description: 'Einmaleins-Tabelle vervollständigen.', deadline: '16.04.2024' },
             { id: 't3', studentId: 's2', subjectCode: 'DE', description: 'Diktat vorbereiten: "Der Frühling kommt".', deadline: '15.04.2024' }
         ],
-        // Structure: { studentId: [taskId1, taskId2] }
         completedTasks: {
             's1': ['t2'],
             's2': ['t3']
@@ -432,7 +430,7 @@
                     this.state = { 
                         ...INITIAL_STATE, 
                         ...parsed, 
-                        isLehrer: false, // Reset view state on reload
+                        isLehrer: false,
                         currentTab: 'Planer' 
                     };
                 } else {
@@ -612,7 +610,7 @@
             if (!container) return;
             const filterId = this.state.selectedStudentId;
             const currentStudent = this.state.students.find(s => s.id === filterId);
-            const isLocked = currentStudent?.confirmed || false;
+            const isConfirmed = currentStudent?.confirmed || false;
             
             let displayTasks = [];
             if (filterId === 'all') {
@@ -628,10 +626,9 @@
                     const student = t.studentId === 'all' ? { name: 'Ganze Klasse' } : this.state.students.find(s => s.id === t.studentId);
                     const done = this.isTaskDone(t.id, filterId);
                     const config = SUBJECT_CONFIG[t.subjectCode] || { name: 'Divers', color: '#64748b' };
-                    const isInteractionDisabled = filterId === 'all' || isLocked;
-
+                    
                     return `
-                        <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-60 grayscale' : 'hover:border-primary/40 hover:shadow-md'} ${isLocked ? 'cursor-not-allowed' : ''}">
+                        <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-60 grayscale' : 'hover:border-primary/40 hover:shadow-md'} ${isConfirmed ? 'cursor-not-allowed' : ''}">
                             <div class="w-2.5" style="background-color: ${config.color}"></div>
                             <div class="flex-1 p-8 grid grid-cols-1 md:grid-cols-4 gap-8 items-center">
                                 <div>
@@ -648,14 +645,14 @@
                                     <p class="text-base font-black text-on-surface">${t.deadline}</p>
                                     
                                     <div class="mt-6 flex items-center justify-end gap-3 group ml-auto">
-                                        ${isLocked ? `
+                                        ${isConfirmed ? `
                                             <div class="flex items-center gap-2 px-3 py-1 bg-red-50 text-red-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-red-100">
                                                 <span class="material-symbols-outlined text-[14px]">lock</span> GESPERRT
                                             </div>
                                         ` : ''}
                                         
                                         ${filterId !== 'all' ? `
-                                            <button onclick="app.toggleTaskStatus('${t.id}')" ${isLocked ? 'disabled' : ''} class="flex items-center gap-2 ${isLocked ? 'opacity-50' : 'hover:scale-110 transition-transform'}">
+                                            <button onclick="app.toggleTaskStatus('${t.id}')" ${isConfirmed ? 'disabled' : ''} class="flex items-center gap-2 ${isConfirmed ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110 transition-transform'}">
                                                 <span class="material-symbols-outlined text-3xl ${done ? 'text-primary fill-1' : 'text-outline-variant'}">${done ? 'check_circle' : 'radio_button_unchecked'}</span>
                                                 <span class="text-[11px] font-black uppercase tracking-widest ${done ? 'text-primary' : 'text-on-surface-variant'}">${done ? 'Erledigt' : 'Offen'}</span>
                                             </button>
@@ -681,9 +678,19 @@
                         </div>
                         <h3 class="text-3xl font-black text-on-surface mb-4">Bestätigung der Eltern</h3>
                         <p class="text-on-surface-variant mb-10 max-w-md mx-auto text-base font-medium leading-relaxed">Ich bestätige hiermit, dass ich die oben aufgeführten Hausaufgaben gesehen habe.</p>
-                        <button onclick="app.confirmStudent('${currentStudent.id}')" class="px-12 py-5 ${currentStudent.confirmed ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-surface-container hover:bg-outline-variant text-on-surface'} rounded-full font-black uppercase tracking-[0.15em] transition-all transform hover:scale-[1.02]">
-                            ${currentStudent.confirmed ? 'Gesehen ✓' : 'Bestätigen'}
-                        </button>
+                        
+                        <div class="flex flex-col items-center gap-4">
+                            <button onclick="app.confirmStudent('${currentStudent.id}')" ${currentStudent.confirmed ? 'disabled' : ''} class="px-12 py-5 ${currentStudent.confirmed ? 'bg-primary text-white shadow-lg shadow-primary/30 cursor-not-allowed' : 'bg-surface-container hover:bg-outline-variant text-on-surface'} rounded-full font-black uppercase tracking-[0.15em] transition-all transform ${currentStudent.confirmed ? '' : 'hover:scale-[1.02]'}">
+                                ${currentStudent.confirmed ? 'Gesehen ✓' : 'Bestätigen'}
+                            </button>
+                            
+                            ${this.state.isLehrer && currentStudent.confirmed ? `
+                                <button onclick="app.resetConfirmation('${currentStudent.id}')" class="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-widest hover:underline">
+                                    <span class="material-symbols-outlined text-[14px]">history</span> Bestätigung zurücksetzen
+                                </button>
+                            ` : ''}
+                        </div>
+                        
                         ${currentStudent.confirmed ? `<div class="flex items-center gap-2 mt-6 text-primary"><span class="material-symbols-outlined text-sm">schedule</span><p class="text-[10px] font-bold uppercase tracking-widest">Am ${currentStudent.lastConfirmed} bestätigt</p></div>` : ''}
                     </div>
                 `;
@@ -721,9 +728,14 @@
                 const progress = taskTotal > 0 ? Math.round((doneCount / taskTotal) * 100) : 0;
                 
                 const parentalStatus = s.confirmed 
-                    ? `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest">
-                        <span class="material-symbols-outlined text-[14px] fill-1">verified</span> GESEHEN <span class="opacity-60 text-[9px] font-bold ml-1">${s.lastConfirmed}</span>
-                       </span>`
+                    ? `<div class="flex items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest">
+                            <span class="material-symbols-outlined text-[14px] fill-1">verified</span> GESEHEN <span class="opacity-60 text-[9px] font-bold ml-1">${s.lastConfirmed}</span>
+                        </span>
+                        <button onclick="app.resetConfirmation('${s.id}')" title="Bestätigung zurücksetzen" class="w-7 h-7 flex items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant hover:text-red-600 transition-colors">
+                            <span class="material-symbols-outlined text-[16px]">refresh</span>
+                        </button>
+                       </div>`
                     : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant/40 text-[10px] font-black uppercase tracking-widest">
                         <span class="material-symbols-outlined text-[14px]">hourglass_empty</span> –
                        </span>`;
@@ -874,7 +886,7 @@
             const studentId = this.state.selectedStudentId;
             if (studentId === 'all') return;
             
-            // Safety check: is parent lock on?
+            // Lock logic: cannot toggle if confirmed
             const currentStudent = this.state.students.find(s => s.id === studentId);
             if (currentStudent?.confirmed) return;
 
@@ -897,21 +909,31 @@
 
         confirmStudent(id) {
             const s = this.state.students.find(st => st.id === id);
-            if (s) { 
-                s.confirmed = !s.confirmed; 
-                if (s.confirmed) {
-                    const now = new Date();
-                    const day = String(now.getDate()).padStart(2, '0');
-                    const month = String(now.getMonth() + 1).padStart(2, '0');
-                    const year = now.getFullYear();
-                    s.lastConfirmed = `${day}.${month}.${year}`;
-                } else {
-                    s.lastConfirmed = '-';
-                }
+            if (s && !s.confirmed) { 
+                s.confirmed = true; 
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                s.lastConfirmed = `${day}.${month}.${year}`;
+                
                 this.persist(); 
                 this.renderTasks(); 
                 this.renderDashboard(); 
                 this.updateInstructions(); 
+            }
+        },
+
+        resetConfirmation(id) {
+            // Teacher-only reset logic
+            if (!this.state.isLehrer) return;
+            
+            const s = this.state.students.find(st => st.id === id);
+            if (s && confirm(`Bestätigung für ${s.name} wirklich zurücksetzen? Die Sperre wird aufgehoben.`)) {
+                s.confirmed = false;
+                s.lastConfirmed = '-';
+                this.persist();
+                this.renderAll();
             }
         },
 
@@ -944,11 +966,4 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state));
             const dl = document.createElement('a'); 
             dl.setAttribute("href", dataStr); 
-            dl.setAttribute("download", `doeltschi_export.json`); 
-            dl.click();
-        }
-    };
-
-    document.addEventListener('DOMContentLoaded', () => app.init());
-</script>
-</body></html>
+            dl.setAttribute("download", `doeltschi_</script></body></html>
