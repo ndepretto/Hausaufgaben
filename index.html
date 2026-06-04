@@ -1,7 +1,6 @@
 <html class="light" lang="de"><head></head><body class="bg-background text-on-surface worksheet-pattern min-h-screen selection:bg-blue-100">```html
 
 
-
     <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>doeltschi | Wer – Was – Bis wann</title>
@@ -36,7 +35,6 @@
             .worksheet-pattern { background-image: none !important; }
         }
 
-        #app { display: block; }
         body { font-family: 'Inter', sans-serif; }
     </style>
 <script id="tailwind-config">
@@ -122,9 +120,9 @@
 </div>
 <div class="flex items-center gap-4">
 <nav class="hidden md:flex gap-2">
-<button class="px-5 py-2.5 rounded-full text-sm font-bold bg-primary text-on-primary shadow-lg shadow-primary/20 transition-all" id="nav-Planer" onclick="app.setTab('Planer')">Schüler-Ansicht</button>
-<button class="px-5 py-2.5 rounded-full text-sm font-bold text-on-surface-variant hover:bg-surface-container transition-all" id="nav-Dashboard" onclick="app.handleLehrerNavClick()">Lehrer-Modus</button>
-<button class="px-5 py-2.5 rounded-full text-sm font-bold text-on-surface-variant hover:bg-surface-container transition-all" id="nav-Anleitung" onclick="app.setTab('Anleitung')">Anleitung</button>
+<button class="px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Planer" onclick="app.setTab('Planer')">Schüler-Ansicht</button>
+<button class="px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Dashboard" onclick="app.handleLehrerNavClick()">Lehrer-Modus</button>
+<button class="px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Anleitung" onclick="app.setTab('Anleitung')">Anleitung</button>
 </nav>
 <button class="hidden flex items-center gap-2 px-5 py-2.5 bg-surface-container hover:bg-outline-variant text-on-surface rounded-full transition-colors text-sm font-bold uppercase shadow-sm" id="lehrer-access-btn" onclick="app.logoutLehrer()">
 <span class="material-symbols-outlined text-[18px]">lock</span>
@@ -143,11 +141,25 @@
 </div>
 <h3 class="text-xl font-bold">Lehrer-Bereich</h3>
 </div>
-<p class="text-on-surface-variant mb-6 text-sm">Bitte geben Sie das Passwort ein, um den Lehrer-Modus freizuschalten.</p>
+<p class="text-on-surface-variant mb-6 text-sm">Bitte geben Sie das Passwort ein (lehrer123), um den Lehrer-Modus freizuschalten.</p>
 <input class="w-full bg-surface-container border border-outline-variant rounded-xl p-3 mb-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" id="lehrer-password" onkeyup="if(event.key === 'Enter') app.checkLehrerPassword()" placeholder="Passwort" type="password"/>
 <div class="flex justify-end gap-3">
 <button class="px-4 py-2 text-on-surface-variant font-bold text-sm uppercase hover:text-on-surface transition-colors" onclick="app.closeLehrerModal()">Abbrechen</button>
 <button class="px-6 py-2 bg-primary text-on-primary rounded-full font-bold text-sm uppercase shadow-md hover:bg-primary/90 transition-all" onclick="app.checkLehrerPassword()">Anmelden</button>
+</div>
+</div>
+</div>
+<!-- Identity Confirmation Modal -->
+<div class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm no-print" id="identity-modal">
+<div class="bg-surface rounded-2xl p-8 max-w-md w-full shadow-2xl border border-outline-variant mx-4 text-center">
+<div class="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
+<span class="material-symbols-outlined text-4xl">person_check</span>
+</div>
+<h3 class="text-2xl font-black text-on-surface mb-2">Identität bestätigen</h3>
+<p class="text-on-surface-variant mb-8">Bist du wirklich <span class="font-bold text-on-surface" id="confirm-name-span">...</span>?</p>
+<div class="flex gap-4">
+<button class="flex-1 px-4 py-4 bg-surface-container rounded-xl font-bold text-sm uppercase hover:bg-outline-variant transition-colors" onclick="app.cancelIdentity()">Nein</button>
+<button class="flex-1 px-4 py-4 bg-primary text-on-primary rounded-xl font-bold text-sm uppercase shadow-lg shadow-primary/20 transition-all" onclick="app.confirmIdentity()">Ja, das bin ich</button>
 </div>
 </div>
 </div>
@@ -156,7 +168,7 @@
 <!-- 4-Step Info Cards -->
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 no-print">
 <div class="bg-white p-6 rounded-2xl border border-outline-variant shadow-sm flex flex-col items-center text-center transition-all" id="step-1">
-<div class="w-10 h-10 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center mb-3">1</div>
+<div class="w-10 h-10 rounded-full bg-surface-container text-on-surface-variant/40 font-bold flex items-center justify-center mb-3">1</div>
 <p class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant/60">Name wählen</p>
 </div>
 <div class="bg-white p-6 rounded-2xl border border-outline-variant shadow-sm flex flex-col items-center text-center transition-all opacity-50" id="step-2">
@@ -180,7 +192,7 @@
                     </label>
 <div class="relative">
 <select class="w-full bg-white border border-outline-variant rounded-xl font-semibold py-4 px-5 focus:ring-2 focus:ring-primary focus:border-transparent outline-none appearance-none shadow-sm pr-12 cursor-pointer" id="student-filter" onchange="app.handleFilterChange()">
-<option selected="" value="all">Alle Schüler / Ganze Klasse</option>
+<option value="all">Alle Schüler / Ganze Klasse</option>
 </select>
 <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">
 <span class="material-symbols-outlined">expand_more</span>
@@ -353,7 +365,7 @@
 <span class="material-symbols-outlined text-3xl">school</span>
 </div>
 <h3 class="text-xl font-bold mb-3 text-on-surface">Schüler &amp; Eltern</h3>
-<p class="text-on-surface-variant text-sm leading-relaxed">Wählen Sie Ihren Namen aus dem Menü. Erledigen Sie Aufgaben und haken Sie diese ab. Am Ende der Woche können die Eltern die Liste direkt auf dem Gerät bestätigen.</p>
+<p class="text-on-surface-variant text-sm leading-relaxed">Wählen Sie Ihren Namen aus dem Menü. Bestätigen Sie Ihre Identität. Erledigen Sie Aufgaben und haken Sie diese ab. Am Ende der Woche können die Eltern die Liste direkt auf dem Gerät bestätigen. Sobald die Eltern bestätigt haben, wird die Liste gesperrt.</p>
 </div>
 <div class="bg-white border border-outline-variant p-8 rounded-2xl shadow-sm">
 <div class="w-12 h-12 bg-secondary/10 text-secondary rounded-xl flex items-center justify-center mb-6">
@@ -401,6 +413,7 @@
         isLehrer: false,
         currentTab: 'Planer',
         selectedStudentId: 'all',
+        verifiedStudentId: null, // Track if identity was confirmed for session
         students: [
             { id: 's1', name: 'Lukas Müller', confirmed: false, lastConfirmed: '-' },
             { id: 's2', name: 'Sophie Fischer', confirmed: true, lastConfirmed: '12.03.2024' },
@@ -420,7 +433,7 @@
 
     const app = {
         state: null,
-        STORAGE_KEY: 'doeltschi_v21_final',
+        STORAGE_KEY: 'doeltschi_v21_repair',
 
         init() {
             try {
@@ -431,7 +444,8 @@
                         ...INITIAL_STATE, 
                         ...parsed, 
                         isLehrer: false,
-                        currentTab: 'Planer' 
+                        currentTab: 'Planer',
+                        verifiedStudentId: null // Reset verification on page load for safety
                     };
                 } else {
                     this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
@@ -445,7 +459,10 @@
 
         persist() {
             try {
-                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
+                const dataToSave = { ...this.state };
+                delete dataToSave.isLehrer; // Don't persist session state
+                delete dataToSave.verifiedStudentId;
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(dataToSave));
             } catch (e) { console.error("Storage Error", e); }
         },
 
@@ -465,12 +482,9 @@
         },
 
         openLehrerModal() {
-            const modal = document.getElementById('lehrer-modal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                document.getElementById('lehrer-password').value = '';
-                document.getElementById('lehrer-password').focus();
-            }
+            document.getElementById('lehrer-modal').classList.remove('hidden');
+            document.getElementById('lehrer-password').value = '';
+            document.getElementById('lehrer-password').focus();
         },
 
         closeLehrerModal() {
@@ -502,9 +516,32 @@
         },
 
         handleFilterChange() {
-            this.state.selectedStudentId = document.getElementById('student-filter').value;
-            this.renderTasks();
-            this.updateInstructions();
+            const newVal = document.getElementById('student-filter').value;
+            
+            // Identity Protection: If a specific student is selected, they must confirm identity
+            if (newVal !== 'all' && newVal !== this.state.verifiedStudentId) {
+                const student = this.state.students.find(s => s.id === newVal);
+                document.getElementById('confirm-name-span').textContent = student.name;
+                document.getElementById('identity-modal').classList.remove('hidden');
+                this.pendingStudentId = newVal;
+            } else {
+                this.state.selectedStudentId = newVal;
+                this.renderAll();
+            }
+        },
+
+        confirmIdentity() {
+            this.state.verifiedStudentId = this.pendingStudentId;
+            this.state.selectedStudentId = this.pendingStudentId;
+            document.getElementById('identity-modal').classList.add('hidden');
+            this.renderAll();
+        },
+
+        cancelIdentity() {
+            document.getElementById('identity-modal').classList.add('hidden');
+            // Revert dropdown to previous state or 'all'
+            document.getElementById('student-filter').value = this.state.selectedStudentId;
+            this.renderAll();
         },
 
         renderAll() {
@@ -513,11 +550,11 @@
             const guide = document.getElementById('content-guide');
             const lehrerBtn = document.getElementById('lehrer-access-btn');
 
-            if (planner) planner.classList.toggle('hidden', this.state.currentTab !== 'Planer');
-            if (dashboard) dashboard.classList.toggle('hidden', this.state.currentTab !== 'Dashboard');
-            if (guide) guide.classList.toggle('hidden', this.state.currentTab !== 'Anleitung');
+            planner.classList.toggle('hidden', this.state.currentTab !== 'Planer');
+            dashboard.classList.toggle('hidden', this.state.currentTab !== 'Dashboard');
+            guide.classList.toggle('hidden', this.state.currentTab !== 'Anleitung');
 
-            if (lehrerBtn) lehrerBtn.classList.toggle('hidden', !this.state.isLehrer);
+            lehrerBtn.classList.toggle('hidden', !this.state.isLehrer);
 
             this.updateNavStyles();
             this.renderFilters();
@@ -536,28 +573,42 @@
             
             let anyDone = false;
             let allDone = false;
-            let confirmed = false;
 
             if (studentSelected) {
-                const sObj = this.state.students.find(s => s.id === this.state.selectedStudentId);
                 const filteredTasks = this.state.tasks.filter(t => t.studentId === this.state.selectedStudentId || t.studentId === 'all');
                 const completedList = this.state.completedTasks[this.state.selectedStudentId] || [];
                 const doneTasks = filteredTasks.filter(t => completedList.includes(t.id));
                 anyDone = doneTasks.length > 0;
                 allDone = filteredTasks.length > 0 && doneTasks.length === filteredTasks.length;
-                confirmed = sObj?.confirmed || false;
             }
             
-            steps.forEach(el => el && el.classList.add('opacity-50'));
-            if (!studentSelected) steps[0].classList.remove('opacity-50');
-            else if (!anyDone) steps[1].classList.remove('opacity-50');
-            else if (!allDone) steps[2].classList.remove('opacity-50');
-            else steps[3].classList.remove('opacity-50');
+            steps.forEach(el => {
+                el.classList.add('opacity-50');
+                el.querySelector('div').classList.replace('bg-primary/10', 'bg-surface-container');
+                el.querySelector('div').classList.replace('text-primary', 'text-on-surface-variant/40');
+            });
+
+            if (!studentSelected) {
+                steps[0].classList.remove('opacity-50');
+                steps[0].querySelector('div').classList.replace('bg-surface-container', 'bg-primary/10');
+                steps[0].querySelector('div').classList.replace('text-on-surface-variant/40', 'text-primary');
+            } else if (!anyDone) {
+                steps[1].classList.remove('opacity-50');
+                steps[1].querySelector('div').classList.replace('bg-surface-container', 'bg-primary/10');
+                steps[1].querySelector('div').classList.replace('text-on-surface-variant/40', 'text-primary');
+            } else if (!allDone) {
+                steps[2].classList.remove('opacity-50');
+                steps[2].querySelector('div').classList.replace('bg-surface-container', 'bg-primary/10');
+                steps[2].querySelector('div').classList.replace('text-on-surface-variant/40', 'text-primary');
+            } else {
+                steps[3].classList.remove('opacity-50');
+                steps[3].querySelector('div').classList.replace('bg-surface-container', 'bg-primary/10');
+                steps[3].querySelector('div').classList.replace('text-on-surface-variant/40', 'text-primary');
+            }
         },
 
         renderLegend() {
             const lp = document.getElementById('color-legend-planner');
-            if (!lp) return;
             lp.innerHTML = Object.keys(SUBJECT_CONFIG).map(code => {
                 const cfg = SUBJECT_CONFIG[code];
                 return `
@@ -572,9 +623,9 @@
         updateNavStyles() {
             const tabs = ['Planer', 'Dashboard', 'Anleitung'];
             tabs.forEach(t => {
-                const desktop = document.getElementById(`nav-${t}`);
-                if (desktop) {
-                    desktop.className = this.state.currentTab === t 
+                const el = document.getElementById(`nav-${t}`);
+                if (el) {
+                    el.className = this.state.currentTab === t 
                         ? "px-5 py-2.5 rounded-full text-sm font-bold bg-primary text-on-primary shadow-lg shadow-primary/20 transition-all" 
                         : "px-5 py-2.5 rounded-full text-sm font-bold text-on-surface-variant hover:bg-surface-container transition-all";
                 }
@@ -584,7 +635,6 @@
         renderFilters() {
             const select = document.getElementById('student-filter');
             const taskSelect = document.getElementById('task-student');
-            if (!select) return;
             
             let html = `<option value="all" ${this.state.selectedStudentId === 'all' ? 'selected' : ''}>Alle Schüler / Ganze Klasse</option>`;
             let taskHtml = `<option value="all">Ganze Klasse</option>`;
@@ -607,7 +657,6 @@
 
         renderTasks() {
             const container = document.getElementById('task-container');
-            if (!container) return;
             const filterId = this.state.selectedStudentId;
             const currentStudent = this.state.students.find(s => s.id === filterId);
             const isConfirmed = currentStudent?.confirmed || false;
@@ -628,7 +677,7 @@
                     const config = SUBJECT_CONFIG[t.subjectCode] || { name: 'Divers', color: '#64748b' };
                     
                     return `
-                        <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-60 grayscale' : 'hover:border-primary/40 hover:shadow-md'} ${isConfirmed ? 'cursor-not-allowed' : ''}">
+                        <div class="bg-white border border-outline-variant rounded-2xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-60 grayscale' : 'hover:border-primary/40 hover:shadow-md'}">
                             <div class="w-2.5" style="background-color: ${config.color}"></div>
                             <div class="flex-1 p-8 grid grid-cols-1 md:grid-cols-4 gap-8 items-center">
                                 <div>
@@ -683,12 +732,6 @@
                             <button onclick="app.confirmStudent('${currentStudent.id}')" ${currentStudent.confirmed ? 'disabled' : ''} class="px-12 py-5 ${currentStudent.confirmed ? 'bg-primary text-white shadow-lg shadow-primary/30 cursor-not-allowed' : 'bg-surface-container hover:bg-outline-variant text-on-surface'} rounded-full font-black uppercase tracking-[0.15em] transition-all transform ${currentStudent.confirmed ? '' : 'hover:scale-[1.02]'}">
                                 ${currentStudent.confirmed ? 'Gesehen ✓' : 'Bestätigen'}
                             </button>
-                            
-                            ${this.state.isLehrer && currentStudent.confirmed ? `
-                                <button onclick="app.resetConfirmation('${currentStudent.id}')" class="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-widest hover:underline">
-                                    <span class="material-symbols-outlined text-[14px]">history</span> Bestätigung zurücksetzen
-                                </button>
-                            ` : ''}
                         </div>
                         
                         ${currentStudent.confirmed ? `<div class="flex items-center gap-2 mt-6 text-primary"><span class="material-symbols-outlined text-sm">schedule</span><p class="text-[10px] font-bold uppercase tracking-widest">Am ${currentStudent.lastConfirmed} bestätigt</p></div>` : ''}
@@ -730,11 +773,8 @@
                 const parentalStatus = s.confirmed 
                     ? `<div class="flex items-center gap-2">
                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest">
-                            <span class="material-symbols-outlined text-[14px] fill-1">verified</span> GESEHEN <span class="opacity-60 text-[9px] font-bold ml-1">${s.lastConfirmed}</span>
+                            <span class="material-symbols-outlined text-[14px] fill-1">verified</span> GESEHEN
                         </span>
-                        <button onclick="app.resetConfirmation('${s.id}')" title="Bestätigung zurücksetzen" class="w-7 h-7 flex items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant hover:text-red-600 transition-colors">
-                            <span class="material-symbols-outlined text-[16px]">refresh</span>
-                        </button>
                        </div>`
                     : `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant/40 text-[10px] font-black uppercase tracking-widest">
                         <span class="material-symbols-outlined text-[14px]">hourglass_empty</span> –
@@ -755,7 +795,12 @@
                             ${parentalStatus}
                         </td>
                         <td class="px-6 py-5">
-                            <button onclick="app.viewDetails('${s.id}')" class="px-3 py-1 border border-primary text-primary rounded-full font-bold uppercase text-[10px] hover:bg-primary hover:text-white transition-all">Details</button>
+                            <div class="flex gap-2">
+                                <button onclick="app.viewDetails('${s.id}')" class="px-3 py-1 border border-primary text-primary rounded-full font-bold uppercase text-[10px] hover:bg-primary hover:text-white transition-all">Details</button>
+                                ${s.confirmed ? `
+                                    <button onclick="app.resetConfirmation('${s.id}')" class="px-3 py-1 bg-surface-container text-on-surface-variant rounded-full font-bold uppercase text-[10px] hover:bg-outline-variant transition-all">Zurücksetzen</button>
+                                ` : ''}
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -796,7 +841,6 @@
 
         renderStudentManagement() {
             const list = document.getElementById('student-management-list');
-            if (!list) return;
             const sorted = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
             list.innerHTML = sorted.map(s => `
                 <div class="flex items-center justify-between p-3.5 bg-surface-container border border-outline-variant rounded-xl group transition-all">
@@ -849,7 +893,7 @@
                 deadline: dead 
             });
             
-            // If new task is added, reset confirmations as plan has changed
+            // Adding a task resets parents' confirmation
             if (sid === 'all') {
                 this.state.students.forEach(s => {
                     s.confirmed = false;
@@ -871,12 +915,9 @@
         deleteTask(taskId) {
             if (confirm("Aufgabe wirklich löschen?")) {
                 this.state.tasks = this.state.tasks.filter(t => t.id !== taskId);
-                
-                // Cleanup completion states
                 for (const sid in this.state.completedTasks) {
                     this.state.completedTasks[sid] = this.state.completedTasks[sid].filter(id => id !== taskId);
                 }
-                
                 this.persist();
                 this.renderAll();
             }
@@ -886,9 +927,8 @@
             const studentId = this.state.selectedStudentId;
             if (studentId === 'all') return;
             
-            // Lock logic: cannot toggle if confirmed
             const currentStudent = this.state.students.find(s => s.id === studentId);
-            if (currentStudent?.confirmed) return;
+            if (currentStudent?.confirmed) return; // Locked by parents
 
             if (!this.state.completedTasks[studentId]) {
                 this.state.completedTasks[studentId] = [];
@@ -898,72 +938,4 @@
             if (index > -1) {
                 this.state.completedTasks[studentId].splice(index, 1);
             } else {
-                this.state.completedTasks[studentId].push(taskId);
-            }
-
-            this.persist(); 
-            this.renderTasks(); 
-            this.renderDashboard(); 
-            this.updateInstructions(); 
-        },
-
-        confirmStudent(id) {
-            const s = this.state.students.find(st => st.id === id);
-            if (s && !s.confirmed) { 
-                s.confirmed = true; 
-                const now = new Date();
-                const day = String(now.getDate()).padStart(2, '0');
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const year = now.getFullYear();
-                s.lastConfirmed = `${day}.${month}.${year}`;
-                
-                this.persist(); 
-                this.renderTasks(); 
-                this.renderDashboard(); 
-                this.updateInstructions(); 
-            }
-        },
-
-        resetConfirmation(id) {
-            // Teacher-only reset logic
-            if (!this.state.isLehrer) return;
-            
-            const s = this.state.students.find(st => st.id === id);
-            if (s && confirm(`Bestätigung für ${s.name} wirklich zurücksetzen? Die Sperre wird aufgehoben.`)) {
-                s.confirmed = false;
-                s.lastConfirmed = '-';
-                this.persist();
-                this.renderAll();
-            }
-        },
-
-        viewDetails(id) { 
-            this.state.selectedStudentId = id; 
-            this.state.currentTab = 'Planer'; 
-            this.renderAll(); 
-            window.scrollTo({ top: 0, behavior: 'smooth' }); 
-        },
-
-        importTxt(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const names = e.target.result.split(/[\n,]/).map(n => n.trim()).filter(n => n.length > 0);
-                names.forEach(name => {
-                    if (!this.state.students.find(s => s.name === name)) {
-                        const newId = 's' + Math.random().toString(36).substr(2, 9);
-                        this.state.students.push({ id: newId, name, confirmed: false, lastConfirmed: '-' });
-                        this.state.completedTasks[newId] = [];
-                    }
-                });
-                this.persist(); this.renderAll();
-            };
-            reader.readAsText(file);
-        },
-
-        exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state));
-            const dl = document.createElement('a'); 
-            dl.setAttribute("href", dataStr); 
-            dl.setAttribute("download", `doeltschi_</script></body></html>
+                this.</script></body></html>
