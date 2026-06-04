@@ -3,24 +3,47 @@
 <html class="light" lang="de"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>doeltschi | Digitaler Aufgabenplaner</title>
+<title>doeltschi | Hausaufgabenplaner</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<!-- QR Code Library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .checkmark-active { font-variation-settings: 'FILL' 1; color: #0058bc; }
-        [v-cloak] { display: none; }
+        .material-symbols-outlined { 
+            font-size: 24px; 
+            vertical-align: middle; 
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; 
+        }
+        .material-symbols-outlined.fill-1 {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
         .worksheet-pattern {
-            background-color: #f8fafc;
+            background-color: #f9f9fe;
             background-image: radial-gradient(#cbd5e1 0.5px, transparent 0.5px);
             background-size: 24px 24px;
         }
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.95); }
+        }
+        .animate-pulse-soft { animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        
         @media print {
             .no-print { display: none !important; }
-            .print-only { display: block !important; }
             body { background: white !important; }
             .worksheet-pattern { background-image: none !important; }
+            .print-only { display: block !important; }
+        }
+        .print-only { display: none; }
+
+        body { font-family: 'Inter', sans-serif; }
+        
+        #qrcode img {
+            margin: 0 auto;
+            padding: 10px;
+            background: white;
+            border-radius: 0.5rem;
         }
     </style>
 <script id="tailwind-config">
@@ -30,429 +53,702 @@
                 extend: {
                     "colors": {
                         "primary": "#0058bc",
+                        "on-surface": "#1a1c1f",
+                        "on-surface-variant": "#414755",
+                        "surface": "#f9f9fe",
+                        "surface-container": "#ededf2",
+                        "surface-container-high": "#e8e8ed",
+                        "outline-variant": "#c1c6d7",
+                        "background": "#f9f9fe",
                         "on-primary": "#ffffff",
-                        "background": "#f8fafc",
-                        "surface": "#ffffff",
-                        "on-surface": "#1e293b",
-                        "outline-variant": "#e2e8f0",
-                        "surface-container": "#f1f5f9",
-                        "on-surface-variant": "#64748b",
                     },
                     "borderRadius": {
-                        "DEFAULT": "0.75rem",
-                        "lg": "1rem",
-                        "xl": "1.5rem",
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
                     },
                     "spacing": {
+                        "stack-padding": "1.25rem",
                         "gutter": "1.5rem",
-                        "input-padding": "0.75rem"
-                    },
-                    "fontFamily": {
-                        "h1": ["Inter", "sans-serif"],
-                        "body": ["Inter", "sans-serif"]
+                        "container-margin": "2rem"
                     }
                 },
             },
         }
     </script>
 </head>
-<body class="bg-background text-on-surface worksheet-pattern min-h-screen selection:bg-blue-100 flex flex-col">
+<body class="bg-background text-on-surface worksheet-pattern min-h-screen">
+<div class="flex flex-col min-h-screen" id="app">
 <!-- Top App Bar -->
-<header class="bg-surface/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50 no-print">
-<div class="flex justify-between items-center w-full px-gutter max-w-[1000px] mx-auto h-16">
-<div class="flex items-center gap-4">
-<h1 class="text-2xl font-black tracking-tight text-primary cursor-pointer" onclick="app.resetToHome()">doeltschi</h1>
-<div class="hidden md:flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold uppercase text-slate-500">
+<header class="bg-white/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50 no-print">
+<div class="flex justify-between items-center w-full px-gutter max-w-[1100px] mx-auto h-20">
+<div class="flex items-center gap-6">
+<h1 class="text-2xl md:text-3xl font-black tracking-tight text-primary cursor-pointer select-none active:scale-95 transition-transform" onclick="app.setTab('Planer')">Döltschi Hausaufgaben</h1>
+<div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-surface-container rounded-full text-[10px] font-bold uppercase text-on-surface-variant animate-pulse-soft">
 <span class="material-symbols-outlined text-[14px]">bolt</span>
 <span>Lokal aktiv</span>
 </div>
 </div>
-<div class="flex items-center gap-2">
-<nav class="flex items-center bg-slate-100 rounded-full p-1 border border-slate-200">
-<button class="px-4 py-1.5 rounded-full text-xs font-bold transition-all" id="nav-student" onclick="app.setRole('student')">Schüler-Ansicht</button>
-<button class="px-4 py-1.5 rounded-full text-xs font-bold transition-all" id="nav-teacher" onclick="app.requestTeacherMode()">Lehrer-Modus</button>
+<div class="flex items-center gap-4">
+<nav class="hidden md:flex gap-2">
+<button class="px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Planer" onclick="app.setTab('Planer')">Schüler</button>
+<button class="px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Dashboard" onclick="app.handleLehrerNavClick()">Lehrer</button>
+<button class="px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Anleitung" onclick="app.setTab('Anleitung')">Hilfe</button>
 </nav>
-<button class="hover:bg-slate-200 p-2 rounded-full transition-colors no-print" onclick="window.location.reload()">
-<span class="material-symbols-outlined text-primary text-xl">refresh</span>
+<button class="hidden flex items-center gap-2 px-4 py-2 bg-surface-container hover:bg-outline-variant text-on-surface rounded-full transition-colors text-xs font-bold uppercase" id="lehrer-access-btn" onclick="app.logoutLehrer()">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+<span>Abmelden</span>
 </button>
 </div>
 </div>
 </header>
-<main class="flex-1 w-full max-w-[1000px] mx-auto px-gutter py-8">
-<!-- Lehrer Login -->
-<div class="hidden flex flex-col items-center justify-center py-20 no-print" id="login-view">
-<div class="bg-surface p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-outline-variant">
-<span class="material-symbols-outlined text-primary text-6xl mb-4">lock</span>
-<h2 class="text-2xl font-bold mb-2">Lehrer Login</h2>
-<p class="text-on-surface-variant text-sm mb-6">Passwort erforderlich (Standard: lehrer123)</p>
-<input class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4 focus:ring-2 focus:ring-primary outline-none" id="login-password" onkeyup="if(event.key==='Enter') app.handleLogin()" placeholder="Passwort eingeben" type="password"/>
-<button class="w-full py-3 bg-primary text-white rounded-xl font-bold uppercase tracking-wider hover:bg-blue-700 transition-all" onclick="app.handleLogin()">Anmelden</button>
+<main class="flex-1 w-full max-w-[1100px] mx-auto px-gutter py-8 md:py-12">
+<!-- Login Modal -->
+<div class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm no-print" id="lehrer-modal">
+<div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl border border-outline-variant mx-4">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">lock</span>
+</div>
+<h3 class="text-xl font-bold">Lehrer-Bereich</h3>
+</div>
+<p class="text-on-surface-variant mb-6 text-sm">Bitte gib dein Passwort ein, um zum Cockpit zu gelangen.</p>
+<input class="w-full bg-surface-container border border-outline-variant rounded-xl p-3 mb-4 outline-none focus:ring-2 focus:ring-primary" id="lehrer-password" onkeyup="if(event.key === 'Enter') app.checkLehrerPassword()" placeholder="Passwort" type="password"/>
+<div class="flex justify-end gap-3">
+<button class="px-4 py-2 text-on-surface-variant font-bold text-sm uppercase" onclick="app.closeLehrerModal()">Abbrechen</button>
+<button class="px-6 py-2 bg-primary text-on-primary rounded-full font-bold text-sm uppercase shadow-md" onclick="app.checkLehrerPassword()">Anmelden</button>
 </div>
 </div>
-<!-- Student Select View -->
-<div class="hidden flex flex-col items-center py-12" id="student-select-view">
-<div class="text-center space-y-4 mb-12">
-<h2 class="text-4xl font-black text-slate-900">Wer bist du?</h2>
-<p class="text-slate-500 font-medium">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
 </div>
-<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full" id="student-grid">
-<!-- Dynamically generated buttons -->
+<!-- Identity Modal -->
+<div class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm no-print" id="identity-modal">
+<div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl border border-outline-variant mx-4 text-center">
+<div class="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
+<span class="material-symbols-outlined text-4xl">person_check</span>
 </div>
-</div>
-<!-- Student Personal View (The 1-2-3-4 style tasks) -->
-<div class="hidden space-y-12" id="student-tasks-view">
-<div class="flex flex-col md:flex-row justify-between items-center gap-6 no-print">
-<div class="flex items-center gap-4">
-<button class="flex items-center gap-2 text-primary font-bold hover:underline" onclick="app.setRole('student')">
-<span class="material-symbols-outlined">arrow_back</span>
-<span class="text-xl" id="display-student-name">Lukas</span>
-</button>
-</div>
-<div class="text-center md:text-right">
-<h2 class="text-3xl font-black text-slate-900" id="current-week-display">Woche 14</h2>
-<p class="text-slate-500 font-medium" id="current-date-range">01.04.2024 – 05.04.2024</p>
+<h3 class="text-2xl font-black text-on-surface mb-2">Identität bestätigen</h3>
+<p class="text-on-surface-variant mb-8">Bist du wirklich <span class="font-bold text-on-surface" id="confirm-name-span">...</span>?</p>
+<div class="flex gap-4">
+<button class="flex-1 px-4 py-4 bg-surface-container rounded-xl font-bold text-sm uppercase hover:bg-outline-variant" onclick="app.cancelIdentity()">Nein</button>
+<button class="flex-1 px-4 py-4 bg-primary text-on-primary rounded-xl font-bold text-sm uppercase shadow-lg shadow-primary/20" onclick="app.confirmIdentity()">Ja, ich bin es</button>
 </div>
 </div>
-<!-- Progress Steps -->
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4 no-print">
-<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center step-card" id="step-1">
-<div class="w-8 h-8 rounded-full bg-blue-100 text-primary font-bold flex items-center justify-center mb-2">1</div>
-<p class="text-[11px] font-bold uppercase text-slate-400">Name wählen</p>
 </div>
-<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center step-card" id="step-2">
-<div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-2">2</div>
-<p class="text-[11px] font-bold uppercase text-slate-400">Aufgaben prüfen</p>
+<!-- PLANER VIEW -->
+<div class="space-y-12" id="content-planner">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 no-print">
+<div class="bg-white p-4 md:p-6 rounded-2xl border border-outline-variant shadow-sm flex flex-col items-center text-center transition-all" id="step-1">
+<div class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant/40 font-bold flex items-center justify-center mb-3">1</div>
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Name wählen</p>
 </div>
-<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center step-card" id="step-3">
-<div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-2">3</div>
-<p class="text-[11px] font-bold uppercase text-slate-400">Erledigen</p>
+<div class="bg-white p-4 md:p-6 rounded-2xl border border-outline-variant shadow-sm flex flex-col items-center text-center transition-all opacity-50" id="step-2">
+<div class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant/40 font-bold flex items-center justify-center mb-3">2</div>
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Aufgaben prüfen</p>
 </div>
-<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center step-card" id="step-4">
-<div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-2">4</div>
-<p class="text-[11px] font-bold uppercase text-slate-400">Eltern zeigen</p>
+<div class="bg-white p-4 md:p-6 rounded-2xl border border-outline-variant shadow-sm flex flex-col items-center text-center transition-all opacity-50" id="step-3">
+<div class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant/40 font-bold flex items-center justify-center mb-3">3</div>
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Erledigen</p>
 </div>
-</div>
-<div class="space-y-4" id="task-list">
-<!-- Tasks populated here -->
-</div>
-<!-- Parents Confirmation Card -->
-<div class="hidden mt-12 bg-white border-2 border-dashed border-slate-300 p-10 rounded-2xl flex flex-col items-center text-center shadow-md transition-all" id="parents-confirmation-card">
-<div class="w-16 h-16 bg-blue-50 text-primary rounded-full flex items-center justify-center mb-6">
-<span class="material-symbols-outlined text-4xl" id="confirmation-icon">signature</span>
-</div>
-<h3 class="text-2xl font-black text-slate-900 mb-2">Bestätigung der Eltern</h3>
-<p class="text-slate-500 mb-8 max-w-md mx-auto text-sm font-medium">Ich bestätige hiermit, dass ich die oben aufgeführten Hausaufgaben gesehen habe.</p>
-<button class="px-10 py-4 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-black uppercase tracking-widest transition-all" id="confirm-btn" onclick="app.confirmByParent()">
-                Jetzt Bestätigen
-            </button>
-<p class="mt-4 text-[10px] font-bold text-primary uppercase hidden" id="confirmation-timestamp"></p>
+<div class="bg-white p-4 md:p-6 rounded-2xl border border-outline-variant shadow-sm flex flex-col items-center text-center transition-all opacity-50" id="step-4">
+<div class="w-8 h-8 rounded-full bg-surface-container text-on-surface-variant/40 font-bold flex items-center justify-center mb-3">4</div>
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">Eltern zeigen</p>
 </div>
 </div>
-<!-- Teacher Dashboard View -->
-<div class="hidden space-y-8" id="teacher-dashboard">
-<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-<h2 class="text-3xl font-black text-slate-900">Lehrer Dashboard</h2>
+<div class="flex flex-col md:flex-row justify-between items-end gap-6 border-b border-outline-variant pb-8">
+<div class="w-full md:w-80">
+<label class="flex items-center gap-2 text-[10px] font-black uppercase text-primary mb-3 tracking-widest">
+<span class="material-symbols-outlined text-[14px]">person</span> Schüler auswählen
+                    </label>
+<div class="relative">
+<select class="w-full bg-white border border-outline-variant rounded-xl font-semibold py-4 px-5 focus:ring-2 focus:ring-primary outline-none appearance-none shadow-sm pr-12 cursor-pointer" id="student-filter" onchange="app.handleFilterChange()">
+<option value="all">Klassenübersicht</option>
+</select>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">
+<span class="material-symbols-outlined">expand_more</span>
+</div>
+</div>
+</div>
+<div class="text-right w-full md:w-auto">
+<h2 class="text-4xl md:text-6xl font-black text-on-surface leading-none tracking-tight" id="current-week-display">Woche --</h2>
+<p class="text-on-surface-variant font-semibold mt-2" id="current-date-range">--.--.---- – --.--.----</p>
+</div>
+</div>
+<div class="space-y-4" id="task-container"></div>
+<div class="no-print mt-12 bg-white border border-outline-variant rounded-2xl p-6 shadow-sm">
+<h3 class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-4">Farblegende</h3>
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4" id="color-legend-planner"></div>
+</div>
+</div>
+<!-- DASHBOARD VIEW -->
+<div class="hidden space-y-8" id="content-dashboard">
+<div class="flex justify-between items-center">
+<h2 class="text-3xl font-black text-on-surface">Lehrer-Cockpit</h2>
 <div class="flex gap-2">
-<button class="px-4 py-2 border border-slate-200 bg-white rounded-lg text-xs font-bold uppercase text-slate-600 flex items-center gap-2 hover:bg-slate-50" onclick="app.openQRView()">
-<span class="material-symbols-outlined text-[18px]">qr_code_2</span> Teilen
-                </button>
-<button class="px-4 py-2 border border-slate-200 bg-white rounded-lg text-xs font-bold uppercase text-slate-600 flex items-center gap-2 hover:bg-slate-50" onclick="window.print()">
+<button class="px-5 py-2.5 bg-white border border-outline-variant rounded-full text-xs font-bold uppercase flex items-center gap-2 hover:bg-surface-container" onclick="window.print()">
 <span class="material-symbols-outlined text-[18px]">print</span> Drucken
-                </button>
+                    </button>
 </div>
 </div>
-<!-- Stats Overview -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-<div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-<p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Erledigungsquote Gesamt</p>
-<div class="text-3xl font-black text-primary" id="total-progress-percent">0%</div>
-<div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
-<div class="bg-primary h-full transition-all duration-500" id="total-progress-bar" style="width: 0%"></div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<div class="bg-white border border-outline-variant p-6 rounded-2xl shadow-sm md:col-span-1">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase mb-2 tracking-widest text-center">QR-Code teilen</p>
+<div class="mx-auto mb-4 flex justify-center" id="qrcode"></div>
+<button class="w-full py-2 border border-outline-variant rounded-lg text-[10px] font-bold uppercase hover:bg-surface-container" onclick="app.printQRCode()">QR-Code Drucken</button>
+</div>
+<div class="bg-white border border-outline-variant p-6 rounded-2xl shadow-sm">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase mb-2 tracking-widest">Globaler Fortschritt</p>
+<div class="text-4xl font-black text-primary" id="dashboard-quote">0%</div>
+<div class="w-full bg-surface-container h-2 rounded-full mt-4 overflow-hidden">
+<div class="bg-primary h-full transition-all duration-700" id="dashboard-progress-bar" style="width: 0%;"></div>
 </div>
 </div>
-<div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-<p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Elternbestätigungen</p>
-<div class="text-3xl font-black text-slate-700" id="confirmed-count">0/0</div>
-<p class="text-xs text-slate-400 mt-1" id="confirmed-pending-text">Warte auf Daten...</p>
+<div class="bg-white border border-outline-variant p-6 rounded-2xl shadow-sm">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase mb-2 tracking-widest">Eltern-Bestätigungen</p>
+<div class="text-4xl font-black text-on-surface" id="dashboard-confirmations">0/0</div>
+<p class="text-xs text-on-surface-variant mt-2 font-semibold" id="dashboard-pending-text">-</p>
 </div>
-<div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center">
-<button class="text-primary hover:underline font-bold text-sm uppercase flex items-center gap-2" onclick="app.exportData()">
-<span class="material-symbols-outlined">download</span> Daten Sichern
-                </button>
+<div class="bg-white border border-outline-variant p-6 rounded-2xl shadow-sm flex flex-col justify-center">
+<p class="text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mb-2">System-Status</p>
+<div class="flex items-center gap-2 text-green-600">
+<span class="w-2 h-2 rounded-full bg-green-600 animate-pulse"></span>
+<span class="text-sm font-bold">App-Modus Bereit</span>
 </div>
 </div>
-<!-- Add Task Form -->
-<div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-<h3 class="text-lg font-bold mb-6 text-slate-800">Neue Aufgabe zuteilen</h3>
-<form class="grid grid-cols-1 md:grid-cols-3 gap-4" onsubmit="app.addTask(event)">
-<div>
-<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Empfänger</label>
-<select class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary" id="new-task-student">
-<option value="all">Ganze Klasse</option>
+</div>
+<div class="bg-white border border-outline-variant rounded-2xl p-6 shadow-sm">
+<h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">add_circle</span> Aufgabe erfassen
+                </h3>
+<form class="grid grid-cols-1 md:grid-cols-6 gap-4" onsubmit="app.addTask(event)">
+<div class="md:col-span-1">
+<label class="block text-[10px] font-bold text-on-surface-variant uppercase mb-1">Empfänger</label>
+<select class="w-full bg-surface-container border border-outline-variant rounded-lg p-2.5 text-sm outline-none" id="task-student"></select>
+</div>
+<div class="md:col-span-1">
+<label class="block text-[10px] font-bold text-on-surface-variant uppercase mb-1">Fach</label>
+<select class="w-full bg-surface-container border border-outline-variant rounded-lg p-2.5 text-sm outline-none" id="task-subject">
+<option value="DE">DE</option><option value="MA">MA</option><option value="E">E</option><option value="F">F</option>
+<option value="RZG">RZG</option><option value="NT">NT</option><option value="MU">MU</option><option value="BS">BS</option>
 </select>
 </div>
-<div>
-<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Fach</label>
-<select class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary" id="new-task-subject">
-<option value="Deutsch">Deutsch</option>
-<option value="Mathematik">Mathematik</option>
-<option value="Sachunterricht">Sachunterricht</option>
-<option value="Englisch">Englisch</option>
-<option value="Französisch">Französisch</option>
-</select>
-</div>
-<div>
-<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bis Datum</label>
-<input class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary" id="new-task-date" placeholder="TT.MM.JJJJ" required="" type="text"/>
+<div class="md:col-span-1">
+<label class="block text-[10px] font-bold text-on-surface-variant uppercase mb-1">Termin</label>
+<input class="w-full bg-surface-container border border-outline-variant rounded-lg p-2.5 text-sm outline-none" id="task-deadline" placeholder="z.B. Fr" required=""/>
 </div>
 <div class="md:col-span-2">
-<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Aufgabenbeschreibung</label>
-<input class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary" id="new-task-desc" placeholder="Z.B. Arbeitsheft S. 42 lesen..." required="" type="text"/>
+<label class="block text-[10px] font-bold text-on-surface-variant uppercase mb-1">Details</label>
+<input class="w-full bg-surface-container border border-outline-variant rounded-lg p-2.5 text-sm outline-none" id="task-description" placeholder="Was ist zu tun?" required=""/>
 </div>
 <div class="flex items-end">
-<button class="w-full py-2 bg-primary text-white rounded-lg font-bold text-sm uppercase hover:bg-blue-700" type="submit">Aufgabe erstellen</button>
+<button class="w-full py-2.5 bg-primary text-white rounded-lg font-bold text-xs uppercase shadow-md hover:bg-primary/90" type="submit">Hinzufügen</button>
 </div>
 </form>
 </div>
-<!-- Student List and Management -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 <div class="lg:col-span-2 space-y-4">
-<h3 class="text-xl font-bold text-slate-800">Status Schüler</h3>
-<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+<h3 class="text-xl font-bold text-on-surface">Klassenfortschritt</h3>
+<div class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
 <table class="w-full text-left text-sm">
-<thead class="bg-slate-50 border-b border-slate-200">
+<thead class="bg-surface-container text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
 <tr>
-<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Name</th>
-<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Fortschritt</th>
-<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Eltern</th>
-<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Aktion</th>
+<th class="px-6 py-4">Name</th>
+<th class="px-6 py-4">Erledigt</th>
+<th class="px-6 py-4">Eltern</th>
+<th class="px-6 py-4 text-right">Aktion</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-slate-100" id="teacher-student-table">
-<!-- Table rows -->
-</tbody>
+<tbody class="divide-y divide-surface-container" id="student-table-body"></tbody>
 </table>
 </div>
 </div>
 <div class="space-y-4">
 <div class="flex justify-between items-center">
-<h3 class="text-xl font-bold text-slate-800">Klasse</h3>
-<button class="text-primary text-[10px] font-bold uppercase hover:underline" onclick="app.importStudents()">Import (.txt)</button>
-</div>
-<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
-<div class="space-y-2 max-h-60 overflow-y-auto" id="student-mgmt-list"></div>
+<h3 class="text-xl font-bold text-on-surface">Klassenliste</h3>
 <div class="flex gap-2">
-<input class="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-primary" id="new-student-input" onkeyup="if(event.key==='Enter') app.addStudent()" placeholder="Neuer Name..." type="text"/>
-<button class="p-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700" onclick="app.addStudent()">
-<span class="material-symbols-outlined text-[20px]">person_add</span>
+<button class="text-[10px] font-bold text-primary uppercase border border-primary/20 bg-primary/5 px-2 py-1 rounded-md flex items-center gap-1 hover:bg-primary hover:text-white transition-colors" onclick="document.getElementById('import-txt').click()">
+<span class="material-symbols-outlined text-[14px]">upload_file</span> Import (.txt)
+                            </button>
+<input accept=".txt" class="hidden" id="import-txt" onchange="app.importStudents(event)" type="file"/>
+</div>
+</div>
+<div class="bg-white border border-outline-variant rounded-2xl p-5 shadow-sm space-y-4">
+<div class="space-y-2 max-h-60 overflow-y-auto pr-2" id="student-management-list"></div>
+<div class="flex gap-2">
+<input class="flex-1 bg-surface-container border border-outline-variant rounded-xl p-3 text-sm outline-none" id="new-student-name" placeholder="Name..." type="text"/>
+<button class="p-3 bg-on-surface text-white rounded-xl hover:bg-on-surface/90" onclick="app.addStudent()">
+<span class="material-symbols-outlined">person_add</span>
 </button>
 </div>
 </div>
 </div>
 </div>
+<div class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
+<div class="p-4 bg-surface-container border-b border-outline-variant">
+<h3 class="text-sm font-bold uppercase tracking-widest">Alle Aufgaben verwalten</h3>
 </div>
-<!-- QR View -->
-<div class="hidden flex flex-col items-center py-12" id="qr-view">
-<div class="max-w-md w-full text-center space-y-8">
-<h2 class="text-3xl font-black">Klasse einladen</h2>
-<div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-xl flex flex-col items-center gap-6">
-<div class="p-2 bg-white border border-slate-100 rounded-lg" id="qrcode"></div>
-<p class="text-sm text-slate-500">Scanne diesen Code, um die Schüler-Ansicht auf einem Tablet oder Smartphone zu öffnen.</p>
-<div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-full text-xs font-mono text-slate-400 truncate w-full justify-center" id="qr-url-display"></div>
+<table class="w-full text-left text-sm">
+<tbody class="divide-y divide-surface-container" id="manage-tasks-body"></tbody>
+</table>
 </div>
-<button class="font-bold text-primary hover:underline" onclick="app.setRole('teacher')">Zurück zum Dashboard</button>
+</div>
+<!-- GUIDE VIEW -->
+<div class="hidden space-y-8" id="content-guide">
+<h2 class="text-3xl font-black text-on-surface">Bedienungsanleitung</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="bg-white border border-outline-variant p-8 rounded-2xl shadow-sm">
+<div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-3xl">face</span>
+</div>
+<h3 class="text-xl font-bold mb-3">Für Schüler</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">Wähle deinen Namen aus der Liste. Du musst einmal bestätigen, dass du es bist. Deine Aufgaben erscheinen automatisch. Sobald du etwas fertig hast, hake es ab. Wenn alles erledigt ist, zeigst du die Seite deinen Eltern zur Bestätigung.</p>
+</div>
+<div class="bg-white border border-outline-variant p-8 rounded-2xl shadow-sm">
+<div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-3xl">install_mobile</span>
+</div>
+<h3 class="text-xl font-bold mb-3">Als App installieren</h3>
+<div class="space-y-4">
+<div>
+<p class="text-[10px] font-bold text-primary uppercase mb-1">iOS (iPhone/iPad)</p>
+<p class="text-on-surface-variant text-xs leading-relaxed">Tippe in Safari auf das <span class="font-bold">Teilen-Symbol</span> (Quadrat mit Pfeil) und wähle <span class="font-bold">"Zum Home-Bildschirm"</span>.</p>
+</div>
+<div>
+<p class="text-[10px] font-bold text-primary uppercase mb-1">Android</p>
+<p class="text-on-surface-variant text-xs leading-relaxed">Tippe auf die <span class="font-bold">drei Punkte</span> oben rechts und wähle <span class="font-bold">"App installieren"</span> oder <span class="font-bold">"Zum Startbildschirm hinzufügen"</span>.</p>
+</div>
+</div>
+</div>
+<div class="bg-white border border-outline-variant p-8 rounded-2xl shadow-sm md:col-span-2">
+<div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-3xl">school</span>
+</div>
+<h3 class="text-xl font-bold mb-3">Für Lehrpersonen</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed mb-4">Im Lehrer-Bereich (Passwort 'lehrer123') kannst du Aufgaben für die ganze Klasse oder einzelne Schüler erstellen. Du siehst in Echtzeit, wer die Aufgaben bereits erledigt hat und ob die Eltern diese gesehen haben.</p>
+<div class="p-4 bg-surface-container rounded-xl">
+<p class="text-[10px] font-bold uppercase mb-2">QR-Code Tipp</p>
+<p class="text-xs text-on-surface-variant">Drucke den QR-Code aus dem Dashboard aus und hänge ihn im Klassenzimmer auf. So haben die Schüler sofortigen Zugriff auf ihren persönlichen Planer.</p>
+</div>
+</div>
 </div>
 </div>
 </main>
-<footer class="bg-white border-t border-slate-200 no-print py-10 mt-auto">
-<div class="max-w-[1000px] mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-6">
-<div class="text-center md:text-left">
-<p class="text-xs font-bold text-slate-400 uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
-<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Version 12 • Bulletproof Engine</p>
+<!-- Print Only Section -->
+<div class="print-only fixed inset-0 bg-white p-20 text-center">
+<h1 class="text-4xl font-bold mb-4">Döltschi Hausaufgabenplaner</h1>
+<p class="text-xl mb-12">Scanne den Code für deinen persönlichen Planer</p>
+<div class="flex justify-center mb-8" id="print-qrcode-container"></div>
+<p class="text-sm text-gray-500 mt-20">Stand: <span id="print-date"></span></p>
 </div>
-<div class="flex gap-8">
-<a class="text-xs font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Datenschutz</a>
-<a class="text-xs font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Impressum</a>
-<a class="text-xs font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Hilfe</a>
+<footer class="bg-white border-t border-outline-variant no-print py-10 mt-12">
+<div class="max-w-[1100px] mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="text-center md:text-left">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">© 2024 Döltschi Hausaufgabenplaner</p>
+<div class="flex items-center justify-center md:justify-start gap-3 mt-1">
+<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 23.0 • Swiss Edition</p>
+<button class="text-[9px] text-on-surface-variant/30 hover:text-red-500 underline font-mono uppercase" onclick="app.resetSystem()">App zurücksetzen</button>
+</div>
+</div>
+<div class="flex gap-8 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
+<a class="hover:text-primary transition-colors" href="#">Datenschutz</a>
+<a class="hover:text-primary transition-colors" href="#">Impressum</a>
+<a class="hover:text-primary transition-colors" href="#">Hilfe</a>
 </div>
 </div>
 </footer>
-<!-- Print View -->
-<div class="hidden print-only bg-white p-10 min-h-screen text-black">
-<div class="flex justify-between items-end border-b-2 border-black pb-4 mb-8">
-<div>
-<h1 class="text-3xl font-bold">doeltschi Hausaufgaben</h1>
-<p class="text-lg" id="print-header-info">Hausaufgabenplaner</p>
-</div>
-<p class="text-sm italic">Gedruckt am: <span id="print-date"></span></p>
-</div>
-<div class="space-y-4" id="print-content"></div>
-<div class="mt-20 border-t border-black pt-4 grid grid-cols-2 gap-8 text-center">
-<div class="h-12 border-b border-black">Unterschrift Schüler/in</div>
-<div class="h-12 border-b border-black">Unterschrift Eltern</div>
-</div>
 </div>
 <script>
+    const SUBJECT_CONFIG = {
+        'DE': { name: 'Deutsch', color: '#ef4444' },
+        'MA': { name: 'Mathematik', color: '#3b82f6' },
+        'E':  { name: 'Englisch', color: '#f59e0b' },
+        'F':  { name: 'Französisch', color: '#10b981' },
+        'RZG': { name: 'RZG', color: '#f97316' },
+        'NT': { name: 'NT', color: '#06b6d4' },
+        'MU': { name: 'Musik', color: '#a855f7' },
+        'BS': { name: 'Sport', color: '#fbbf24' }
+    };
+
     const INITIAL_STATE = {
+        isLehrer: false,
+        currentTab: 'Planer',
+        selectedStudentId: 'all',
+        verifiedStudentId: null,
         students: [
             { id: 's1', name: 'Lukas Müller', confirmed: false, lastConfirmed: '-' },
             { id: 's2', name: 'Sophie Fischer', confirmed: false, lastConfirmed: '-' },
-            { id: 's3', name: 'Emma Weber', confirmed: false, lastConfirmed: '-' },
-            { id: 's4', name: 'Maximilian Schmidt', confirmed: false, lastConfirmed: '-' }
+            { id: 's3', name: 'Emma Weber', confirmed: false, lastConfirmed: '-' }
         ],
         tasks: [
-            { id: 't1', studentId: 'all', subject: 'Deutsch', description: 'Arbeitsheft S. 42-43 lesen.', deadline: '15.05.2024', completions: [] },
-            { id: 't2', studentId: 's1', subject: 'Mathematik', description: 'Einmaleins-Tabelle vervollständigen.', deadline: '16.05.2024', completions: [] }
-        ]
+            { id: 't0', studentId: 'all', subjectCode: 'MA', description: 'Ganze Klasse: Buch S. 120-121.', deadline: 'Fr' },
+            { id: 't1', studentId: 's1', subjectCode: 'DE', description: 'Lesetagebuch führen.', deadline: 'Mi' }
+        ],
+        completedTasks: {} 
     };
 
     const app = {
         state: null,
-        currentRole: 'student', // 'student', 'teacher', 'login'
-        selectedStudent: null,
-        STORAGE_KEY: 'doeltschi_v12_stable',
+        STORAGE_KEY: 'doeltschi_v23_pwa',
+        _qrcode: null,
 
         init() {
-            try {
-                const saved = localStorage.getItem(this.STORAGE_KEY);
-                this.state = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(INITIAL_STATE));
-                
-                // Handle URL params (QR Sync)
-                const params = new URLSearchParams(window.location.search);
-                const sParam = params.get('s');
-                const roleParam = params.get('role');
-
-                if (roleParam === 'teacher') {
-                    this.setRole('teacher');
-                } else if (sParam) {
-                    const student = this.state.students.find(st => st.id === sParam);
-                    if (student) {
-                        this.selectStudent(student.id);
-                    } else {
-                        this.setRole('student');
-                    }
-                } else {
-                    this.setRole('student');
-                }
-                
-                document.getElementById('print-date').textContent = new Date().toLocaleDateString('de-CH');
-            } catch (e) {
-                console.error(e);
+            const saved = localStorage.getItem(this.STORAGE_KEY);
+            if (saved) {
+                try {
+                    this.state = JSON.parse(saved);
+                    this.state.isLehrer = false;
+                    this.state.currentTab = 'Planer';
+                    this.state.verifiedStudentId = null;
+                    if (!this.state.completedTasks) this.state.completedTasks = {};
+                } catch(e) { this.state = JSON.parse(JSON.stringify(INITIAL_STATE)); }
+            } else {
                 this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
-                this.setRole('student');
             }
+            this.updateDateDisplay();
+            this.renderAll();
+            this.initQRCode();
         },
 
         persist() {
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
         },
 
-        setRole(role) {
-            this.currentRole = role;
-            if (role === 'student') this.selectedStudent = null;
-            this.render();
+        initQRCode() {
+            const qrContainer = document.getElementById("qrcode");
+            qrContainer.innerHTML = "";
+            this._qrcode = new QRCode(qrContainer, {
+                text: window.location.href,
+                width: 128,
+                height: 128,
+                colorDark : "#0058bc",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            // Prepare print QR
+            const printQrContainer = document.getElementById("print-qrcode-container");
+            printQrContainer.innerHTML = "";
+            new QRCode(printQrContainer, {
+                text: window.location.href,
+                width: 400,
+                height: 400,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+            document.getElementById('print-date').textContent = new Date().toLocaleDateString('de-CH');
         },
 
-        requestTeacherMode() {
-            this.setRole('login');
+        printQRCode() {
+            window.print();
         },
 
-        handleLogin() {
-            const pw = document.getElementById('login-password').value;
-            if (pw === 'lehrer123') {
-                this.setRole('teacher');
+        updateDateDisplay() {
+            const now = new Date();
+            const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            
+            const monday = new Date(now);
+            const day = now.getDay();
+            const diff = (day === 0 ? -6 : 1) - day;
+            monday.setDate(now.getDate() + diff);
+            
+            const friday = new Date(monday);
+            friday.setDate(monday.getDate() + 4);
+
+            const fmt = (date) => date.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            
+            document.getElementById('current-week-display').textContent = `Woche ${weekNo}`;
+            document.getElementById('current-date-range').textContent = `${fmt(monday)} – ${fmt(friday)}`;
+        },
+
+        setTab(tab) {
+            this.state.currentTab = tab;
+            this.renderAll();
+        },
+
+        handleLehrerNavClick() {
+            if (this.state.isLehrer) this.setTab('Dashboard');
+            else this.openLehrerModal();
+        },
+
+        openLehrerModal() {
+            document.getElementById('lehrer-modal').classList.remove('hidden');
+            document.getElementById('lehrer-password').value = '';
+            document.getElementById('lehrer-password').focus();
+        },
+
+        closeLehrerModal() {
+            document.getElementById('lehrer-modal').classList.add('hidden');
+        },
+
+        checkLehrerPassword() {
+            const input = document.getElementById('lehrer-password');
+            if (input.value === 'lehrer123') {
+                this.state.isLehrer = true;
+                this.state.currentTab = 'Dashboard';
+                this.closeLehrerModal();
+                this.renderAll();
             } else {
-                alert('Falsches Passwort!');
+                input.classList.add('ring-red-500', 'ring-2');
+                setTimeout(() => input.classList.remove('ring-red-500', 'ring-2'), 800);
             }
         },
 
-        resetToHome() {
-            window.location.search = "";
-            this.init();
+        logoutLehrer() {
+            this.state.isLehrer = false;
+            this.state.currentTab = 'Planer';
+            this.renderAll();
         },
 
-        selectStudent(id) {
-            this.selectedStudent = this.state.students.find(s => s.id === id);
-            this.currentRole = 'student-tasks';
-            this.render();
-        },
-
-        render() {
-            const views = ['login-view', 'student-select-view', 'student-tasks-view', 'teacher-dashboard', 'qr-view'];
-            views.forEach(v => document.getElementById(v).classList.add('hidden'));
-
-            // Nav Highlight
-            const navS = document.getElementById('nav-student');
-            const navT = document.getElementById('nav-teacher');
-            navS.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all " + 
-                (this.currentRole.startsWith('student') ? "bg-primary text-white" : "text-slate-500 hover:bg-slate-200");
-            navT.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all " + 
-                (this.currentRole === 'teacher' || this.currentRole === 'login' ? "bg-primary text-white" : "text-slate-500 hover:bg-slate-200");
-
-            if (this.currentRole === 'login') {
-                document.getElementById('login-view').classList.remove('hidden');
-            } else if (this.currentRole === 'student') {
-                document.getElementById('student-select-view').classList.remove('hidden');
-                this.renderStudentGrid();
-            } else if (this.currentRole === 'student-tasks') {
-                document.getElementById('student-tasks-view').classList.remove('hidden');
-                this.renderStudentTasks();
-            } else if (this.currentRole === 'teacher') {
-                document.getElementById('teacher-dashboard').classList.remove('hidden');
-                this.renderTeacherDashboard();
-            } else if (this.currentRole === 'qr') {
-                document.getElementById('qr-view').classList.remove('hidden');
-                this.generateQR();
+        handleFilterChange() {
+            const val = document.getElementById('student-filter').value;
+            if (val !== 'all' && val !== this.state.verifiedStudentId) {
+                const s = this.state.students.find(x => x.id === val);
+                document.getElementById('confirm-name-span').textContent = s.name;
+                document.getElementById('identity-modal').classList.remove('hidden');
+                this._pendingId = val;
+            } else {
+                this.state.selectedStudentId = val;
+                this.renderAll();
             }
         },
 
-        renderStudentGrid() {
-            const grid = document.getElementById('student-grid');
-            grid.innerHTML = this.state.students.map(s => `
-                <button onclick="app.selectStudent('${s.id}')" class="p-6 bg-white border border-slate-200 rounded-2xl hover:border-primary hover:shadow-md transition-all text-lg font-bold text-slate-700">
-                    ${s.name}
-                </button>
-            `).join('');
+        confirmIdentity() {
+            this.state.verifiedStudentId = this._pendingId;
+            this.state.selectedStudentId = this._pendingId;
+            document.getElementById('identity-modal').classList.add('hidden');
+            this.renderAll();
         },
 
-        renderStudentTasks() {
-            const s = this.selectedStudent;
-            if (!s) return;
+        cancelIdentity() {
+            document.getElementById('identity-modal').classList.add('hidden');
+            document.getElementById('student-filter').value = this.state.selectedStudentId;
+        },
 
-            document.getElementById('display-student-name').textContent = s.name;
-            const taskList = document.getElementById('task-list');
+        addTask(e) {
+            e.preventDefault();
+            const task = {
+                id: 't' + Date.now(),
+                studentId: document.getElementById('task-student').value,
+                subjectCode: document.getElementById('task-subject').value,
+                deadline: document.getElementById('task-deadline').value,
+                description: document.getElementById('task-description').value
+            };
+            this.state.tasks.push(task);
+            e.target.reset();
+            this.persist();
+            this.renderAll();
+        },
+
+        deleteTask(id) {
+            this.state.tasks = this.state.tasks.filter(t => t.id !== id);
+            Object.keys(this.state.completedTasks).forEach(sid => {
+                this.state.completedTasks[sid] = this.state.completedTasks[sid].filter(tid => tid !== id);
+            });
+            this.persist();
+            this.renderAll();
+        },
+
+        toggleTask(taskId) {
+            const sid = this.state.selectedStudentId;
+            if (sid === 'all') return;
+            const s = this.state.students.find(x => x.id === sid);
+            if (s.confirmed) return; 
+
+            if (!this.state.completedTasks[sid]) this.state.completedTasks[sid] = [];
             
-            const myTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === s.id);
-            
-            if (myTasks.length === 0) {
-                taskList.innerHTML = `<div class="py-20 text-center border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold uppercase tracking-widest text-xs">Keine Aufgaben gefunden</div>`;
+            const idx = this.state.completedTasks[sid].indexOf(taskId);
+            if (idx > -1) {
+                this.state.completedTasks[sid].splice(idx, 1);
             } else {
-                taskList.innerHTML = myTasks.map(t => {
-                    const isDone = t.completions.includes(s.id);
-                    const colorMap = { 'Deutsch': '#dc2626', 'Mathematik': '#2563eb', 'Sachunterricht': '#92400e', 'Englisch': '#4f46e5', 'Französisch': '#6664e4' };
-                    const color = colorMap[t.subject] || '#64748b';
-                    const locked = s.confirmed;
+                this.state.completedTasks[sid].push(taskId);
+            }
+            
+            this.persist();
+            this.renderAll();
+        },
 
+        confirmParental(sid) {
+            const s = this.state.students.find(x => x.id === sid);
+            if (s) {
+                s.confirmed = true;
+                s.lastConfirmed = new Date().toLocaleDateString('de-CH') + ' ' + new Date().toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
+                this.persist();
+                this.renderAll();
+            }
+        },
+
+        unlockStudent(sid) {
+            const s = this.state.students.find(x => x.id === sid);
+            if (s) {
+                s.confirmed = false;
+                s.lastConfirmed = '-';
+                this.persist();
+                this.renderAll();
+            }
+        },
+
+        addStudent() {
+            const name = document.getElementById('new-student-name').value.trim();
+            if (name) {
+                this.state.students.push({ id: 's' + Date.now(), name, confirmed: false, lastConfirmed: '-' });
+                document.getElementById('new-student-name').value = '';
+                this.persist();
+                this.renderAll();
+            }
+        },
+
+        importStudents(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                const names = text.split('\n')
+                    .map(name => name.trim())
+                    .filter(name => name.length > 0);
+                
+                if (names.length > 0) {
+                    names.forEach(name => {
+                        this.state.students.push({ 
+                            id: 's' + Math.random().toString(36).substr(2, 9), 
+                            name, 
+                            confirmed: false, 
+                            lastConfirmed: '-' 
+                        });
+                    });
+                    this.persist();
+                    this.renderAll();
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; 
+        },
+
+        deleteStudent(id) {
+            if (confirm('Schüler wirklich löschen?')) {
+                this.state.students = this.state.students.filter(s => s.id !== id);
+                delete this.state.completedTasks[id];
+                this.persist();
+                this.renderAll();
+            }
+        },
+
+        resetSystem() {
+            if (confirm('Wirklich alles löschen?')) {
+                localStorage.removeItem(this.STORAGE_KEY);
+                window.location.reload();
+            }
+        },
+
+        renderAll() {
+            document.getElementById('content-planner').classList.toggle('hidden', this.state.currentTab !== 'Planer');
+            document.getElementById('content-dashboard').classList.toggle('hidden', this.state.currentTab !== 'Dashboard');
+            document.getElementById('content-guide').classList.toggle('hidden', this.state.currentTab !== 'Anleitung');
+            document.getElementById('lehrer-access-btn').classList.toggle('hidden', !this.state.isLehrer);
+
+            ['Planer', 'Dashboard', 'Anleitung'].forEach(t => {
+                const el = document.getElementById(`nav-${t}`);
+                if (this.state.currentTab === t) {
+                    el.className = "px-5 py-2.5 rounded-full text-sm font-bold bg-primary text-on-primary shadow-lg shadow-primary/20 transition-all";
+                } else {
+                    el.className = "px-5 py-2.5 rounded-full text-sm font-bold text-on-surface-variant hover:bg-surface-container transition-all";
+                }
+            });
+
+            this.renderFilters();
+            this.renderTasks();
+            this.renderLegend();
+            this.renderDashboard();
+            this.renderStudentManagement();
+            this.renderManageTasks();
+            this.updateSteps();
+        },
+
+        updateSteps() {
+            const sid = this.state.selectedStudentId;
+            const verified = this.state.verifiedStudentId === sid;
+            const s = this.state.students.find(x => x.id === sid);
+            
+            const steps = [1, 2, 3, 4].map(i => document.getElementById(`step-${i}`));
+            steps.forEach(el => {
+                el.classList.add('opacity-50');
+                el.querySelector('div').className = "w-8 h-8 rounded-full bg-surface-container text-on-surface-variant/40 font-bold flex items-center justify-center mb-3";
+            });
+
+            if (sid === 'all') {
+                steps[0].classList.remove('opacity-50');
+                steps[0].querySelector('div').className = "w-8 h-8 rounded-full bg-primary text-on-primary font-bold flex items-center justify-center mb-3";
+            } else if (!verified) {
+                steps[0].classList.remove('opacity-50');
+                steps[0].querySelector('div').classList.add('bg-primary/20', 'text-primary');
+            } else if (s && !s.confirmed) {
+                steps[1].classList.remove('opacity-50');
+                steps[2].classList.remove('opacity-50');
+                steps[1].querySelector('div').classList.add('bg-primary/20', 'text-primary');
+            } else {
+                steps[3].classList.remove('opacity-50');
+                steps[3].querySelector('div').classList.add('bg-primary/20', 'text-primary');
+            }
+        },
+
+        renderFilters() {
+            const select = document.getElementById('student-filter');
+            const taskSelect = document.getElementById('task-student');
+            const students = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
+            
+            const html = `<option value="all" ${this.state.selectedStudentId === 'all' ? 'selected' : ''}>Klassenübersicht</option>` + 
+                students.map(s => `<option value="${s.id}" ${this.state.selectedStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('');
+            
+            select.innerHTML = html;
+            taskSelect.innerHTML = `<option value="all">Alle (Klasse)</option>` + students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        },
+
+        renderTasks() {
+            const container = document.getElementById('task-container');
+            const sid = this.state.selectedStudentId;
+            const verified = this.state.verifiedStudentId === sid;
+            const s = this.state.students.find(x => x.id === sid);
+            const isLocked = s?.confirmed || false;
+
+            const filtered = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === sid);
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="py-16 text-center border-4 border-dashed border-outline-variant/20 rounded-2xl text-on-surface-variant/40 font-bold uppercase tracking-widest text-xs">Keine Aufgaben</div>`;
+            } else {
+                container.innerHTML = filtered.map(t => {
+                    const done = (this.state.completedTasks[sid] || []).includes(t.id);
+                    const cfg = SUBJECT_CONFIG[t.subjectCode] || { name: 'Divers', color: '#64748b' };
+                    const isGlobal = t.studentId === 'all';
+                    
                     return `
-                        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden flex transition-all shadow-sm ${isDone ? 'opacity-50 grayscale' : 'hover:border-primary/30'}">
-                            <div class="w-2" style="background-color: ${color}"></div>
-                            <div class="flex-1 p-6 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-                                <div>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Wer</p>
-                                    <p class="font-bold text-slate-800">${t.studentId === 'all' ? 'Ganze Klasse' : s.name}</p>
-                                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" style="background-color: ${color}20; color: ${color}">${t.subject}</span>
+                        <div class="bg-white border border-outline-variant rounded-xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-50' : 'hover:border-primary/30'}">
+                            <div class="w-2" style="background-color: ${cfg.color}"></div>
+                            <div class="flex-1 p-5 flex flex-col md:flex-row md:items-center gap-4">
+                                <div class="md:w-32">
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest" style="background-color: ${cfg.color}15; color: ${cfg.color}">${cfg.name}</span>
+                                    <p class="text-[10px] text-on-surface-variant font-bold uppercase mt-1">${isGlobal ? 'Klasse' : 'Persönlich'}</p>
                                 </div>
-                                <div class="md:col-span-2">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Aufgabe</p>
-                                    <p class="text-sm font-medium text-slate-700">${t.description}</p>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-on-surface">${t.description}</p>
                                 </div>
-                                <div class="text-right">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Bis</p>
-                                    <p class="text-sm font-black text-slate-900">${t.deadline}</p>
-                                    <button onclick="${locked ? '' : `app.toggleTask('${t.id}')`}" class="mt-4 flex items-center justify-end gap-2 group ml-auto ${locked ? 'cursor-not-allowed' : ''}">
-                                        <span class="material-symbols-outlined ${isDone ? 'checkmark-active' : 'text-slate-200'}">${isDone ? 'check_circle' : 'radio_button_unchecked'}</span>
-                                        <span class="text-[10px] font-bold uppercase ${isDone ? 'text-primary' : 'text-slate-400'}">${isDone ? 'Erledigt' : 'Offen'}</span>
-                                    </button>
+                                <div class="flex items-center gap-6 justify-between md:justify-end">
+                                    <div class="text-right">
+                                        <p class="text-[9px] font-bold text-on-surface-variant uppercase">Termin</p>
+                                        <p class="text-sm font-black text-on-surface">${t.deadline}</p>
+                                    </div>
+                                    ${sid !== 'all' ? `
+                                        <button onclick="app.toggleTask('${t.id}')" ${!verified || isLocked ? 'disabled' : ''} class="flex items-center gap-2 group">
+                                            <span class="material-symbols-outlined text-3xl ${done ? 'text-primary fill-1' : 'text-outline-variant group-hover:text-primary'}">
+                                                ${done ? 'check_circle' : 'radio_button_unchecked'}
+                                            </span>
+                                        </button>
+                                    ` : '<div class="w-8"></div>'}
                                 </div>
                             </div>
                         </div>
@@ -460,230 +756,119 @@
                 }).join('');
             }
 
-            // Update Step Indicators
-            this.updateSteps();
-
-            // Parents Confirmation
-            const card = document.getElementById('parents-confirmation-card');
-            const icon = document.getElementById('confirmation-icon');
-            const btn = document.getElementById('confirm-btn');
-            const ts = document.getElementById('confirmation-timestamp');
-
-            card.classList.remove('hidden');
-            if (s.confirmed) {
-                card.classList.replace('border-slate-300', 'border-primary');
-                icon.textContent = 'verified';
-                icon.parentElement.classList.add('bg-blue-100');
-                btn.textContent = 'Bestätigt ✓';
-                btn.className = "px-10 py-4 bg-primary text-white rounded-xl font-black uppercase tracking-widest";
-                ts.textContent = `Erfolgreich bestätigt am ${s.lastConfirmed}`;
-                ts.classList.remove('hidden');
-            } else {
-                card.classList.replace('border-primary', 'border-slate-300');
-                icon.textContent = 'signature';
-                icon.parentElement.classList.remove('bg-blue-100');
-                btn.textContent = 'Jetzt Bestätigen';
-                btn.className = "px-10 py-4 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-black uppercase tracking-widest";
-                ts.classList.add('hidden');
+            if (sid !== 'all' && s) {
+                container.innerHTML += `
+                    <div class="mt-8 bg-white border-2 ${isLocked ? 'border-primary' : 'border-dashed border-outline-variant'} p-8 rounded-2xl flex flex-col items-center text-center">
+                        <div class="w-16 h-16 ${isLocked ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant/20'} rounded-full flex items-center justify-center mb-4 transition-all">
+                            <span class="material-symbols-outlined text-4xl ${isLocked ? 'fill-1' : ''}">${isLocked ? 'verified' : 'signature'}</span>
+                        </div>
+                        <h3 class="text-xl font-bold">Bestätigung der Eltern</h3>
+                        <p class="text-on-surface-variant text-sm mb-6 max-w-sm">Ich habe die Hausaufgaben dieser Woche gesehen und kontrolliert.</p>
+                        <button onclick="app.confirmParental('${s.id}')" ${isLocked || !verified ? 'disabled' : ''} class="px-8 py-3 rounded-full font-black uppercase text-xs tracking-widest transition-all ${isLocked ? 'bg-primary text-white cursor-default' : (!verified ? 'bg-surface-container opacity-50' : 'bg-surface-container hover:bg-primary hover:text-white')}">
+                            ${isLocked ? 'Bestätigt ✓' : 'Jetzt Bestätigen'}
+                        </button>
+                        ${isLocked ? `<p class="text-[10px] mt-4 font-bold text-primary uppercase">Gesehen am ${s.lastConfirmed}</p>` : ''}
+                    </div>
+                `;
             }
         },
 
-        updateSteps() {
-            const s = this.selectedStudent;
-            const myTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === s.id);
-            const doneCount = myTasks.filter(t => t.completions.includes(s.id)).length;
-            const allDone = myTasks.length > 0 && doneCount === myTasks.length;
-
-            const update = (id, active) => {
-                const el = document.getElementById(id);
-                el.classList.toggle('opacity-50', !active);
-                const circle = el.querySelector('div');
-                circle.className = active ? "w-8 h-8 rounded-full bg-blue-100 text-primary font-bold flex items-center justify-center mb-2" : "w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-2";
-            };
-
-            update('step-1', true);
-            update('step-2', true);
-            update('step-3', doneCount > 0);
-            update('step-4', allDone || s.confirmed);
+        renderLegend() {
+            const lp = document.getElementById('color-legend-planner');
+            lp.innerHTML = Object.keys(SUBJECT_CONFIG).map(code => {
+                const cfg = SUBJECT_CONFIG[code];
+                return `<div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${cfg.color}"></div>
+                    <span class="text-[10px] font-bold text-on-surface-variant uppercase">${cfg.name}</span>
+                </div>`;
+            }).join('');
         },
 
-        toggleTask(taskId) {
-            const task = this.state.tasks.find(t => t.id === taskId);
-            const sid = this.selectedStudent.id;
-            if (task.completions.includes(sid)) {
-                task.completions = task.completions.filter(id => id !== sid);
-            } else {
-                task.completions.push(sid);
-            }
-            this.persist();
-            this.renderStudentTasks();
-        },
-
-        confirmByParent() {
-            if (this.selectedStudent.confirmed) return;
-            if (confirm("Bestätigen Sie hiermit die Erledigung der Hausaufgaben für diese Woche?")) {
-                this.selectedStudent.confirmed = true;
-                this.selectedStudent.lastConfirmed = new Date().toLocaleDateString('de-CH') + " " + new Date().toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'});
-                this.persist();
-                this.renderStudentTasks();
-            }
-        },
-
-        renderTeacherDashboard() {
-            // Fill Selects
-            const select = document.getElementById('new-task-student');
-            select.innerHTML = `<option value="all">Ganze Klasse</option>` + this.state.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-
-            // Stats
-            const totalTasks = this.state.tasks.length;
-            const totalCompletions = this.state.tasks.reduce((acc, t) => acc + t.completions.length, 0);
-            const totalCapacity = this.state.tasks.reduce((acc, t) => acc + (t.studentId === 'all' ? this.state.students.length : 1), 0);
-            const overallPercent = totalCapacity > 0 ? Math.round((totalCompletions / totalCapacity) * 100) : 0;
+        renderDashboard() {
+            const tbody = document.getElementById('student-table-body');
+            const sorted = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
             
-            document.getElementById('total-progress-percent').textContent = overallPercent + "%";
-            document.getElementById('total-progress-bar').style.width = overallPercent + "%";
+            let totalPossibleTasks = 0;
+            let totalActualCompleted = 0;
+            let confirmedCount = 0;
 
-            const confirmedCount = this.state.students.filter(s => s.confirmed).length;
-            document.getElementById('confirmed-count').textContent = `${confirmedCount}/${this.state.students.length}`;
-            document.getElementById('confirmed-pending-text').textContent = `Noch ${this.state.students.length - confirmedCount} ausstehend`;
+            tbody.innerHTML = sorted.map(s => {
+                const relevantTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === s.id);
+                const studentCompletions = this.state.completedTasks[s.id] || [];
+                const doneCount = studentCompletions.filter(tid => relevantTasks.some(t => t.id === tid)).length;
+                const totalCount = relevantTasks.length;
+                const perc = totalCount > 0 ? Math.round((doneCount/totalCount)*100) : 100;
+                
+                totalPossibleTasks += totalCount;
+                totalActualCompleted += doneCount;
+                if (s.confirmed) confirmedCount++;
 
-            // Table
-            const tbody = document.getElementById('teacher-student-table');
-            tbody.innerHTML = this.state.students.map(s => {
-                const sTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === s.id);
-                const sDone = sTasks.filter(t => t.completions.includes(s.id)).length;
-                const sPercent = sTasks.length > 0 ? Math.round((sDone / sTasks.length) * 100) : 0;
                 return `
-                    <tr class="hover:bg-slate-50">
-                        <td class="px-6 py-4 font-bold text-slate-800">${s.name}</td>
+                    <tr class="hover:bg-surface-container/30">
+                        <td class="px-6 py-4 font-bold text-on-surface">${s.name}</td>
                         <td class="px-6 py-4">
-                            <div class="flex items-center gap-2">
-                                <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary" style="width: ${sPercent}%"></div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-20 h-1.5 bg-surface-container rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary" style="width: ${perc}%"></div>
                                 </div>
-                                <span class="text-[10px] font-bold text-slate-400">${sPercent}%</span>
+                                <span class="text-[10px] font-bold">${doneCount}/${totalCount}</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-[10px] font-bold uppercase ${s.confirmed ? 'text-primary' : 'text-slate-300'}">${s.confirmed ? 'Bestätigt' : '-'}</td>
                         <td class="px-6 py-4">
-                            <button onclick="app.selectStudent('${s.id}')" class="text-primary font-bold uppercase text-[10px] hover:underline">Ansicht</button>
-                            <button onclick="app.resetStudentConfirmation('${s.id}')" class="ml-2 text-slate-400 font-bold uppercase text-[10px] hover:text-red-500">Reset</button>
+                            ${s.confirmed ? 
+                                `<span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[9px] font-black uppercase">Gesehen ✓</span>` : 
+                                `<span class="text-on-surface-variant/30 text-[9px] font-black uppercase">Offen</span>`
+                            }
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="app.unlockStudent('${s.id}')" class="text-[9px] font-bold uppercase text-primary hover:underline ${!s.confirmed ? 'opacity-0 pointer-events-none' : ''}">Zurücksetzen</button>
                         </td>
                     </tr>
                 `;
             }).join('');
 
-            // Student Management
-            const mgmtList = document.getElementById('student-mgmt-list');
-            mgmtList.innerHTML = this.state.students.map(s => `
-                <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl group">
-                    <span class="text-sm font-semibold text-slate-700 truncate mr-2">${s.name}</span>
-                    <button onclick="app.removeStudent('${s.id}')" class="text-red-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100">
-                        <span class="material-symbols-outlined text-[18px]">delete</span>
+            const globalPerc = totalPossibleTasks > 0 ? Math.round((totalActualCompleted/totalPossibleTasks)*100) : 0;
+            document.getElementById('dashboard-quote').textContent = `${globalPerc}%`;
+            document.getElementById('dashboard-progress-bar').style.width = `${globalPerc}%`;
+            document.getElementById('dashboard-confirmations').textContent = `${confirmedCount}/${this.state.students.length}`;
+            document.getElementById('dashboard-pending-text').textContent = `Noch ${this.state.students.length - confirmedCount} ausstehend`;
+        },
+
+        renderStudentManagement() {
+            const list = document.getElementById('student-management-list');
+            const sorted = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
+            list.innerHTML = sorted.map(s => `
+                <div class="flex justify-between items-center p-3 bg-surface-container rounded-xl">
+                    <span class="text-sm font-semibold">${s.name}</span>
+                    <button onclick="app.deleteStudent('${s.id}')" class="text-on-surface-variant/40 hover:text-red-500">
+                        <span class="material-symbols-outlined text-[20px]">delete</span>
                     </button>
                 </div>
             `).join('');
         },
 
-        resetStudentConfirmation(id) {
-            const s = this.state.students.find(st => st.id === id);
-            if (s && confirm(`${s.name} Bestätigung wirklich zurücksetzen?`)) {
-                s.confirmed = false;
-                s.lastConfirmed = '-';
-                this.persist();
-                this.renderTeacherDashboard();
-            }
-        },
-
-        addTask(e) {
-            e.preventDefault();
-            const studentId = document.getElementById('new-task-student').value;
-            const subject = document.getElementById('new-task-subject').value;
-            const deadline = document.getElementById('new-task-date').value;
-            const description = document.getElementById('new-task-desc').value;
-
-            const newTask = {
-                id: 't' + Date.now(),
-                studentId,
-                subject,
-                description,
-                deadline,
-                completions: []
-            };
-
-            this.state.tasks.push(newTask);
-            this.persist();
-            document.getElementById('new-task-desc').value = "";
-            this.renderTeacherDashboard();
-        },
-
-        addStudent() {
-            const input = document.getElementById('new-student-input');
-            const name = input.value.trim();
-            if (name) {
-                this.state.students.push({ id: 's' + Date.now(), name, confirmed: false, lastConfirmed: '-' });
-                input.value = '';
-                this.persist();
-                this.renderTeacherDashboard();
-            }
-        },
-
-        removeStudent(id) {
-            if (confirm("Schüler/in wirklich entfernen?")) {
-                this.state.students = this.state.students.filter(s => s.id !== id);
-                this.state.tasks = this.state.tasks.filter(t => t.studentId !== id);
-                this.persist();
-                this.renderTeacherDashboard();
-            }
-        },
-
-        importStudents() {
-            const txt = prompt("Kopiere hier eine Namensliste hinein (ein Name pro Zeile):");
-            if (txt) {
-                const names = txt.split('\n').map(n => n.trim()).filter(n => n.length > 0);
-                names.forEach(name => {
-                    this.state.students.push({ id: 's' + Math.random().toString(36).substr(2, 6), name, confirmed: false, lastConfirmed: '-' });
-                });
-                this.persist();
-                this.renderTeacherDashboard();
-            }
-        },
-
-        exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "doeltschi_backup.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-        },
-
-        openQRView() {
-            this.currentRole = 'qr';
-            this.render();
-        },
-
-        generateQR() {
-            const qrContainer = document.getElementById("qrcode");
-            qrContainer.innerHTML = "";
-            const url = new URL(window.location.origin + window.location.pathname);
-            url.searchParams.set('role', 'student');
-            
-            const display = document.getElementById('qr-url-display');
-            display.textContent = url.href;
-
-            new QRCode(qrContainer, {
-                text: url.href,
-                width: 200,
-                height: 200,
-                colorDark : "#0058bc",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
+        renderManageTasks() {
+            const body = document.getElementById('manage-tasks-body');
+            body.innerHTML = this.state.tasks.map(t => {
+                const s = t.studentId === 'all' ? 'Klasse' : (this.state.students.find(x => x.id === t.studentId)?.name || 'Gelöscht');
+                const cfg = SUBJECT_CONFIG[t.subjectCode] || { name: '?', color: '#64748b' };
+                return `
+                    <tr class="hover:bg-surface-container/30">
+                        <td class="px-6 py-3 text-[11px] font-bold uppercase text-on-surface-variant">${s}</td>
+                        <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full text-[9px] font-bold" style="background-color: ${cfg.color}15; color: ${cfg.color}">${cfg.name}</span></td>
+                        <td class="px-6 py-3 text-xs">${t.description}</td>
+                        <td class="px-6 py-3 text-xs font-bold">${t.deadline}</td>
+                        <td class="px-6 py-3 text-right">
+                            <button onclick="app.deleteTask('${t.id}')" class="text-on-surface-variant/30 hover:text-red-500">
+                                <span class="material-symbols-outlined text-[18px]">close</span>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
     };
 
-    document.addEventListener('DOMContentLoaded', () => app.init());
+    app.init();
 </script>
 </body></html>
