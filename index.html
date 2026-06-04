@@ -6,8 +6,8 @@
 <title>QR-Code scannen – Wer – Was – Bis wann</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<!-- QRCode.js Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -109,14 +109,32 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
+        /* Ensure QR code canvas fills the container */
+        #qrcode canvas, #qrcode img {
+            width: 100% !important;
+            height: auto !important;
+        }
+        @media print {
+            header, footer, .action-buttons, .info-box {
+                display: none !important;
+            }
+            main {
+                padding: 0 !important;
+            }
+            .qr-card {
+                box-shadow: none !important;
+                border: none !important;
+                transform: none !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-surface text-on-surface font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed">
-<!-- Top AppBar (from Shared Components JSON - Filtered for relevance) -->
+<!-- Top AppBar -->
 <header class="bg-surface border-b border-outline-variant flex justify-between items-center w-full px-gutter max-w-[1100px] mx-auto h-16 sticky top-0 z-50">
 <h1 class="font-h2 text-h2 font-bold text-on-surface">Wer – Was – Bis wann</h1>
 <div class="flex items-center gap-4">
-<button class="hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95 duration-200">
+<button class="hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95 duration-200" onclick="window.location.reload()">
 <span class="material-symbols-outlined text-primary" data-icon="refresh">refresh</span>
 </button>
 </div>
@@ -131,39 +149,39 @@
                 </p>
 </div>
 <!-- Central QR Card -->
-<div class="relative group">
+<div class="relative group qr-card-container">
 <!-- Background decorative element -->
 <div class="absolute -inset-4 bg-primary/5 rounded-[4rem] blur-3xl group-hover:bg-primary/10 transition-all duration-500 -z-10"></div>
-<div class="bg-surface-container-lowest rounded-lg border border-outline-variant p-8 md:p-12 shadow-sm transition-all duration-300 hover:shadow-md max-w-sm mx-auto">
+<div class="qr-card bg-surface-container-lowest rounded-lg border border-outline-variant p-8 md:p-12 shadow-sm transition-all duration-300 hover:shadow-md max-w-sm mx-auto">
 <div class="flex flex-col items-center gap-8">
 <span class="font-label-caps text-label-caps text-primary tracking-[0.2em]">DOELTSCHI PLANER</span>
 <!-- QR Code Area -->
 <div class="qr-gradient-border rounded-lg p-2 bg-white aspect-square w-full max-w-[280px] flex items-center justify-center overflow-hidden">
-<img alt="QR Code for sharing the planner" class="w-full h-full object-contain" data-alt="A high-contrast, professional QR code centered on a clean white background. The QR code uses a deep primary blue color for its data modules. It is framed by a subtle, modern gradient border that blends from bright blue to soft purple. The overall aesthetic is clean, minimalist, and highly corporate, conveying reliability and ease of use for an educational software platform." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAlPbL0597K2bwvc58xSBYk4vb2sbmdnDu61aY5YR1syD-ynfelqN_zQZ0LJA1WOcVvMB0-OmhzgyyIlBqkGsOV7IW73GE0Jm9qtqIeTIg2iSfssCDZIrcKTzWWMOibaO4nnO8q1JuKq7TxknzKb2uSfFSlwj9md9J05RpTXOJOLQ3fXtWz5RlbJXv4HbrFlV8409XA5KdZJHV_nkqwEqCdxOQyM7qahHe0m1hqt-GMW1cnD5cTZxJWCrpBvQgxb6TU2wgkjeXT-uo"/>
+<div class="w-full h-full flex items-center justify-center" id="qrcode"></div>
 </div>
 <div class="flex items-center gap-3 bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant">
 <span class="material-symbols-outlined text-primary text-sm" data-icon="link">link</span>
-<span class="font-subject-tag text-subject-tag text-on-surface-variant">doeltschi.app/share/v482</span>
+<span class="font-subject-tag text-subject-tag text-on-surface-variant" id="display-url">doeltschi.app/share/...</span>
 </div>
 </div>
 </div>
 </div>
 <!-- Action Buttons -->
-<div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-<button class="w-full sm:w-auto px-8 py-4 bg-primary text-on-primary rounded-full font-h2 text-body-lg hover:bg-primary-container transition-all active:scale-[0.98] duration-200 shadow-sm flex items-center justify-center gap-3">
+<div class="action-buttons flex flex-col sm:flex-row items-center justify-center gap-4">
+<button class="w-full sm:w-auto px-8 py-4 bg-primary text-on-primary rounded-full font-h2 text-body-lg hover:bg-primary-container transition-all active:scale-[0.98] duration-200 shadow-sm flex items-center justify-center gap-3" onclick="window.print()">
 <span class="material-symbols-outlined" data-icon="print">print</span>
                     QR-Code drucken
                 </button>
-<a class="w-full sm:w-auto px-8 py-4 text-primary font-h2 text-body-lg hover:bg-surface-container-high rounded-full transition-all flex items-center justify-center gap-3" href="#">
+<button class="w-full sm:w-auto px-8 py-4 text-primary font-h2 text-body-lg hover:bg-surface-container-high rounded-full transition-all flex items-center justify-center gap-3" onclick="window.history.back()">
 <span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
                     Zurück zum Planer
-                </a>
+                </button>
 </div>
-<!-- Confirmation Style Box (as per Style Guidance) -->
-<div class="mt-8 p-6 bg-primary/10 border-2 border-dashed border-primary/30 rounded-lg max-w-sm mx-auto text-left">
+<!-- Confirmation Style Box -->
+<div class="info-box mt-8 p-6 bg-primary/10 border-2 border-dashed border-primary/30 rounded-lg max-w-sm mx-auto text-left">
 <div class="flex items-start gap-4">
 <div class="bg-primary text-on-primary p-1 rounded-full shrink-0">
-<span class="material-symbols-outlined text-sm" data-icon="verified_user" data-weight="fill">verified_user</span>
+<span class="material-symbols-outlined text-sm" data-icon="verified_user">verified_user</span>
 </div>
 <div>
 <span class="font-label-caps text-label-caps text-primary block mb-1">Sichere Verbindung</span>
@@ -175,7 +193,7 @@
 </div>
 </div>
 </main>
-<!-- Footer (from Shared Components JSON) -->
+<!-- Footer -->
 <footer class="bg-surface border-t border-outline-variant">
 <div class="w-full max-w-[1100px] mx-auto py-8 px-gutter flex flex-col md:flex-row justify-between items-center gap-4">
 <span class="font-label-caps text-label-caps font-bold text-on-surface-variant">© 2024 Wer – Was – Bis wann</span>
@@ -187,24 +205,53 @@
 </div>
 </footer>
 <script>
-        // Micro-interaction for the QR code card
-        const qrCard = document.querySelector('.group');
-        if (qrCard) {
-            qrCard.addEventListener('mousemove', (e) => {
-                const rect = qrCard.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                const rotateX = (y - centerY) / 25;
-                const rotateY = (centerX - x) / 25;
-                
-                qrCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-            });
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Handle URL Generation
+            const currentUrl = window.location.href;
+            const displayUrl = document.getElementById('display-url');
+            
+            // For display, we might want a shorter version if it's too long
+            try {
+                const url = new URL(currentUrl);
+                displayUrl.textContent = url.hostname + url.pathname.substring(0, 10) + (url.pathname.length > 10 ? '...' : '');
+            } catch(e) {
+                displayUrl.textContent = "doeltschi.app/share/current";
+            }
 
-            qrCard.addEventListener('mouseleave', () => {
-                qrCard.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
-            });
-        }
+            // 2. Robust QR Code Generation
+            const qrcodeContainer = document.getElementById("qrcode");
+            if (qrcodeContainer) {
+                new QRCode(qrcodeContainer, {
+                    text: currentUrl,
+                    width: 256,
+                    height: 256,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+            }
+
+            // 3. Card Micro-interactions
+            const qrCardContainer = document.querySelector('.qr-card-container');
+            const qrCard = document.querySelector('.qr-card');
+            
+            if (qrCardContainer && qrCard) {
+                qrCardContainer.addEventListener('mousemove', (e) => {
+                    const rect = qrCardContainer.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = (y - centerY) / 20;
+                    const rotateY = (centerX - x) / 20;
+                    
+                    qrCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                });
+
+                qrCardContainer.addEventListener('mouseleave', () => {
+                    qrCard.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+                });
+            }
+        });
     </script>
 </body></html>
