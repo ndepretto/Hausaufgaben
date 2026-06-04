@@ -207,7 +207,7 @@
 <h2 class="text-3xl font-black text-on-surface">Lehrer-Cockpit</h2>
 <div class="flex gap-2">
 <button class="px-5 py-2.5 bg-success text-white rounded-full text-xs font-bold uppercase flex items-center gap-2 shadow-lg shadow-success/20 hover:scale-105 transition-all disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed" id="publish-btn" onclick="app.publishData()">
-<span class="material-symbols-outlined text-[18px]">publish</span> <span>Veröffentlichen</span>
+<span class="material-symbols-outlined text-[18px]">publish</span> <span>Änderungen veröffentlichen</span>
 </button>
 <button class="px-5 py-2.5 bg-white border border-outline-variant rounded-full text-xs font-bold uppercase flex items-center gap-2 hover:bg-surface-container" onclick="window.print()">
 <span class="material-symbols-outlined text-[18px]">print</span> Drucken
@@ -398,6 +398,7 @@
             state: null,
             STORAGE_KEY: 'doeltschi_v24_urlsync',
             _qrcode: null,
+            _pendingId: null,
 
             async init() {
                 // Initialize default state
@@ -412,7 +413,7 @@
                     this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
                 }
 
-                // Reset temporary session flags
+                // Temporary session flags should be reset on load unless they come from a fresh sync
                 this.state.isLehrer = false;
                 this.state.currentTab = 'Planer';
 
@@ -422,18 +423,19 @@
                 
                 if (dataParam) {
                     try {
-                        // Safe b64 decoding for UTF-8
                         const decodedString = decodeURIComponent(escape(atob(dataParam)));
                         const decoded = JSON.parse(decodedString);
                         
                         if (decoded && decoded.tasks && decoded.students) {
-                            // Merge URL data into state. Completions stay local.
                             this.state.tasks = decoded.tasks;
-                            this.state.students = decoded.students;
+                            this.state.students = decoded.students.map(s => {
+                                // Keep local confirmation state if it exists, otherwise use fresh
+                                const existing = this.state.students.find(es => es.id === s.id);
+                                return { ...s, confirmed: existing?.confirmed || false, lastConfirmed: existing?.lastConfirmed || '-' };
+                            });
                             this.state.lastPublished = decoded.lp;
                             this.state.isFromUrlSync = true;
                             this.state.hasUnpublishedChanges = false;
-                            
                             this.persist();
                         }
                     } catch (e) {
@@ -458,7 +460,6 @@
 
             generateShareLink() {
                 try {
-                    // Minify data for URL: strip confirmed flags and local state
                     const payload = {
                         tasks: this.state.tasks,
                         students: this.state.students.map(s => ({ id: s.id, name: s.name })), 
@@ -488,11 +489,8 @@
                     this.persist();
                     
                     const shareLink = this.generateShareLink();
-                    
-                    // Update URL without refreshing
                     window.history.replaceState({}, document.title, shareLink);
                     
-                    // Update UI components
                     this.initQRCode(shareLink);
                     document.getElementById('share-link-input').value = shareLink;
                     document.getElementById('publish-modal').classList.remove('hidden');
@@ -526,7 +524,7 @@
                 }
             },
 
-            updateSyncUI(status) {
+            updateSyncUI() {
                 const el = document.getElementById('sync-status');
                 const txt = document.getElementById('sync-status-text');
                 const icon = document.getElementById('sync-icon');
@@ -624,7 +622,13 @@
                 monday.setDate(now.getDate() + diff);
                 const friday = new Date(monday);
                 friday.setDate(monday.getDate() + 4);
-                const fmt = (date) => date.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                
+                const fmt = (date) => {
+                    const d = date.getDate().toString().padStart(2, '0');
+                    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+                    const y = date.getFullYear();
+                    return `${d}.${m}.${y}`;
+                };
                 
                 const weekDisplay = document.getElementById('current-week-display');
                 const dateRange = document.getElementById('current-date-range');
@@ -744,7 +748,12 @@
                 const s = this.state.students.find(x => x.id === sid);
                 if (s) {
                     s.confirmed = true;
-                    s.lastConfirmed = new Date().toLocaleDateString('de-CH') + ' ' + new Date().toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
+                    const date = new Date();
+                    const d = date.getDate().toString().padStart(2, '0');
+                    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+                    const y = date.getFullYear();
+                    const time = date.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
+                    s.lastConfirmed = `${d}.${m}.${y} ${time}`;
                     this.persist();
                     this.renderAll();
                 }
@@ -863,8 +872,11 @@
                         steps[1].classList.remove('opacity-50');
                         steps[1].querySelector('div').classList.add('bg-primary/20', 'text-primary');
                     }
-                    if (steps[2]) steps[2].classList.remove('opacity-50');
-                } else {
+                    if (steps[2]) {
+                        steps[2].classList.remove('opacity-50');
+                        steps[2].querySelector('div').classList.add('bg-primary/20', 'text-primary');
+                    }
+                } else if (s && s.confirmed) {
                     if (steps[3]) {
                         steps[3].classList.remove('opacity-50');
                         steps[3].querySelector('div').classList.add('bg-primary/20', 'text-primary');
@@ -998,15 +1010,4 @@
 
                 const globalPerc = totalPossibleTasks > 0 ? Math.round((totalActualCompleted/totalPossibleTasks)*100) : 0;
                 const quoteEl = document.getElementById('dashboard-quote');
-                const progressEl = document.getElementById('dashboard-progress-bar');
-                const confirmationsEl = document.getElementById('dashboard-confirmations');
-                const pendingEl = document.getElementById('dashboard-pending-text');
-
-                if (quoteEl) quoteEl.textContent = `${globalPerc}%`;
-                if (progressEl) progressEl.style.width = `${globalPerc}%`;
-                if (confirmationsEl) confirmationsEl.textContent = `${confirmedCount}/${this.state.students.length}`;
-                if (pendingEl) {
-                    const pendingCount = this.state.students.length - confirmedCount;
-                    pendingEl.textContent = pendingCount === 0 ? "Alle Eltern haben bestätigt" : `${pendingCount} Bestätigung(en) ausstehend`;
-                }
-            },</script></body></html>
+                const progressEl = document.getElementById('</script></body></html>
