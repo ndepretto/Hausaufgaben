@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+<html class="light" lang="de"><head></head><body class="bg-background text-on-surface worksheet-pattern min-h-screen selection:bg-blue-100 flex flex-col font-body">```html
 
-<html class="light" lang="de"><head>
-<meta charset="utf-8"/>
+
+
+    <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>doeltschi | Digitaler Aufgabenplaner</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -71,8 +72,6 @@
             },
         }
     </script>
-</head>
-<body class="bg-background text-on-surface worksheet-pattern min-h-screen selection:bg-blue-100 flex flex-col font-body">
 <!-- Top App Bar -->
 <header class="bg-surface/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50 no-print">
 <div class="flex justify-between items-center w-full px-gutter max-w-[1000px] mx-auto h-16">
@@ -112,11 +111,11 @@
 <p class="text-slate-500 font-medium text-lg">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
 </div>
 <div class="w-full max-w-md px-4">
-<div class="relative group">
+<div class="relative group" id="student-dropdown-container">
 <select class="w-full appearance-none bg-white border-2 border-slate-200 rounded-2xl px-6 py-5 text-xl font-bold text-slate-700 shadow-sm transition-all hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none cursor-pointer" id="student-dropdown" onchange="if(this.value) app.selectStudent(this.value)">
 <option disabled="" selected="" value="">Deinen Namen auswählen...</option>
 </select>
-<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-6 text-primary">
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-6 text-primary" id="dropdown-arrow">
 <span class="material-symbols-outlined text-3xl font-bold">expand_more</span>
 </div>
 </div>
@@ -126,15 +125,26 @@
 <div class="hidden space-y-12" id="student-tasks-view">
 <div class="flex flex-col md:flex-row justify-between items-center gap-6 no-print">
 <div class="flex items-center gap-4">
-<button class="flex items-center gap-2 text-primary font-bold hover:underline" onclick="app.setRole('student')">
+<button class="flex items-center gap-2 text-primary font-bold hover:underline" id="student-back-btn" onclick="app.setRole('student')">
 <span class="material-symbols-outlined">arrow_back</span>
-<span class="text-xl" id="display-student-name">...</span>
+<span class="text-xl flex items-center gap-2">
+<span id="display-student-name">...</span>
+<span class="material-symbols-outlined text-sm hidden" id="lock-icon-status">lock</span>
+</span>
 </button>
 </div>
 <div class="text-center md:text-right">
 <h2 class="text-3xl font-black text-slate-900" id="current-week-display">Woche</h2>
 <p class="text-slate-500 font-medium" id="current-date-range"></p>
 </div>
+</div>
+<!-- Session Lock Banner -->
+<div class="hidden bg-blue-50 border border-blue-100 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 no-print" id="session-lock-banner">
+<div class="flex items-center gap-3 text-primary">
+<span class="material-symbols-outlined">verified_user</span>
+<p class="text-sm font-semibold">Sitzung noch nicht geschützt. Diesen Namen für dieses Gerät festlegen?</p>
+</div>
+<button class="px-4 py-2 bg-primary text-white rounded-lg text-xs font-bold uppercase tracking-wide hover:bg-blue-700 transition-all" onclick="app.lockSession()">Sitzung Sperren</button>
 </div>
 <!-- Progress Steps -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 no-print">
@@ -268,7 +278,7 @@
 <th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Name</th>
 <th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Fortschritt</th>
 <th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Eltern</th>
-<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px] text-center">Individueller QR</th>
+<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px] text-center">Sitzung</th>
 <th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Aktion</th>
 </tr>
 </thead>
@@ -338,7 +348,7 @@
 <div class="max-w-[1000px] mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-6">
 <div class="text-center md:text-left">
 <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
-<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Version 12.2 • Smart Individual Sync</p>
+<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Version 12.5 • Student Identity Protection</p>
 </div>
 <div class="flex gap-8">
 <a class="text-xs font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Datenschutz</a>
@@ -396,14 +406,15 @@
         tasks: [
             { id: 't1', studentId: 'all', subject: 'Deutsch', description: 'Arbeitsheft S. 42-43 lesen.', deadline: '15.05.2024', completions: [] },
             { id: 't2', studentId: 's1', subject: 'Mathematik', description: 'Einmaleins-Tabelle vervollständigen.', deadline: '16.05.2024', completions: [] }
-        ]
+        ],
+        lockedStudentId: null // Global lock for this device
     };
 
     const app = {
         state: null,
         currentRole: 'student', 
         selectedStudent: null,
-        STORAGE_KEY: 'doeltschi_v12_stable',
+        STORAGE_KEY: 'doeltschi_v12_protected',
         qrInstance: null,
         qrInstancePrint: null,
         qrInstanceSingle: null,
@@ -436,10 +447,19 @@
                                         syncStud.lastConfirmed = localStud.lastConfirmed;
                                     }
                                 });
+                                // Keep local lock if exists
+                                decoded.lockedStudentId = local.lockedStudentId || decoded.lockedStudentId;
                             }
+                            
+                            // If URL has specific student, set it as the device lock
+                            if (sParam && decoded.students.some(st => st.id === sParam)) {
+                                decoded.lockedStudentId = sParam;
+                            }
+
                             this.state = decoded;
                             this.persist();
                             let nextUrl = window.location.origin + window.location.pathname + "?role=student";
+                            // Preserve sParam in URL if desired, but we rely on local lock now
                             if (sParam) nextUrl += `&s=${sParam}`;
                             window.location.href = nextUrl;
                             return;
@@ -452,9 +472,18 @@
                     this.state = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(INITIAL_STATE));
                 }
                 
-                if (roleParam === 'teacher') {
+                // If device is locked, force student view to that student
+                if (this.state.lockedStudentId && roleParam !== 'teacher' && roleParam !== 'login') {
+                    const student = this.state.students.find(st => st.id === this.state.lockedStudentId);
+                    if (student) {
+                        this.selectedStudent = student;
+                        this.currentRole = 'student-tasks';
+                    } else {
+                        this.setRole('student');
+                    }
+                } else if (roleParam === 'teacher') {
                     this.setRole('teacher');
-                } else if (sParam) {
+                } else if (sParam && !this.state.lockedStudentId) {
                     const student = this.state.students.find(st => st.id === sParam);
                     if (student) this.selectStudent(student.id);
                     else this.setRole('student');
@@ -499,7 +528,16 @@
 
         setRole(role) {
             this.currentRole = role;
-            if (role === 'student') this.selectedStudent = null;
+            // If we are resetting to student view and have a lock, force the locked user
+            if (role === 'student' && this.state.lockedStudentId) {
+                const s = this.state.students.find(st => st.id === this.state.lockedStudentId);
+                if (s) {
+                    this.selectedStudent = s;
+                    this.currentRole = 'student-tasks';
+                }
+            } else if (role === 'student') {
+                this.selectedStudent = null;
+            }
             this.render();
         },
 
@@ -525,6 +563,25 @@
             this.selectedStudent = this.state.students.find(s => s.id === id);
             this.currentRole = 'student-tasks';
             this.render();
+        },
+
+        lockSession() {
+            if (this.selectedStudent) {
+                this.state.lockedStudentId = this.selectedStudent.id;
+                this.persist();
+                this.render();
+            }
+        },
+
+        unlockSessionTeacher() {
+            const pw = prompt("Bitte Lehrer-Passwort eingeben, um die Sitzungssperre aufzuheben:");
+            if (pw === 'lehrer123') {
+                this.state.lockedStudentId = null;
+                this.persist();
+                this.setRole('student');
+            } else if (pw !== null) {
+                alert("Passwort falsch.");
+            }
         },
 
         render() {
@@ -560,18 +617,54 @@
 
         renderStudentDropdown() {
             const dropdown = document.getElementById('student-dropdown');
+            const isLocked = !!this.state.lockedStudentId;
+            
+            dropdown.disabled = isLocked;
+            document.getElementById('student-dropdown-container').classList.toggle('opacity-60', isLocked);
+            document.getElementById('dropdown-arrow').classList.toggle('hidden', isLocked);
+
             dropdown.innerHTML = '<option value="" disabled selected>Deinen Namen auswählen...</option>' + 
-                this.state.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-            dropdown.value = ""; 
+                this.state.students.map(s => `<option value="${s.id}" ${this.state.lockedStudentId === s.id ? 'selected' : ''}>${s.name}${this.state.lockedStudentId === s.id ? ' (Gesperrt)' : ''}</option>`).join('');
+            
+            if (isLocked) dropdown.value = this.state.lockedStudentId;
+            else dropdown.value = ""; 
         },
 
         renderStudentTasks() {
             const s = this.selectedStudent;
             if (!s) return;
 
-            document.getElementById('display-student-name').textContent = s.name;
-            const taskList = document.getElementById('task-list');
+            const isLocked = (this.state.lockedStudentId === s.id);
+            const backBtn = document.getElementById('student-back-btn');
             
+            // Manage lock icon in header
+            const lockIcon = document.getElementById('lock-icon-status');
+            lockIcon.classList.toggle('hidden', !isLocked);
+
+            // Display name
+            document.getElementById('display-student-name').textContent = s.name;
+            
+            // Back button logic: If locked, clicking back does nothing or goes to a locked dropdown.
+            // Requirement says dropdown should be locked too.
+            if (isLocked) {
+                backBtn.onclick = null;
+                backBtn.classList.remove('hover:underline', 'cursor-pointer');
+                backBtn.querySelector('.material-symbols-outlined:first-child').classList.add('hidden');
+            } else {
+                backBtn.onclick = () => app.setRole('student');
+                backBtn.classList.add('hover:underline', 'cursor-pointer');
+                backBtn.querySelector('.material-symbols-outlined:first-child').classList.remove('hidden');
+            }
+
+            // Session lock banner logic
+            const banner = document.getElementById('session-lock-banner');
+            if (!isLocked) {
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+
+            const taskList = document.getElementById('task-list');
             const myTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === s.id);
             
             if (myTasks.length === 0) {
@@ -698,9 +791,14 @@
                 const sTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === s.id);
                 const sDone = sTasks.filter(t => t.completions.includes(s.id)).length;
                 const sPercent = sTasks.length > 0 ? Math.round((sDone / sTasks.length) * 100) : 0;
+                const isLockedOnDevice = (this.state.lockedStudentId === s.id);
+                
                 return `
                     <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-6 py-4 font-bold text-slate-800">${s.name}</td>
+                        <td class="px-6 py-4 font-bold text-slate-800 flex items-center gap-2">
+                            ${s.name}
+                            ${isLockedOnDevice ? '<span class="material-symbols-outlined text-[14px] text-primary" title="Diese Sitzung ist auf diesem Gerät gesperrt">lock</span>' : ''}
+                        </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2">
                                 <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -713,13 +811,18 @@
                             ${s.confirmed ? `Ja (${s.lastConfirmed})` : '-'}
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <button onclick="app.openSingleQR('${s.id}')" class="p-2 hover:bg-blue-50 text-primary rounded-lg transition-colors inline-flex items-center justify-center">
-                                <span class="material-symbols-outlined text-[20px] pointer-events-none">qr_code_2</span>
-                            </button>
+                            ${isLockedOnDevice ? 
+                                `<button onclick="app.unlockSessionTeacher()" class="text-xs font-bold text-primary uppercase hover:underline">Entsperren</button>` : 
+                                `<span class="text-slate-300 text-[10px] font-bold uppercase">Frei</span>`}
                         </td>
                         <td class="px-6 py-4">
-                            <button onclick="app.selectStudent('${s.id}')" class="text-primary font-bold uppercase text-[10px] hover:underline">Ansicht</button>
-                            <button onclick="app.resetStudentConfirmation('${s.id}')" class="ml-2 text-slate-400 font-bold uppercase text-[10px] hover:text-red-500">Reset</button>
+                            <div class="flex items-center gap-3">
+                                <button onclick="app.selectStudent('${s.id}')" class="text-primary font-bold uppercase text-[10px] hover:underline">Ansicht</button>
+                                <button onclick="app.openSingleQR('${s.id}')" class="text-slate-500 hover:text-primary transition-colors flex items-center" title="QR Code">
+                                    <span class="material-symbols-outlined text-[20px]">qr_code_2</span>
+                                </button>
+                                <button onclick="app.resetStudentConfirmation('${s.id}')" class="text-slate-400 font-bold uppercase text-[10px] hover:text-red-500">Reset</button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -817,6 +920,7 @@
             if (confirm("Schüler/in wirklich entfernen?")) {
                 this.state.students = this.state.students.filter(s => s.id !== id);
                 this.state.tasks = this.state.tasks.filter(t => t.studentId !== id);
+                if (this.state.lockedStudentId === id) this.state.lockedStudentId = null;
                 this.persist();
                 this.renderTeacherDashboard();
             }
@@ -908,46 +1012,4 @@
         },
 
         closeSingleQR() {
-            document.getElementById('single-qr-modal').classList.remove('active');
-        },
-
-        generateQR() {
-            const qrContainer = document.getElementById("qrcode");
-            const qrContainerPrint = document.getElementById("qrcode-print");
-            const printTitle = document.getElementById('print-qr-title');
-            
-            qrContainer.innerHTML = "";
-            qrContainerPrint.innerHTML = "";
-            printTitle.textContent = "Klasse";
-            
-            const syncData = btoa(JSON.stringify(this.state));
-            const url = new URL(window.location.origin + window.location.pathname);
-            url.searchParams.set('role', 'student');
-            url.searchParams.set('d', syncData);
-            
-            const display = document.getElementById('qr-url-display');
-            display.textContent = url.href;
-
-            this.qrInstance = new QRCode(qrContainer, {
-                text: url.href,
-                width: 320,
-                height: 320,
-                colorDark : "#0058bc",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.L
-            });
-
-            this.qrInstancePrint = new QRCode(qrContainerPrint, {
-                text: url.href,
-                width: 500,
-                height: 500,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.L
-            });
-        }
-    };
-
-    document.addEventListener('DOMContentLoaded', () => app.init());
-</script>
-</body></html>
+            </script></body></html>
