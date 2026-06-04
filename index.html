@@ -84,8 +84,8 @@
 </div>
 <div class="flex items-center gap-2">
 <nav class="flex items-center bg-slate-100 rounded-full p-1 border border-slate-200">
-<button class="px-4 py-1.5 rounded-full text-xs font-bold transition-all" id="nav-student" onclick="app.setRole('student')">Schüler-Ansicht</button>
-<button class="px-4 py-1.5 rounded-full text-xs font-bold transition-all" id="nav-teacher" onclick="app.requestTeacherMode()">Lehrer-Modus</button>
+<button class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2" id="nav-student" onclick="app.setRole('student')"><span class="material-symbols-outlined text-[18px]">person</span><span>Schüler-Ansicht</span></button>
+<button class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2" id="nav-teacher" onclick="app.requestTeacherMode()"><span class="material-symbols-outlined text-[18px]">admin_panel_settings</span><span>Lehrer-Modus</span></button>
 </nav>
 <button class="hover:bg-slate-200 p-2 rounded-full transition-colors no-print" onclick="window.location.reload()">
 <span class="material-symbols-outlined text-primary text-xl">refresh</span>
@@ -105,7 +105,7 @@
 </div>
 </div>
 <!-- Student Select View (Dropdown Layout) -->
-<div class="hidden flex flex-col items-center py-24" id="student-select-view">
+<div class="hidden flex flex-col items-center py-24 max-w-2xl mx-auto" id="student-select-view">
 <div class="text-center space-y-4 mb-12">
 <h2 class="text-5xl font-black text-slate-900 tracking-tight">Wer bist du?</h2>
 <p class="text-slate-500 font-medium text-lg">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
@@ -113,7 +113,7 @@
 <div class="w-full max-w-md px-4">
 <div class="relative group" id="student-dropdown-container">
 <select class="w-full appearance-none bg-white border-2 border-slate-200 rounded-2xl px-6 py-5 text-xl font-bold text-slate-700 shadow-sm transition-all hover:border-primary focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none cursor-pointer" id="student-dropdown" onchange="if(this.value) app.selectStudent(this.value)">
-<option disabled="" selected="" value="">Deinen Namen auswählen...</option>
+<option disabled="" selected="" value="">Wähle deinen Namen...</option>
 </select>
 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-6 text-primary" id="dropdown-arrow">
 <span class="material-symbols-outlined text-3xl font-bold">expand_more</span>
@@ -134,7 +134,7 @@
 </button>
 </div>
 <div class="text-center md:text-right">
-<h2 class="text-3xl font-black text-slate-900" id="current-week-display">Woche</h2>
+<h2 class="text-3xl font-black text-slate-900" id="current-week-display">Aktuelle Woche</h2>
 <p class="text-slate-500 font-medium" id="current-date-range"></p>
 </div>
 </div>
@@ -182,7 +182,7 @@
 </div>
 </div>
 <!-- Teacher Dashboard View -->
-<div class="hidden space-y-8" id="teacher-dashboard">
+<div class="hidden space-y-8 max-w-[1000px] mx-auto" id="teacher-dashboard">
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 <h2 class="text-3xl font-black text-slate-900">Lehrer Dashboard</h2>
 <div class="flex gap-2">
@@ -236,7 +236,7 @@
 </div>
 <div>
 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bis Datum</label>
-<input class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary" id="new-task-date" placeholder="DD.MM.YYYY" required="" type="text"/>
+<input class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary" id="new-task-date" placeholder="TT.MM.JJJJ" required="" type="text"/>
 </div>
 <div class="md:col-span-2">
 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Aufgabenbeschreibung</label>
