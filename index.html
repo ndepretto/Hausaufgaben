@@ -102,7 +102,7 @@
 </div>
 <h3 class="text-xl font-bold">Lehrer-Bereich</h3>
 </div>
-<p class="text-on-surface-variant mb-6 text-sm">Passwort: <code class="bg-surface-container px-1 rounded">lehrer123</code></p>
+<p class="text-on-surface-variant mb-6 text-sm">Bitte gib dein Passwort ein, um zum Cockpit zu gelangen.</p>
 <input class="w-full bg-surface-container border border-outline-variant rounded-xl p-3 mb-4 outline-none focus:ring-2 focus:ring-primary" id="lehrer-password" onkeyup="if(event.key === 'Enter') app.checkLehrerPassword()" placeholder="Passwort" type="password"/>
 <div class="flex justify-end gap-3">
 <button class="px-4 py-2 text-on-surface-variant font-bold text-sm uppercase" onclick="app.closeLehrerModal()">Abbrechen</button>
@@ -290,7 +290,7 @@
 <span class="material-symbols-outlined text-3xl">school</span>
 </div>
 <h3 class="text-xl font-bold mb-3">Für Lehrpersonen</h3>
-<p class="text-on-surface-variant text-sm leading-relaxed">Im Lehrer-Bereich kannst du Aufgaben für die ganze Klasse oder einzelne Schüler erstellen. Du siehst in Echtzeit, wer die Aufgaben bereits erledigt hat und ob die Eltern diese gesehen haben. Das Passwort ist <span class="font-bold">lehrer123</span>.</p>
+<p class="text-on-surface-variant text-sm leading-relaxed">Im Lehrer-Bereich kannst du Aufgaben für die ganze Klasse oder einzelne Schüler erstellen. Du siehst in Echtzeit, wer die Aufgaben bereits erledigt hat und ob die Eltern diese gesehen haben.</p>
 </div>
 </div>
 </div>
@@ -399,6 +399,7 @@
 
         openLehrerModal() {
             document.getElementById('lehrer-modal').classList.remove('hidden');
+            document.getElementById('lehrer-password').value = '';
             document.getElementById('lehrer-password').focus();
         },
 
