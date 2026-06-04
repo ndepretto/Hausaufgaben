@@ -1,13 +1,12 @@
-<!DOCTYPE html>
+<html class="light" lang="de"><head></head><body class="bg-background text-on-surface worksheet-pattern min-h-screen" onload="app.init()">```html
 
-<html class="light" lang="de"><head>
-<meta charset="utf-8"/>
+
+    <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>doeltschi | Hausaufgabenplaner</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<!-- QR Code Library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
         .material-symbols-outlined { 
@@ -39,7 +38,7 @@
 
         body { font-family: 'Inter', sans-serif; }
         
-        #qrcode img {
+        #qrcode img, #print-qrcode-container img {
             margin: 0 auto;
             padding: 10px;
             background: white;
@@ -61,6 +60,7 @@
                         "outline-variant": "#c1c6d7",
                         "background": "#f9f9fe",
                         "on-primary": "#ffffff",
+                        "success": "#15803d"
                     },
                     "borderRadius": {
                         "DEFAULT": "1rem",
@@ -77,33 +77,41 @@
             },
         }
     </script>
-</head>
-<body class="bg-background text-on-surface worksheet-pattern min-h-screen">
 <div class="flex flex-col min-h-screen" id="app">
 <!-- Top App Bar -->
 <header class="bg-white/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50 no-print">
 <div class="flex justify-between items-center w-full px-gutter max-w-[1100px] mx-auto h-20">
 <div class="flex items-center gap-6">
-<h1 class="text-2xl md:text-3xl font-black tracking-tight text-primary cursor-pointer select-none active:scale-95 transition-transform" onclick="app.setTab('Planer')">Döltschi Hausaufgaben</h1>
-<div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-surface-container rounded-full text-[10px] font-bold uppercase text-on-surface-variant animate-pulse-soft">
-<span class="material-symbols-outlined text-[14px]">bolt</span>
-<span>Lokal aktiv</span>
+<h1 class="text-2xl md:text-3xl font-black tracking-tight text-primary cursor-pointer select-none active:scale-95 transition-transform" onclick="app.setTab('Planer')">doeltschi</h1>
+<div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container rounded-full text-[10px] font-bold uppercase text-on-surface-variant" id="sync-status">
+<span class="material-symbols-outlined text-[14px]" id="sync-icon">sync</span>
+<span id="sync-status-text">Synchronisiert</span>
 </div>
 </div>
 <div class="flex items-center gap-4">
 <nav class="hidden md:flex gap-2">
-<button class="px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Planer" onclick="app.setTab('Planer')">Schüler</button>
-<button class="px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Dashboard" onclick="app.handleLehrerNavClick()">Lehrer</button>
+<button class="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Planer" onclick="app.setTab('Planer')">
+<span class="material-symbols-outlined text-[20px]">person_outline</span> Schüler
+                    </button>
+<button class="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Dashboard" onclick="app.handleLehrerNavClick()">
+<span class="material-symbols-outlined text-[20px]">lock_outline</span> Lehrer
+                    </button>
 <button class="px-5 py-2.5 rounded-full text-sm font-bold transition-all" id="nav-Anleitung" onclick="app.setTab('Anleitung')">Hilfe</button>
 </nav>
 <button class="hidden flex items-center gap-2 px-4 py-2 bg-surface-container hover:bg-outline-variant text-on-surface rounded-full transition-colors text-xs font-bold uppercase" id="lehrer-access-btn" onclick="app.logoutLehrer()">
-<span class="material-symbols-outlined text-[18px]">lock</span>
+<span class="material-symbols-outlined text-[18px]">logout</span>
 <span>Abmelden</span>
 </button>
 </div>
 </div>
 </header>
 <main class="flex-1 w-full max-w-[1100px] mx-auto px-gutter py-8 md:py-12">
+<!-- Alert Area -->
+<div class="hidden mb-8 p-4 bg-red-100 border border-red-200 text-red-700 rounded-xl flex items-center gap-3" id="error-alert">
+<span class="material-symbols-outlined">error</span>
+<span id="error-alert-text">Ein Fehler ist aufgetreten.</span>
+<button class="ml-auto text-xs font-bold uppercase underline" onclick="document.getElementById('error-alert').classList.add('hidden')">Schliessen</button>
+</div>
 <!-- Login Modal -->
 <div class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm no-print" id="lehrer-modal">
 <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl border border-outline-variant mx-4">
@@ -114,7 +122,7 @@
 <h3 class="text-xl font-bold">Lehrer-Bereich</h3>
 </div>
 <p class="text-on-surface-variant mb-6 text-sm">Bitte gib dein Passwort ein, um zum Cockpit zu gelangen.</p>
-<input class="w-full bg-surface-container border border-outline-variant rounded-xl p-3 mb-4 outline-none focus:ring-2 focus:ring-primary" id="lehrer-password" onkeyup="if(event.key === 'Enter') app.checkLehrerPassword()" placeholder="Passwort" type="password"/>
+<input class="w-full bg-surface-container border border-outline-variant rounded-xl p-3 mb-4 outline-none focus:ring-2 focus:ring-primary" id="lehrer-password" onkeyup="if(event.key === 'Enter') app.checkLehrerPassword()" placeholder="Passwort (lehrer123)" type="password"/>
 <div class="flex justify-end gap-3">
 <button class="px-4 py-2 text-on-surface-variant font-bold text-sm uppercase" onclick="app.closeLehrerModal()">Abbrechen</button>
 <button class="px-6 py-2 bg-primary text-on-primary rounded-full font-bold text-sm uppercase shadow-md" onclick="app.checkLehrerPassword()">Anmelden</button>
@@ -133,6 +141,23 @@
 <button class="flex-1 px-4 py-4 bg-surface-container rounded-xl font-bold text-sm uppercase hover:bg-outline-variant" onclick="app.cancelIdentity()">Nein</button>
 <button class="flex-1 px-4 py-4 bg-primary text-on-primary rounded-xl font-bold text-sm uppercase shadow-lg shadow-primary/20" onclick="app.confirmIdentity()">Ja, ich bin es</button>
 </div>
+</div>
+</div>
+<!-- Publish Success Modal -->
+<div class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm no-print" id="publish-modal">
+<div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl border border-outline-variant mx-4 text-center">
+<div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+<span class="material-symbols-outlined text-4xl">check_circle</span>
+</div>
+<h3 class="text-2xl font-black text-on-surface mb-2">Bereit zum Teilen!</h3>
+<p class="text-on-surface-variant mb-6 text-sm">Die Daten sind aktualisiert. Der QR-Code enthält nun den neuen Stand. Kopiere den Link, um ihn direkt zu versenden.</p>
+<div class="relative mb-6">
+<input class="w-full bg-surface-container border border-outline-variant rounded-xl p-3 text-xs font-mono text-on-surface-variant outline-none" id="share-link-input" readonly="" type="text"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-primary" onclick="app.copyShareLink()">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+<button class="w-full py-4 bg-primary text-on-primary rounded-xl font-bold text-sm uppercase shadow-lg shadow-primary/20" onclick="document.getElementById('publish-modal').classList.add('hidden')">Verstanden</button>
 </div>
 </div>
 <!-- PLANER VIEW -->
@@ -182,9 +207,12 @@
 </div>
 <!-- DASHBOARD VIEW -->
 <div class="hidden space-y-8" id="content-dashboard">
-<div class="flex justify-between items-center">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 <h2 class="text-3xl font-black text-on-surface">Lehrer-Cockpit</h2>
-<div class="flex gap-2">
+<div class="flex flex-wrap gap-2">
+<button class="px-5 py-2.5 bg-success text-white rounded-full text-xs font-bold uppercase flex items-center gap-2 shadow-lg shadow-success/20 hover:scale-105 transition-all disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed" id="publish-btn" onclick="app.publishData()">
+<span class="material-symbols-outlined text-[18px]">publish</span> <span>Änderungen veröffentlichen</span>
+</button>
 <button class="px-5 py-2.5 bg-white border border-outline-variant rounded-full text-xs font-bold uppercase flex items-center gap-2 hover:bg-surface-container" onclick="window.print()">
 <span class="material-symbols-outlined text-[18px]">print</span> Drucken
                     </button>
@@ -209,11 +237,12 @@
 <p class="text-xs text-on-surface-variant mt-2 font-semibold" id="dashboard-pending-text">-</p>
 </div>
 <div class="bg-white border border-outline-variant p-6 rounded-2xl shadow-sm flex flex-col justify-center">
-<p class="text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mb-2">System-Status</p>
-<div class="flex items-center gap-2 text-green-600">
-<span class="w-2 h-2 rounded-full bg-green-600 animate-pulse"></span>
-<span class="text-sm font-bold">App-Modus Bereit</span>
+<p class="text-[10px] font-bold uppercase text-on-surface-variant tracking-widest mb-2">Sync-Modus</p>
+<div class="flex items-center gap-2" id="sync-indicator">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-sm font-bold text-green-600">Aktuell</span>
 </div>
+<p class="text-[9px] text-on-surface-variant mt-2 font-mono uppercase" id="last-sync-time">Letzte Veröffentlichung: -</p>
 </div>
 </div>
 <div class="bg-white border border-outline-variant rounded-2xl p-6 shadow-sm">
@@ -248,8 +277,8 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 <div class="lg:col-span-2 space-y-4">
 <h3 class="text-xl font-bold text-on-surface">Klassenfortschritt</h3>
-<div class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm">
-<table class="w-full text-left text-sm">
+<div class="bg-white border border-outline-variant rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
+<table class="w-full text-left text-sm min-w-[500px]">
 <thead class="bg-surface-container text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
 <tr>
 <th class="px-6 py-4">Name</th>
@@ -287,9 +316,11 @@
 <div class="p-4 bg-surface-container border-b border-outline-variant">
 <h3 class="text-sm font-bold uppercase tracking-widest">Alle Aufgaben verwalten</h3>
 </div>
-<table class="w-full text-left text-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm min-w-[600px]">
 <tbody class="divide-y divide-surface-container" id="manage-tasks-body"></tbody>
 </table>
+</div>
 </div>
 </div>
 <!-- GUIDE VIEW -->
@@ -301,41 +332,21 @@
 <span class="material-symbols-outlined text-3xl">face</span>
 </div>
 <h3 class="text-xl font-bold mb-3">Für Schüler</h3>
-<p class="text-on-surface-variant text-sm leading-relaxed">Wähle deinen Namen aus der Liste. Du musst einmal bestätigen, dass du es bist. Deine Aufgaben erscheinen automatisch. Sobald du etwas fertig hast, hake es ab. Wenn alles erledigt ist, zeigst du die Seite deinen Eltern zur Bestätigung.</p>
+<p class="text-on-surface-variant text-sm leading-relaxed">Wähle deinen Namen aus der Liste. Deine Aufgaben erscheinen automatisch, sobald die Lehrperson sie über einen Link oder QR-Code geteilt hat. Sobald du etwas fertig hast, hake es ab. Deine Erledigungen werden lokal auf deinem Gerät gespeichert.</p>
 </div>
 <div class="bg-white border border-outline-variant p-8 rounded-2xl shadow-sm">
 <div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6">
-<span class="material-symbols-outlined text-3xl">install_mobile</span>
+<span class="material-symbols-outlined text-3xl">cloud_sync</span>
 </div>
-<h3 class="text-xl font-bold mb-3">Als App installieren</h3>
-<div class="space-y-4">
-<div>
-<p class="text-[10px] font-bold text-primary uppercase mb-1">iOS (iPhone/iPad)</p>
-<p class="text-on-surface-variant text-xs leading-relaxed">Tippe in Safari auf das <span class="font-bold">Teilen-Symbol</span> (Quadrat mit Pfeil) und wähle <span class="font-bold">"Zum Home-Bildschirm"</span>.</p>
-</div>
-<div>
-<p class="text-[10px] font-bold text-primary uppercase mb-1">Android</p>
-<p class="text-on-surface-variant text-xs leading-relaxed">Tippe auf die <span class="font-bold">drei Punkte</span> oben rechts und wähle <span class="font-bold">"App installieren"</span> oder <span class="font-bold">"Zum Startbildschirm hinzufügen"</span>.</p>
-</div>
-</div>
-</div>
-<div class="bg-white border border-outline-variant p-8 rounded-2xl shadow-sm md:col-span-2">
-<div class="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6">
-<span class="material-symbols-outlined text-3xl">school</span>
-</div>
-<h3 class="text-xl font-bold mb-3">Für Lehrpersonen</h3>
-<p class="text-on-surface-variant text-sm leading-relaxed mb-4">Im Lehrer-Bereich (Passwort 'lehrer123') kannst du Aufgaben für die ganze Klasse oder einzelne Schüler erstellen. Du siehst in Echtzeit, wer die Aufgaben bereits erledigt hat und ob die Eltern diese gesehen haben.</p>
-<div class="p-4 bg-surface-container rounded-xl">
-<p class="text-[10px] font-bold uppercase mb-2">QR-Code Tipp</p>
-<p class="text-xs text-on-surface-variant">Drucke den QR-Code aus dem Dashboard aus und hänge ihn im Klassenzimmer auf. So haben die Schüler sofortigen Zugriff auf ihren persönlichen Planer.</p>
-</div>
+<h3 class="text-xl font-bold mb-3">URL-Synchronisation</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">Da dies eine statische Webseite ist, werden Aufgaben über die URL geteilt. Als Lehrperson klicke auf <span class="font-bold">"Veröffentlichen"</span>, um einen speziellen Link zu generieren. Diesen Link oder den aktualisierten QR-Code teilst du mit deiner Klasse.</p>
 </div>
 </div>
 </div>
 </main>
 <!-- Print Only Section -->
 <div class="print-only fixed inset-0 bg-white p-20 text-center">
-<h1 class="text-4xl font-bold mb-4">Döltschi Hausaufgabenplaner</h1>
+<h1 class="text-4xl font-bold mb-4">doeltschi Hausaufgabenplaner</h1>
 <p class="text-xl mb-12">Scanne den Code für deinen persönlichen Planer</p>
 <div class="flex justify-center mb-8" id="print-qrcode-container"></div>
 <p class="text-sm text-gray-500 mt-20">Stand: <span id="print-date"></span></p>
@@ -343,9 +354,9 @@
 <footer class="bg-white border-t border-outline-variant no-print py-10 mt-12">
 <div class="max-w-[1100px] mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-6">
 <div class="text-center md:text-left">
-<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">© 2024 Döltschi Hausaufgabenplaner</p>
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">© 2024 doeltschi Hausaufgabenplaner</p>
 <div class="flex items-center justify-center md:justify-start gap-3 mt-1">
-<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 23.0 • Swiss Edition</p>
+<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 24.2 • URL-Sync Edition</p>
 <button class="text-[9px] text-on-surface-variant/30 hover:text-red-500 underline font-mono uppercase" onclick="app.resetSystem()">App zurücksetzen</button>
 </div>
 </div>
@@ -370,73 +381,241 @@
     };
 
     const INITIAL_STATE = {
+        classId: 'demo-klasse',
         isLehrer: false,
         currentTab: 'Planer',
         selectedStudentId: 'all',
         verifiedStudentId: null,
+        lastPublished: null,
+        hasUnpublishedChanges: false,
         students: [
             { id: 's1', name: 'Lukas Müller', confirmed: false, lastConfirmed: '-' },
             { id: 's2', name: 'Sophie Fischer', confirmed: false, lastConfirmed: '-' },
             { id: 's3', name: 'Emma Weber', confirmed: false, lastConfirmed: '-' }
         ],
         tasks: [
-            { id: 't0', studentId: 'all', subjectCode: 'MA', description: 'Ganze Klasse: Buch S. 120-121.', deadline: 'Fr' },
-            { id: 't1', studentId: 's1', subjectCode: 'DE', description: 'Lesetagebuch führen.', deadline: 'Mi' }
+            { id: 't0', studentId: 'all', subjectCode: 'MA', description: 'Ganze Klasse: Buch S. 120-121.', deadline: 'Fr' }
         ],
         completedTasks: {} 
     };
 
-    const app = {
+    window.app = {
         state: null,
-        STORAGE_KEY: 'doeltschi_v23_pwa',
-        _qrcode: null,
+        STORAGE_KEY: 'doeltschi_v24_urlsync_final',
+        _pendingId: null,
 
-        init() {
+        async init() {
             const saved = localStorage.getItem(this.STORAGE_KEY);
             if (saved) {
                 try {
                     this.state = JSON.parse(saved);
-                    this.state.isLehrer = false;
-                    this.state.currentTab = 'Planer';
-                    this.state.verifiedStudentId = null;
-                    if (!this.state.completedTasks) this.state.completedTasks = {};
-                } catch(e) { this.state = JSON.parse(JSON.stringify(INITIAL_STATE)); }
+                } catch(e) { 
+                    this.state = JSON.parse(JSON.stringify(INITIAL_STATE)); 
+                }
             } else {
                 this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
             }
+
+            // UI Defaults
+            this.state.isLehrer = false;
+            this.state.currentTab = 'Planer';
+
+            // 1. Logic: Check for URL-based sync data
+            const urlParams = new URLSearchParams(window.location.search);
+            const dataParam = urlParams.get('d');
+            
+            if (dataParam) {
+                try {
+                    // Handle UTF-8 encoding properly for Base64
+                    const decodedString = decodeURIComponent(escape(atob(dataParam)));
+                    const decoded = JSON.parse(decodedString);
+                    
+                    if (decoded && decoded.tasks && decoded.students) {
+                        // Merge logic: keep local completion/confirmation states, but update global tasks/students
+                        this.state.tasks = decoded.tasks;
+                        
+                        // Sync names and new IDs, but keep confirmation locally
+                        const newStudents = decoded.students.map(s => {
+                            const existing = this.state.students.find(es => es.id === s.id);
+                            return { 
+                                ...s, 
+                                confirmed: existing?.confirmed || false, 
+                                lastConfirmed: existing?.lastConfirmed || '-' 
+                            };
+                        });
+                        this.state.students = newStudents;
+                        
+                        this.state.lastPublished = decoded.lp;
+                        this.state.hasUnpublishedChanges = false;
+                        this.persist();
+
+                        // Redirect to clean URL
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                } catch (e) {
+                    console.error("Fehler beim Dekodieren der URL-Daten", e);
+                    this.showError("Der geteilte Link konnte nicht geladen werden.");
+                }
+            }
+
             this.updateDateDisplay();
             this.renderAll();
             this.initQRCode();
         },
 
-        persist() {
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
+        showError(msg) {
+            const alertEl = document.getElementById('error-alert');
+            const alertText = document.getElementById('error-alert-text');
+            if (alertEl && alertText) {
+                alertText.textContent = msg;
+                alertEl.classList.remove('hidden');
+            }
         },
 
-        initQRCode() {
-            const qrContainer = document.getElementById("qrcode");
-            qrContainer.innerHTML = "";
-            this._qrcode = new QRCode(qrContainer, {
-                text: window.location.href,
-                width: 128,
-                height: 128,
-                colorDark : "#0058bc",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
+        // 1. Logic: Aggregate and Encode
+        generateShareLink() {
+            try {
+                const payload = {
+                    tasks: this.state.tasks,
+                    students: this.state.students.map(s => ({ id: s.id, name: s.name })), 
+                    lp: new Date().toISOString()
+                };
+                const jsonStr = JSON.stringify(payload);
+                // Correct UTF-8 Base64 encoding
+                const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+                return `${window.location.origin}${window.location.pathname}?d=${encoded}`;
+            } catch(e) {
+                console.error("Link generation failed", e);
+                return window.location.origin + window.location.pathname;
+            }
+        },
 
-            // Prepare print QR
-            const printQrContainer = document.getElementById("print-qrcode-container");
-            printQrContainer.innerHTML = "";
-            new QRCode(printQrContainer, {
-                text: window.location.href,
-                width: 400,
-                height: 400,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-            document.getElementById('print-date').textContent = new Date().toLocaleDateString('de-CH');
+        async publishData() {
+            const btn = document.getElementById('publish-btn');
+            const originalContent = btn.innerHTML;
+            
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span>...';
+                
+                await new Promise(r => setTimeout(r, 600));
+                
+                this.state.hasUnpublishedChanges = false;
+                this.state.lastPublished = new Date().toISOString();
+                this.persist();
+                
+                const shareLink = this.generateShareLink();
+                this.initQRCode(shareLink);
+                document.getElementById('share-link-input').value = shareLink;
+                document.getElementById('publish-modal').classList.remove('hidden');
+
+                btn.classList.replace('bg-success', 'bg-primary');
+                btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">verified</span> Aktualisiert!';
+
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.classList.replace('bg-primary', 'bg-success');
+                    btn.innerHTML = originalContent;
+                    this.renderAll();
+                }, 2000);
+
+            } catch (error) {
+                console.error('Publishing failed:', error);
+                this.showError("Veröffentlichung fehlgeschlagen.");
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        },
+
+        copyShareLink() {
+            const input = document.getElementById('share-link-input');
+            input.select();
+            try {
+                document.execCommand('copy');
+                alert('Link kopiert!');
+            } catch(e) {
+                alert('Fehler beim Kopieren.');
+            }
+        },
+
+        updateSyncUI() {
+            const el = document.getElementById('sync-status');
+            const txt = document.getElementById('sync-status-text');
+            const icon = document.getElementById('sync-icon');
+            const indicator = document.getElementById('sync-indicator');
+            const lastSyncEl = document.getElementById('last-sync-time');
+            
+            if (!el) return;
+
+            if (this.state.hasUnpublishedChanges) {
+                txt.textContent = 'Änderungen offen';
+                icon.textContent = 'sync_problem';
+                el.classList.add('bg-yellow-100', 'text-yellow-700');
+                el.classList.remove('bg-surface-container', 'text-on-surface-variant');
+            } else {
+                txt.textContent = 'Synchronisiert';
+                icon.textContent = 'cloud_done';
+                el.classList.remove('bg-yellow-100', 'text-yellow-700');
+                el.classList.add('bg-surface-container', 'text-on-surface-variant');
+            }
+
+            if (indicator) {
+                if (this.state.hasUnpublishedChanges) {
+                    indicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span><span class="text-sm font-bold text-yellow-600">Unveröffentlicht</span>`;
+                } else {
+                    indicator.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm font-bold text-green-600">Veröffentlicht</span>`;
+                }
+            }
+
+            if (lastSyncEl && this.state.lastPublished) {
+                const date = new Date(this.state.lastPublished);
+                lastSyncEl.textContent = `Letzte Veröffentlichung: ${date.toLocaleDateString('de-CH')} ${date.toLocaleTimeString('de-CH', {hour: '2-digit', minute:'2-digit'})}`;
+            }
+        },
+
+        persist() {
+            try {
+                localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
+            } catch(e) {
+                console.error("Persistence failed", e);
+            }
+        },
+
+        initQRCode(customUrl) {
+            const qrContainer = document.getElementById("qrcode");
+            if (!qrContainer) return;
+            
+            const shareUrl = customUrl || this.generateShareLink();
+            
+            qrContainer.innerHTML = "";
+            try {
+                new QRCode(qrContainer, {
+                    text: shareUrl,
+                    width: 140,
+                    height: 140,
+                    colorDark : "#0058bc",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.L
+                });
+
+                const printQrContainer = document.getElementById("print-qrcode-container");
+                if (printQrContainer) {
+                    printQrContainer.innerHTML = "";
+                    new QRCode(printQrContainer, {
+                        text: shareUrl,
+                        width: 360,
+                        height: 360,
+                        colorDark : "#000000",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.L
+                    });
+                }
+            } catch(e) {
+                console.error("QR Code Generation failed", e);
+            }
+            
+            const printDateEl = document.getElementById('print-date');
+            if (printDateEl) printDateEl.textContent = new Date().toLocaleDateString('de-CH');
         },
 
         printQRCode() {
@@ -455,19 +634,26 @@
             const day = now.getDay();
             const diff = (day === 0 ? -6 : 1) - day;
             monday.setDate(now.getDate() + diff);
-            
             const friday = new Date(monday);
             friday.setDate(monday.getDate() + 4);
-
-            const fmt = (date) => date.toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' });
             
-            document.getElementById('current-week-display').textContent = `Woche ${weekNo}`;
-            document.getElementById('current-date-range').textContent = `${fmt(monday)} – ${fmt(friday)}`;
+            const fmt = (date) => {
+                const dd = date.getDate().toString().padStart(2, '0');
+                const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+                const yyyy = date.getFullYear();
+                return `${dd}.${mm}.${yyyy}`;
+            };
+            
+            const weekDisplay = document.getElementById('current-week-display');
+            const dateRange = document.getElementById('current-date-range');
+            if (weekDisplay) weekDisplay.textContent = `Woche ${weekNo}`;
+            if (dateRange) dateRange.textContent = `${fmt(monday)} – ${fmt(friday)}`;
         },
 
         setTab(tab) {
             this.state.currentTab = tab;
             this.renderAll();
+            window.scrollTo(0,0);
         },
 
         handleLehrerNavClick() {
@@ -493,8 +679,8 @@
                 this.closeLehrerModal();
                 this.renderAll();
             } else {
-                input.classList.add('ring-red-500', 'ring-2');
-                setTimeout(() => input.classList.remove('ring-red-500', 'ring-2'), 800);
+                input.classList.add('ring-red-500', 'ring-2', 'animate-shake');
+                setTimeout(() => input.classList.remove('ring-red-500', 'ring-2', 'animate-shake'), 800);
             }
         },
 
@@ -508,9 +694,11 @@
             const val = document.getElementById('student-filter').value;
             if (val !== 'all' && val !== this.state.verifiedStudentId) {
                 const s = this.state.students.find(x => x.id === val);
-                document.getElementById('confirm-name-span').textContent = s.name;
-                document.getElementById('identity-modal').classList.remove('hidden');
-                this._pendingId = val;
+                if (s) {
+                    document.getElementById('confirm-name-span').textContent = s.name;
+                    document.getElementById('identity-modal').classList.remove('hidden');
+                    this._pendingId = val;
+                }
             } else {
                 this.state.selectedStudentId = val;
                 this.renderAll();
@@ -539,25 +727,27 @@
                 description: document.getElementById('task-description').value
             };
             this.state.tasks.push(task);
+            this.state.hasUnpublishedChanges = true;
             e.target.reset();
             this.persist();
             this.renderAll();
         },
 
         deleteTask(id) {
-            this.state.tasks = this.state.tasks.filter(t => t.id !== id);
-            Object.keys(this.state.completedTasks).forEach(sid => {
-                this.state.completedTasks[sid] = this.state.completedTasks[sid].filter(tid => tid !== id);
-            });
-            this.persist();
-            this.renderAll();
+            if (confirm('Aufgabe wirklich löschen?')) {
+                this.state.tasks = this.state.tasks.filter(t => t.id !== id);
+                this.state.hasUnpublishedChanges = true;
+                this.persist();
+                this.renderAll();
+            }
         },
 
         toggleTask(taskId) {
             const sid = this.state.selectedStudentId;
             if (sid === 'all') return;
             const s = this.state.students.find(x => x.id === sid);
-            if (s.confirmed) return; 
+            // Parental confirmation locks the list for the student
+            if (!s || s.confirmed) return; 
 
             if (!this.state.completedTasks[sid]) this.state.completedTasks[sid] = [];
             
@@ -576,7 +766,12 @@
             const s = this.state.students.find(x => x.id === sid);
             if (s) {
                 s.confirmed = true;
-                s.lastConfirmed = new Date().toLocaleDateString('de-CH') + ' ' + new Date().toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
+                const date = new Date();
+                const d = date.getDate().toString().padStart(2, '0');
+                const m = (date.getMonth() + 1).toString().padStart(2, '0');
+                const y = date.getFullYear();
+                const time = date.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
+                s.lastConfirmed = `${d}.${m}.${y} ${time}`;
                 this.persist();
                 this.renderAll();
             }
@@ -596,6 +791,7 @@
             const name = document.getElementById('new-student-name').value.trim();
             if (name) {
                 this.state.students.push({ id: 's' + Date.now(), name, confirmed: false, lastConfirmed: '-' });
+                this.state.hasUnpublishedChanges = true;
                 document.getElementById('new-student-name').value = '';
                 this.persist();
                 this.renderAll();
@@ -605,23 +801,15 @@
         importStudents(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = (e) => {
                 const text = e.target.result;
-                const names = text.split('\n')
-                    .map(name => name.trim())
-                    .filter(name => name.length > 0);
-                
+                const names = text.split('\n').map(n => n.trim()).filter(n => n.length > 0);
                 if (names.length > 0) {
                     names.forEach(name => {
-                        this.state.students.push({ 
-                            id: 's' + Math.random().toString(36).substr(2, 9), 
-                            name, 
-                            confirmed: false, 
-                            lastConfirmed: '-' 
-                        });
+                        this.state.students.push({ id: 's' + Math.random().toString(36).substr(2, 9), name, confirmed: false, lastConfirmed: '-' });
                     });
+                    this.state.hasUnpublishedChanges = true;
                     this.persist();
                     this.renderAll();
                 }
@@ -633,6 +821,7 @@
         deleteStudent(id) {
             if (confirm('Schüler wirklich löschen?')) {
                 this.state.students = this.state.students.filter(s => s.id !== id);
+                this.state.hasUnpublishedChanges = true;
                 delete this.state.completedTasks[id];
                 this.persist();
                 this.renderAll();
@@ -640,24 +829,31 @@
         },
 
         resetSystem() {
-            if (confirm('Wirklich alles löschen?')) {
+            if (confirm('Wirklich alle Daten zurücksetzen?')) {
                 localStorage.removeItem(this.STORAGE_KEY);
-                window.location.reload();
+                window.location.href = window.location.origin + window.location.pathname;
             }
         },
 
         renderAll() {
+            if (!this.state) return;
+
+            // View management
             document.getElementById('content-planner').classList.toggle('hidden', this.state.currentTab !== 'Planer');
             document.getElementById('content-dashboard').classList.toggle('hidden', this.state.currentTab !== 'Dashboard');
             document.getElementById('content-guide').classList.toggle('hidden', this.state.currentTab !== 'Anleitung');
             document.getElementById('lehrer-access-btn').classList.toggle('hidden', !this.state.isLehrer);
 
+            // Nav Highlight
             ['Planer', 'Dashboard', 'Anleitung'].forEach(t => {
                 const el = document.getElementById(`nav-${t}`);
-                if (this.state.currentTab === t) {
-                    el.className = "px-5 py-2.5 rounded-full text-sm font-bold bg-primary text-on-primary shadow-lg shadow-primary/20 transition-all";
+                if (!el) return;
+                const active = this.state.currentTab === t;
+                const baseClasses = "flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all ";
+                if (active) {
+                    el.className = baseClasses + "bg-primary text-on-primary shadow-lg shadow-primary/20";
                 } else {
-                    el.className = "px-5 py-2.5 rounded-full text-sm font-bold text-on-surface-variant hover:bg-surface-container transition-all";
+                    el.className = baseClasses + "text-on-surface-variant hover:bg-surface-container";
                 }
             });
 
@@ -668,6 +864,7 @@
             this.renderStudentManagement();
             this.renderManageTasks();
             this.updateSteps();
+            this.updateSyncUI();
         },
 
         updateSteps() {
@@ -677,55 +874,66 @@
             
             const steps = [1, 2, 3, 4].map(i => document.getElementById(`step-${i}`));
             steps.forEach(el => {
+                if (!el) return;
                 el.classList.add('opacity-50');
                 el.querySelector('div').className = "w-8 h-8 rounded-full bg-surface-container text-on-surface-variant/40 font-bold flex items-center justify-center mb-3";
             });
 
             if (sid === 'all') {
-                steps[0].classList.remove('opacity-50');
-                steps[0].querySelector('div').className = "w-8 h-8 rounded-full bg-primary text-on-primary font-bold flex items-center justify-center mb-3";
+                if (steps[0]) {
+                    steps[0].classList.remove('opacity-50');
+                    steps[0].querySelector('div').className = "w-8 h-8 rounded-full bg-primary text-on-primary font-bold flex items-center justify-center mb-3";
+                }
             } else if (!verified) {
-                steps[0].classList.remove('opacity-50');
-                steps[0].querySelector('div').classList.add('bg-primary/20', 'text-primary');
+                if (steps[0]) {
+                    steps[0].classList.remove('opacity-50');
+                    steps[0].querySelector('div').classList.add('bg-primary/20', 'text-primary');
+                }
             } else if (s && !s.confirmed) {
-                steps[1].classList.remove('opacity-50');
-                steps[2].classList.remove('opacity-50');
-                steps[1].querySelector('div').classList.add('bg-primary/20', 'text-primary');
-            } else {
-                steps[3].classList.remove('opacity-50');
-                steps[3].querySelector('div').classList.add('bg-primary/20', 'text-primary');
+                if (steps[1]) {
+                    steps[1].classList.remove('opacity-50');
+                    steps[1].querySelector('div').classList.add('bg-primary/20', 'text-primary');
+                }
+                if (steps[2]) {
+                    steps[2].classList.remove('opacity-50');
+                    steps[2].querySelector('div').classList.add('bg-primary/20', 'text-primary');
+                }
+            } else if (s && s.confirmed) {
+                if (steps[3]) {
+                    steps[3].classList.remove('opacity-50');
+                    steps[3].querySelector('div').classList.add('bg-primary/20', 'text-primary');
+                }
             }
         },
 
         renderFilters() {
             const select = document.getElementById('student-filter');
             const taskSelect = document.getElementById('task-student');
+            if (!select) return;
             const students = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
             
-            const html = `<option value="all" ${this.state.selectedStudentId === 'all' ? 'selected' : ''}>Klassenübersicht</option>` + 
+            select.innerHTML = `<option value="all" ${this.state.selectedStudentId === 'all' ? 'selected' : ''}>Klassenübersicht</option>` + 
                 students.map(s => `<option value="${s.id}" ${this.state.selectedStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('');
             
-            select.innerHTML = html;
-            taskSelect.innerHTML = `<option value="all">Alle (Klasse)</option>` + students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            if(taskSelect) taskSelect.innerHTML = `<option value="all">Alle (Klasse)</option>` + students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         },
 
         renderTasks() {
             const container = document.getElementById('task-container');
+            if (!container) return;
             const sid = this.state.selectedStudentId;
             const verified = this.state.verifiedStudentId === sid;
             const s = this.state.students.find(x => x.id === sid);
             const isLocked = s?.confirmed || false;
-
             const filtered = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === sid);
             
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="py-16 text-center border-4 border-dashed border-outline-variant/20 rounded-2xl text-on-surface-variant/40 font-bold uppercase tracking-widest text-xs">Keine Aufgaben</div>`;
+                container.innerHTML = `<div class="py-16 text-center border-4 border-dashed border-outline-variant/20 rounded-2xl text-on-surface-variant/40 font-bold uppercase tracking-widest text-xs">Keine Aufgaben für diese Woche</div>`;
             } else {
                 container.innerHTML = filtered.map(t => {
                     const done = (this.state.completedTasks[sid] || []).includes(t.id);
                     const cfg = SUBJECT_CONFIG[t.subjectCode] || { name: 'Divers', color: '#64748b' };
                     const isGlobal = t.studentId === 'all';
-                    
                     return `
                         <div class="bg-white border border-outline-variant rounded-xl overflow-hidden flex transition-all shadow-sm ${done ? 'opacity-50' : 'hover:border-primary/30'}">
                             <div class="w-2" style="background-color: ${cfg.color}"></div>
@@ -775,6 +983,7 @@
 
         renderLegend() {
             const lp = document.getElementById('color-legend-planner');
+            if (!lp) return;
             lp.innerHTML = Object.keys(SUBJECT_CONFIG).map(code => {
                 const cfg = SUBJECT_CONFIG[code];
                 return `<div class="flex items-center gap-2">
@@ -786,11 +995,9 @@
 
         renderDashboard() {
             const tbody = document.getElementById('student-table-body');
+            if(!tbody) return;
             const sorted = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
-            
-            let totalPossibleTasks = 0;
-            let totalActualCompleted = 0;
-            let confirmedCount = 0;
+            let totalPossibleTasks = 0, totalActualCompleted = 0, confirmedCount = 0;
 
             tbody.innerHTML = sorted.map(s => {
                 const relevantTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === s.id);
@@ -798,11 +1005,9 @@
                 const doneCount = studentCompletions.filter(tid => relevantTasks.some(t => t.id === tid)).length;
                 const totalCount = relevantTasks.length;
                 const perc = totalCount > 0 ? Math.round((doneCount/totalCount)*100) : 100;
-                
                 totalPossibleTasks += totalCount;
                 totalActualCompleted += doneCount;
                 if (s.confirmed) confirmedCount++;
-
                 return `
                     <tr class="hover:bg-surface-container/30">
                         <td class="px-6 py-4 font-bold text-on-surface">${s.name}</td>
@@ -815,60 +1020,4 @@
                             </div>
                         </td>
                         <td class="px-6 py-4">
-                            ${s.confirmed ? 
-                                `<span class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-[9px] font-black uppercase">Gesehen ✓</span>` : 
-                                `<span class="text-on-surface-variant/30 text-[9px] font-black uppercase">Offen</span>`
-                            }
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            <button onclick="app.unlockStudent('${s.id}')" class="text-[9px] font-bold uppercase text-primary hover:underline ${!s.confirmed ? 'opacity-0 pointer-events-none' : ''}">Zurücksetzen</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
-            const globalPerc = totalPossibleTasks > 0 ? Math.round((totalActualCompleted/totalPossibleTasks)*100) : 0;
-            document.getElementById('dashboard-quote').textContent = `${globalPerc}%`;
-            document.getElementById('dashboard-progress-bar').style.width = `${globalPerc}%`;
-            document.getElementById('dashboard-confirmations').textContent = `${confirmedCount}/${this.state.students.length}`;
-            document.getElementById('dashboard-pending-text').textContent = `Noch ${this.state.students.length - confirmedCount} ausstehend`;
-        },
-
-        renderStudentManagement() {
-            const list = document.getElementById('student-management-list');
-            const sorted = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
-            list.innerHTML = sorted.map(s => `
-                <div class="flex justify-between items-center p-3 bg-surface-container rounded-xl">
-                    <span class="text-sm font-semibold">${s.name}</span>
-                    <button onclick="app.deleteStudent('${s.id}')" class="text-on-surface-variant/40 hover:text-red-500">
-                        <span class="material-symbols-outlined text-[20px]">delete</span>
-                    </button>
-                </div>
-            `).join('');
-        },
-
-        renderManageTasks() {
-            const body = document.getElementById('manage-tasks-body');
-            body.innerHTML = this.state.tasks.map(t => {
-                const s = t.studentId === 'all' ? 'Klasse' : (this.state.students.find(x => x.id === t.studentId)?.name || 'Gelöscht');
-                const cfg = SUBJECT_CONFIG[t.subjectCode] || { name: '?', color: '#64748b' };
-                return `
-                    <tr class="hover:bg-surface-container/30">
-                        <td class="px-6 py-3 text-[11px] font-bold uppercase text-on-surface-variant">${s}</td>
-                        <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full text-[9px] font-bold" style="background-color: ${cfg.color}15; color: ${cfg.color}">${cfg.name}</span></td>
-                        <td class="px-6 py-3 text-xs">${t.description}</td>
-                        <td class="px-6 py-3 text-xs font-bold">${t.deadline}</td>
-                        <td class="px-6 py-3 text-right">
-                            <button onclick="app.deleteTask('${t.id}')" class="text-on-surface-variant/30 hover:text-red-500">
-                                <span class="material-symbols-outlined text-[18px]">close</span>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-    };
-
-    app.init();
-</script>
-</body></html>
+                            ${s.confirmed ? `<span class="px-2 py-</script></body></html>
