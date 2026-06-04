@@ -3,411 +3,687 @@
 <html class="light" lang="de"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Wer – Was – Bis wann</title>
+<title>doeltschi | Digitaler Aufgabenplaner</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- QRCode.js Library -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .checkmark-active { font-variation-settings: 'FILL' 1; color: #0058bc; }
+        [v-cloak] { display: none; }
+        .worksheet-pattern {
+            background-color: #f8fafc;
+            background-image: radial-gradient(#cbd5e1 0.5px, transparent 0.5px);
+            background-size: 24px 24px;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; }
+            .worksheet-pattern { background-image: none !important; }
+        }
+    </style>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
                     "colors": {
-                        "primary-fixed-dim": "#adc6ff",
-                        "on-error-container": "#93000a",
-                        "surface-variant": "#e2e2e7",
-                        "inverse-surface": "#2e3034",
-                        "on-secondary-fixed-variant": "#3631b4",
-                        "surface": "#f9f9fe",
-                        "on-surface-variant": "#414755",
-                        "surface-dim": "#d9dade",
-                        "surface-container-highest": "#e2e2e7",
-                        "on-secondary-fixed": "#0c006a",
-                        "background": "#f9f9fe",
-                        "primary-fixed": "#d8e2ff",
-                        "surface-bright": "#f9f9fe",
-                        "on-surface": "#1a1c1f",
-                        "surface-container-lowest": "#ffffff",
-                        "secondary": "#4c4aca",
-                        "on-primary-fixed-variant": "#004493",
-                        "error": "#ba1a1a",
-                        "on-tertiary-container": "#fffbff",
-                        "on-error": "#ffffff",
-                        "on-secondary": "#ffffff",
                         "primary": "#0058bc",
-                        "tertiary-container": "#c64f00",
-                        "tertiary": "#9e3d00",
-                        "secondary-fixed-dim": "#c2c1ff",
-                        "tertiary-fixed-dim": "#ffb595",
-                        "outline": "#717786",
-                        "outline-variant": "#c1c6d7",
-                        "on-secondary-container": "#fffbff",
-                        "on-primary-fixed": "#001a41",
-                        "on-primary-container": "#fefcff",
-                        "surface-tint": "#005bc1",
-                        "on-tertiary-fixed": "#351000",
-                        "inverse-primary": "#adc6ff",
-                        "error-container": "#ffdad6",
-                        "on-tertiary": "#ffffff",
                         "on-primary": "#ffffff",
-                        "secondary-container": "#6664e4",
-                        "surface-container": "#ededf2",
-                        "surface-container-low": "#f3f3f8",
-                        "secondary-fixed": "#e2dfff",
-                        "inverse-on-surface": "#f0f0f5",
-                        "primary-container": "#0070eb",
-                        "tertiary-fixed": "#ffdbcc",
-                        "surface-container-high": "#e8e8ed",
-                        "on-tertiary-fixed-variant": "#7c2e00",
-                        "on-background": "#1a1c1f"
+                        "background": "#f8fafc",
+                        "surface": "#ffffff",
+                        "on-surface": "#1e293b",
+                        "outline-variant": "#e2e8f0",
+                        "surface-container": "#f1f5f9",
+                        "on-surface-variant": "#64748b",
                     },
                     "borderRadius": {
-                        "DEFAULT": "1rem",
-                        "lg": "2rem",
-                        "xl": "3rem",
-                        "full": "9999px"
+                        "DEFAULT": "0.75rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
                     },
                     "spacing": {
-                        "stack-padding": "1.25rem",
-                        "container-margin": "2rem",
-                        "input-padding": "1rem",
-                        "gutter": "1.5rem"
+                        "gutter": "1.5rem",
+                        "input-padding": "0.75rem"
                     },
                     "fontFamily": {
-                        "label-caps": ["Inter"],
-                        "body-md": ["Inter"],
-                        "subject-tag": ["Inter"],
-                        "h1-mobile": ["Inter"],
-                        "h1": ["Inter"],
-                        "h2": ["Inter"],
-                        "body-lg": ["Inter"]
-                    },
-                    "fontSize": {
-                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
-                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
-                        "subject-tag": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
-                        "h1-mobile": ["26px", {"lineHeight": "32px", "fontWeight": "700"}],
-                        "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-                        "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
-                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                        "h1": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
                     }
-                }
-            }
+                },
+            },
         }
     </script>
-<style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        .qr-gradient-border {
-            background: linear-gradient(white, white) padding-box,
-                        linear-gradient(to bottom right, #0058bc, #6664e4) border-box;
-            border: 4px solid transparent;
-        }
-        body {
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        #qrcode canvas, #qrcode img {
-            width: 100% !important;
-            height: auto !important;
-            display: block;
-        }
-        @media print {
-            header, footer, .action-buttons, .info-box {
-                display: none !important;
-            }
-            main {
-                padding: 0 !important;
-            }
-            .qr-card {
-                box-shadow: none !important;
-                border: none !important;
-                transform: none !important;
-            }
-        }
-    </style>
 </head>
-<body class="bg-surface text-on-surface font-body-md selection:bg-primary-fixed selection:text-on-primary-fixed">
-<!-- Top AppBar -->
-<header class="bg-surface border-b border-outline-variant flex justify-between items-center w-full px-gutter max-w-[1100px] mx-auto h-16 sticky top-0 z-50">
-<h1 class="font-h2 text-h2 font-bold text-on-surface">Wer – Was – Bis wann</h1>
+<body class="bg-background text-on-surface worksheet-pattern min-h-screen selection:bg-blue-100 flex flex-col">
+<!-- Top App Bar -->
+<header class="bg-surface/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50 no-print">
+<div class="flex justify-between items-center w-full px-gutter max-w-[1000px] mx-auto h-16">
 <div class="flex items-center gap-4">
-<button class="hover:bg-surface-container-high transition-colors p-2 rounded-full active:scale-95 duration-200" onclick="window.location.reload()">
-<span class="material-symbols-outlined text-primary" data-icon="refresh">refresh</span>
+<h1 class="text-2xl font-black tracking-tight text-primary cursor-pointer" onclick="app.resetToHome()">doeltschi</h1>
+<div class="hidden md:flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full text-[10px] font-bold uppercase text-slate-500">
+<span class="material-symbols-outlined text-[14px]">bolt</span>
+<span>Lokal aktiv</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<nav class="flex items-center bg-slate-100 rounded-full p-1 border border-slate-200">
+<button class="px-4 py-1.5 rounded-full text-xs font-bold transition-all" id="nav-student" onclick="app.setRole('student')">Schüler-Ansicht</button>
+<button class="px-4 py-1.5 rounded-full text-xs font-bold transition-all" id="nav-teacher" onclick="app.requestTeacherMode()">Lehrer-Modus</button>
+</nav>
+<button class="hover:bg-slate-200 p-2 rounded-full transition-colors no-print" onclick="window.location.reload()">
+<span class="material-symbols-outlined text-primary text-xl">refresh</span>
 </button>
 </div>
+</div>
 </header>
-<!-- Main Container for all Views -->
-<div id="main-content">
-<!-- QR View Section -->
-<main class="min-h-[calc(100vh-64px)] hidden flex-col items-center justify-center px-gutter py-12" id="qr-view">
-<div class="max-w-[600px] w-full text-center space-y-12">
+<main class="flex-1 w-full max-w-[1000px] mx-auto px-gutter py-8">
+<!-- Lehrer Login -->
+<div class="hidden flex flex-col items-center justify-center py-20 no-print" id="login-view">
+<div class="bg-surface p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center border border-outline-variant">
+<span class="material-symbols-outlined text-primary text-6xl mb-4">lock</span>
+<h2 class="text-2xl font-bold mb-2">Lehrer Login</h2>
+<p class="text-on-surface-variant text-sm mb-6">Passwort erforderlich (Standard: lehrer123)</p>
+<input class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4 focus:ring-2 focus:ring-primary outline-none" id="login-password" onkeyup="if(event.key==='Enter') app.handleLogin()" placeholder="Passwort eingeben" type="password"/>
+<button class="w-full py-3 bg-primary text-white rounded-xl font-bold uppercase tracking-wider hover:bg-blue-700 transition-all" onclick="app.handleLogin()">Anmelden</button>
+</div>
+</div>
+<!-- Student Select View -->
+<div class="hidden flex flex-col items-center py-12" id="student-select-view">
+<div class="text-center space-y-4 mb-12">
+<h2 class="text-4xl font-black text-slate-900">Wer bist du?</h2>
+<p class="text-slate-500 font-medium">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full" id="student-grid">
+<!-- Dynamically generated buttons -->
+</div>
+</div>
+<!-- Student Personal View (The 1-2-3-4 style tasks) -->
+<div class="hidden space-y-12" id="student-tasks-view">
+<div class="flex flex-col md:flex-row justify-between items-center gap-6 no-print">
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 text-primary font-bold hover:underline" onclick="app.setRole('student')">
+<span class="material-symbols-outlined">arrow_back</span>
+<span class="text-xl" id="display-student-name">Lukas</span>
+</button>
+</div>
+<div class="text-center md:text-right">
+<h2 class="text-3xl font-black text-slate-900" id="current-week-display">Woche 14</h2>
+<p class="text-slate-500 font-medium" id="current-date-range">01.04.2024 – 05.04.2024</p>
+</div>
+</div>
+<!-- Progress Steps -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 no-print">
+<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center step-card" id="step-1">
+<div class="w-8 h-8 rounded-full bg-blue-100 text-primary font-bold flex items-center justify-center mb-2">1</div>
+<p class="text-[11px] font-bold uppercase text-slate-400">Name wählen</p>
+</div>
+<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center step-card" id="step-2">
+<div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-2">2</div>
+<p class="text-[11px] font-bold uppercase text-slate-400">Aufgaben prüfen</p>
+</div>
+<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center step-card" id="step-3">
+<div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-2">3</div>
+<p class="text-[11px] font-bold uppercase text-slate-400">Erledigen</p>
+</div>
+<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center step-card" id="step-4">
+<div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-2">4</div>
+<p class="text-[11px] font-bold uppercase text-slate-400">Eltern zeigen</p>
+</div>
+</div>
+<div class="space-y-4" id="task-list">
+<!-- Tasks populated here -->
+</div>
+<!-- Parents Confirmation Card -->
+<div class="hidden mt-12 bg-white border-2 border-dashed border-slate-300 p-10 rounded-2xl flex flex-col items-center text-center shadow-md transition-all" id="parents-confirmation-card">
+<div class="w-16 h-16 bg-blue-50 text-primary rounded-full flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-4xl" id="confirmation-icon">signature</span>
+</div>
+<h3 class="text-2xl font-black text-slate-900 mb-2">Bestätigung der Eltern</h3>
+<p class="text-slate-500 mb-8 max-w-md mx-auto text-sm font-medium">Ich bestätige hiermit, dass ich die oben aufgeführten Hausaufgaben gesehen habe.</p>
+<button class="px-10 py-4 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-black uppercase tracking-widest transition-all" id="confirm-btn" onclick="app.confirmByParent()">
+                Jetzt Bestätigen
+            </button>
+<p class="mt-4 text-[10px] font-bold text-primary uppercase hidden" id="confirmation-timestamp"></p>
+</div>
+</div>
+<!-- Teacher Dashboard View -->
+<div class="hidden space-y-8" id="teacher-dashboard">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<h2 class="text-3xl font-black text-slate-900">Lehrer Dashboard</h2>
+<div class="flex gap-2">
+<button class="px-4 py-2 border border-slate-200 bg-white rounded-lg text-xs font-bold uppercase text-slate-600 flex items-center gap-2 hover:bg-slate-50" onclick="app.openQRView()">
+<span class="material-symbols-outlined text-[18px]">qr_code_2</span> Teilen
+                </button>
+<button class="px-4 py-2 border border-slate-200 bg-white rounded-lg text-xs font-bold uppercase text-slate-600 flex items-center gap-2 hover:bg-slate-50" onclick="window.print()">
+<span class="material-symbols-outlined text-[18px]">print</span> Drucken
+                </button>
+</div>
+</div>
+<!-- Stats Overview -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+<p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Erledigungsquote Gesamt</p>
+<div class="text-3xl font-black text-primary" id="total-progress-percent">0%</div>
+<div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
+<div class="bg-primary h-full transition-all duration-500" id="total-progress-bar" style="width: 0%"></div>
+</div>
+</div>
+<div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+<p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Elternbestätigungen</p>
+<div class="text-3xl font-black text-slate-700" id="confirmed-count">0/0</div>
+<p class="text-xs text-slate-400 mt-1" id="confirmed-pending-text">Warte auf Daten...</p>
+</div>
+<div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center">
+<button class="text-primary hover:underline font-bold text-sm uppercase flex items-center gap-2" onclick="app.exportData()">
+<span class="material-symbols-outlined">download</span> Daten Sichern
+                </button>
+</div>
+</div>
+<!-- Add Task Form -->
+<div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+<h3 class="text-lg font-bold mb-6 text-slate-800">Neue Aufgabe zuteilen</h3>
+<form class="grid grid-cols-1 md:grid-cols-3 gap-4" onsubmit="app.addTask(event)">
+<div>
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Empfänger</label>
+<select class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary" id="new-task-student">
+<option value="all">Ganze Klasse</option>
+</select>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Fach</label>
+<select class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary" id="new-task-subject">
+<option value="Deutsch">Deutsch</option>
+<option value="Mathematik">Mathematik</option>
+<option value="Sachunterricht">Sachunterricht</option>
+<option value="Englisch">Englisch</option>
+<option value="Französisch">Französisch</option>
+</select>
+</div>
+<div>
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Bis Datum</label>
+<input class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary" id="new-task-date" placeholder="TT.MM.JJJJ" required="" type="text"/>
+</div>
+<div class="md:col-span-2">
+<label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Aufgabenbeschreibung</label>
+<input class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-1 focus:ring-primary" id="new-task-desc" placeholder="Z.B. Arbeitsheft S. 42 lesen..." required="" type="text"/>
+</div>
+<div class="flex items-end">
+<button class="w-full py-2 bg-primary text-white rounded-lg font-bold text-sm uppercase hover:bg-blue-700" type="submit">Aufgabe erstellen</button>
+</div>
+</form>
+</div>
+<!-- Student List and Management -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="lg:col-span-2 space-y-4">
+<h3 class="text-xl font-bold text-slate-800">Status Schüler</h3>
+<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+<table class="w-full text-left text-sm">
+<thead class="bg-slate-50 border-b border-slate-200">
+<tr>
+<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Name</th>
+<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Fortschritt</th>
+<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Eltern</th>
+<th class="px-6 py-4 font-bold text-slate-500 uppercase text-[10px]">Aktion</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100" id="teacher-student-table">
+<!-- Table rows -->
+</tbody>
+</table>
+</div>
+</div>
 <div class="space-y-4">
-<h2 class="font-h1 text-h1 md:text-h1 text-on-surface tracking-tight">QR-Code scannen</h2>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md mx-auto">
-                    Scanne diesen Code mit deinem Smartphone, um die aktuelle Aufgabenliste direkt zu öffnen.
-                </p>
-</div>
-<div class="relative group qr-card-container">
-<div class="absolute -inset-4 bg-primary/5 rounded-[4rem] blur-3xl group-hover:bg-primary/10 transition-all duration-500 -z-10"></div>
-<div class="qr-card bg-surface-container-lowest rounded-lg border border-outline-variant p-8 md:p-12 shadow-sm transition-all duration-300 hover:shadow-md max-w-sm mx-auto">
-<div class="flex flex-col items-center gap-8">
-<span class="font-label-caps text-label-caps text-primary tracking-[0.2em]">DOELTSCHI PLANER</span>
-<div class="qr-gradient-border rounded-lg p-2 bg-white aspect-square w-full max-w-[280px] flex items-center justify-center overflow-hidden">
-<div class="w-full h-full flex items-center justify-center bg-white" id="qrcode"></div>
-</div>
-<div class="flex items-center gap-3 bg-surface-container-low px-4 py-2 rounded-full border border-outline-variant max-w-full">
-<span class="material-symbols-outlined text-primary text-sm shrink-0" data-icon="link">link</span>
-<span class="font-subject-tag text-subject-tag text-on-surface-variant truncate" id="display-url">doeltschi.app/share/...</span>
-</div>
-</div>
-</div>
-</div>
-<div class="action-buttons flex flex-col sm:flex-row items-center justify-center gap-4">
-<button class="w-full sm:w-auto px-8 py-4 bg-primary text-on-primary rounded-full font-h2 text-body-lg hover:bg-primary-container transition-all active:scale-[0.98] duration-200 shadow-sm flex items-center justify-center gap-3" onclick="window.print()">
-<span class="material-symbols-outlined" data-icon="print">print</span>
-                    QR-Code drucken
-                </button>
-<button class="w-full sm:w-auto px-8 py-4 text-primary font-h2 text-body-lg hover:bg-surface-container-high rounded-full transition-all flex items-center justify-center gap-3" onclick="goBackToPlanner()">
-<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
-                    Zurück zum Planer
-                </button>
-</div>
-<div class="info-box mt-8 p-6 bg-primary/10 border-2 border-dashed border-primary/30 rounded-lg max-w-sm mx-auto text-left">
-<div class="flex items-start gap-4">
-<div class="bg-primary text-on-primary p-1 rounded-full shrink-0">
-<span class="material-symbols-outlined text-sm" data-icon="verified_user">verified_user</span>
-</div>
-<div>
-<span class="font-label-caps text-label-caps text-primary block mb-1">Sichere Verbindung</span>
-<p class="text-sm text-on-surface-variant leading-relaxed">
-                            Dieser Code ist verschlüsselt und nur für deine Klasse zugänglich. Keine Registrierung für Schüler erforderlich.
-                        </p>
-</div>
-</div>
-</div>
-</div>
-</main>
-<!-- Planner View Section (Teacher Mode) -->
-<main class="min-h-[calc(100vh-64px)] hidden flex-col items-center px-gutter py-8" id="planner-view">
-<div class="max-w-[800px] w-full space-y-8">
 <div class="flex justify-between items-center">
-<h2 class="font-h1 text-h1 text-on-surface">Aufgaben-Planer</h2>
-<button class="flex items-center gap-2 px-4 py-2 bg-secondary text-on-secondary rounded-full hover:bg-secondary-container transition-all" onclick="navigateTo('qr')">
-<span class="material-symbols-outlined text-sm">qr_code_2</span>
-                    Teilen
-                </button>
+<h3 class="text-xl font-bold text-slate-800">Klasse</h3>
+<button class="text-primary text-[10px] font-bold uppercase hover:underline" onclick="app.importStudents()">Import (.txt)</button>
 </div>
-<div class="bg-surface-container p-6 rounded-lg border border-outline-variant">
-<p class="text-on-surface-variant mb-6">Willkommen im Planer. Hier kannst du Aufgaben verwalten.</p>
-<div class="space-y-4" id="teacher-task-list">
-<!-- Task items would be rendered here -->
-<div class="p-4 bg-surface rounded-md border border-outline-variant flex justify-between items-center">
-<div>
-<p class="font-bold">Hausaufgaben Mathematik</p>
-<p class="text-sm text-on-surface-variant">Bis: 24.05.2024</p>
-</div>
-<span class="px-3 py-1 bg-primary-fixed text-on-primary-fixed rounded-full text-xs">Aktiv</span>
+<div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
+<div class="space-y-2 max-h-60 overflow-y-auto" id="student-mgmt-list"></div>
+<div class="flex gap-2">
+<input class="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm outline-none focus:ring-1 focus:ring-primary" id="new-student-input" onkeyup="if(event.key==='Enter') app.addStudent()" placeholder="Neuer Name..." type="text"/>
+<button class="p-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700" onclick="app.addStudent()">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+</button>
 </div>
 </div>
 </div>
 </div>
-</main>
-<!-- Student View Section -->
-<main class="min-h-[calc(100vh-64px)] hidden flex-col items-center px-gutter py-8" id="student-view">
-<div class="max-w-[600px] w-full space-y-8">
-<div class="text-center space-y-2">
-<h2 class="font-h1 text-h1 text-on-surface">Aktuelle Aufgaben</h2>
-<p class="text-on-surface-variant" id="student-view-date">Stand: --.--.----</p>
 </div>
-<div class="space-y-4" id="student-task-list">
-<!-- Task list for students -->
+<!-- QR View -->
+<div class="hidden flex flex-col items-center py-12" id="qr-view">
+<div class="max-w-md w-full text-center space-y-8">
+<h2 class="text-3xl font-black">Klasse einladen</h2>
+<div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-xl flex flex-col items-center gap-6">
+<div class="p-2 bg-white border border-slate-100 rounded-lg" id="qrcode"></div>
+<p class="text-sm text-slate-500">Scanne diesen Code, um die Schüler-Ansicht auf einem Tablet oder Smartphone zu öffnen.</p>
+<div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-full text-xs font-mono text-slate-400 truncate w-full justify-center" id="qr-url-display"></div>
 </div>
-<div class="p-4 bg-surface-container-low border border-outline-variant rounded-lg text-center text-sm text-on-surface-variant">
-                Diese Liste wird automatisch aktualisiert.
-            </div>
+<button class="font-bold text-primary hover:underline" onclick="app.setRole('teacher')">Zurück zum Dashboard</button>
+</div>
 </div>
 </main>
+<footer class="bg-white border-t border-slate-200 no-print py-10 mt-auto">
+<div class="max-w-[1000px] mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="text-center md:text-left">
+<p class="text-xs font-bold text-slate-400 uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
+<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Version 12 • Bulletproof Engine</p>
 </div>
-<!-- Footer -->
-<footer class="bg-surface border-t border-outline-variant mt-auto">
-<div class="w-full max-w-[1100px] mx-auto py-8 px-gutter flex flex-col md:flex-row justify-between items-center gap-4">
-<span class="font-label-caps text-label-caps font-bold text-on-surface-variant">© 2024 Wer – Was – Bis wann</span>
-<div class="flex gap-6">
-<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Datenschutz</a>
-<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Impressum</a>
-<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">Hilfe</a>
+<div class="flex gap-8">
+<a class="text-xs font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Datenschutz</a>
+<a class="text-xs font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Impressum</a>
+<a class="text-xs font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Hilfe</a>
 </div>
 </div>
 </footer>
+<!-- Print View -->
+<div class="hidden print-only bg-white p-10 min-h-screen text-black">
+<div class="flex justify-between items-end border-b-2 border-black pb-4 mb-8">
+<div>
+<h1 class="text-3xl font-bold">doeltschi Hausaufgaben</h1>
+<p class="text-lg" id="print-header-info">Hausaufgabenplaner</p>
+</div>
+<p class="text-sm italic">Gedruckt am: <span id="print-date"></span></p>
+</div>
+<div class="space-y-4" id="print-content"></div>
+<div class="mt-20 border-t border-black pt-4 grid grid-cols-2 gap-8 text-center">
+<div class="h-12 border-b border-black">Unterschrift Schüler/in</div>
+<div class="h-12 border-b border-black">Unterschrift Eltern</div>
+</div>
+</div>
 <script>
-    // State management
-    const state = {
-        tasks: [
-            { id: 1, title: "Hausaufgaben Mathematik", dueDate: "2024-05-24", student: "Klasse 5a", status: "open" },
-            { id: 2, title: "Vortrag Geschichte", dueDate: "2024-05-26", student: "Max", status: "open" }
+    const INITIAL_STATE = {
+        students: [
+            { id: 's1', name: 'Lukas Müller', confirmed: false, lastConfirmed: '-' },
+            { id: 's2', name: 'Sophie Fischer', confirmed: false, lastConfirmed: '-' },
+            { id: 's3', name: 'Emma Weber', confirmed: false, lastConfirmed: '-' },
+            { id: 's4', name: 'Maximilian Schmidt', confirmed: false, lastConfirmed: '-' }
         ],
-        students: ["Klasse 5a", "Max", "Julia", "Lukas"]
+        tasks: [
+            { id: 't1', studentId: 'all', subject: 'Deutsch', description: 'Arbeitsheft S. 42-43 lesen.', deadline: '15.05.2024', completions: [] },
+            { id: 't2', studentId: 's1', subject: 'Mathematik', description: 'Einmaleins-Tabelle vervollständigen.', deadline: '16.05.2024', completions: [] }
+        ]
     };
 
-    function encodeData(data) {
-        try {
-            return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-        } catch (e) {
-            console.error("Encoding failed", e);
-            return "";
-        }
-    }
+    const app = {
+        state: null,
+        currentRole: 'student', // 'student', 'teacher', 'login'
+        selectedStudent: null,
+        STORAGE_KEY: 'doeltschi_v12_stable',
 
-    function decodeData(encoded) {
-        try {
-            if (!encoded) return null;
-            return JSON.parse(decodeURIComponent(escape(atob(encoded))));
-        } catch (e) {
-            console.error("Decoding failed", e);
-            return null;
-        }
-    }
+        init() {
+            try {
+                const saved = localStorage.getItem(this.STORAGE_KEY);
+                this.state = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(INITIAL_STATE));
+                
+                // Handle URL params (QR Sync)
+                const params = new URLSearchParams(window.location.search);
+                const sParam = params.get('s');
+                const roleParam = params.get('role');
 
-    function formatDate(dateStr) {
-        if (!dateStr) return "-";
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('de-CH'); // Switzerland format: dd.mm.yyyy
-    }
+                if (roleParam === 'teacher') {
+                    this.setRole('teacher');
+                } else if (sParam) {
+                    const student = this.state.students.find(st => st.id === sParam);
+                    if (student) {
+                        this.selectStudent(student.id);
+                    } else {
+                        this.setRole('student');
+                    }
+                } else {
+                    this.setRole('student');
+                }
+                
+                document.getElementById('print-date').textContent = new Date().toLocaleDateString('de-CH');
+            } catch (e) {
+                console.error(e);
+                this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
+                this.setRole('student');
+            }
+        },
 
-    function navigateTo(view) {
-        const url = new URL(window.location);
-        url.searchParams.set('view', view);
-        
-        // If going to QR view, we must include the current state
-        if (view === 'qr') {
-            const dataHash = encodeData({ tasks: state.tasks, students: state.students });
-            url.searchParams.set('d', dataHash);
-        }
-        
-        window.history.pushState({}, '', url);
-        initApp();
-    }
+        persist() {
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
+        },
 
-    function goBackToPlanner() {
-        // Explicitly return to teacher dashboard
-        const url = new URL(window.location);
-        url.searchParams.delete('view');
-        url.searchParams.delete('d');
-        window.history.pushState({}, '', url);
-        initApp();
-    }
+        setRole(role) {
+            this.currentRole = role;
+            if (role === 'student') this.selectedStudent = null;
+            this.render();
+        },
 
-    function renderStudentView(data) {
-        const container = document.getElementById('student-task-list');
-        const dateLabel = document.getElementById('student-view-date');
-        
-        if (!container) return;
-        container.innerHTML = '';
-        
-        const displayData = data || state;
-        dateLabel.textContent = `Stand: ${formatDate(new Date())}`;
+        requestTeacherMode() {
+            this.setRole('login');
+        },
 
-        if (displayData.tasks && displayData.tasks.length > 0) {
-            displayData.tasks.forEach(task => {
-                const div = document.createElement('div');
-                div.className = "p-6 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm flex flex-col gap-2";
-                div.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <h3 class="font-h2 text-primary">${task.title || 'Kein Titel'}</h3>
-                        <span class="font-label-caps text-[10px] px-2 py-1 bg-surface-container-high rounded text-on-surface-variant">OFFEN</span>
-                    </div>
-                    <div class="flex items-center gap-4 text-sm text-on-surface-variant">
-                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">person</span> ${task.student || 'Nicht zugewiesen'}</span>
-                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">calendar_today</span> ${formatDate(task.dueDate)}</span>
-                    </div>
+        handleLogin() {
+            const pw = document.getElementById('login-password').value;
+            if (pw === 'lehrer123') {
+                this.setRole('teacher');
+            } else {
+                alert('Falsches Passwort!');
+            }
+        },
+
+        resetToHome() {
+            window.location.search = "";
+            this.init();
+        },
+
+        selectStudent(id) {
+            this.selectedStudent = this.state.students.find(s => s.id === id);
+            this.currentRole = 'student-tasks';
+            this.render();
+        },
+
+        render() {
+            const views = ['login-view', 'student-select-view', 'student-tasks-view', 'teacher-dashboard', 'qr-view'];
+            views.forEach(v => document.getElementById(v).classList.add('hidden'));
+
+            // Nav Highlight
+            const navS = document.getElementById('nav-student');
+            const navT = document.getElementById('nav-teacher');
+            navS.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all " + 
+                (this.currentRole.startsWith('student') ? "bg-primary text-white" : "text-slate-500 hover:bg-slate-200");
+            navT.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all " + 
+                (this.currentRole === 'teacher' || this.currentRole === 'login' ? "bg-primary text-white" : "text-slate-500 hover:bg-slate-200");
+
+            if (this.currentRole === 'login') {
+                document.getElementById('login-view').classList.remove('hidden');
+            } else if (this.currentRole === 'student') {
+                document.getElementById('student-select-view').classList.remove('hidden');
+                this.renderStudentGrid();
+            } else if (this.currentRole === 'student-tasks') {
+                document.getElementById('student-tasks-view').classList.remove('hidden');
+                this.renderStudentTasks();
+            } else if (this.currentRole === 'teacher') {
+                document.getElementById('teacher-dashboard').classList.remove('hidden');
+                this.renderTeacherDashboard();
+            } else if (this.currentRole === 'qr') {
+                document.getElementById('qr-view').classList.remove('hidden');
+                this.generateQR();
+            }
+        },
+
+        renderStudentGrid() {
+            const grid = document.getElementById('student-grid');
+            grid.innerHTML = this.state.students.map(s => `
+                <button onclick="app.selectStudent('${s.id}')" class="p-6 bg-white border border-slate-200 rounded-2xl hover:border-primary hover:shadow-md transition-all text-lg font-bold text-slate-700">
+                    ${s.name}
+                </button>
+            `).join('');
+        },
+
+        renderStudentTasks() {
+            const s = this.selectedStudent;
+            if (!s) return;
+
+            document.getElementById('display-student-name').textContent = s.name;
+            const taskList = document.getElementById('task-list');
+            
+            const myTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === s.id);
+            
+            if (myTasks.length === 0) {
+                taskList.innerHTML = `<div class="py-20 text-center border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold uppercase tracking-widest text-xs">Keine Aufgaben gefunden</div>`;
+            } else {
+                taskList.innerHTML = myTasks.map(t => {
+                    const isDone = t.completions.includes(s.id);
+                    const colorMap = { 'Deutsch': '#dc2626', 'Mathematik': '#2563eb', 'Sachunterricht': '#92400e', 'Englisch': '#4f46e5', 'Französisch': '#6664e4' };
+                    const color = colorMap[t.subject] || '#64748b';
+                    const locked = s.confirmed;
+
+                    return `
+                        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden flex transition-all shadow-sm ${isDone ? 'opacity-50 grayscale' : 'hover:border-primary/30'}">
+                            <div class="w-2" style="background-color: ${color}"></div>
+                            <div class="flex-1 p-6 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+                                <div>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Wer</p>
+                                    <p class="font-bold text-slate-800">${t.studentId === 'all' ? 'Ganze Klasse' : s.name}</p>
+                                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" style="background-color: ${color}20; color: ${color}">${t.subject}</span>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Aufgabe</p>
+                                    <p class="text-sm font-medium text-slate-700">${t.description}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Bis</p>
+                                    <p class="text-sm font-black text-slate-900">${t.deadline}</p>
+                                    <button onclick="${locked ? '' : `app.toggleTask('${t.id}')`}" class="mt-4 flex items-center justify-end gap-2 group ml-auto ${locked ? 'cursor-not-allowed' : ''}">
+                                        <span class="material-symbols-outlined ${isDone ? 'checkmark-active' : 'text-slate-200'}">${isDone ? 'check_circle' : 'radio_button_unchecked'}</span>
+                                        <span class="text-[10px] font-bold uppercase ${isDone ? 'text-primary' : 'text-slate-400'}">${isDone ? 'Erledigt' : 'Offen'}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Update Step Indicators
+            this.updateSteps();
+
+            // Parents Confirmation
+            const card = document.getElementById('parents-confirmation-card');
+            const icon = document.getElementById('confirmation-icon');
+            const btn = document.getElementById('confirm-btn');
+            const ts = document.getElementById('confirmation-timestamp');
+
+            card.classList.remove('hidden');
+            if (s.confirmed) {
+                card.classList.replace('border-slate-300', 'border-primary');
+                icon.textContent = 'verified';
+                icon.parentElement.classList.add('bg-blue-100');
+                btn.textContent = 'Bestätigt ✓';
+                btn.className = "px-10 py-4 bg-primary text-white rounded-xl font-black uppercase tracking-widest";
+                ts.textContent = `Erfolgreich bestätigt am ${s.lastConfirmed}`;
+                ts.classList.remove('hidden');
+            } else {
+                card.classList.replace('border-primary', 'border-slate-300');
+                icon.textContent = 'signature';
+                icon.parentElement.classList.remove('bg-blue-100');
+                btn.textContent = 'Jetzt Bestätigen';
+                btn.className = "px-10 py-4 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-black uppercase tracking-widest";
+                ts.classList.add('hidden');
+            }
+        },
+
+        updateSteps() {
+            const s = this.selectedStudent;
+            const myTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === s.id);
+            const doneCount = myTasks.filter(t => t.completions.includes(s.id)).length;
+            const allDone = myTasks.length > 0 && doneCount === myTasks.length;
+
+            const update = (id, active) => {
+                const el = document.getElementById(id);
+                el.classList.toggle('opacity-50', !active);
+                const circle = el.querySelector('div');
+                circle.className = active ? "w-8 h-8 rounded-full bg-blue-100 text-primary font-bold flex items-center justify-center mb-2" : "w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-2";
+            };
+
+            update('step-1', true);
+            update('step-2', true);
+            update('step-3', doneCount > 0);
+            update('step-4', allDone || s.confirmed);
+        },
+
+        toggleTask(taskId) {
+            const task = this.state.tasks.find(t => t.id === taskId);
+            const sid = this.selectedStudent.id;
+            if (task.completions.includes(sid)) {
+                task.completions = task.completions.filter(id => id !== sid);
+            } else {
+                task.completions.push(sid);
+            }
+            this.persist();
+            this.renderStudentTasks();
+        },
+
+        confirmByParent() {
+            if (this.selectedStudent.confirmed) return;
+            if (confirm("Bestätigen Sie hiermit die Erledigung der Hausaufgaben für diese Woche?")) {
+                this.selectedStudent.confirmed = true;
+                this.selectedStudent.lastConfirmed = new Date().toLocaleDateString('de-CH') + " " + new Date().toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'});
+                this.persist();
+                this.renderStudentTasks();
+            }
+        },
+
+        renderTeacherDashboard() {
+            // Fill Selects
+            const select = document.getElementById('new-task-student');
+            select.innerHTML = `<option value="all">Ganze Klasse</option>` + this.state.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+            // Stats
+            const totalTasks = this.state.tasks.length;
+            const totalCompletions = this.state.tasks.reduce((acc, t) => acc + t.completions.length, 0);
+            const totalCapacity = this.state.tasks.reduce((acc, t) => acc + (t.studentId === 'all' ? this.state.students.length : 1), 0);
+            const overallPercent = totalCapacity > 0 ? Math.round((totalCompletions / totalCapacity) * 100) : 0;
+            
+            document.getElementById('total-progress-percent').textContent = overallPercent + "%";
+            document.getElementById('total-progress-bar').style.width = overallPercent + "%";
+
+            const confirmedCount = this.state.students.filter(s => s.confirmed).length;
+            document.getElementById('confirmed-count').textContent = `${confirmedCount}/${this.state.students.length}`;
+            document.getElementById('confirmed-pending-text').textContent = `Noch ${this.state.students.length - confirmedCount} ausstehend`;
+
+            // Table
+            const tbody = document.getElementById('teacher-student-table');
+            tbody.innerHTML = this.state.students.map(s => {
+                const sTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === s.id);
+                const sDone = sTasks.filter(t => t.completions.includes(s.id)).length;
+                const sPercent = sTasks.length > 0 ? Math.round((sDone / sTasks.length) * 100) : 0;
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-6 py-4 font-bold text-slate-800">${s.name}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-primary" style="width: ${sPercent}%"></div>
+                                </div>
+                                <span class="text-[10px] font-bold text-slate-400">${sPercent}%</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-[10px] font-bold uppercase ${s.confirmed ? 'text-primary' : 'text-slate-300'}">${s.confirmed ? 'Bestätigt' : '-'}</td>
+                        <td class="px-6 py-4">
+                            <button onclick="app.selectStudent('${s.id}')" class="text-primary font-bold uppercase text-[10px] hover:underline">Ansicht</button>
+                            <button onclick="app.resetStudentConfirmation('${s.id}')" class="ml-2 text-slate-400 font-bold uppercase text-[10px] hover:text-red-500">Reset</button>
+                        </td>
+                    </tr>
                 `;
-                container.appendChild(div);
+            }).join('');
+
+            // Student Management
+            const mgmtList = document.getElementById('student-mgmt-list');
+            mgmtList.innerHTML = this.state.students.map(s => `
+                <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl group">
+                    <span class="text-sm font-semibold text-slate-700 truncate mr-2">${s.name}</span>
+                    <button onclick="app.removeStudent('${s.id}')" class="text-red-400 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100">
+                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                </div>
+            `).join('');
+        },
+
+        resetStudentConfirmation(id) {
+            const s = this.state.students.find(st => st.id === id);
+            if (s && confirm(`${s.name} Bestätigung wirklich zurücksetzen?`)) {
+                s.confirmed = false;
+                s.lastConfirmed = '-';
+                this.persist();
+                this.renderTeacherDashboard();
+            }
+        },
+
+        addTask(e) {
+            e.preventDefault();
+            const studentId = document.getElementById('new-task-student').value;
+            const subject = document.getElementById('new-task-subject').value;
+            const deadline = document.getElementById('new-task-date').value;
+            const description = document.getElementById('new-task-desc').value;
+
+            const newTask = {
+                id: 't' + Date.now(),
+                studentId,
+                subject,
+                description,
+                deadline,
+                completions: []
+            };
+
+            this.state.tasks.push(newTask);
+            this.persist();
+            document.getElementById('new-task-desc').value = "";
+            this.renderTeacherDashboard();
+        },
+
+        addStudent() {
+            const input = document.getElementById('new-student-input');
+            const name = input.value.trim();
+            if (name) {
+                this.state.students.push({ id: 's' + Date.now(), name, confirmed: false, lastConfirmed: '-' });
+                input.value = '';
+                this.persist();
+                this.renderTeacherDashboard();
+            }
+        },
+
+        removeStudent(id) {
+            if (confirm("Schüler/in wirklich entfernen?")) {
+                this.state.students = this.state.students.filter(s => s.id !== id);
+                this.state.tasks = this.state.tasks.filter(t => t.studentId !== id);
+                this.persist();
+                this.renderTeacherDashboard();
+            }
+        },
+
+        importStudents() {
+            const txt = prompt("Kopiere hier eine Namensliste hinein (ein Name pro Zeile):");
+            if (txt) {
+                const names = txt.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+                names.forEach(name => {
+                    this.state.students.push({ id: 's' + Math.random().toString(36).substr(2, 6), name, confirmed: false, lastConfirmed: '-' });
+                });
+                this.persist();
+                this.renderTeacherDashboard();
+            }
+        },
+
+        exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "doeltschi_backup.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        },
+
+        openQRView() {
+            this.currentRole = 'qr';
+            this.render();
+        },
+
+        generateQR() {
+            const qrContainer = document.getElementById("qrcode");
+            qrContainer.innerHTML = "";
+            const url = new URL(window.location.origin + window.location.pathname);
+            url.searchParams.set('role', 'student');
+            
+            const display = document.getElementById('qr-url-display');
+            display.textContent = url.href;
+
+            new QRCode(qrContainer, {
+                text: url.href,
+                width: 200,
+                height: 200,
+                colorDark : "#0058bc",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
             });
-        } else {
-            container.innerHTML = '<div class="p-8 text-center text-on-surface-variant">Keine aktuellen Aufgaben gefunden.</div>';
         }
-    }
+    };
 
-    function generateQRCode() {
-        const qrcodeContainer = document.getElementById("qrcode");
-        const displayUrl = document.getElementById('display-url');
-        if (!qrcodeContainer) return;
-
-        // Create student view URL
-        const currentUrl = new URL(window.location.origin + window.location.pathname);
-        currentUrl.searchParams.set('view', 'student');
-        currentUrl.searchParams.set('d', encodeData({ tasks: state.tasks, students: state.students }));
-        
-        const shareUrl = currentUrl.toString();
-        displayUrl.textContent = currentUrl.hostname + "/view/student";
-
-        qrcodeContainer.innerHTML = "";
-        new QRCode(qrcodeContainer, {
-            text: shareUrl,
-            width: 256,
-            height: 256,
-            colorDark : "#000000",
-            colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.H
-        });
-    }
-
-    function initApp() {
-        const params = new URLSearchParams(window.location.search);
-        const view = params.get('view');
-        const encodedData = params.get('d');
-        
-        // Hide all
-        document.getElementById('qr-view').classList.add('hidden');
-        document.getElementById('planner-view').classList.add('hidden');
-        document.getElementById('student-view').classList.add('hidden');
-        document.getElementById('qr-view').classList.remove('flex');
-
-        if (view === 'student') {
-            const data = decodeData(encodedData);
-            document.getElementById('student-view').classList.remove('hidden');
-            document.getElementById('student-view').classList.add('flex');
-            renderStudentView(data);
-        } else if (view === 'qr') {
-            document.getElementById('qr-view').classList.remove('hidden');
-            document.getElementById('qr-view').classList.add('flex');
-            generateQRCode();
-        } else {
-            // Default: Teacher Planner
-            document.getElementById('planner-view').classList.remove('hidden');
-            document.getElementById('planner-view').classList.add('flex');
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        initApp();
-
-        // 3D Tilt effect for QR card
-        const qrCardContainer = document.querySelector('.qr-card-container');
-        const qrCard = document.querySelector('.qr-card');
-        
-        if (qrCardContainer && qrCard) {
-            qrCardContainer.addEventListener('mousemove', (e) => {
-                const rect = qrCardContainer.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-                const rotateX = (y - centerY) / 35;
-                const rotateY = (centerX - x) / 35;
-                qrCard.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-            });
-
-            qrCardContainer.addEventListener('mouseleave', () => {
-                qrCard.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
-            });
-        }
-    });
-
-    // Handle browser back button
-    window.addEventListener('popstate', initApp);
+    document.addEventListener('DOMContentLoaded', () => app.init());
 </script>
 </body></html>
