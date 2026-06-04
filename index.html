@@ -148,7 +148,7 @@
 <div class="w-full md:w-80">
 <label class="flex items-center gap-2 text-[10px] font-black uppercase text-primary mb-3 tracking-widest">
 <span class="material-symbols-outlined text-[14px]">person</span> Schüler auswählen
-                    </label>
+                        </label>
 <div class="relative">
 <select class="w-full bg-white border border-outline-variant rounded-xl font-semibold py-4 px-5 focus:ring-2 focus:ring-primary outline-none appearance-none shadow-sm pr-12 cursor-pointer" id="student-filter" onchange="app.handleFilterChange()">
 <option value="all">Klassenübersicht</option>
@@ -175,7 +175,7 @@
 <h2 class="text-3xl font-black text-on-surface">Lehrer-Cockpit</h2>
 <button class="px-5 py-2.5 bg-white border border-outline-variant rounded-full text-xs font-bold uppercase flex items-center gap-2 hover:bg-surface-container" onclick="window.print()">
 <span class="material-symbols-outlined text-[18px]">print</span> Drucken
-                </button>
+                    </button>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 <div class="bg-white border border-outline-variant p-6 rounded-2xl shadow-sm">
@@ -201,7 +201,7 @@
 <div class="bg-white border border-outline-variant rounded-2xl p-6 shadow-sm">
 <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
 <span class="material-symbols-outlined text-primary">add_circle</span> Aufgabe erfassen
-                </h3>
+                    </h3>
 <form class="grid grid-cols-1 md:grid-cols-6 gap-4" onsubmit="app.addTask(event)">
 <div class="md:col-span-1">
 <label class="block text-[10px] font-bold text-on-surface-variant uppercase mb-1">Empfänger</label>
@@ -245,7 +245,15 @@
 </div>
 </div>
 <div class="space-y-4">
+<div class="flex justify-between items-center">
 <h3 class="text-xl font-bold text-on-surface">Klassenliste</h3>
+<div class="flex gap-2">
+<button class="text-[10px] font-bold text-primary uppercase border border-primary/20 bg-primary/5 px-2 py-1 rounded-md flex items-center gap-1 hover:bg-primary hover:text-white transition-colors" onclick="document.getElementById('import-txt').click()">
+<span class="material-symbols-outlined text-[14px]">upload_file</span> Import (.txt)
+                                </button>
+<input accept=".txt" class="hidden" id="import-txt" onchange="app.importStudents(event)" type="file"/>
+</div>
+</div>
 <div class="bg-white border border-outline-variant rounded-2xl p-5 shadow-sm space-y-4">
 <div class="space-y-2 max-h-60 overflow-y-auto pr-2" id="student-management-list"></div>
 <div class="flex gap-2">
@@ -506,6 +514,35 @@
                 this.persist();
                 this.renderAll();
             }
+        },
+
+        importStudents(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                const names = text.split('\n')
+                    .map(name => name.trim())
+                    .filter(name => name.length > 0);
+                
+                if (names.length > 0) {
+                    names.forEach(name => {
+                        this.state.students.push({ 
+                            id: 's' + Math.random().toString(36).substr(2, 9), 
+                            name, 
+                            confirmed: false, 
+                            lastConfirmed: '-' 
+                        });
+                    });
+                    this.persist();
+                    this.renderAll();
+                    alert(`${names.length} Schüler importiert.`);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input
         },
 
         deleteStudent(id) {
