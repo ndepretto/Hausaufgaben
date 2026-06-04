@@ -148,7 +148,7 @@
 <div class="w-full md:w-80">
 <label class="flex items-center gap-2 text-[10px] font-black uppercase text-primary mb-3 tracking-widest">
 <span class="material-symbols-outlined text-[14px]">person</span> Schüler auswählen
-                        </label>
+                    </label>
 <div class="relative">
 <select class="w-full bg-white border border-outline-variant rounded-xl font-semibold py-4 px-5 focus:ring-2 focus:ring-primary outline-none appearance-none shadow-sm pr-12 cursor-pointer" id="student-filter" onchange="app.handleFilterChange()">
 <option value="all">Klassenübersicht</option>
@@ -175,7 +175,7 @@
 <h2 class="text-3xl font-black text-on-surface">Lehrer-Cockpit</h2>
 <button class="px-5 py-2.5 bg-white border border-outline-variant rounded-full text-xs font-bold uppercase flex items-center gap-2 hover:bg-surface-container" onclick="window.print()">
 <span class="material-symbols-outlined text-[18px]">print</span> Drucken
-                    </button>
+                </button>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 <div class="bg-white border border-outline-variant p-6 rounded-2xl shadow-sm">
@@ -201,7 +201,7 @@
 <div class="bg-white border border-outline-variant rounded-2xl p-6 shadow-sm">
 <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
 <span class="material-symbols-outlined text-primary">add_circle</span> Aufgabe erfassen
-                    </h3>
+                </h3>
 <form class="grid grid-cols-1 md:grid-cols-6 gap-4" onsubmit="app.addTask(event)">
 <div class="md:col-span-1">
 <label class="block text-[10px] font-bold text-on-surface-variant uppercase mb-1">Empfänger</label>
@@ -250,7 +250,7 @@
 <div class="flex gap-2">
 <button class="text-[10px] font-bold text-primary uppercase border border-primary/20 bg-primary/5 px-2 py-1 rounded-md flex items-center gap-1 hover:bg-primary hover:text-white transition-colors" onclick="document.getElementById('import-txt').click()">
 <span class="material-symbols-outlined text-[14px]">upload_file</span> Import (.txt)
-                                </button>
+                            </button>
 <input accept=".txt" class="hidden" id="import-txt" onchange="app.importStudents(event)" type="file"/>
 </div>
 </div>
@@ -300,7 +300,7 @@
 <div class="text-center md:text-left">
 <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">© 2024 Döltschi Hausaufgabenplaner</p>
 <div class="flex items-center justify-center md:justify-start gap-3 mt-1">
-<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 22 • Swiss Edition</p>
+<p class="text-[9px] text-on-surface-variant/40 font-mono uppercase">Version 22.1 • Swiss Edition</p>
 <button class="text-[9px] text-on-surface-variant/30 hover:text-red-500 underline font-mono uppercase" onclick="app.resetSystem()">App zurücksetzen</button>
 </div>
 </div>
@@ -338,7 +338,7 @@
             { id: 't0', studentId: 'all', subjectCode: 'MA', description: 'Ganze Klasse: Buch S. 120-121.', deadline: 'Fr' },
             { id: 't1', studentId: 's1', subjectCode: 'DE', description: 'Lesetagebuch führen.', deadline: 'Mi' }
         ],
-        completedTasks: {}
+        completedTasks: {} // Format: { studentId: [taskId1, taskId2] }
     };
 
     const app = {
@@ -353,6 +353,7 @@
                     this.state.isLehrer = false;
                     this.state.currentTab = 'Planer';
                     this.state.verifiedStudentId = null;
+                    if (!this.state.completedTasks) this.state.completedTasks = {};
                 } catch(e) { this.state = JSON.parse(JSON.stringify(INITIAL_STATE)); }
             } else {
                 this.state = JSON.parse(JSON.stringify(INITIAL_STATE));
@@ -468,6 +469,10 @@
 
         deleteTask(id) {
             this.state.tasks = this.state.tasks.filter(t => t.id !== id);
+            // Cleanup completions if task is deleted
+            Object.keys(this.state.completedTasks).forEach(sid => {
+                this.state.completedTasks[sid] = this.state.completedTasks[sid].filter(tid => tid !== id);
+            });
             this.persist();
             this.renderAll();
         },
@@ -476,12 +481,16 @@
             const sid = this.state.selectedStudentId;
             if (sid === 'all') return;
             const s = this.state.students.find(x => x.id === sid);
-            if (s.confirmed) return; // Locked
+            if (s.confirmed) return; // Locked by parents
 
             if (!this.state.completedTasks[sid]) this.state.completedTasks[sid] = [];
+            
             const idx = this.state.completedTasks[sid].indexOf(taskId);
-            if (idx > -1) this.state.completedTasks[sid].splice(idx, 1);
-            else this.state.completedTasks[sid].push(taskId);
+            if (idx > -1) {
+                this.state.completedTasks[sid].splice(idx, 1);
+            } else {
+                this.state.completedTasks[sid].push(taskId);
+            }
             
             this.persist();
             this.renderAll();
@@ -543,12 +552,13 @@
                 }
             };
             reader.readAsText(file);
-            event.target.value = ''; // Reset input
+            event.target.value = ''; 
         },
 
         deleteStudent(id) {
             if (confirm('Schüler wirklich löschen?')) {
                 this.state.students = this.state.students.filter(s => s.id !== id);
+                delete this.state.completedTasks[id];
                 this.persist();
                 this.renderAll();
             }
@@ -639,6 +649,7 @@
                 container.innerHTML = `<div class="py-16 text-center border-4 border-dashed border-outline-variant/20 rounded-2xl text-on-surface-variant/40 font-bold uppercase tracking-widest text-xs">Keine Aufgaben</div>`;
             } else {
                 container.innerHTML = filtered.map(t => {
+                    // Critical Fix: Completion is checked against student-specific list
                     const done = (this.state.completedTasks[sid] || []).includes(t.id);
                     const cfg = SUBJECT_CONFIG[t.subjectCode] || { name: 'Divers', color: '#64748b' };
                     const isGlobal = t.studentId === 'all';
@@ -705,18 +716,25 @@
             const tbody = document.getElementById('student-table-body');
             const sorted = [...this.state.students].sort((a,b) => a.name.localeCompare(b.name));
             
-            let totalTasks = 0;
-            let completedTasks = 0;
+            let totalPossibleTasks = 0;
+            let totalActualCompleted = 0;
             let confirmedCount = 0;
 
             tbody.innerHTML = sorted.map(s => {
-                const sTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === s.id);
-                const done = (this.state.completedTasks[s.id] || []).length;
-                const total = sTasks.length;
-                const perc = total > 0 ? Math.round((done/total)*100) : 100;
+                // Relevant tasks for THIS student: their specific tasks + class-wide tasks
+                const relevantTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === s.id);
                 
-                totalTasks += total;
-                completedTasks += done;
+                // Completed tasks for THIS student only
+                const studentCompletions = this.state.completedTasks[s.id] || [];
+                
+                // Only count completions that actually exist in current task list (safety)
+                const doneCount = studentCompletions.filter(tid => relevantTasks.some(t => t.id === tid)).length;
+                const totalCount = relevantTasks.length;
+                
+                const perc = totalCount > 0 ? Math.round((doneCount/totalCount)*100) : 100;
+                
+                totalPossibleTasks += totalCount;
+                totalActualCompleted += doneCount;
                 if (s.confirmed) confirmedCount++;
 
                 return `
@@ -727,7 +745,7 @@
                                 <div class="w-20 h-1.5 bg-surface-container rounded-full overflow-hidden">
                                     <div class="h-full bg-primary" style="width: ${perc}%"></div>
                                 </div>
-                                <span class="text-[10px] font-bold">${done}/${total}</span>
+                                <span class="text-[10px] font-bold">${doneCount}/${totalCount}</span>
                             </div>
                         </td>
                         <td class="px-6 py-4">
@@ -737,13 +755,13 @@
                             }
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <button onclick="app.unlockStudent('${s.id}')" class="text-[9px] font-bold uppercase text-primary hover:underline ${!s.confirmed ? 'opacity-0' : ''}">Zurücksetzen</button>
+                            <button onclick="app.unlockStudent('${s.id}')" class="text-[9px] font-bold uppercase text-primary hover:underline ${!s.confirmed ? 'opacity-0 pointer-events-none' : ''}">Zurücksetzen</button>
                         </td>
                     </tr>
                 `;
             }).join('');
 
-            const globalPerc = totalTasks > 0 ? Math.round((completedTasks/totalTasks)*100) : 0;
+            const globalPerc = totalPossibleTasks > 0 ? Math.round((totalActualCompleted/totalPossibleTasks)*100) : 0;
             document.getElementById('dashboard-quote').textContent = `${globalPerc}%`;
             document.getElementById('dashboard-progress-bar').style.width = `${globalPerc}%`;
             document.getElementById('dashboard-confirmations').textContent = `${confirmedCount}/${this.state.students.length}`;
