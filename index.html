@@ -12,10 +12,11 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .dot-pattern { background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; }
         .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .task-row:hover .delete-btn { opacity: 1; }
         @media print { .no-print { display: none !important; } }
         .view-section { display: none; }
         .view-section.active { display: block; }
+        .task-done { background-color: #f0fdf4 !important; border-color: #bbf7d0 !important; }
+        .task-done .task-title { text-decoration: line-through; color: #94a3b8; }
     </style>
 </head>
 <body class="dot-pattern min-h-screen text-slate-800 pb-20">
@@ -99,6 +100,11 @@
 <div class="text-slate-400 font-bold tracking-widest text-sm uppercase" id="date-range-display">--. --. ---- – --. --. ----</div>
 </div>
 </div>
+<!-- Task Table Header -->
+<div class="grid grid-cols-12 px-6 mb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
+<div class="col-span-8 md:col-span-9">Aufgabe</div>
+<div class="col-span-4 md:col-span-3 text-right">Status / Datum</div>
+</div>
 <div class="space-y-4 mb-16" id="task-container"></div>
 </div>
 <!-- Teacher-View -->
@@ -146,7 +152,7 @@
 <button class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-all" onclick="addTask()">Hinzufügen</button>
 </div>
 </div>
-<!-- Fortschritt (Placeholder) -->
+<!-- Fortschritt (Dashboard Stats) -->
 <div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-lg">
 <h3 class="text-xl font-bold mb-4">Zusammenfassung</h3>
 <div class="space-y-4" id="teacher-stats">
@@ -189,8 +195,11 @@
 </footer>
 <script>
     const STORAGE_KEY = 'doeltschi-master-data';
+    const COMPLETION_KEY = 'doeltschi-completion-data';
+    
     let students = ['Lukas Müller', 'Sophie Fischer', 'Emma Weber', 'Maximilian Schmidt'];
     let tasks = [];
+    let completionStatus = {}; // { studentName: { taskId: boolean } }
     let currentMode = 'student';
     let selectedStudent = null;
 
@@ -243,13 +252,22 @@
             tasks = data.tasks || [];
             if (data.students) students = data.students;
         }
-        document.getElementById('class-input').value = students.join('\n');
+
+        const savedCompletions = localStorage.getItem(COMPLETION_KEY);
+        if (savedCompletions) {
+            completionStatus = JSON.parse(savedCompletions);
+        }
+
+        const classInput = document.getElementById('class-input');
+        if (classInput) classInput.value = students.join('\n');
+        
         renderTasks();
         renderTeacherTasks();
     }
 
     function saveData() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ tasks, students }));
+        localStorage.setItem(COMPLETION_KEY, JSON.stringify(completionStatus));
         generateQRCode();
         renderTasks();
         renderTeacherTasks();
@@ -279,8 +297,8 @@
         const btnS = document.getElementById('btn-student');
         const btnT = document.getElementById('btn-teacher');
         
-        btnS.className = currentMode === 'student' ? 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-blue-600 text-white shadow-sm' : 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:bg-slate-200';
-        btnT.className = currentMode === 'teacher' ? 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-blue-600 text-white shadow-sm' : 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:bg-slate-200';
+        if (btnS) btnS.className = currentMode === 'student' ? 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-blue-600 text-white shadow-sm' : 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:bg-slate-200';
+        if (btnT) btnT.className = currentMode === 'teacher' ? 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-blue-600 text-white shadow-sm' : 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:bg-slate-200';
 
         document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
         if (currentMode === 'teacher') {
@@ -289,6 +307,7 @@
             updateStats();
         } else if (selectedStudent) {
             document.getElementById('planer-view').classList.add('active');
+            renderTasks();
         } else {
             document.getElementById('start-view').classList.add('active');
         }
@@ -299,12 +318,12 @@
         selectedStudent = val;
         document.getElementById('current-user-display').innerText = val === 'all' ? 'Ganze Klasse' : val;
         updateUI();
-        renderTasks();
     }
 
     function resetSelection() {
         selectedStudent = null;
-        document.getElementById('student-selector').value = "";
+        const selector = document.getElementById('student-selector');
+        if (selector) selector.value = "";
         updateUI();
     }
 
@@ -343,13 +362,11 @@
         if (!container) return;
         container.innerHTML = "";
         
-        // Encode both students AND tasks into the URL (Sync Fix)
         const syncPayload = {
             students: students,
             tasks: tasks
         };
         
-        // Use Base64 encoding to shorten the URL slightly and handle special characters
         const dataStr = btoa(JSON.stringify(syncPayload));
         const syncUrl = `${window.location.origin}${window.location.pathname}?data=${encodeURIComponent(dataStr)}`;
         
@@ -370,12 +387,15 @@
         const curr = new Date();
         const monday = new Date(curr.setDate(curr.getDate() - curr.getDay() + 1)).toLocaleDateString('de-CH');
         const friday = new Date(curr.setDate(curr.getDate() - curr.getDay() + 5)).toLocaleDateString('de-CH');
-        document.getElementById('week-display').innerText = `Woche ${weekNum}`;
-        document.getElementById('date-range-display').innerText = `${monday} – ${friday}`;
+        const weekDisplay = document.getElementById('week-display');
+        const dateRangeDisplay = document.getElementById('date-range-display');
+        if (weekDisplay) weekDisplay.innerText = `Woche ${weekNum}`;
+        if (dateRangeDisplay) dateRangeDisplay.innerText = `${monday} – ${friday}`;
     }
 
     function renderLegend() {
         const container = document.getElementById('legend-container');
+        if (!container) return;
         container.innerHTML = Object.entries(subjects).map(([key, data]) => `
             <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
                 <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${data.color}"></span>
@@ -395,28 +415,53 @@
         });
     }
 
+    function toggleTask(taskId) {
+        if (!selectedStudent) return;
+        
+        if (!completionStatus[selectedStudent]) {
+            completionStatus[selectedStudent] = {};
+        }
+        
+        completionStatus[selectedStudent][taskId] = !completionStatus[selectedStudent][taskId];
+        saveData();
+    }
+
     function renderTasks() {
         const container = document.getElementById('task-container');
         if (!container) return;
         
-        // Show all tasks (In this simplified model, all tasks are for everyone)
         if (tasks.length === 0) {
             container.innerHTML = '<div class="text-center py-20 text-slate-400 font-medium bg-white rounded-[32px] border-2 border-dashed border-slate-100">Keine Aufgaben vorhanden.</div>';
             return;
         }
         
-        container.innerHTML = tasks.map(t => `
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center group hover:border-blue-200 transition-colors">
-                <div class="flex items-center gap-4">
-                    <span class="w-3 h-3 rounded-full shadow-sm" style="background-color: ${subjects[t.subject]?.color || '#ccc'}"></span>
-                    <div>
-                        <p class="font-bold text-slate-800">${t.desc}</p>
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${subjects[t.subject]?.name || 'Allgemein'}</span>
+        container.innerHTML = tasks.map(t => {
+            const taskId = t.id || `${t.desc}-${t.date}-${t.subject}`;
+            const isDone = completionStatus[selectedStudent] && completionStatus[selectedStudent][taskId];
+            const statusClass = isDone ? 'task-done' : 'bg-white';
+            const actionText = isDone ? 'Erledigt' : 'Offen';
+            const actionIcon = isDone ? 'check_circle' : 'radio_button_unchecked';
+            const iconColor = isDone ? 'text-green-500' : 'text-slate-300';
+
+            return `
+                <div class="${statusClass} grid grid-cols-12 items-center p-6 rounded-2xl shadow-sm border border-slate-100 hover:border-blue-200 transition-all cursor-pointer group" onclick="toggleTask('${taskId}')">
+                    <div class="col-span-8 md:col-span-9 flex items-center gap-4">
+                        <span class="w-3 h-3 rounded-full shadow-sm flex-shrink-0" style="background-color: ${subjects[t.subject]?.color || '#ccc'}"></span>
+                        <div>
+                            <p class="font-bold text-slate-800 task-title transition-all">${t.desc}</p>
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${subjects[t.subject]?.name || 'Allgemein'}</span>
+                        </div>
+                    </div>
+                    <div class="col-span-4 md:col-span-3 flex flex-col items-end gap-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold ${isDone ? 'text-green-600' : 'text-slate-400'} uppercase tracking-tight">${actionText}</span>
+                            <span class="material-icons-outline ${iconColor} transition-colors">${actionIcon}</span>
+                        </div>
+                        <div class="text-slate-400 text-[10px] font-bold whitespace-nowrap">${t.date}</div>
                     </div>
                 </div>
-                <div class="text-slate-400 text-sm font-bold whitespace-nowrap ml-4">${t.date}</div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     function renderTeacherTasks() {
@@ -445,18 +490,27 @@
     }
 
     function addTask() {
-        const desc = document.getElementById('task-desc').value;
-        const subject = document.getElementById('task-subject').value;
-        const dateInput = document.getElementById('task-date').value;
-        if (!desc || !dateInput) {
+        const descInput = document.getElementById('task-desc');
+        const subjectInput = document.getElementById('task-subject');
+        const dateInput = document.getElementById('task-date');
+        
+        const desc = descInput.value;
+        const subject = subjectInput.value;
+        const dateVal = dateInput.value;
+        
+        if (!desc || !dateVal) {
             alert("Bitte fülle alle Felder aus.");
             return;
         }
-        const date = new Date(dateInput).toLocaleDateString('de-CH');
-        tasks.push({ desc, subject, date });
+        
+        const date = new Date(dateVal).toLocaleDateString('de-CH');
+        const id = 'task-' + Date.now();
+        
+        tasks.push({ id, desc, subject, date });
         saveData();
-        document.getElementById('task-desc').value = "";
-        document.getElementById('task-date').value = "";
+        
+        descInput.value = "";
+        dateInput.value = "";
     }
 
     function deleteTask(index) {
