@@ -365,18 +365,6 @@
             `).join('');
         }
 
-        function addTask() {
-            const desc = document.getElementById('task-desc').value;
-            const subject = document.getElementById('task-subject').value;
-            const dateInput = document.getElementById('task-date').value;
-            if (!desc || !dateInput) return;
-            const date = new Date(dateInput).toLocaleDateString('de-CH');
-            tasks.push({ desc, subject, date });
-            saveData();
-            document.getElementById('task-desc').value = "";
-            alert("Aufgabe hinzugefügt!");
-        }
-
         window.onload = init;
     </script>
 </body>
