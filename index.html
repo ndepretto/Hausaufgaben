@@ -1,9 +1,11 @@
-<!DOCTYPE html><html class="light" lang="de"><head>
-<meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<!DOCTYPE html>
+
+<html class="light" lang="de"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>doeltschi | Digitaler Aufgabenplaner</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
@@ -83,7 +85,7 @@
 <span class="material-symbols-outlined text-primary text-6xl mb-4">lock_open</span>
 <h2 class="text-2xl font-bold mb-2">Lehrer Login</h2>
 <p class="text-slate-500 text-sm mb-6">Bitte Passwort eingeben</p>
-<input class="w-full bg-slate-50 border border-outline-variant rounded-xl p-3 mb-4 focus:ring-2 focus:ring-primary outline-none" id="login-password" onkeyup="if(event.key==='Enter') app.handleLogin()" placeholder="Passwort" type="password">
+<input class="w-full bg-slate-50 border border-outline-variant rounded-xl p-3 mb-4 focus:ring-2 focus:ring-primary outline-none" id="login-password" onkeyup="if(event.key==='Enter') app.handleLogin()" placeholder="Passwort" type="password"/>
 <button class="w-full py-3 bg-primary text-white rounded-xl font-bold uppercase tracking-wider hover:opacity-90" onclick="app.handleLogin()">Anmelden</button>
 <button class="mt-4 text-xs font-bold text-slate-400 uppercase" onclick="app.setRole('student')">Abbrechen</button>
 </div>
@@ -216,13 +218,13 @@
 </div>
 <div class="mb-6 flex flex-col md:flex-row gap-3">
 <div class="flex-1 flex gap-2">
-<input class="flex-1 text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none" id="new-student-name" onkeyup="if(event.key==='Enter') app.addStudent()" placeholder="Neuer Schüler-Name" type="text">
+<input class="flex-1 text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none" id="new-student-name" onkeyup="if(event.key==='Enter') app.addStudent()" placeholder="Neuer Schüler-Name" type="text"/>
 <button class="px-4 bg-slate-100 hover:bg-slate-200 text-primary rounded-xl transition-colors" onclick="app.addStudent()" title="Hinzufügen">
 <span class="material-symbols-outlined">person_add</span>
 </button>
 </div>
 <div class="relative">
-<input accept=".txt" class="hidden" id="import-txt-file" onchange="app.importStudentList(event)" type="file">
+<input accept=".txt" class="hidden" id="import-txt-file" onchange="app.importStudentList(event)" type="file"/>
 <button class="h-full px-6 py-3 border-2 border-dashed border-slate-200 hover:border-primary hover:bg-primary/5 rounded-xl text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-primary transition-all flex items-center justify-center gap-2" onclick="document.getElementById('import-txt-file').click()">
 <span class="material-symbols-outlined text-base">upload_file</span>
                             Import (.txt)
@@ -251,7 +253,7 @@
                     Neue Aufgabe
                 </h4>
 <div class="space-y-3">
-<input class="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none" id="new-task-desc" placeholder="Was ist zu tun?" type="text">
+<input class="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none" id="new-task-desc" placeholder="Was ist zu tun?" type="text"/>
 <div class="grid grid-cols-1 gap-2">
 <select class="text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl" id="new-task-student"></select>
 <select class="text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl" id="new-task-subject">
@@ -330,7 +332,7 @@
 <div class="max-w-[1000px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
 <div class="text-center md:text-left">
 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
-<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Version 14.0 • QR Integration • Swiss Locale</p>
+<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Version 15.0 • Class QR Sync • Swiss Locale</p>
 </div>
 <div class="flex gap-6">
 <a class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Datenschutz</a>
@@ -374,37 +376,82 @@
         selectedStudentId: null,
         viewingStudentId: null,
         STORAGE_KEY: 'doeltschi_identity_protected_v2',
-        QR_URL: 'https://ndepretto.github.io/Hausaufgaben/',
+        BASE_URL: window.location.origin + window.location.pathname,
 
         init() {
             const saved = localStorage.getItem(this.STORAGE_KEY);
             this.state = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(INITIAL_STATE));
             
+            // Check for Class Import in URL
+            this.handleUrlImport();
+
             if (this.state.lockedStudentId) {
                 this.selectedStudentId = this.state.lockedStudentId;
             }
             
             this.render();
-            this.initQRCode();
+            this.updateQRCode();
         },
 
-        initQRCode() {
-            const qrContainer = document.getElementById('qrcode');
-            if (qrContainer) {
-                qrContainer.innerHTML = '';
-                new QRCode(qrContainer, {
-                    text: this.QR_URL,
-                    width: 140,
-                    height: 140,
-                    colorDark: "#0058bc",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.H
-                });
+        handleUrlImport() {
+            const params = new URLSearchParams(window.location.search);
+            const classData = params.get('class');
+            if (classData) {
+                try {
+                    // Decoding Base64 (using atob + decodeURIComponent for UTF-8 safety)
+                    const decoded = decodeURIComponent(atob(classData));
+                    const importedStudents = JSON.parse(decoded);
+                    
+                    if (Array.isArray(importedStudents) && importedStudents.length > 0) {
+                        // Merge logic: only add students that don't exist by name yet to avoid duplicates
+                        // while preserving existing tasks and IDs if they match.
+                        // For a clean sync, we usually replace the list if coming from a master QR.
+                        if (confirm("Neue Schülerliste über QR-Code erkannt. Möchtest du diese Liste importieren? (Bestehende Schüler bleiben erhalten)")) {
+                            importedStudents.forEach(impS => {
+                                const exists = this.state.students.find(s => s.name === impS.name);
+                                if (!exists) {
+                                    this.state.students.push({
+                                        ...impS,
+                                        confirmed: false,
+                                        lastConfirmed: '-'
+                                    });
+                                }
+                            });
+                            this.persist();
+                            // Clean URL
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Fehler beim Importieren der Schülerliste:", e);
+                }
             }
+        },
+
+        updateQRCode() {
+            const qrContainer = document.getElementById('qrcode');
+            if (!qrContainer) return;
+
+            // Prepare student list for encoding (minimal data to keep QR readable)
+            const exportList = this.state.students.map(s => ({ id: s.id, name: s.name }));
+            const jsonStr = JSON.stringify(exportList);
+            const base64Data = btoa(encodeURIComponent(jsonStr));
+            const shareUrl = `${this.BASE_URL}?class=${base64Data}`;
+
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: shareUrl,
+                width: 140,
+                height: 140,
+                colorDark: "#0058bc",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L // Low error correction to allow more data in same size
+            });
         },
 
         persist() {
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
+            this.updateQRCode(); // Refresh QR when state changes
         },
 
         setRole(role) {
@@ -847,6 +894,4 @@
 
     window.onload = () => app.init();
 </script>
-
-
 </body></html>
