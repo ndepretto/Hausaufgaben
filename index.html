@@ -403,6 +403,16 @@
             }
         },
 
+        resetParentConfirmation(studentId) {
+            const student = this.state.students.find(s => s.id === studentId);
+            if (student && confirm(`Bestätigung für ${student.name} wirklich zurücksetzen?`)) {
+                student.confirmed = false;
+                student.lastConfirmed = '-';
+                this.persist();
+                this.render();
+            }
+        },
+
         addStudent() {
             const input = document.getElementById('new-student-name');
             const name = input.value.trim();
@@ -655,9 +665,14 @@
                             </div>
                         </td>
                         <td class="px-4 py-3">
-                            ${s.confirmed ? 
-                                '<span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase flex items-center w-fit gap-1"><span class="material-symbols-outlined text-xs">verified</span> Gesehen</span>' : 
-                                '<span class="text-[10px] font-bold text-slate-400 uppercase">Offen</span>'}
+                            <div class="flex items-center gap-2">
+                                ${s.confirmed ? 
+                                    `<span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase flex items-center w-fit gap-1"><span class="material-symbols-outlined text-xs">verified</span> Gesehen</span>
+                                     <button onclick="app.resetParentConfirmation('${s.id}')" title="Bestätigung zurücksetzen" class="text-slate-300 hover:text-error transition-colors">
+                                        <span class="material-symbols-outlined text-sm">close</span>
+                                     </button>` : 
+                                    '<span class="text-[10px] font-bold text-slate-400 uppercase">Offen</span>'}
+                            </div>
                         </td>
                         <td class="px-4 py-3 text-xs font-mono text-slate-500">${s.lastConfirmed}</td>
                         <td class="px-4 py-3 text-right">
