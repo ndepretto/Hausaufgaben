@@ -238,33 +238,8 @@
 </div>
 </div>
 </div>
-<!-- Teacher Inspection Area (New) -->
-<div class="hidden space-y-6 animate-in slide-in-from-bottom-4 duration-300" id="teacher-inspection-area">
-<div class="bg-blue-50 border-l-4 border-primary p-4 rounded-r-2xl flex justify-between items-center">
-<div>
-<p class="text-xs font-bold text-primary uppercase tracking-widest mb-1">Inspektions-Modus</p>
-<h3 class="text-xl font-black text-slate-900" id="inspection-title">Aufgaben von ...</h3>
-</div>
-<button class="p-2 hover:bg-primary/10 rounded-full text-primary transition-colors" onclick="app.closeInspection()">
-<span class="material-symbols-outlined">close</span>
-</button>
-</div>
-<div class="overflow-x-auto">
-<table class="w-full text-left bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-<thead>
-<tr class="bg-slate-50 border-b border-slate-200">
-<th class="px-6 py-4 text-[10px] font-bold uppercase text-slate-500 w-16">Status</th>
-<th class="px-6 py-4 text-[10px] font-bold uppercase text-slate-500">Fach</th>
-<th class="px-6 py-4 text-[10px] font-bold uppercase text-slate-500">Aufgabe</th>
-<th class="px-6 py-4 text-[10px] font-bold uppercase text-slate-500">Typ</th>
-</tr>
-</thead>
-<tbody class="divide-y divide-slate-100" id="teacher-inspection-tbody"></tbody>
-</table>
-</div>
-</div>
 <!-- Manage Tasks Section -->
-<div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm" id="manage-tasks-section">
+<div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
 <h4 class="font-bold mb-4 flex items-center gap-2">
 <span class="material-symbols-outlined text-primary">assignment_turned_in</span>
                 Zugeordnete Aufgaben verwalten
@@ -297,7 +272,7 @@
 <div class="max-w-[1000px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
 <div class="text-center md:text-left">
 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
-<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Version 13.0 • Teacher Inspection • Swiss Locale</p>
+<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Version 12.9 • Parent Tracking • Import Ready</p>
 </div>
 <div class="flex gap-6">
 <a class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Datenschutz</a>
@@ -339,7 +314,6 @@
         state: null,
         currentRole: 'student',
         selectedStudentId: null,
-        viewingStudentId: null, // Teacher inspecting a specific student
         STORAGE_KEY: 'doeltschi_identity_protected_v2',
 
         init() {
@@ -396,34 +370,18 @@
             }
         },
 
-        toggleTask(taskId, targetStudentId = null) {
-            // If targetStudentId is provided, we use that (teacher mode), otherwise use selectedStudentId (student mode)
-            const sid = targetStudentId || this.selectedStudentId;
-            if (!sid) return;
-
+        toggleTask(taskId) {
+            if (!this.selectedStudentId) return;
             const task = this.state.tasks.find(t => t.id === taskId);
-            const student = this.state.students.find(s => s.id === sid);
-            
-            // Student mode: can't toggle if confirmed
-            if (this.currentRole === 'student' && (!student || student.confirmed)) return;
+            const student = this.state.students.find(s => s.id === this.selectedStudentId);
+            if (!student || student.confirmed) return;
 
-            if (task.completions.includes(sid)) {
-                task.completions = task.completions.filter(id => id !== sid);
+            if (task.completions.includes(this.selectedStudentId)) {
+                task.completions = task.completions.filter(id => id !== this.selectedStudentId);
             } else {
-                task.completions.push(sid);
+                task.completions.push(this.selectedStudentId);
             }
             this.persist();
-            this.render();
-        },
-
-        inspectStudent(id) {
-            this.viewingStudentId = id;
-            this.render();
-            document.getElementById('teacher-inspection-area').scrollIntoView({ behavior: 'smooth' });
-        },
-
-        closeInspection() {
-            this.viewingStudentId = null;
             this.render();
         },
 
@@ -476,9 +434,6 @@
                 if (this.state.lockedStudentId === id) {
                     this.state.lockedStudentId = null;
                     this.selectedStudentId = null;
-                }
-                if (this.viewingStudentId === id) {
-                    this.viewingStudentId = null;
                 }
                 this.state.students = this.state.students.filter(s => s.id !== id);
                 this.state.tasks.forEach(t => {
@@ -694,10 +649,10 @@
                 const percent = totalCount > 0 ? Math.round((completedCount/totalCount)*100) : 0;
                 
                 return `
-                    <tr class="group hover:bg-slate-50 transition-colors cursor-pointer ${this.state.lockedStudentId === s.id ? 'bg-blue-50/50' : ''} ${this.viewingStudentId === s.id ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''}" onclick="app.inspectStudent('${s.id}')">
+                    <tr class="hover:bg-slate-50 transition-colors ${this.state.lockedStudentId === s.id ? 'bg-blue-50/50' : ''}">
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-2">
-                                <span class="text-sm font-bold text-slate-900 group-hover:text-primary transition-colors">${s.name}</span>
+                                <span class="text-sm font-bold text-slate-900">${s.name}</span>
                                 ${this.state.lockedStudentId === s.id ? '<span class="material-symbols-outlined text-sm text-primary">lock</span>' : ''}
                             </div>
                         </td>
@@ -713,7 +668,7 @@
                             <div class="flex items-center gap-2">
                                 ${s.confirmed ? 
                                     `<span class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase flex items-center w-fit gap-1"><span class="material-symbols-outlined text-xs">verified</span> Gesehen</span>
-                                     <button onclick="event.stopPropagation(); app.resetParentConfirmation('${s.id}')" title="Bestätigung zurücksetzen" class="text-slate-300 hover:text-error transition-colors">
+                                     <button onclick="app.resetParentConfirmation('${s.id}')" title="Bestätigung zurücksetzen" class="text-slate-300 hover:text-error transition-colors">
                                         <span class="material-symbols-outlined text-sm">close</span>
                                      </button>` : 
                                     '<span class="text-[10px] font-bold text-slate-400 uppercase">Offen</span>'}
@@ -721,51 +676,13 @@
                         </td>
                         <td class="px-4 py-3 text-xs font-mono text-slate-500">${s.lastConfirmed}</td>
                         <td class="px-4 py-3 text-right">
-                            <button onclick="event.stopPropagation(); app.removeStudent('${s.id}')" class="text-slate-300 hover:text-error transition-colors p-1">
+                            <button onclick="app.removeStudent('${s.id}')" class="text-slate-300 hover:text-error transition-colors p-1">
                                 <span class="material-symbols-outlined text-lg">delete</span>
                             </button>
                         </td>
                     </tr>
                 `;
             }).join('') || '<tr><td colspan="5" class="px-4 py-8 text-center text-slate-400 text-xs uppercase font-bold">Keine Schüler erfasst</td></tr>';
-
-            // New: Teacher Inspection Area
-            const inspectionArea = document.getElementById('teacher-inspection-area');
-            if (this.viewingStudentId) {
-                inspectionArea.classList.remove('hidden');
-                const student = this.state.students.find(s => s.id === this.viewingStudentId);
-                document.getElementById('inspection-title').textContent = `Aufgaben von ${student.name}`;
-                
-                const inspectionTbody = document.getElementById('teacher-inspection-tbody');
-                const filteredTasks = this.state.tasks.filter(t => t.studentId === 'all' || t.studentId === this.viewingStudentId);
-                
-                inspectionTbody.innerHTML = filteredTasks.map(t => {
-                    const isDone = t.completions.includes(this.viewingStudentId);
-                    const color = SUBJECT_COLORS[t.subject] || '#64748b';
-                    return `
-                        <tr class="hover:bg-slate-50 transition-colors ${isDone ? 'bg-slate-50/50' : ''}">
-                            <td class="px-6 py-3">
-                                <button onclick="app.toggleTask('${t.id}', '${this.viewingStudentId}')" class="flex items-center">
-                                    <span class="material-symbols-outlined text-2xl ${isDone ? 'checkmark-active' : 'text-slate-200 hover:text-primary/30'}">
-                                        ${isDone ? 'check_circle' : 'radio_button_unchecked'}
-                                    </span>
-                                </button>
-                            </td>
-                            <td class="px-6 py-3">
-                                <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase" style="background-color: ${color}15; color: ${color}">
-                                    ${t.subject}
-                                </span>
-                            </td>
-                            <td class="px-6 py-3 text-sm text-slate-700 font-medium">${t.description}</td>
-                            <td class="px-6 py-3 text-[10px] font-bold text-slate-400 uppercase">
-                                ${t.studentId === 'all' ? 'Klasse' : 'Privat'}
-                            </td>
-                        </tr>
-                    `;
-                }).join('') || '<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400 text-xs uppercase font-bold">Keine Aufgaben für diesen Schüler</td></tr>';
-            } else {
-                inspectionArea.classList.add('hidden');
-            }
 
             // Task management table
             const teacherTaskList = document.getElementById('teacher-task-list');
