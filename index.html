@@ -35,6 +35,7 @@
                         "on-surface": "#1a1c1f",
                         "outline-variant": "#c1c6d7",
                         "surface-container": "#ededf2",
+                        "error": "#ba1a1a",
                     },
                     "borderRadius": {
                         "DEFAULT": "1rem",
@@ -363,6 +364,31 @@ Neue Aufgabe
             this.render();
         },
 
+        removeStudent(id) {
+            const student = this.state.students.find(s => s.id === id);
+            if (!student) return;
+
+            if (confirm(`Soll der Schüler "${student.name}" wirklich gelöscht werden?`)) {
+                // If the deleted student was the locked one, unlock the session
+                if (this.state.lockedStudentId === id) {
+                    this.state.lockedStudentId = null;
+                    this.selectedStudentId = null;
+                }
+                
+                // Remove student from array
+                this.state.students = this.state.students.filter(s => s.id !== id);
+                
+                // Clean up tasks (remove specific student tasks or completions)
+                this.state.tasks = this.state.tasks.filter(t => t.studentId !== id);
+                this.state.tasks.forEach(t => {
+                    t.completions = t.completions.filter(sid => sid !== id);
+                });
+
+                this.persist();
+                this.render();
+            }
+        },
+
         importStudentList(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -370,7 +396,6 @@ Neue Aufgabe
             const reader = new FileReader();
             reader.onload = (e) => {
                 const content = e.target.result;
-                // Split by newline, comma, or semicolon
                 const rawNames = content.split(/[\n\r,;]+/);
                 const names = rawNames.map(n => n.trim()).filter(n => n.length > 0);
                 
@@ -393,7 +418,7 @@ Neue Aufgabe
                 alert(`${names.length} Schüler wurden erfolgreich importiert.`);
             };
             reader.readAsText(file);
-            event.target.value = ''; // Reset input
+            event.target.value = ''; 
         },
 
         addTask() {
@@ -543,7 +568,11 @@ Neue Aufgabe
 
             if (this.state.lockedStudentId) {
                 const s = this.state.students.find(x => x.id === this.state.lockedStudentId);
-                sessionLabel.innerHTML = `Sitzung gesperrt für: <span class="text-primary">${s.name}</span>`;
+                if (s) {
+                    sessionLabel.innerHTML = `Sitzung gesperrt für: <span class="text-primary">${s.name}</span>`;
+                } else {
+                    sessionLabel.textContent = 'Sitzung gesperrt';
+                }
                 unlockBtn.classList.remove('opacity-50', 'pointer-events-none');
             } else {
                 sessionLabel.textContent = 'Keine aktive Sitzung';
@@ -556,9 +585,14 @@ Neue Aufgabe
                         <span class="text-sm font-bold">${s.name}</span>
                         ${this.state.lockedStudentId === s.id ? '<span class="material-symbols-outlined text-[16px] text-primary">person_check</span>' : ''}
                     </div>
-                    <span class="text-[10px] font-bold uppercase ${s.confirmed ? 'text-primary bg-primary/10 px-2 py-0.5 rounded' : 'text-slate-400'}">
-                        ${s.confirmed ? 'Bestätigt' : 'Offen'}
-                    </span>
+                    <div class="flex items-center gap-4">
+                        <span class="text-[10px] font-bold uppercase ${s.confirmed ? 'text-primary bg-primary/10 px-2 py-0.5 rounded' : 'text-slate-400'}">
+                            ${s.confirmed ? 'Bestätigt' : 'Offen'}
+                        </span>
+                        <button onclick="app.removeStudent('${s.id}')" class="text-slate-300 hover:text-error transition-colors p-1" title="Löschen">
+                            <span class="material-symbols-outlined text-lg">delete</span>
+                        </button>
+                    </div>
                 </div>
             `).join('');
 
