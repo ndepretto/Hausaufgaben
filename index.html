@@ -6,7 +6,6 @@
 <title>doeltschi | Digitaler Aufgabenplaner</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
         .checkmark-active { font-variation-settings: 'FILL' 1; color: #0058bc; }
@@ -105,8 +104,8 @@
 </div>
 <div class="hidden text-[10px] font-bold text-primary uppercase flex items-center gap-1" id="unlock-hint">
 <span class="material-symbols-outlined text-[14px]">lock</span>
-Identitätsschutz aktiv. Nur Lehrer können dies ändern.
-</div>
+                Identitätsschutz aktiv. Nur Lehrer können dies ändern.
+            </div>
 </div>
 <!-- Task List Area -->
 <div class="hidden space-y-6" id="task-area">
@@ -116,9 +115,6 @@ Identitätsschutz aktiv. Nur Lehrer können dies ändern.
 <span class="text-[10px] font-bold text-primary uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded">Deine Lernübersicht</span>
 </div>
 <h3 class="text-3xl font-black text-slate-900" id="task-title">Deine Aufgaben</h3>
-</div>
-<div class="flex flex-wrap gap-3" id="subject-legend">
-<!-- Legend dynamic -->
 </div>
 </div>
 <div class="overflow-x-auto">
@@ -130,7 +126,7 @@ Identitätsschutz aktiv. Nur Lehrer können dies ändern.
 <th class="px-6 py-4 text-[10px] font-bold uppercase text-slate-500">Fach</th>
 <th class="px-6 py-4 text-[10px] font-bold uppercase text-slate-500">Aufgabe</th>
 <th class="px-6 py-4 text-[10px] font-bold uppercase text-slate-500">Termin</th>
-<th class="px-6 py-4 text-[10px] font-bold uppercase text-slate-500 text-right">Aktion</th>
+<th class="px-6 py-4 text-[10px] font-bold uppercase text-slate-500 text-right">Info</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-slate-100" id="task-tbody">
@@ -159,19 +155,19 @@ Identitätsschutz aktiv. Nur Lehrer können dies ändern.
 </div>
 </div>
 </div>
-<!-- Teacher View (Brief Dashboard) -->
+<!-- Teacher View (Dashboard) -->
 <div class="hidden space-y-8" id="teacher-view">
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 <h2 class="text-3xl font-black text-slate-900">Lehrer Dashboard</h2>
 <div class="flex gap-2 w-full md:w-auto">
 <button class="flex-1 md:flex-none px-6 py-3 bg-primary text-white rounded-xl text-xs font-bold uppercase hover:opacity-90 shadow-lg shadow-primary/20 flex items-center justify-center gap-2" id="teacher-unlock-btn" onclick="app.unlockSession()">
 <span class="material-symbols-outlined text-sm">lock_open</span>
-Sitzung entsperren
-</button>
+                    Sitzung entsperren
+                </button>
 <button class="flex-1 md:flex-none px-6 py-3 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold uppercase hover:bg-slate-200 flex items-center justify-center gap-2" onclick="app.setRole('student')">
 <span class="material-symbols-outlined text-sm">logout</span>
-Beenden
-</button>
+                    Beenden
+                </button>
 </div>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -179,11 +175,10 @@ Beenden
 <div class="flex justify-between items-center mb-4">
 <h4 class="font-bold flex items-center gap-2">
 <span class="material-symbols-outlined text-primary">groups</span>
-Schüler-Verwaltung
-</h4>
+                        Schüler-Verwaltung
+                    </h4>
 <span class="text-[10px] font-bold text-slate-400 uppercase" id="active-session-label">Keine aktive Sitzung</span>
 </div>
-<!-- Class Management: Add Student & Import -->
 <div class="mb-4 space-y-3">
 <div class="flex gap-2">
 <input class="flex-1 text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none" id="new-student-name" onkeyup="if(event.key==='Enter') app.addStudent()" placeholder="Name (z.B. Julia S.)" type="text"/>
@@ -195,8 +190,8 @@ Schüler-Verwaltung
 <input accept=".txt" class="hidden" id="import-txt-file" onchange="app.importStudentList(event)" type="file"/>
 <button class="w-full py-2.5 border-2 border-dashed border-slate-200 hover:border-primary hover:bg-primary/5 rounded-xl text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:text-primary transition-all flex items-center justify-center gap-2" onclick="document.getElementById('import-txt-file').click()">
 <span class="material-symbols-outlined text-base">upload_file</span>
-Liste importieren (.txt)
-</button>
+                            Liste importieren (.txt)
+                        </button>
 </div>
 </div>
 <div class="space-y-2 overflow-y-auto max-h-[300px] pr-1" id="teacher-student-list"></div>
@@ -204,8 +199,8 @@ Liste importieren (.txt)
 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
 <h4 class="font-bold mb-4 flex items-center gap-2">
 <span class="material-symbols-outlined text-primary">add_task</span>
-Neue Aufgabe
-</h4>
+                    Neue Aufgabe
+                </h4>
 <div class="space-y-3">
 <input class="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none" id="new-task-desc" placeholder="Was ist zu tun?" type="text"/>
 <div class="grid grid-cols-2 gap-2">
@@ -213,13 +208,51 @@ Neue Aufgabe
 <select class="text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl" id="new-task-subject">
 <option>Deutsch</option>
 <option>Mathematik</option>
-<option>Sachunterricht</option>
 <option>Englisch</option>
+<option>Französisch</option>
+<option>RZG</option>
+<option>NT</option>
+<option>Musik</option>
+<option>Sport</option>
+<option>Medien</option>
+<option>WAH</option>
 </select>
 </div>
 <button class="w-full py-3 bg-primary text-white rounded-xl font-bold uppercase text-xs tracking-widest hover:opacity-90" onclick="app.addTask()">Aufgabe Hinzufügen</button>
 </div>
 </div>
+</div>
+<!-- Manage Tasks Section -->
+<div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+<h4 class="font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">assignment_turned_in</span>
+                Zugeordnete Aufgaben verwalten
+            </h4>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-slate-50 border-b border-slate-200">
+<th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500">Wer</th>
+<th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500">Fach</th>
+<th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500">Aufgabe</th>
+<th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500 text-right">Löschen</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100" id="teacher-task-list">
+<!-- Teacher task list dynamic -->
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- Shared Legend Section -->
+<div class="mt-12 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+<h4 class="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">palette</span>
+            Farblegende der Fächer
+        </h4>
+<div class="flex flex-wrap gap-4" id="shared-subject-legend">
+<!-- Dynamic Legend -->
 </div>
 </div>
 </main>
@@ -227,7 +260,7 @@ Neue Aufgabe
 <div class="max-w-[1000px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
 <div class="text-center md:text-left">
 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
-<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Version 12.7 • Identity Protected &amp; Session Locked • Import Ready</p>
+<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Version 12.8 • Task Manager • Import Ready</p>
 </div>
 <div class="flex gap-6">
 <a class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Datenschutz</a>
@@ -238,10 +271,16 @@ Neue Aufgabe
 </footer>
 <script>
     const SUBJECT_COLORS = { 
-        'Deutsch': '#dc2626', 
-        'Mathematik': '#2563eb', 
-        'Sachunterricht': '#92400e', 
-        'Englisch': '#4f46e5'
+        'Deutsch': '#dc2626',      // Red
+        'Mathematik': '#2563eb',   // Blue
+        'Englisch': '#facc15',     // Yellow
+        'Französisch': '#22c55e',  // Green
+        'RZG': '#f97316',          // Orange
+        'NT': '#06b6d4',           // Cyan
+        'Musik': '#a855f7',        // Purple
+        'Sport': '#eab308',        // Yellow-Gold
+        'Medien': '#64748b',       // Grey
+        'WAH': '#c2410c'           // Dark Orange
     };
 
     const INITIAL_STATE = {
@@ -269,7 +308,6 @@ Neue Aufgabe
             const saved = localStorage.getItem(this.STORAGE_KEY);
             this.state = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(INITIAL_STATE));
             
-            // Check for persistent session lock
             if (this.state.lockedStudentId) {
                 this.selectedStudentId = this.state.lockedStudentId;
             }
@@ -294,7 +332,7 @@ Neue Aufgabe
             const pw = document.getElementById('login-password').value;
             if (pw === 'lehrer123') {
                 this.setRole('teacher');
-                document.getElementById('login-password').value = ''; // clear for security
+                document.getElementById('login-password').value = '';
             } else {
                 alert('Passwort falsch!');
             }
@@ -324,7 +362,7 @@ Neue Aufgabe
             if (!this.selectedStudentId) return;
             const task = this.state.tasks.find(t => t.id === taskId);
             const student = this.state.students.find(s => s.id === this.selectedStudentId);
-            if (student.confirmed) return; // Locked by parents
+            if (!student || student.confirmed) return;
 
             if (task.completions.includes(this.selectedStudentId)) {
                 task.completions = task.completions.filter(id => id !== this.selectedStudentId);
@@ -369,21 +407,22 @@ Neue Aufgabe
             if (!student) return;
 
             if (confirm(`Soll der Schüler "${student.name}" wirklich gelöscht werden?`)) {
-                // If the deleted student was the locked one, unlock the session
                 if (this.state.lockedStudentId === id) {
                     this.state.lockedStudentId = null;
                     this.selectedStudentId = null;
                 }
-                
-                // Remove student from array
                 this.state.students = this.state.students.filter(s => s.id !== id);
-                
-                // Clean up tasks (remove specific student tasks or completions)
-                this.state.tasks = this.state.tasks.filter(t => t.studentId !== id);
                 this.state.tasks.forEach(t => {
                     t.completions = t.completions.filter(sid => sid !== id);
                 });
+                this.persist();
+                this.render();
+            }
+        },
 
+        removeTask(id) {
+            if (confirm("Soll diese Aufgabe für alle betroffenen Schüler gelöscht werden?")) {
+                this.state.tasks = this.state.tasks.filter(t => t.id !== id);
                 this.persist();
                 this.render();
             }
@@ -448,7 +487,8 @@ Neue Aufgabe
             };
             
             Object.keys(views).forEach(k => {
-                document.getElementById(views[k]).classList.toggle('hidden', this.currentRole !== k);
+                const el = document.getElementById(views[k]);
+                if (el) el.classList.toggle('hidden', this.currentRole !== k);
             });
 
             const navS = document.getElementById('nav-student');
@@ -458,11 +498,23 @@ Neue Aufgabe
             navT.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 " + 
                 (this.currentRole === 'teacher' || this.currentRole === 'login' ? "bg-primary text-white" : "text-slate-500 hover:bg-slate-200");
 
+            this.renderLegend();
+
             if (this.currentRole === 'student') {
                 this.renderStudentView();
             } else if (this.currentRole === 'teacher') {
                 this.renderTeacherView();
             }
+        },
+
+        renderLegend() {
+            const legend = document.getElementById('shared-subject-legend');
+            legend.innerHTML = Object.keys(SUBJECT_COLORS).map(s => `
+                <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                    <div class="w-2.5 h-2.5 rounded-full shadow-sm" style="background-color: ${SUBJECT_COLORS[s]}"></div>
+                    <span class="text-[11px] font-bold uppercase text-slate-600 tracking-wide">${s}</span>
+                </div>
+            `).join('');
         },
 
         renderStudentView() {
@@ -547,32 +599,20 @@ Neue Aufgabe
                     confirmText.textContent = "Bitte nach Erledigung aller Aufgaben unterschreiben lassen.";
                     dateDisp.textContent = "-";
                 }
-
-                const legend = document.getElementById('subject-legend');
-                legend.innerHTML = Object.keys(SUBJECT_COLORS).map(s => `
-                    <div class="flex items-center gap-1.5">
-                        <div class="w-2 h-2 rounded-full" style="background-color: ${SUBJECT_COLORS[s]}"></div>
-                        <span class="text-[9px] font-bold uppercase text-slate-400">${s}</span>
-                    </div>
-                `).join('');
-
             } else {
                 taskArea.classList.add('hidden');
             }
         },
 
         renderTeacherView() {
+            // Student list
             const list = document.getElementById('teacher-student-list');
             const sessionLabel = document.getElementById('active-session-label');
             const unlockBtn = document.getElementById('teacher-unlock-btn');
 
             if (this.state.lockedStudentId) {
                 const s = this.state.students.find(x => x.id === this.state.lockedStudentId);
-                if (s) {
-                    sessionLabel.innerHTML = `Sitzung gesperrt für: <span class="text-primary">${s.name}</span>`;
-                } else {
-                    sessionLabel.textContent = 'Sitzung gesperrt';
-                }
+                sessionLabel.innerHTML = s ? `Sitzung gesperrt für: <span class="text-primary">${s.name}</span>` : 'Sitzung gesperrt';
                 unlockBtn.classList.remove('opacity-50', 'pointer-events-none');
             } else {
                 sessionLabel.textContent = 'Keine aktive Sitzung';
@@ -596,6 +636,30 @@ Neue Aufgabe
                 </div>
             `).join('');
 
+            // Task management
+            const teacherTaskList = document.getElementById('teacher-task-list');
+            teacherTaskList.innerHTML = this.state.tasks.map(t => {
+                const color = SUBJECT_COLORS[t.subject] || '#64748b';
+                const owner = t.studentId === 'all' ? 'Alle' : (this.state.students.find(s => s.id === t.studentId)?.name || 'Gelöscht');
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-4 py-3 text-xs font-bold text-slate-500">${owner}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2 py-0.5 rounded text-[9px] font-bold uppercase" style="background-color: ${color}15; color: ${color}">
+                                ${t.subject}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-slate-700 font-medium">${t.description}</td>
+                        <td class="px-4 py-3 text-right">
+                            <button onclick="app.removeTask('${t.id}')" class="text-slate-300 hover:text-error transition-colors p-1">
+                                <span class="material-symbols-outlined text-lg">delete</span>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('') || '<tr><td colspan="4" class="px-4 py-8 text-center text-slate-400 text-xs uppercase font-bold">Keine Aufgaben vorhanden</td></tr>';
+
+            // New Task Select
             const studSelect = document.getElementById('new-task-student');
             studSelect.innerHTML = '<option value="all">Ganze Klasse</option>' + 
                 this.state.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
