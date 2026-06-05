@@ -1,9 +1,11 @@
-<!DOCTYPE html><html class="light" lang="de"><head>
-<meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<!DOCTYPE html>
+
+<html class="light" lang="de"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>doeltschi | Digitaler Aufgabenplaner</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
@@ -79,7 +81,7 @@
 <span class="material-symbols-outlined text-primary text-6xl mb-4">lock_open</span>
 <h2 class="text-2xl font-bold mb-2">Lehrer Login</h2>
 <p class="text-slate-500 text-sm mb-6">Bitte Passwort eingeben (Test: lehrer123)</p>
-<input class="w-full bg-slate-50 border border-outline-variant rounded-xl p-3 mb-4 focus:ring-2 focus:ring-primary outline-none" id="login-password" onkeyup="if(event.key==='Enter') app.handleLogin()" placeholder="Passwort" type="password">
+<input class="w-full bg-slate-50 border border-outline-variant rounded-xl p-3 mb-4 focus:ring-2 focus:ring-primary outline-none" id="login-password" onkeyup="if(event.key==='Enter') app.handleLogin()" placeholder="Passwort" type="password"/>
 <button class="w-full py-3 bg-primary text-white rounded-xl font-bold uppercase tracking-wider hover:opacity-90" onclick="app.handleLogin()">Anmelden</button>
 <button class="mt-4 text-xs font-bold text-slate-400 uppercase" onclick="app.setRole('student')">Abbrechen</button>
 </div>
@@ -90,23 +92,31 @@
 <div class="flex flex-col items-center space-y-6">
 <div class="text-center">
 <h2 class="text-4xl font-black text-slate-900 mb-2">Wer bist du?</h2>
-<p class="text-slate-500 font-medium">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
+<p class="text-slate-500 font-medium" id="student-instruction">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
 </div>
 <div class="w-full max-w-md relative">
-<select class="w-full appearance-none bg-white border-2 border-slate-200 rounded-2xl px-6 py-5 text-xl font-bold text-slate-700 shadow-sm transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none cursor-pointer" id="student-dropdown" onchange="app.selectStudent(this.value)">
+<select class="w-full appearance-none bg-white border-2 border-slate-200 rounded-2xl px-6 py-5 text-xl font-bold text-slate-700 shadow-sm transition-all focus:border-primary focus:ring-4 focus:ring-primary/10 outline-none cursor-pointer disabled:bg-slate-50 disabled:cursor-not-allowed" id="student-dropdown" onchange="app.selectStudent(this.value)">
 <option disabled="" selected="" value="">Wähle deinen Namen...</option>
 </select>
-<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-6 text-primary" id="dropdown-arrow">
-<span class="material-symbols-outlined text-3xl font-bold">expand_more</span>
+<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-6 text-primary" id="dropdown-icon-container">
+<span class="material-symbols-outlined text-3xl font-bold" id="dropdown-status-icon">expand_more</span>
 </div>
 </div>
-<div class="hidden text-[10px] font-bold text-primary uppercase" id="unlock-hint">Sitzung gesperrt. Nur Lehrer können dies ändern.</div>
+<div class="hidden text-[10px] font-bold text-primary uppercase flex items-center gap-1" id="unlock-hint">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+Identitätsschutz aktiv. Nur Lehrer können dies ändern.
+</div>
 </div>
 <!-- Task List Area -->
 <div class="hidden space-y-6" id="task-area">
-<div class="flex justify-between items-center border-b border-slate-200 pb-4">
-<h3 class="text-2xl font-black text-slate-900" id="task-title">Deine Aufgaben</h3>
-<div class="flex gap-2" id="subject-legend">
+<div class="flex flex-col md:flex-row md:justify-between md:items-end border-b border-slate-200 pb-4 gap-4">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="text-[10px] font-bold text-primary uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded">Deine Lernübersicht</span>
+</div>
+<h3 class="text-3xl font-black text-slate-900" id="task-title">Deine Aufgaben</h3>
+</div>
+<div class="flex flex-wrap gap-3" id="subject-legend">
 <!-- Legend dynamic -->
 </div>
 </div>
@@ -150,32 +160,47 @@
 </div>
 <!-- Teacher View (Brief Dashboard) -->
 <div class="hidden space-y-8" id="teacher-view">
-<div class="flex justify-between items-center">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 <h2 class="text-3xl font-black text-slate-900">Lehrer Dashboard</h2>
-<div class="flex gap-2">
-<button class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold uppercase hover:bg-red-100" onclick="app.unlockSession()">Sitzung Entsperren</button>
-<button class="px-4 py-2 bg-slate-800 text-white rounded-lg text-xs font-bold uppercase hover:opacity-90" onclick="app.setRole('student')">Beenden</button>
+<div class="flex gap-2 w-full md:w-auto">
+<button class="flex-1 md:flex-none px-6 py-3 bg-primary text-white rounded-xl text-xs font-bold uppercase hover:opacity-90 shadow-lg shadow-primary/20 flex items-center justify-center gap-2" id="teacher-unlock-btn" onclick="app.unlockSession()">
+<span class="material-symbols-outlined text-sm">lock_open</span>
+Sitzung entsperren
+</button>
+<button class="flex-1 md:flex-none px-6 py-3 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold uppercase hover:bg-slate-200 flex items-center justify-center gap-2" onclick="app.setRole('student')">
+<span class="material-symbols-outlined text-sm">logout</span>
+Beenden
+</button>
 </div>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-<h4 class="font-bold mb-4">Schüler-Status</h4>
+<div class="flex justify-between items-center mb-4">
+<h4 class="font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">groups</span>
+Schüler-Status
+</h4>
+<span class="text-[10px] font-bold text-slate-400 uppercase" id="active-session-label">Keine aktive Sitzung</span>
+</div>
 <div class="space-y-2" id="teacher-student-list"></div>
 </div>
 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-<h4 class="font-bold mb-4">Neue Aufgabe</h4>
+<h4 class="font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">add_task</span>
+Neue Aufgabe
+</h4>
 <div class="space-y-3">
-<input class="w-full text-sm p-2 border border-slate-200 rounded-lg" id="new-task-desc" placeholder="Was ist zu tun?" type="text">
+<input class="w-full text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 outline-none" id="new-task-desc" placeholder="Was ist zu tun?" type="text"/>
 <div class="grid grid-cols-2 gap-2">
-<select class="text-sm p-2 border border-slate-200 rounded-lg" id="new-task-student"></select>
-<select class="text-sm p-2 border border-slate-200 rounded-lg" id="new-task-subject">
+<select class="text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl" id="new-task-student"></select>
+<select class="text-sm p-3 bg-slate-50 border border-slate-200 rounded-xl" id="new-task-subject">
 <option>Deutsch</option>
 <option>Mathematik</option>
 <option>Sachunterricht</option>
 <option>Englisch</option>
 </select>
 </div>
-<button class="w-full py-2 bg-primary text-white rounded-lg font-bold uppercase text-xs" onclick="app.addTask()">Hinzufügen</button>
+<button class="w-full py-3 bg-primary text-white rounded-xl font-bold uppercase text-xs tracking-widest hover:opacity-90" onclick="app.addTask()">Aufgabe Hinzufügen</button>
 </div>
 </div>
 </div>
@@ -185,7 +210,7 @@
 <div class="max-w-[1000px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
 <div class="text-center md:text-left">
 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
-<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Version 12.5 • Student Identity Protection</p>
+<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Version 12.6 • Identity Protected &amp; Session Locked</p>
 </div>
 <div class="flex gap-6">
 <a class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Datenschutz</a>
@@ -221,13 +246,13 @@
         state: null,
         currentRole: 'student',
         selectedStudentId: null,
-        STORAGE_KEY: 'doeltschi_classic_v1',
+        STORAGE_KEY: 'doeltschi_identity_protected_v1',
 
         init() {
             const saved = localStorage.getItem(this.STORAGE_KEY);
             this.state = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(INITIAL_STATE));
             
-            // Sync logic
+            // Check for persistent session lock
             if (this.state.lockedStudentId) {
                 this.selectedStudentId = this.state.lockedStudentId;
             }
@@ -252,16 +277,17 @@
             const pw = document.getElementById('login-password').value;
             if (pw === 'lehrer123') {
                 this.setRole('teacher');
+                document.getElementById('login-password').value = ''; // clear for security
             } else {
                 alert('Passwort falsch!');
             }
         },
 
         selectStudent(id) {
+            // Logic Requirement 1 & 2: Set flag in state (persisted) and lock
             if (this.state.lockedStudentId && this.state.lockedStudentId !== id) return;
             
             this.selectedStudentId = id;
-            // Lock logic: as requested, selecting a student locks the dropdown for this session
             if (!this.state.lockedStudentId) {
                 this.state.lockedStudentId = id;
                 this.persist();
@@ -269,11 +295,14 @@
             this.render();
         },
 
+        // Logic Requirement 4 & 5: Teacher Mode Unlock
         unlockSession() {
-            this.state.lockedStudentId = null;
-            this.selectedStudentId = null;
-            this.persist();
-            this.render();
+            if (confirm("Sitzung wirklich entsperren? Dies ermöglicht die Wahl eines anderen Schülers.")) {
+                this.state.lockedStudentId = null;
+                this.selectedStudentId = null;
+                this.persist();
+                this.render();
+            }
         },
 
         toggleTask(taskId) {
@@ -320,6 +349,7 @@
             });
             this.persist();
             this.render();
+            document.getElementById('new-task-desc').value = '';
         },
 
         render() {
@@ -351,19 +381,26 @@
 
         renderStudentView() {
             const dropdown = document.getElementById('student-dropdown');
+            const dropdownIcon = document.getElementById('dropdown-status-icon');
             const isLocked = !!this.state.lockedStudentId;
+            const hint = document.getElementById('unlock-hint');
+            const instr = document.getElementById('student-instruction');
             
-            dropdown.innerHTML = '<option value="" disabled selected>Wähle deinen Namen...</option>' + 
+            dropdown.innerHTML = '<option value="" disabled ' + (!this.selectedStudentId ? 'selected' : '') + '>Wähle deinen Namen...</option>' + 
                 this.state.students.map(s => `<option value="${s.id}" ${this.selectedStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('');
             
             if (isLocked) {
                 dropdown.disabled = true;
-                document.getElementById('dropdown-arrow').classList.add('hidden');
-                document.getElementById('unlock-hint').classList.remove('hidden');
+                dropdownIcon.textContent = 'lock';
+                dropdownIcon.classList.add('text-primary');
+                hint.classList.remove('hidden');
+                instr.textContent = "Deine Identität ist geschützt. Viel Erfolg beim Lernen!";
             } else {
                 dropdown.disabled = false;
-                document.getElementById('dropdown-arrow').classList.remove('hidden');
-                document.getElementById('unlock-hint').classList.add('hidden');
+                dropdownIcon.textContent = 'expand_more';
+                dropdownIcon.classList.remove('text-primary');
+                hint.classList.add('hidden');
+                instr.textContent = "Wähle deinen Namen aus, um deine Aufgaben zu sehen.";
             }
 
             const taskArea = document.getElementById('task-area');
@@ -379,10 +416,10 @@
                     const isDone = t.completions.includes(this.selectedStudentId);
                     const color = SUBJECT_COLORS[t.subject] || '#64748b';
                     return `
-                        <tr class="group hover:bg-slate-50 transition-colors ${isDone ? 'opacity-60' : ''}">
+                        <tr class="group hover:bg-slate-50 transition-colors ${isDone ? 'opacity-60 bg-slate-50' : ''}">
                             <td class="px-6 py-4">
                                 <button onclick="app.toggleTask('${t.id}')" class="flex items-center">
-                                    <span class="material-symbols-outlined text-2xl ${isDone ? 'checkmark-active' : 'text-slate-200'}">
+                                    <span class="material-symbols-outlined text-2xl ${isDone ? 'checkmark-active' : 'text-slate-200 group-hover:text-slate-300'}">
                                         ${isDone ? 'check_circle' : 'radio_button_unchecked'}
                                     </span>
                                 </button>
@@ -442,23 +479,36 @@
 
         renderTeacherView() {
             const list = document.getElementById('teacher-student-list');
+            const sessionLabel = document.getElementById('active-session-label');
+            const unlockBtn = document.getElementById('teacher-unlock-btn');
+
+            if (this.state.lockedStudentId) {
+                const s = this.state.students.find(x => x.id === this.state.lockedStudentId);
+                sessionLabel.innerHTML = `Sitzung gesperrt für: <span class="text-primary">${s.name}</span>`;
+                unlockBtn.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                sessionLabel.textContent = 'Keine aktive Sitzung';
+                unlockBtn.classList.add('opacity-50', 'pointer-events-none');
+            }
+
             list.innerHTML = this.state.students.map(s => `
-                <div class="flex justify-between items-center p-2 bg-slate-50 rounded-lg">
-                    <span class="text-sm font-bold">${s.name}</span>
-                    <span class="text-[10px] font-bold uppercase ${s.confirmed ? 'text-primary' : 'text-slate-400'}">
+                <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-transparent ${this.state.lockedStudentId === s.id ? 'border-primary/20 bg-blue-50' : ''}">
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-bold">${s.name}</span>
+                        ${this.state.lockedStudentId === s.id ? '<span class="material-symbols-outlined text-[16px] text-primary">person_check</span>' : ''}
+                    </div>
+                    <span class="text-[10px] font-bold uppercase ${s.confirmed ? 'text-primary bg-primary/10 px-2 py-0.5 rounded' : 'text-slate-400'}">
                         ${s.confirmed ? 'Bestätigt' : 'Offen'}
                     </span>
                 </div>
             `).join('');
 
             const studSelect = document.getElementById('new-task-student');
-            studSelect.innerHTML = '<option value="all">Alle</option>' + 
+            studSelect.innerHTML = '<option value="all">Ganze Klasse</option>' + 
                 this.state.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         }
     };
 
     window.onload = () => app.init();
 </script>
-
-
 </body></html>
