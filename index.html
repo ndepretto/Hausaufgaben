@@ -64,11 +64,11 @@
 <div class="flex items-center gap-2">
 <nav class="flex items-center bg-slate-100 rounded-full p-1 border border-slate-200">
 <button class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 bg-primary text-white" id="nav-student" onclick="app.setRole('student')">
-<span class="material-symbols-outlined text-[18px]">person</span>
+<span class="material-symbols-outlined text-[18px]">person_outline</span>
 <span class="">Schüler-Ansicht</span>
 </button>
 <button class="px-4 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-2 text-slate-500 hover:bg-slate-200" id="nav-teacher" onclick="app.requestTeacherMode()">
-<span class="material-symbols-outlined text-[18px]">lock</span>
+<span class="material-symbols-outlined text-[18px]">lock_outline</span>
 <span class="">Lehrer-Modus</span>
 </button>
 </nav>
@@ -160,7 +160,7 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 no-print" id="app-instructions">
 <div class="bg-white border border-slate-200 rounded-2xl p-8 flex flex-col items-center text-center shadow-sm">
 <h4 class="text-xl font-black text-slate-900 mb-6">QR-Code scannen</h4>
-<div class="bg-white p-4 border-2 border-slate-100 rounded-2xl mb-6 shadow-inner" id="qrcode"></div>
+<div class="bg-white p-4 border-2 border-slate-100 rounded-2xl mb-6 shadow-inner" id="qrcode-container"></div>
 <p class="text-sm text-slate-500 max-w-[240px]">Scanne diesen Code mit deinem Handy, um deine Aufgaben immer dabei zu haben.</p>
 </div>
 <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
@@ -207,7 +207,7 @@
 </div>
 </div>
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-<!-- Student Management & Parent Confirm Overview Combined -->
+<!-- Student Management -->
 <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
 <div class="flex justify-between items-center mb-6">
 <h4 class="font-bold flex items-center gap-2">
@@ -236,8 +236,8 @@
 <thead>
 <tr class="bg-slate-50 border-b border-slate-200">
 <th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500">Schüler</th>
-<th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500">Aufgaben erledigt</th>
-<th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500">Eltern-Bestätigung</th>
+<th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500">Aufgaben</th>
+<th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500">Eltern</th>
 <th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500">Datum</th>
 <th class="px-4 py-3 text-[10px] font-bold uppercase text-slate-500 text-right">Aktion</th>
 </tr>
@@ -377,12 +377,12 @@
         viewingStudentId: null,
         STORAGE_KEY: 'doeltschi_identity_protected_v2',
         BASE_URL: window.location.origin + window.location.pathname,
+        qrInstance: null,
 
         init() {
             const saved = localStorage.getItem(this.STORAGE_KEY);
             this.state = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(INITIAL_STATE));
             
-            // Check for Class Import in URL
             this.handleUrlImport();
 
             if (this.state.lockedStudentId) {
@@ -390,6 +390,7 @@
             }
             
             this.render();
+            // Important: QR code needs the element to be visible or existing in DOM
             this.updateQRCode();
         },
 
@@ -398,14 +399,10 @@
             const classData = params.get('class');
             if (classData) {
                 try {
-                    // Decoding Base64 (using atob + decodeURIComponent for UTF-8 safety)
                     const decoded = decodeURIComponent(atob(classData));
                     const importedStudents = JSON.parse(decoded);
                     
                     if (Array.isArray(importedStudents) && importedStudents.length > 0) {
-                        // Merge logic: only add students that don't exist by name yet to avoid duplicates
-                        // while preserving existing tasks and IDs if they match.
-                        // For a clean sync, we usually replace the list if coming from a master QR.
                         if (confirm("Neue Schülerliste über QR-Code erkannt. Möchtest du diese Liste importieren? (Bestehende Schüler bleiben erhalten)")) {
                             importedStudents.forEach(impS => {
                                 const exists = this.state.students.find(s => s.name === impS.name);
@@ -418,7 +415,6 @@
                                 }
                             });
                             this.persist();
-                            // Clean URL
                             window.history.replaceState({}, document.title, window.location.pathname);
                         }
                     }
@@ -429,34 +425,41 @@
         },
 
         updateQRCode() {
-            const qrContainer = document.getElementById('qrcode');
+            const qrContainer = document.getElementById('qrcode-container');
             if (!qrContainer) return;
 
-            // Prepare student list for encoding (minimal data to keep QR readable)
+            // Prepare student list for encoding
             const exportList = this.state.students.map(s => ({ id: s.id, name: s.name }));
             const jsonStr = JSON.stringify(exportList);
             const base64Data = btoa(encodeURIComponent(jsonStr));
             const shareUrl = `${this.BASE_URL}?class=${base64Data}`;
 
             qrContainer.innerHTML = '';
-            new QRCode(qrContainer, {
-                text: shareUrl,
-                width: 140,
-                height: 140,
-                colorDark: "#0058bc",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.L // Low error correction to allow more data in same size
-            });
+            
+            // Check if library is available before initializing
+            if (typeof QRCode !== 'undefined') {
+                new QRCode(qrContainer, {
+                    text: shareUrl,
+                    width: 180,
+                    height: 180,
+                    colorDark: "#0058bc",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.L
+                });
+            } else {
+                console.error('QRCode.js library not loaded.');
+            }
         },
 
         persist() {
             localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.state));
-            this.updateQRCode(); // Refresh QR when state changes
+            this.updateQRCode();
         },
 
         setRole(role) {
             this.currentRole = role;
             this.render();
+            if (role === 'student') this.updateQRCode();
         },
 
         requestTeacherMode() {
