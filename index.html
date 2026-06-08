@@ -5,7 +5,7 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>doeltschi | Digitaler Aufgabenplaner Cloud</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outline" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <!-- Firebase SDKs -->
 <script type="module">
@@ -134,12 +134,22 @@
           if (!currentStudent) return;
           if (confirm('Bestätigen Sie als Elternteil, dass die Hausaufgaben erledigt oder gesehen wurden?')) {
               const confRef = doc(db, "config", "confirmations");
-              await updateDoc(confRef, {
-                  [currentStudent]: {
-                      status: 'OK',
-                      date: Date.now()
-                  }
-              });
+              try {
+                  await updateDoc(confRef, {
+                      [currentStudent]: {
+                          status: 'OK',
+                          date: Date.now()
+                      }
+                  });
+              } catch (e) {
+                  // Fallback if doc doesn't exist yet
+                  await setDoc(confRef, {
+                      [currentStudent]: {
+                          status: 'OK',
+                          date: Date.now()
+                      }
+                  }, { merge: true });
+              }
           }
       };
 
@@ -241,9 +251,9 @@
               container.innerHTML = `
                 <div class="bg-green-50 border-2 border-green-100 p-8 rounded-[40px] text-center transition-all">
                     <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="material-icons-outline text-white text-3xl">check</span>
+                        <span class="material-symbols-outlined text-white text-3xl">check</span>
                     </div>
-                    <h3 class="text-2xl font-black text-green-900 mb-2">Bestätigung der Eltern</h3>
+                    <h3 class="text-2xl font-black text-green-900 mb-2">Gesehen</h3>
                     <p class="text-green-700 font-medium mb-6">Bestätigt am ${dateStr}</p>
                     <button disabled class="w-full max-w-xs bg-green-500 text-white font-bold py-4 rounded-2xl opacity-50 cursor-not-allowed">
                         Bestätigt
@@ -254,7 +264,7 @@
               container.innerHTML = `
                 <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-xl text-center">
                     <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="material-icons-outline text-blue-600 text-3xl">verified_user</span>
+                        <span class="material-symbols-outlined text-blue-600 text-3xl">verified_user</span>
                     </div>
                     <h3 class="text-2xl font-black text-slate-900 mb-2">Bestätigung der Eltern</h3>
                     <p class="text-slate-500 mb-8 max-w-sm mx-auto">Ich bestätige hiermit, dass ich die oben aufgeführten Hausaufgaben gesehen habe.</p>
@@ -270,7 +280,7 @@
           // Progress Section
           const stats = document.getElementById('stats-body');
           if (stats) {
-              stats.innerHTML = students.map(s => {
+              let rows = students.map(s => {
                   const studentTasks = tasks.filter(t => t.who === 'all' || t.who === s);
                   const doneCount = studentTasks.filter(t => t.done && t.done.includes(s)).length;
                   const percent = studentTasks.length > 0 ? (doneCount / studentTasks.length) * 100 : 0;
@@ -294,12 +304,12 @@
                     </tr>
                   `;
               }).join('');
-              // Add option to show all again
+              
               stats.innerHTML = `
                 <tr class="border-b border-slate-50 cursor-pointer hover:bg-slate-50 transition-colors ${selectedTeacherViewStudent === 'all' ? 'bg-blue-50/50' : ''}" onclick="selectTeacherViewStudent('all')">
                     <td class="py-4 font-black text-blue-600 pl-2" colspan="2">Alle Aufgaben anzeigen</td>
                 </tr>
-              ` + stats.innerHTML;
+              ` + rows;
           }
 
           // Parental Confirmation Section
@@ -313,18 +323,18 @@
                     <tr class="border-b border-slate-50">
                         <td class="py-4 font-bold text-slate-700">${s}</td>
                         <td class="py-4 text-center">
-                            <span class="px-3 py-1 rounded-full text-[10px] font-black ${isOk ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'} uppercase">
-                                ${isOk ? 'OK' : 'OPEN'}
+                            <span class="px-3 py-1 rounded-full text-[10px] font-black ${isOk ? 'bg-green-100 text-slate-900' : 'bg-orange-100 text-orange-700'} uppercase">
+                                ${isOk ? 'OK' : 'OFFEN'}
                             </span>
                         </td>
                         <td class="py-4 text-center text-xs text-slate-400 font-bold">${dateStr}</td>
                         <td class="py-4 text-right">
                             ${isOk ? `
                                 <button onclick="resetParentalConfirmation('${s}')" class="text-slate-400 hover:text-red-500 transition-colors flex items-center justify-end ml-auto" title="Entsperren">
-                                    <span class="material-icons-outline text-lg">lock_open</span>
+                                    <span class="material-symbols-outlined text-lg">lock_open</span>
                                 </button>
                             ` : `
-                                <span class="material-icons-outline text-lg text-slate-100">lock_outline</span>
+                                <span class="material-symbols-outlined text-lg text-slate-100">lock</span>
                             `}
                         </td>
                     </tr>
@@ -349,13 +359,16 @@
                       let doneStatus = '';
                       if (selectedTeacherViewStudent !== 'all' && t.who !== 'all') {
                           const isDone = t.done && t.done.includes(selectedTeacherViewStudent);
-                          doneStatus = isDone ? '<span class="text-green-500 material-icons-outline text-sm">check_circle</span>' : '<span class="text-slate-200 material-icons-outline text-sm">radio_button_unchecked</span>';
+                          doneStatus = isDone ? '<span class="text-green-500 material-symbols-outlined text-sm">check_circle</span>' : '<span class="text-slate-200 material-symbols-outlined text-sm">radio_button_unchecked</span>';
+                      } else if (selectedTeacherViewStudent !== 'all' && t.who === 'all') {
+                           const isDone = t.done && t.done.includes(selectedTeacherViewStudent);
+                           doneStatus = isDone ? '<span class="text-green-500 material-symbols-outlined text-sm">check_circle</span>' : '<span class="text-slate-200 material-symbols-outlined text-sm">radio_button_unchecked</span>';
                       }
 
                       return `
                         <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl mb-2 border border-slate-100 group hover:border-blue-200 transition-all">
                             <div class="flex items-center gap-3">
-                                <span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full min-w-[30px] text-center" style="background:${subjects[t.subject]?.color}">${t.subject}</span>
+                                <span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full min-w-[30px] text-center" style="background:${subjects[t.subject]?.color || '#64748b'}">${t.subject}</span>
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <p class="text-sm font-bold text-slate-700">${t.task}</p>
@@ -365,7 +378,7 @@
                                 </div>
                             </div>
                             <button onclick="deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500 transition-colors p-2">
-                                <span class="material-icons-outline text-lg">delete</span>
+                                <span class="material-symbols-outlined text-lg">delete</span>
                             </button>
                         </div>
                       `;
@@ -401,6 +414,9 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
     </style>
 </head>
 <body class="dot-pattern min-h-screen text-slate-800 pb-20">
@@ -445,7 +461,7 @@
 <!-- Create Task -->
 <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-lg">
 <div class="flex items-center gap-2 mb-4">
-<span class="material-icons-outline text-blue-600">add_task</span>
+<span class="material-symbols-outlined text-blue-600">add_task</span>
 <h3 class="font-bold text-blue-600">Aufgabe zuteilen</h3>
 </div>
 <input class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 mb-3 focus:ring-2 focus:ring-blue-100 outline-none" id="task-desc" placeholder="Aufgabe..." type="text"/>
@@ -463,7 +479,7 @@
 <!-- Class List -->
 <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-lg">
 <div class="flex items-center gap-2 mb-4">
-<span class="material-icons-outline text-slate-700">group</span>
+<span class="material-symbols-outlined text-slate-700">group</span>
 <h3 class="font-bold">Klassenliste verwalten</h3>
 </div>
 <textarea class="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-3 text-sm" id="class-input" placeholder="Namen trennen mit Komma oder neuer Zeile..." rows="3"></textarea>
@@ -476,7 +492,7 @@
 <div class="bg-white p-8 rounded-[40px] shadow-lg border border-slate-100">
 <div class="flex items-center justify-between mb-6">
 <div class="flex items-center gap-2">
-<span class="material-icons-outline text-blue-600">analytics</span>
+<span class="material-symbols-outlined text-blue-600">analytics</span>
 <h3 class="font-bold">Klassen-Fortschritt</h3>
 </div>
 <span class="text-[10px] font-black text-slate-400 uppercase">Wähle Schüler/in</span>
@@ -490,7 +506,7 @@
 <!-- Manage Current Tasks -->
 <div class="bg-white p-8 rounded-[40px] shadow-lg border border-slate-100">
 <div class="flex items-center gap-2 mb-6">
-<span class="material-icons-outline text-blue-600">assignment</span>
+<span class="material-symbols-outlined text-blue-600">assignment</span>
 <h3 class="font-bold" id="task-list-header">Aktuelle Aufgaben</h3>
 </div>
 <div class="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar" id="all-tasks-list">
@@ -501,7 +517,7 @@
 <!-- Row 3: Parental Confirmation Status -->
 <div class="bg-white p-8 rounded-[40px] shadow-lg border border-slate-100">
 <div class="flex items-center gap-2 mb-6">
-<span class="material-icons-outline text-green-600">verified_user</span>
+<span class="material-symbols-outlined text-green-600">verified_user</span>
 <h3 class="font-bold">Eltern-Bestätigungen</h3>
 </div>
 <div class="overflow-x-auto">
