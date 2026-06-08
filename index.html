@@ -134,8 +134,8 @@
 <h3 class="text-xl font-bold mb-4">Aufgabe zuteilen</h3>
 <div class="space-y-4">
 <input class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 outline-none focus:border-blue-500" id="task-desc" placeholder="Was ist zu tun?" type="text"/>
-<div class="flex gap-4">
-<select class="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 outline-none" id="task-subject">
+<div class="grid grid-cols-2 gap-4">
+<select class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 outline-none" id="task-subject">
 <option value="DE">Deutsch</option>
 <option value="MA">Mathematik</option>
 <option value="E">Englisch</option>
@@ -147,7 +147,14 @@
 <option value="MI">Medien</option>
 <option value="WAH">WAH</option>
 </select>
-<input class="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 outline-none" id="task-date" type="date"/>
+<input class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 outline-none" id="task-date" type="date"/>
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 px-1" for="task-recipient">Empfänger</label>
+<select class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 outline-none" id="task-recipient">
+<option value="all">Ganze Klasse</option>
+<!-- Dynamic student options will be injected here -->
+</select>
 </div>
 <button class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-all" onclick="addTask()">Hinzufügen</button>
 </div>
@@ -219,14 +226,12 @@
     function init() {
         const urlParams = new URLSearchParams(window.location.search);
         
-        // Check for imported data via URL (Sync Fix)
         if (urlParams.has('data')) {
             try {
                 const decodedData = JSON.parse(decodeURIComponent(atob(urlParams.get('data'))));
                 if (decodedData.students) students = decodedData.students;
                 if (decodedData.tasks) tasks = decodedData.tasks;
                 
-                // Immediately save the synced data to local storage
                 localStorage.setItem(STORAGE_KEY, JSON.stringify({ 
                     tasks: tasks, 
                     students: students 
@@ -241,6 +246,7 @@
         updateWeekInfo();
         renderLegend();
         renderStudentOptions();
+        renderRecipientOptions();
         generateQRCode();
         updateUI();
     }
@@ -334,6 +340,7 @@
         if (newNames.length > 0) {
             students = newNames;
             renderStudentOptions();
+            renderRecipientOptions();
             saveData();
             alert("Klassenliste aktualisiert!");
         }
@@ -350,6 +357,7 @@
                 students = newNames;
                 document.getElementById('class-input').value = students.join('\n');
                 renderStudentOptions();
+                renderRecipientOptions();
                 saveData();
                 alert("Klassenliste erfolgreich importiert!");
             }
@@ -415,9 +423,22 @@
         });
     }
 
+    function renderRecipientOptions() {
+        const recipientSelector = document.getElementById('task-recipient');
+        if(!recipientSelector) return;
+        recipientSelector.innerHTML = '<option value="all">Ganze Klasse</option>';
+        students.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s; opt.textContent = s;
+            recipientSelector.appendChild(opt);
+        });
+    }
+
     function toggleTask(taskId) {
         if (!selectedStudent) return;
         
+        // If "Ganze Klasse" is selected, we track individual status per student anyway.
+        // We ensure a bucket exists for the current user.
         if (!completionStatus[selectedStudent]) {
             completionStatus[selectedStudent] = {};
         }
@@ -430,13 +451,21 @@
         const container = document.getElementById('task-container');
         if (!container) return;
         
-        if (tasks.length === 0) {
+        // Filter tasks based on recipient
+        // A student sees tasks assigned to 'all' OR tasks assigned specifically to them.
+        const visibleTasks = tasks.filter(t => {
+            if (selectedStudent === 'all') return true; // Class view sees everything
+            return t.recipient === 'all' || t.recipient === selectedStudent;
+        });
+
+        if (visibleTasks.length === 0) {
             container.innerHTML = '<div class="text-center py-20 text-slate-400 font-medium bg-white rounded-[32px] border-2 border-dashed border-slate-100">Keine Aufgaben vorhanden.</div>';
             return;
         }
         
-        container.innerHTML = tasks.map(t => {
+        container.innerHTML = visibleTasks.map(t => {
             const taskId = t.id || `${t.desc}-${t.date}-${t.subject}`;
+            // If the current student (or class view) has marked it done
             const isDone = completionStatus[selectedStudent] && completionStatus[selectedStudent][taskId];
             const statusClass = isDone ? 'task-done' : 'bg-white';
             const actionText = isDone ? 'Erledigt' : 'Offen';
@@ -449,7 +478,10 @@
                         <span class="w-3 h-3 rounded-full shadow-sm flex-shrink-0" style="background-color: ${subjects[t.subject]?.color || '#ccc'}"></span>
                         <div>
                             <p class="font-bold text-slate-800 task-title transition-all">${t.desc}</p>
-                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${subjects[t.subject]?.name || 'Allgemein'}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${subjects[t.subject]?.name || 'Allgemein'}</span>
+                                ${t.recipient !== 'all' ? `<span class="text-[9px] font-bold bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full uppercase">Persönlich: ${t.recipient}</span>` : ''}
+                            </div>
                         </div>
                     </div>
                     <div class="col-span-4 md:col-span-3 flex flex-col items-end gap-1">
@@ -479,7 +511,12 @@
                     </div>
                     <div>
                         <p class="font-bold text-slate-800">${t.desc}</p>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">${t.date}</p>
+                        <div class="flex items-center gap-2">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">${t.date}</p>
+                            <span class="text-[10px] font-bold ${t.recipient === 'all' ? 'text-blue-500' : 'text-purple-500'} bg-white px-2 py-0.5 rounded-full border border-slate-100 uppercase">
+                                ${t.recipient === 'all' ? 'Alle' : t.recipient}
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <button onclick="deleteTask(${index})" class="p-2 text-slate-300 hover:text-red-600 transition-colors">
@@ -493,12 +530,14 @@
         const descInput = document.getElementById('task-desc');
         const subjectInput = document.getElementById('task-subject');
         const dateInput = document.getElementById('task-date');
+        const recipientInput = document.getElementById('task-recipient');
         
         const desc = descInput.value;
         const subject = subjectInput.value;
         const dateVal = dateInput.value;
+        const recipient = recipientInput.value;
         
-        if (!desc || !dateVal) {
+        if (!desc || !dateVal || !recipient) {
             alert("Bitte fülle alle Felder aus.");
             return;
         }
@@ -506,11 +545,12 @@
         const date = new Date(dateVal).toLocaleDateString('de-CH');
         const id = 'task-' + Date.now();
         
-        tasks.push({ id, desc, subject, date });
+        tasks.push({ id, desc, subject, date, recipient });
         saveData();
         
         descInput.value = "";
         dateInput.value = "";
+        recipientInput.value = "all";
     }
 
     function deleteTask(index) {
