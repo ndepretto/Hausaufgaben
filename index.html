@@ -10,7 +10,7 @@
 <!-- Firebase SDKs -->
 <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-      import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, collection, addDoc, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, collection, addDoc, query, orderBy, deleteDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
       // --- FIREBASE KONFIGURATION ---
       const firebaseConfig = {
@@ -33,6 +33,7 @@
       let parentalConfirmations = {};
       let currentStudent = localStorage.getItem('doeltschi_user') || null;
       let currentMode = 'student';
+      let selectedTeacherViewStudent = 'all'; // Tracking which student's tasks to view in teacher dashboard
 
       const subjects = {
           'DE': { name: 'DEUTSCH', color: '#ef4444' },
@@ -142,11 +143,25 @@
           }
       };
 
+      window.resetParentalConfirmation = async (studentName) => {
+          if (confirm(`Bestätigung für ${studentName} wirklich zurücksetzen? Der Status wird wieder auf "Offen" gesetzt.`)) {
+              const confRef = doc(db, "config", "confirmations");
+              await updateDoc(confRef, {
+                  [studentName]: deleteField()
+              });
+          }
+      };
+
       window.updateClassList = async () => {
           const input = document.getElementById('class-input').value;
           const names = input.split(/[,\n]/).map(n => n.trim()).filter(n => n.length > 0);
           await setDoc(doc(db, "config", "classlist"), { names });
           alert("Liste in Cloud gespeichert!");
+      };
+
+      window.selectTeacherViewStudent = (name) => {
+          selectedTeacherViewStudent = name;
+          renderTeacherDashboard();
       };
 
       function updateUI() {
@@ -259,20 +274,32 @@
                   const studentTasks = tasks.filter(t => t.who === 'all' || t.who === s);
                   const doneCount = studentTasks.filter(t => t.done && t.done.includes(s)).length;
                   const percent = studentTasks.length > 0 ? (doneCount / studentTasks.length) * 100 : 0;
+                  const isSelected = selectedTeacherViewStudent === s;
                   return `
-                    <tr class="border-b border-slate-50">
-                        <td class="py-4 font-bold text-slate-700">${s}</td>
-                        <td class="py-4">
-                            <div class="flex items-center gap-3">
+                    <tr class="border-b border-slate-50 cursor-pointer hover:bg-slate-50 transition-colors ${isSelected ? 'bg-blue-50/50' : ''}" onclick="selectTeacherViewStudent('${s}')">
+                        <td class="py-4 font-bold text-slate-700 pl-2">
+                            <div class="flex items-center gap-2">
+                                ${isSelected ? '<span class="w-2 h-2 rounded-full bg-blue-500"></span>' : '<span class="w-2 h-2"></span>'}
+                                ${s}
+                            </div>
+                        </td>
+                        <td class="py-4 pr-2 text-right">
+                            <div class="flex items-center justify-end gap-3">
                                 <div class="w-24 bg-slate-100 h-2 rounded-full overflow-hidden">
                                     <div class="bg-blue-600 h-full" style="width: ${percent}%"></div>
                                 </div>
-                                <span class="text-xs font-bold text-slate-400">${doneCount}/${studentTasks.length}</span>
+                                <span class="text-xs font-bold text-slate-400 min-w-[32px]">${doneCount}/${studentTasks.length}</span>
                             </div>
                         </td>
                     </tr>
                   `;
               }).join('');
+              // Add option to show all again
+              stats.innerHTML = `
+                <tr class="border-b border-slate-50 cursor-pointer hover:bg-slate-50 transition-colors ${selectedTeacherViewStudent === 'all' ? 'bg-blue-50/50' : ''}" onclick="selectTeacherViewStudent('all')">
+                    <td class="py-4 font-black text-blue-600 pl-2" colspan="2">Alle Aufgaben anzeigen</td>
+                </tr>
+              ` + stats.innerHTML;
           }
 
           // Parental Confirmation Section
@@ -290,7 +317,16 @@
                                 ${isOk ? 'OK' : 'OPEN'}
                             </span>
                         </td>
-                        <td class="py-4 text-right text-xs text-slate-400 font-bold">${dateStr}</td>
+                        <td class="py-4 text-center text-xs text-slate-400 font-bold">${dateStr}</td>
+                        <td class="py-4 text-right">
+                            ${isOk ? `
+                                <button onclick="resetParentalConfirmation('${s}')" class="text-slate-400 hover:text-red-500 transition-colors flex items-center justify-end ml-auto" title="Entsperren">
+                                    <span class="material-icons-outline text-lg">lock_open</span>
+                                </button>
+                            ` : `
+                                <span class="material-icons-outline text-lg text-slate-100">lock_outline</span>
+                            `}
+                        </td>
                     </tr>
                   `;
               }).join('');
@@ -298,24 +334,42 @@
 
           // All Tasks List (with Delete)
           const allTasksContainer = document.getElementById('all-tasks-list');
+          const taskHeader = document.getElementById('task-list-header');
           if (allTasksContainer) {
-              if (tasks.length === 0) {
-                  allTasksContainer.innerHTML = '<p class="text-center text-slate-400 py-4 italic">Keine Aufgaben erstellt</p>';
+              const filteredTasks = tasks.filter(t => selectedTeacherViewStudent === 'all' || t.who === 'all' || t.who === selectedTeacherViewStudent);
+              
+              if (taskHeader) {
+                  taskHeader.innerText = selectedTeacherViewStudent === 'all' ? 'Aktuelle Aufgaben' : `Aufgaben für ${selectedTeacherViewStudent}`;
+              }
+
+              if (filteredTasks.length === 0) {
+                  allTasksContainer.innerHTML = '<p class="text-center text-slate-400 py-12 italic">Keine Aufgaben erstellt</p>';
               } else {
-                  allTasksContainer.innerHTML = tasks.map(t => `
-                    <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl mb-2 border border-slate-100">
-                        <div class="flex items-center gap-3">
-                            <span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjects[t.subject]?.color}">${t.subject}</span>
-                            <div>
-                                <p class="text-sm font-bold text-slate-700">${t.task}</p>
-                                <p class="text-[10px] text-slate-400">Für: ${t.who === 'all' ? 'Ganze Klasse' : t.who}</p>
+                  allTasksContainer.innerHTML = filteredTasks.map(t => {
+                      let doneStatus = '';
+                      if (selectedTeacherViewStudent !== 'all' && t.who !== 'all') {
+                          const isDone = t.done && t.done.includes(selectedTeacherViewStudent);
+                          doneStatus = isDone ? '<span class="text-green-500 material-icons-outline text-sm">check_circle</span>' : '<span class="text-slate-200 material-icons-outline text-sm">radio_button_unchecked</span>';
+                      }
+
+                      return `
+                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl mb-2 border border-slate-100 group hover:border-blue-200 transition-all">
+                            <div class="flex items-center gap-3">
+                                <span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full min-w-[30px] text-center" style="background:${subjects[t.subject]?.color}">${t.subject}</span>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <p class="text-sm font-bold text-slate-700">${t.task}</p>
+                                        ${doneStatus}
+                                    </div>
+                                    <p class="text-[10px] text-slate-400">Für: ${t.who === 'all' ? 'Ganze Klasse' : t.who}</p>
+                                </div>
                             </div>
+                            <button onclick="deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500 transition-colors p-2">
+                                <span class="material-icons-outline text-lg">delete</span>
+                            </button>
                         </div>
-                        <button onclick="deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
-                            <span class="material-icons-outline text-lg">delete</span>
-                        </button>
-                    </div>
-                  `).join('');
+                      `;
+                  }).join('');
               }
           }
 
@@ -343,6 +397,10 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .dot-pattern { background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; }
         @media print { .no-print { display: none !important; } }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
     </style>
 </head>
 <body class="dot-pattern min-h-screen text-slate-800 pb-20">
@@ -414,11 +472,14 @@
 </div>
 <!-- Row 2: Progress & Task List -->
 <div class="grid md:grid-cols-2 gap-8">
-<!-- Progress Overview -->
+<!-- Progress Overview (Clickable) -->
 <div class="bg-white p-8 rounded-[40px] shadow-lg border border-slate-100">
-<div class="flex items-center gap-2 mb-6">
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center gap-2">
 <span class="material-icons-outline text-blue-600">analytics</span>
 <h3 class="font-bold">Klassen-Fortschritt</h3>
+</div>
+<span class="text-[10px] font-black text-slate-400 uppercase">Wähle Schüler/in</span>
 </div>
 <div class="overflow-hidden">
 <table class="w-full">
@@ -430,7 +491,7 @@
 <div class="bg-white p-8 rounded-[40px] shadow-lg border border-slate-100">
 <div class="flex items-center gap-2 mb-6">
 <span class="material-icons-outline text-blue-600">assignment</span>
-<h3 class="font-bold">Aktuelle Aufgaben</h3>
+<h3 class="font-bold" id="task-list-header">Aktuelle Aufgaben</h3>
 </div>
 <div class="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar" id="all-tasks-list">
 <!-- Populated by renderTeacherDashboard -->
@@ -449,7 +510,8 @@
 <tr class="text-left border-b border-slate-100">
 <th class="pb-4 text-xs font-black uppercase text-slate-400">Schüler/in</th>
 <th class="pb-4 text-xs font-black uppercase text-slate-400 text-center">Status</th>
-<th class="pb-4 text-xs font-black uppercase text-slate-400 text-right">Zuletzt am</th>
+<th class="pb-4 text-xs font-black uppercase text-slate-400 text-center">Zuletzt am</th>
+<th class="pb-4 text-xs font-black uppercase text-slate-400 text-right">Aktion</th>
 </tr>
 </thead>
 <tbody id="confirmation-body"></tbody>
@@ -459,10 +521,4 @@
 </div>
 </div>
 </main>
-<style>
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
-    </style>
 </body></html>
