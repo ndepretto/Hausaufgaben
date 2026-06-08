@@ -1,540 +1,224 @@
 <!DOCTYPE html>
 
-<html lang="de"><head>
+<html class="light" lang="de"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>doeltschi | Digitaler Aufgabenplaner Cloud</title>
+<title>Wer – Was – Bis wann | Startbildschirm</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<!-- Firebase SDKs -->
-<script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-      import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, collection, addDoc, query, orderBy, deleteDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-      // --- FIREBASE KONFIGURATION ---
-      const firebaseConfig = {
-        apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
-        authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
-        projectId: "doeltschi-hausaufgabenplaner",
-        storageBucket: "doeltschi-hausaufgabenplaner.firebasestorage.app",
-        messagingSenderId: "741131007424",
-        appId: "1:741131007424:web:04427f839b7eb86aa9c425",
-        measurementId: "G-C6GTQJ8C1D"
-      };
-
-      // Initialisierung
-      const app = initializeApp(firebaseConfig);
-      const db = getFirestore(app);
-
-      // --- APP LOGIK ---
-      let students = [];
-      let tasks = [];
-      let parentalConfirmations = {};
-      let currentStudent = localStorage.getItem('doeltschi_user') || null;
-      let currentMode = 'student';
-      let selectedTeacherViewStudent = 'all'; // Tracking which student's tasks to view in teacher dashboard
-
-      const subjects = {
-          'DE': { name: 'DEUTSCH', color: '#ef4444' },
-          'MA': { name: 'MATHEMATIK', color: '#3b82f6' },
-          'E': { name: 'ENGLISCH', color: '#eab308' },
-          'F': { name: 'FRANZÖSISCH', color: '#22c55e' },
-          'RZG': { name: 'RZG', color: '#f97316' },
-          'NT': { name: 'NT', color: '#06b6d4' },
-          'MU': { name: 'MUSIK', color: '#a855f7' },
-          'BS': { name: 'SPORT', color: '#d97706' },
-          'MI': { name: 'MEDIEN', color: '#64748b' },
-          'WAH': { name: 'WAH', color: '#f43f5e' }
-      };
-
-      // Live-Sync: Schülerliste
-      onSnapshot(doc(db, "config", "classlist"), (doc) => {
-          if (doc.exists()) {
-              students = doc.data().names || [];
-              renderSelectors();
-              if (currentMode === 'teacher') renderTeacherDashboard();
-          }
-      });
-
-      // Live-Sync: Eltern-Bestätigungen
-      onSnapshot(doc(db, "config", "confirmations"), (doc) => {
-          if (doc.exists()) {
-              parentalConfirmations = doc.data() || {};
-              renderConfirmationSection(); // Update student view confirmation
-              if (currentMode === 'teacher') renderTeacherDashboard();
-          }
-      });
-
-      // Live-Sync: Aufgaben
-      const tasksQuery = query(collection(db, "tasks"), orderBy("createdAt", "desc"));
-      onSnapshot(tasksQuery, (snapshot) => {
-          tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          renderTasks();
-          if (currentMode === 'teacher') renderTeacherDashboard();
-      });
-
-      // Funktionen
-      window.selectStudent = (val) => {
-          if (!val) return;
-          currentStudent = val;
-          localStorage.setItem('doeltschi_user', val);
-          updateUI();
-      };
-
-      window.setMode = (mode) => {
-          if (mode === 'teacher') {
-              const pw = prompt("Passwort für Lehrer-Modus:");
-              if (pw !== 'lehrer123') return;
-              currentMode = 'teacher';
-          } else {
-              currentMode = 'student';
-          }
-          updateUI();
-      };
-
-      window.addTask = async () => {
-          const desc = document.getElementById('task-desc').value;
-          const sub = document.getElementById('task-subject').value;
-          const who = document.getElementById('task-who').value;
-          if (!desc) return;
-          await addDoc(collection(db, "tasks"), {
-              task: desc,
-              subject: sub,
-              who: who,
-              done: [],
-              confirmed: false,
-              createdAt: Date.now()
-          });
-          document.getElementById('task-desc').value = '';
-      };
-
-      window.deleteTask = async (taskId) => {
-          if (confirm('Aufgabe wirklich löschen?')) {
-              await deleteDoc(doc(db, "tasks", taskId));
-          }
-      };
-
-      window.toggleTask = async (taskId, isDone) => {
-          if (!currentStudent) return;
-          // Block toggle if already confirmed by parent
-          if (parentalConfirmations[currentStudent]?.status === 'OK') {
-              alert("Aufgaben bereits von Eltern bestätigt. Änderungen nicht mehr möglich.");
-              return;
-          }
-          const taskRef = doc(db, "tasks", taskId);
-          if (isDone) {
-              await updateDoc(taskRef, { done: arrayRemove(currentStudent) });
-          } else {
-              await updateDoc(taskRef, { done: arrayUnion(currentStudent) });
-          }
-      };
-
-      window.confirmParent = async () => {
-          if (!currentStudent) return;
-          if (confirm('Bestätigen Sie als Elternteil, dass die Hausaufgaben erledigt oder gesehen wurden?')) {
-              const confRef = doc(db, "config", "confirmations");
-              try {
-                  await updateDoc(confRef, {
-                      [currentStudent]: {
-                          status: 'OK',
-                          date: Date.now()
-                      }
-                  });
-              } catch (e) {
-                  // Fallback if doc doesn't exist yet
-                  await setDoc(confRef, {
-                      [currentStudent]: {
-                          status: 'OK',
-                          date: Date.now()
-                      }
-                  }, { merge: true });
-              }
-          }
-      };
-
-      window.resetParentalConfirmation = async (studentName) => {
-          if (confirm(`Bestätigung für ${studentName} wirklich zurücksetzen? Der Status wird wieder auf "Offen" gesetzt.`)) {
-              const confRef = doc(db, "config", "confirmations");
-              await updateDoc(confRef, {
-                  [studentName]: deleteField()
-              });
-          }
-      };
-
-      window.updateClassList = async () => {
-          const input = document.getElementById('class-input').value;
-          const names = input.split(/[,\n]/).map(n => n.trim()).filter(n => n.length > 0);
-          await setDoc(doc(db, "config", "classlist"), { names });
-          alert("Liste in Cloud gespeichert!");
-      };
-
-      window.selectTeacherViewStudent = (name) => {
-          selectedTeacherViewStudent = name;
-          renderTeacherDashboard();
-      };
-
-      function updateUI() {
-          document.querySelectorAll('.view-section').forEach(s => s.classList.add('hidden'));
-          const btnStudent = document.getElementById('btn-mode-student');
-          const btnTeacher = document.getElementById('btn-mode-teacher');
-          
-          if (currentMode === 'teacher') {
-              document.getElementById('teacher-view').classList.remove('hidden');
-              btnTeacher.classList.add('bg-blue-600', 'text-white');
-              btnTeacher.classList.remove('text-slate-600', 'hover:bg-slate-200');
-              btnStudent.classList.remove('bg-blue-600', 'text-white');
-              btnStudent.classList.add('text-slate-600', 'hover:bg-slate-200');
-              renderTeacherDashboard();
-          } else if (currentStudent) {
-              document.getElementById('planer-view').classList.remove('hidden');
-              document.getElementById('display-name').innerText = currentStudent;
-              btnStudent.classList.add('bg-blue-600', 'text-white');
-              btnStudent.classList.remove('text-slate-600', 'hover:bg-slate-200');
-              btnTeacher.classList.remove('bg-blue-600', 'text-white');
-              btnTeacher.classList.add('text-slate-600', 'hover:bg-slate-200');
-              renderTasks();
-              renderConfirmationSection();
-          } else {
-              document.getElementById('start-view').classList.remove('hidden');
-              generateQRCode();
-          }
-      }
-
-      function renderSelectors() {
-          const sel = document.getElementById('student-selector');
-          const tSel = document.getElementById('task-who');
-          if (!sel || !tSel) return;
-          sel.innerHTML = '<option value="">Wähle deinen Namen...</option>';
-          tSel.innerHTML = '<option value="all">Ganze Klasse</option>';
-          students.forEach(s => {
-              sel.innerHTML += `<option value="${s}">${s}</option>`;
-              tSel.innerHTML += `<option value="${s}">${s}</option>`;
-          });
-      }
-
-      function renderTasks() {
-          const container = document.getElementById('task-container');
-          if (!container) return;
-          const myTasks = tasks.filter(t => t.who === 'all' || t.who === currentStudent);
-          const isConfirmed = parentalConfirmations[currentStudent]?.status === 'OK';
-
-          if (myTasks.length === 0) {
-              container.innerHTML = '<div class="text-center py-20 text-slate-300 font-bold border-2 border-dashed border-slate-100 rounded-[32px]">Keine Aufgaben</div>';
-              return;
-          }
-          container.innerHTML = myTasks.map(t => {
-              const isDone = t.done && t.done.includes(currentStudent);
-              return `
-                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-4">
-                        <input type="checkbox" onchange="toggleTask('${t.id}', ${isDone})" ${isDone ? 'checked' : ''} ${isConfirmed ? 'disabled' : ''} class="w-6 h-6 rounded-lg text-blue-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                        <div>
-                            <span class="text-[10px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjects[t.subject]?.color}">${t.subject}</span>
-                            <p class="font-bold ${isDone ? 'line-through text-slate-300' : ''}">${t.task}</p>
-                        </div>
-                    </div>
-                </div>
-              `;
-          }).join('');
-      }
-
-      function renderConfirmationSection() {
-          const container = document.getElementById('parent-confirmation-container');
-          if (!container || !currentStudent) return;
-
-          const conf = parentalConfirmations[currentStudent];
-          const isConfirmed = conf && conf.status === 'OK';
-          const dateStr = isConfirmed ? new Date(conf.date).toLocaleDateString('de-DE') : '';
-
-          if (isConfirmed) {
-              container.innerHTML = `
-                <div class="bg-green-50 border-2 border-green-100 p-8 rounded-[40px] text-center transition-all">
-                    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="material-symbols-outlined text-white text-3xl">check</span>
-                    </div>
-                    <h3 class="text-2xl font-black text-green-900 mb-2">Gesehen</h3>
-                    <p class="text-green-700 font-medium mb-6">Bestätigt am ${dateStr}</p>
-                    <button disabled class="w-full max-w-xs bg-green-500 text-white font-bold py-4 rounded-2xl opacity-50 cursor-not-allowed">
-                        Bestätigt
-                    </button>
-                </div>
-              `;
-          } else {
-              container.innerHTML = `
-                <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-xl text-center">
-                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="material-symbols-outlined text-blue-600 text-3xl">verified_user</span>
-                    </div>
-                    <h3 class="text-2xl font-black text-slate-900 mb-2">Bestätigung der Eltern</h3>
-                    <p class="text-slate-500 mb-8 max-w-sm mx-auto">Ich bestätige hiermit, dass ich die oben aufgeführten Hausaufgaben gesehen habe.</p>
-                    <button onclick="confirmParent()" class="w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-200">
-                        Jetzt bestätigen
-                    </button>
-                </div>
-              `;
-          }
-      }
-
-      function renderTeacherDashboard() {
-          // Progress Section
-          const stats = document.getElementById('stats-body');
-          if (stats) {
-              let rows = students.map(s => {
-                  const studentTasks = tasks.filter(t => t.who === 'all' || t.who === s);
-                  const doneCount = studentTasks.filter(t => t.done && t.done.includes(s)).length;
-                  const percent = studentTasks.length > 0 ? (doneCount / studentTasks.length) * 100 : 0;
-                  const isSelected = selectedTeacherViewStudent === s;
-                  return `
-                    <tr class="border-b border-slate-50 cursor-pointer hover:bg-slate-50 transition-colors ${isSelected ? 'bg-blue-50/50' : ''}" onclick="selectTeacherViewStudent('${s}')">
-                        <td class="py-4 font-bold text-slate-700 pl-2">
-                            <div class="flex items-center gap-2">
-                                ${isSelected ? '<span class="w-2 h-2 rounded-full bg-blue-500"></span>' : '<span class="w-2 h-2"></span>'}
-                                ${s}
-                            </div>
-                        </td>
-                        <td class="py-4 pr-2 text-right">
-                            <div class="flex items-center justify-end gap-3">
-                                <div class="w-24 bg-slate-100 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-blue-600 h-full" style="width: ${percent}%"></div>
-                                </div>
-                                <span class="text-xs font-bold text-slate-400 min-w-[32px]">${doneCount}/${studentTasks.length}</span>
-                            </div>
-                        </td>
-                    </tr>
-                  `;
-              }).join('');
-              
-              stats.innerHTML = `
-                <tr class="border-b border-slate-50 cursor-pointer hover:bg-slate-50 transition-colors ${selectedTeacherViewStudent === 'all' ? 'bg-blue-50/50' : ''}" onclick="selectTeacherViewStudent('all')">
-                    <td class="py-4 font-black text-blue-600 pl-2" colspan="2">Alle Aufgaben anzeigen</td>
-                </tr>
-              ` + rows;
-          }
-
-          // Parental Confirmation Section
-          const confirmBody = document.getElementById('confirmation-body');
-          if (confirmBody) {
-              confirmBody.innerHTML = students.map(s => {
-                  const conf = parentalConfirmations[s];
-                  const isOk = conf && conf.status === 'OK';
-                  const dateStr = conf && conf.date ? new Date(conf.date).toLocaleDateString('de-DE') : '-';
-                  return `
-                    <tr class="border-b border-slate-50">
-                        <td class="py-4 font-bold text-slate-700">${s}</td>
-                        <td class="py-4 text-center">
-                            <span class="px-3 py-1 rounded-full text-[10px] font-black ${isOk ? 'bg-green-100 text-slate-900' : 'bg-orange-100 text-orange-700'} uppercase">
-                                ${isOk ? 'OK' : 'OFFEN'}
-                            </span>
-                        </td>
-                        <td class="py-4 text-center text-xs text-slate-400 font-bold">${dateStr}</td>
-                        <td class="py-4 text-right">
-                            ${isOk ? `
-                                <button onclick="resetParentalConfirmation('${s}')" class="text-slate-400 hover:text-red-500 transition-colors flex items-center justify-end ml-auto" title="Entsperren">
-                                    <span class="material-symbols-outlined text-lg">lock_open</span>
-                                </button>
-                            ` : `
-                                <span class="material-symbols-outlined text-lg text-slate-100">lock</span>
-                            `}
-                        </td>
-                    </tr>
-                  `;
-              }).join('');
-          }
-
-          // All Tasks List (with Delete)
-          const allTasksContainer = document.getElementById('all-tasks-list');
-          const taskHeader = document.getElementById('task-list-header');
-          if (allTasksContainer) {
-              const filteredTasks = tasks.filter(t => selectedTeacherViewStudent === 'all' || t.who === 'all' || t.who === selectedTeacherViewStudent);
-              
-              if (taskHeader) {
-                  taskHeader.innerText = selectedTeacherViewStudent === 'all' ? 'Aktuelle Aufgaben' : `Aufgaben für ${selectedTeacherViewStudent}`;
-              }
-
-              if (filteredTasks.length === 0) {
-                  allTasksContainer.innerHTML = '<p class="text-center text-slate-400 py-12 italic">Keine Aufgaben erstellt</p>';
-              } else {
-                  allTasksContainer.innerHTML = filteredTasks.map(t => {
-                      let doneStatus = '';
-                      if (selectedTeacherViewStudent !== 'all' && t.who !== 'all') {
-                          const isDone = t.done && t.done.includes(selectedTeacherViewStudent);
-                          doneStatus = isDone ? '<span class="text-green-500 material-symbols-outlined text-sm">check_circle</span>' : '<span class="text-slate-200 material-symbols-outlined text-sm">radio_button_unchecked</span>';
-                      } else if (selectedTeacherViewStudent !== 'all' && t.who === 'all') {
-                           const isDone = t.done && t.done.includes(selectedTeacherViewStudent);
-                           doneStatus = isDone ? '<span class="text-green-500 material-symbols-outlined text-sm">check_circle</span>' : '<span class="text-slate-200 material-symbols-outlined text-sm">radio_button_unchecked</span>';
-                      }
-
-                      return `
-                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl mb-2 border border-slate-100 group hover:border-blue-200 transition-all">
-                            <div class="flex items-center gap-3">
-                                <span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full min-w-[30px] text-center" style="background:${subjects[t.subject]?.color || '#64748b'}">${t.subject}</span>
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <p class="text-sm font-bold text-slate-700">${t.task}</p>
-                                        ${doneStatus}
-                                    </div>
-                                    <p class="text-[10px] text-slate-400">Für: ${t.who === 'all' ? 'Ganze Klasse' : t.who}</p>
-                                </div>
-                            </div>
-                            <button onclick="deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500 transition-colors p-2">
-                                <span class="material-symbols-outlined text-lg">delete</span>
-                            </button>
-                        </div>
-                      `;
-                  }).join('');
-              }
-          }
-
-          document.getElementById('class-input').value = students.join('\n');
-      }
-
-      function generateQRCode() {
-          const container = document.getElementById('qrcode');
-          if (!container) return;
-          container.innerHTML = "";
-          new QRCode(container, { text: window.location.href, width: 200, height: 200 });
-      }
-
-      window.onload = () => {
-          const d = new Date();
-          const oneJan = new Date(d.getFullYear(),0,1);
-          const week = Math.ceil((((d - oneJan) / 86400000) + oneJan.getDay() + 1) / 7);
-          const weekEl = document.getElementById('week-label');
-          if(weekEl) weekEl.innerText = `Woche ${week}`;
-          updateUI();
-      };
-    </script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
 <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .dot-pattern { background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; }
-        @media print { .no-print { display: none !important; } }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+        .qr-placeholder {
+            background-image: radial-gradient(circle, #0058bc 1px, transparent 1px);
+            background-size: 8px 8px;
+        }
     </style>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed-dim": "#adc6ff",
+                        "surface-variant": "#e2e2e7",
+                        "tertiary": "#9e3d00",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e2e2e7",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed": "#0c006a",
+                        "error-container": "#ffdad6",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#004493",
+                        "surface-dim": "#d9dade",
+                        "inverse-on-surface": "#f0f0f5",
+                        "on-error-container": "#93000a",
+                        "surface-container-high": "#e8e8ed",
+                        "on-tertiary": "#ffffff",
+                        "background": "#f9f9fe",
+                        "outline": "#717786",
+                        "primary": "#0058bc",
+                        "surface-bright": "#f9f9fe",
+                        "outline-variant": "#c1c6d7",
+                        "secondary": "#4c4aca",
+                        "surface-container": "#ededf2",
+                        "on-surface-variant": "#414755",
+                        "on-surface": "#1a1c1f",
+                        "tertiary-fixed-dim": "#ffb595",
+                        "on-tertiary-container": "#fffbff",
+                        "on-background": "#1a1c1f",
+                        "on-tertiary-fixed-variant": "#7c2e00",
+                        "on-primary-fixed": "#001a41",
+                        "on-primary-container": "#fefcff",
+                        "tertiary-container": "#c64f00",
+                        "on-tertiary-fixed": "#351000",
+                        "on-secondary-fixed-variant": "#3631b4",
+                        "tertiary-fixed": "#ffdbcc",
+                        "surface-container-low": "#f3f3f8",
+                        "on-secondary-container": "#fffbff",
+                        "primary-fixed": "#d8e2ff",
+                        "inverse-surface": "#2e3034",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#adc6ff",
+                        "secondary-container": "#6664e4",
+                        "primary-container": "#0070eb",
+                        "surface-tint": "#005bc1",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#f9f9fe",
+                        "secondary-fixed-dim": "#c2c1ff",
+                        "secondary-fixed": "#e2dfff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "1.5rem",
+                        "input-padding": "1rem",
+                        "stack-padding": "1.25rem",
+                        "container-margin": "2rem"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Inter"],
+                        "subject-tag": ["Inter"],
+                        "h2": ["Inter"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "h1": ["Inter"],
+                        "h1-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "subject-tag": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "h1-mobile": ["26px", {"lineHeight": "32px", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
 </head>
-<body class="dot-pattern min-h-screen text-slate-800 pb-20">
-<header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 no-print">
-<div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-<span class="text-2xl font-extrabold text-blue-600">doeltschi</span>
-<div class="flex bg-slate-100 p-1 rounded-xl">
-<button class="px-4 py-2 rounded-lg text-xs font-bold transition-all" id="btn-mode-student" onclick="setMode('student')">Schüler-Ansicht</button>
-<button class="px-4 py-2 rounded-lg text-xs font-bold transition-all" id="btn-mode-teacher" onclick="setMode('teacher')">Lehrer-Modus</button>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- TopAppBar Component -->
+<header class="bg-surface border-b border-outline-variant w-full h-16 flex items-center sticky top-0 z-50">
+<div class="flex justify-between items-center w-full px-gutter max-w-[1100px] mx-auto">
+<div class="font-h2 text-h2 font-bold text-on-surface">Wer – Was – Bis wann</div>
+<nav class="hidden md:flex gap-6 items-center">
+<button class="text-primary font-bold font-label-caps text-label-caps hover:bg-surface-container-high transition-colors px-3 py-1.5 rounded-lg active:scale-95 duration-200">
+                    Schüler-Ansicht
+                </button>
+<button class="text-on-surface-variant font-label-caps text-label-caps hover:bg-surface-container-high transition-colors px-3 py-1.5 rounded-lg active:scale-95 duration-200">
+                    Lehrer-Modus
+                </button>
+</nav>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-primary">refresh</span>
+</button>
 </div>
 </div>
 </header>
-<main class="max-w-4xl mx-auto px-6 mt-12">
-<!-- Start View -->
-<div class="view-section text-center" id="start-view">
-<h1 class="text-5xl font-black mb-4">Wer bist du?</h1>
-<select class="max-w-sm w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 text-xl font-bold mb-12 shadow-sm focus:border-blue-500 outline-none cursor-pointer" id="student-selector" onchange="selectStudent(this.value)"></select>
-<div class="bg-white p-12 rounded-[48px] border-2 border-slate-100 shadow-2xl flex flex-col items-center max-w-sm mx-auto">
-<h3 class="text-2xl font-bold mb-4">QR-Code scannen</h3>
-<div class="bg-white p-4 rounded-2xl mb-4" id="qrcode"></div>
-<p class="text-xs text-slate-400 font-bold uppercase">Einmal scannen, immer aktuell.</p>
-</div>
-</div>
-<!-- Planer View -->
-<div class="view-section hidden" id="planer-view">
-<div class="flex justify-between items-end mb-12">
-<h2 class="text-5xl font-black text-slate-900" id="display-name">Name</h2>
-<div class="text-3xl font-black text-slate-200" id="week-label">Woche --</div>
-</div>
-<div id="task-container"></div>
-<!-- Parent Confirmation Section -->
-<div class="mt-12 mb-20" id="parent-confirmation-container">
-<!-- Populated by renderConfirmationSection -->
-</div>
-</div>
-<!-- Teacher View -->
-<div class="view-section hidden" id="teacher-view">
-<h2 class="text-3xl font-black mb-8">Lehrer-Dashboard</h2>
-<div class="grid gap-8">
-<!-- Row 1: Add Task & Manage Class -->
-<div class="grid md:grid-cols-2 gap-8">
-<!-- Create Task -->
-<div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-lg">
-<div class="flex items-center gap-2 mb-4">
-<span class="material-symbols-outlined text-blue-600">add_task</span>
-<h3 class="font-bold text-blue-600">Aufgabe zuteilen</h3>
-</div>
-<input class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 mb-3 focus:ring-2 focus:ring-blue-100 outline-none" id="task-desc" placeholder="Aufgabe..." type="text"/>
-<div class="flex gap-2 mb-3">
-<select class="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-sm" id="task-who"></select>
-<select class="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-sm" id="task-subject">
-<option value="DE">Deutsch</option><option value="MA">Mathe</option><option value="E">Englisch</option>
-<option value="F">Französisch</option><option value="RZG">RZG</option><option value="NT">NT</option>
-<option value="MU">Musik</option><option value="BS">Sport</option><option value="MI">Medien</option>
-<option value="WAH">WAH</option>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col items-center justify-center py-12 px-gutter max-w-[1100px] mx-auto w-full">
+<!-- Welcome Section -->
+<section class="text-center mb-12">
+<h1 class="font-h1-mobile md:font-h1 text-h1-mobile md:text-h1 text-on-surface mb-6">Wer bist du?</h1>
+<div class="relative w-full max-w-sm mx-auto">
+<select class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-input-padding py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-body-lg text-body-lg cursor-pointer">
+<option disabled="" selected="" value="">Namen auswählen...</option>
+<option value="1">Lukas M.</option>
+<option value="2">Sophie S.</option>
+<option value="3">Julian K.</option>
+<option value="4">Emma B.</option>
 </select>
-</div>
-<button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-2xl transition-all" onclick="addTask()">Hinzufügen</button>
-</div>
-<!-- Class List -->
-<div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-lg">
-<div class="flex items-center gap-2 mb-4">
-<span class="material-symbols-outlined text-slate-700">group</span>
-<h3 class="font-bold">Klassenliste verwalten</h3>
-</div>
-<textarea class="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-3 text-sm" id="class-input" placeholder="Namen trennen mit Komma oder neuer Zeile..." rows="3"></textarea>
-<button class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-2xl transition-all" onclick="updateClassList()">Liste aktualisieren</button>
+<div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+<span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
 </div>
 </div>
-<!-- Row 2: Progress & Task List -->
-<div class="grid md:grid-cols-2 gap-8">
-<!-- Progress Overview (Clickable) -->
-<div class="bg-white p-8 rounded-[40px] shadow-lg border border-slate-100">
-<div class="flex items-center justify-between mb-6">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-blue-600">analytics</span>
-<h3 class="font-bold">Klassen-Fortschritt</h3>
+</section>
+<!-- Action Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+<!-- QR Code Card -->
+<div class="bg-surface border border-outline-variant rounded-lg p-8 flex flex-col items-center text-center hover:shadow-[0px_4px_20px_rgba(0,0,0,0.05)] transition-all duration-300 group">
+<div class="w-12 h-1 bg-primary mb-6 rounded-full"></div>
+<h2 class="font-h2 text-h2 mb-4">QR-Code scannen</h2>
+<div class="w-48 h-48 qr-placeholder rounded-2xl flex items-center justify-center border-2 border-dashed border-outline-variant mb-6 group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-6xl text-outline-variant group-hover:text-primary transition-colors">qr_code_scanner</span>
 </div>
-<span class="text-[10px] font-black text-slate-400 uppercase">Wähle Schüler/in</span>
+<p class="text-on-surface-variant font-body-md mb-6">
+                    Scanne den QR-Code auf deinem Arbeitsblatt, um direkt zu deinem Planer zu gelangen.
+                </p>
+<button class="bg-primary-container text-on-primary-container px-6 py-3 rounded-full font-label-caps text-label-caps hover:brightness-105 active:scale-95 transition-all w-full md:w-auto">
+                    Kamera öffnen
+                </button>
 </div>
-<div class="overflow-hidden">
-<table class="w-full">
-<tbody id="stats-body"></tbody>
-</table>
+<!-- Web App Instructions Card -->
+<div class="bg-surface border border-outline-variant rounded-lg p-8 flex flex-col hover:shadow-[0px_4px_20px_rgba(0,0,0,0.05)] transition-all duration-300">
+<div class="w-12 h-1 bg-secondary mb-6 rounded-full"></div>
+<h2 class="font-h2 text-h2 mb-6">Als App nutzen</h2>
+<div class="space-y-6">
+<!-- Step 1 -->
+<div class="flex items-start gap-4">
+<div class="bg-surface-container flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-primary font-bold">1</div>
+<div class="flex flex-col">
+<span class="font-subject-tag text-subject-tag text-on-surface">Link öffnen</span>
+<span class="text-on-surface-variant text-sm">Stelle sicher, dass du in deinem Browser bist.</span>
 </div>
 </div>
-<!-- Manage Current Tasks -->
-<div class="bg-white p-8 rounded-[40px] shadow-lg border border-slate-100">
-<div class="flex items-center gap-2 mb-6">
-<span class="material-symbols-outlined text-blue-600">assignment</span>
-<h3 class="font-bold" id="task-list-header">Aktuelle Aufgaben</h3>
+<!-- Step 2 -->
+<div class="flex items-start gap-4">
+<div class="bg-surface-container flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-primary font-bold">2</div>
+<div class="flex flex-col">
+<span class="font-subject-tag text-subject-tag text-on-surface">Tippe auf 'Teilen'</span>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-on-surface-variant text-sm">Suche nach dem Symbol</span>
+<span class="material-symbols-outlined text-primary text-xl">share</span>
 </div>
-<div class="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar" id="all-tasks-list">
-<!-- Populated by renderTeacherDashboard -->
+</div>
+</div>
+<!-- Step 3 -->
+<div class="flex items-start gap-4">
+<div class="bg-surface-container flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-primary font-bold">3</div>
+<div class="flex flex-col">
+<span class="font-subject-tag text-subject-tag text-on-surface">Zum Home-Bildschirm</span>
+<span class="text-on-surface-variant text-sm">Wähle 'Zum Home-Bildschirm hinzufügen' aus.</span>
 </div>
 </div>
 </div>
-<!-- Row 3: Parental Confirmation Status -->
-<div class="bg-white p-8 rounded-[40px] shadow-lg border border-slate-100">
-<div class="flex items-center gap-2 mb-6">
-<span class="material-symbols-outlined text-green-600">verified_user</span>
-<h3 class="font-bold">Eltern-Bestätigungen</h3>
-</div>
-<div class="overflow-x-auto">
-<table class="w-full">
-<thead>
-<tr class="text-left border-b border-slate-100">
-<th class="pb-4 text-xs font-black uppercase text-slate-400">Schüler/in</th>
-<th class="pb-4 text-xs font-black uppercase text-slate-400 text-center">Status</th>
-<th class="pb-4 text-xs font-black uppercase text-slate-400 text-center">Zuletzt am</th>
-<th class="pb-4 text-xs font-black uppercase text-slate-400 text-right">Aktion</th>
-</tr>
-</thead>
-<tbody id="confirmation-body"></tbody>
-</table>
-</div>
+<div class="mt-auto pt-8">
+<img class="w-full h-32 object-cover rounded-xl border border-outline-variant grayscale opacity-60" data-alt="A high-quality, professional photograph of a modern smartphone lying on a clean, white minimalist desk. The screen shows a vibrant user interface with blue and slate accents, emphasizing a digital worksheet aesthetic. The lighting is soft and natural, coming from the side to create gentle shadows, evoking a sense of calm productivity and organized educational technology." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOC5li6avuCBkd6JYPypPL3LXnXFjjTd9CTbJQoljTEpdXAPOHfhBxspfeC-pYko216MltglNynj9h-o47lHQNhC4v1LHi-wonf6K4IvYPgn8jv-PPz70odvzBlWe4X5hQRVyjO1Bzfb8RpbRPgsxkl_EExL4qYA1Cdt-QjwUsqrp8O3BYn9z6rKg7xwqlQLA7fLcrLCHEk01U2Ul2TaMqTtoVos8Vm2Y6CX91a5nrwvree19aO8hhhqAWqSpJ6BmqDoroLNNy4F4"/>
 </div>
 </div>
 </div>
 </main>
+<!-- Footer Component -->
+<footer class="bg-surface border-t border-outline-variant mt-auto">
+<div class="w-full max-w-[1100px] mx-auto py-8 px-gutter flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="font-label-caps text-label-caps font-bold text-on-surface-variant">© 2024 Wer – Was – Bis wann</div>
+<div class="flex gap-6 font-body-md text-body-md">
+<a class="text-on-surface-variant hover:text-primary transition-colors hover:underline" href="#">Datenschutz</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors hover:underline" href="#">Impressum</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors hover:underline" href="#">Hilfe</a>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction for dropdown focus
+        const select = document.querySelector('select');
+        select.addEventListener('focus', () => {
+            select.parentElement.querySelector('.material-symbols-outlined').style.transform = 'translateY(-50%) rotate(180deg)';
+        });
+        select.addEventListener('blur', () => {
+            select.parentElement.querySelector('.material-symbols-outlined').style.transform = 'translateY(-50%) rotate(0deg)';
+        });
+    </script>
 </body></html>
