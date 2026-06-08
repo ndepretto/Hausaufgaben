@@ -30,15 +30,15 @@
 <span class="text-2xl font-extrabold tracking-tight text-blue-600">doeltschi</span>
 <div class="flex items-center gap-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider" id="cloud-status">
 <span class="w-2 h-2 bg-blue-500 rounded-full pulse-blue"></span> Cloud Aktiv
-                </div>
+            </div>
 </div>
 <div class="flex bg-slate-100 p-1 rounded-xl">
 <button class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-sm" id="btn-student" onclick="setMode('student')">
 <span class="material-symbols-outlined text-[18px]">person</span> Schüler
-                </button>
+            </button>
 <button class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-600 hover:bg-slate-200" id="btn-teacher" onclick="setMode('teacher')">
 <span class="material-symbols-outlined text-[18px]">lock</span> Lehrer
-                </button>
+            </button>
 </div>
 </div>
 </header>
@@ -64,7 +64,7 @@
 <div>
 <button class="text-blue-600 font-bold flex items-center gap-1 mb-2" id="back-btn" onclick="resetSelection()">
 <span class="material-symbols-outlined text-sm">arrow_back</span> Zurück
-                    </button>
+                </button>
 <h2 class="text-4xl font-black text-slate-900 tracking-tighter" id="display-name">Mein Planer</h2>
 </div>
 <div class="text-right">
@@ -75,7 +75,7 @@
 <div class="bg-blue-600 p-8 rounded-[40px] text-white shadow-lg" id="parent-section">
 <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
 <span class="material-symbols-outlined">verified_user</span> Bestätigung der Eltern
-                </h3>
+            </h3>
 <div class="grid md:grid-cols-2 gap-4" id="parent-form">
 <input class="bg-white/10 border border-white/20 rounded-2xl px-6 py-4 outline-none placeholder:text-white/50 font-bold" id="parent-name" placeholder="Name der Eltern" type="text"/>
 <button class="bg-white text-blue-600 font-bold py-4 rounded-2xl hover:bg-blue-50 transition-all" onclick="confirmParent()">Bestätigen &amp; Sperren</button>
@@ -96,7 +96,7 @@
 <div class="flex items-center gap-2">
 <label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-black uppercase px-3 py-2 rounded-lg transition-all flex items-center gap-1" for="import-file">
 <span class="material-symbols-outlined text-sm">upload_file</span> Klassenliste importieren (.txt)
-                            </label>
+                        </label>
 <input accept=".txt" class="hidden" id="import-file" onchange="handleFileImport(event)" type="file"/>
 </div>
 </div>
@@ -136,11 +136,16 @@
 </div>
 </div>
 <div class="bg-white p-8 rounded-[40px] border-2 border-slate-100 shadow-xl">
-<h3 class="font-bold mb-6 flex items-center gap-2"><span class="material-symbols-outlined">groups</span> Klassenfortschritt (Echtzeit)</h3>
+<h3 class="font-bold mb-6 flex items-center gap-2"><span class="material-symbols-outlined">groups</span> Klassenliste &amp; Fortschritt</h3>
 <div class="overflow-x-auto">
 <table class="w-full text-left text-sm">
 <thead class="text-slate-400 font-bold uppercase text-[10px] border-b border-slate-50">
-<tr><th class="pb-4">Schüler</th><th class="pb-4">Status</th><th class="pb-4">Eltern</th><th class="pb-4 text-right">Aktion</th></tr>
+<tr>
+<th class="pb-4">Schüler</th>
+<th class="pb-4">Status</th>
+<th class="pb-4">Eltern</th>
+<th class="pb-4 text-right">Aktionen</th>
+</tr>
 </thead>
 <tbody id="stats-body"></tbody>
 </table>
@@ -150,273 +155,301 @@
 </div>
 </main>
 <script>
-        // --- FIREBASE CONFIG ---
-        const firebaseConfig = {
-            apiKey: "DEIN_API_KEY",
-            authDomain: "DEIN_PROJEKT.firebaseapp.com",
-            projectId: "DEIN_PROJEKT",
-            storageBucket: "DEIN_PROJEKT.appspot.com",
-            messagingSenderId: "DEINE_ID",
-            appId: "DEINE_APP_ID"
-        };
+    // --- FIREBASE CONFIG ---
+    const firebaseConfig = {
+        apiKey: "DEIN_API_KEY",
+        authDomain: "DEIN_PROJEKT.firebaseapp.com",
+        projectId: "DEIN_PROJEKT",
+        storageBucket: "DEIN_PROJEKT.appspot.com",
+        messagingSenderId: "DEINE_ID",
+        appId: "DEINE_APP_ID"
+    };
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-        let students = ['Lukas Müller', 'Sophie Fischer', 'Emma Weber', 'Maximilian Schmidt'];
-        let tasks = [];
-        let completions = {};
-        let confirmations = {};
-        let currentStudent = null;
-        const subjects = { 'DE':'#ef4444', 'MA':'#3b82f6', 'E':'#eab308', 'F':'#22c55e', 'RZG':'#f97316', 'NT':'#06b6d4' };
+    let students = ['Lukas Müller', 'Sophie Fischer', 'Emma Weber', 'Maximilian Schmidt'];
+    let tasks = [];
+    let completions = {};
+    let confirmations = {};
+    let currentStudent = null;
+    const subjects = { 'DE':'#ef4444', 'MA':'#3b82f6', 'E':'#eab308', 'F':'#22c55e', 'RZG':'#f97316', 'NT':'#06b6d4' };
 
-        function init() {
-            setupListeners();
-            updateWeek();
-            loadStudents();
-            const session = localStorage.getItem('doeltschi_session');
-            if (session) {
-                currentStudent = session;
-                updateUI();
-            }
-            new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 140, height: 140 });
+    function init() {
+        setupListeners();
+        updateWeek();
+        loadStudents();
+        const session = localStorage.getItem('doeltschi_session');
+        if (session) {
+            currentStudent = session;
+            updateUI();
         }
+        new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 140, height: 140 });
+    }
 
-        async function loadStudents() {
-            const doc = await db.collection('settings').doc('classroom').get();
+    async function loadStudents() {
+        const doc = await db.collection('settings').doc('classroom').get();
+        if (doc.exists && doc.data().students) {
+            students = doc.data().students;
+        }
+        renderSelectors();
+        renderStats();
+    }
+
+    function setupListeners() {
+        // Listen for Tasks
+        db.collection('tasks').orderBy('createdAt', 'desc').onSnapshot(snap => {
+            tasks = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderTasks();
+            renderTeacherTasksTable();
+            renderStats();
+        });
+
+        // Listen for Completions
+        db.collection('completions').onSnapshot(snap => {
+            completions = {};
+            snap.docs.forEach(doc => completions[doc.id] = doc.data());
+            renderTasks();
+            renderStats();
+        });
+
+        // Listen for Parent Confirmations
+        db.collection('confirmations').onSnapshot(snap => {
+            confirmations = {};
+            snap.docs.forEach(doc => confirmations[doc.id] = doc.data());
+            renderTasks();
+            renderStats();
+        });
+
+        // Listen for Student List changes
+        db.collection('settings').doc('classroom').onSnapshot(doc => {
             if (doc.exists && doc.data().students) {
                 students = doc.data().students;
-            }
-            renderSelectors();
-            renderStats();
-        }
-
-        function setupListeners() {
-            // Listen for Tasks
-            db.collection('tasks').orderBy('createdAt', 'desc').onSnapshot(snap => {
-                tasks = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderTasks();
-                renderTeacherTasksTable();
+                renderSelectors();
                 renderStats();
-            });
-
-            // Listen for Completions
-            db.collection('completions').onSnapshot(snap => {
-                completions = {};
-                snap.docs.forEach(doc => completions[doc.id] = doc.data());
-                renderTasks();
-                renderStats();
-            });
-
-            // Listen for Parent Confirmations
-            db.collection('confirmations').onSnapshot(snap => {
-                confirmations = {};
-                snap.docs.forEach(doc => confirmations[doc.id] = doc.data());
-                renderTasks();
-                renderStats();
-            });
-
-            // Listen for Student List changes
-            db.collection('settings').doc('classroom').onSnapshot(doc => {
-                if (doc.exists && doc.data().students) {
-                    students = doc.data().students;
-                    renderSelectors();
-                    renderStats();
-                }
-            });
-        }
-
-        function setMode(mode) {
-            if (mode === 'teacher') {
-                const pw = prompt("Passwort:");
-                if (pw !== 'lehrer123') return;
-                document.body.dataset.mode = 'teacher';
-            } else {
-                document.body.dataset.mode = 'student';
             }
-            updateUI();
-        }
+        });
+    }
 
-        function selectStudent(val) {
-            if (!val) return;
-            currentStudent = val;
-            localStorage.setItem('doeltschi_session', val);
-            updateUI();
+    function setMode(mode) {
+        if (mode === 'teacher') {
+            const pw = prompt("Passwort:");
+            if (pw !== 'doeltschi2024') return;
+            document.body.dataset.mode = 'teacher';
+        } else {
+            document.body.dataset.mode = 'student';
         }
+        updateUI();
+    }
 
-        function resetSelection() {
-            if (confirmations[currentStudent]) return alert("Sitzung gesperrt.");
-            currentStudent = null;
-            localStorage.removeItem('doeltschi_session');
-            document.getElementById('student-selector').value = "";
-            updateUI();
+    function selectStudent(val) {
+        if (!val) return;
+        currentStudent = val;
+        localStorage.setItem('doeltschi_session', val);
+        updateUI();
+    }
+
+    function resetSelection() {
+        if (confirmations[currentStudent]) return alert("Sitzung gesperrt.");
+        currentStudent = null;
+        localStorage.removeItem('doeltschi_session');
+        document.getElementById('student-selector').value = "";
+        updateUI();
+    }
+
+    function updateUI() {
+        const isTeacher = document.body.dataset.mode === 'teacher';
+        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+        if (isTeacher) {
+            document.getElementById('teacher-view').classList.add('active');
+        } else if (currentStudent) {
+            document.getElementById('planer-view').classList.add('active');
+            document.getElementById('display-name').innerText = currentStudent;
+            document.getElementById('back-btn').style.display = confirmations[currentStudent] ? 'none' : 'flex';
+        } else {
+            document.getElementById('start-view').classList.add('active');
         }
+    }
 
-        function updateUI() {
-            const isTeacher = document.body.dataset.mode === 'teacher';
-            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-            if (isTeacher) {
-                document.getElementById('teacher-view').classList.add('active');
-            } else if (currentStudent) {
-                document.getElementById('planer-view').classList.add('active');
-                document.getElementById('display-name').innerText = currentStudent;
-                document.getElementById('back-btn').style.display = confirmations[currentStudent] ? 'none' : 'flex';
-            } else {
-                document.getElementById('start-view').classList.add('active');
-            }
-        }
+    function renderSelectors() {
+        const sel = document.getElementById('student-selector');
+        const tSel = document.getElementById('t-who');
+        if (!sel || !tSel) return;
+        sel.innerHTML = '<option value="">Wähle deinen Namen...</option>';
+        tSel.innerHTML = '<option value="all">Ganze Klasse</option>';
+        students.sort().forEach(s => {
+            sel.innerHTML += `<option value="${s}">${s}</option>`;
+            tSel.innerHTML += `<option value="${s}">${s}</option>`;
+        });
+    }
 
-        function renderSelectors() {
-            const sel = document.getElementById('student-selector');
-            const tSel = document.getElementById('t-who');
-            if (!sel || !tSel) return;
-            sel.innerHTML = '<option value="">Wähle deinen Namen...</option>';
-            tSel.innerHTML = '<option value="all">Ganze Klasse</option>';
-            students.sort().forEach(s => {
-                sel.innerHTML += `<option value="${s}">${s}</option>`;
-                tSel.innerHTML += `<option value="${s}">${s}</option>`;
-            });
-        }
-
-        function renderTasks() {
-            const container = document.getElementById('task-list');
-            if (!container || !currentStudent) return;
-            const locked = confirmations[currentStudent];
-            const myTasks = tasks.filter(t => t.who === 'all' || t.who === currentStudent);
-            
-            if (myTasks.length === 0) {
-                container.innerHTML = '<div class="text-center py-12 text-slate-300 font-bold border-2 border-dashed border-slate-100 rounded-[32px]">Warten auf Cloud-Aufgaben...</div>';
-            } else {
-                container.innerHTML = myTasks.map(t => {
-                    const isDone = completions[currentStudent]?.[t.id];
-                    return `
-                        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between transition-all ${isDone ? 'task-done' : ''}">
-                            <div class="flex items-center gap-4">
-                                <input type="checkbox" ${locked ? 'disabled' : ''} onchange="toggleTask('${t.id}')" ${isDone ? 'checked' : ''} class="w-6 h-6 rounded-lg border-2 border-slate-200 text-blue-600 focus:ring-0 cursor-pointer">
-                                <div>
-                                    <span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjects[t.sub]}">${t.sub}</span>
-                                    <p class="font-bold text-slate-700">${t.task}</p>
-                                </div>
+    function renderTasks() {
+        const container = document.getElementById('task-list');
+        if (!container || !currentStudent) return;
+        const locked = confirmations[currentStudent];
+        const myTasks = tasks.filter(t => t.who === 'all' || t.who === currentStudent);
+        
+        if (myTasks.length === 0) {
+            container.innerHTML = '<div class="text-center py-12 text-slate-300 font-bold border-2 border-dashed border-slate-100 rounded-[32px]">Warten auf Cloud-Aufgaben...</div>';
+        } else {
+            container.innerHTML = myTasks.map(t => {
+                const isDone = completions[currentStudent]?.[t.id];
+                return `
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between transition-all ${isDone ? 'task-done' : ''}">
+                        <div class="flex items-center gap-4">
+                            <input type="checkbox" ${locked ? 'disabled' : ''} onchange="toggleTask('${t.id}')" ${isDone ? 'checked' : ''} class="w-6 h-6 rounded-lg border-2 border-slate-200 text-blue-600 focus:ring-0 cursor-pointer">
+                            <div>
+                                <span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjects[t.sub]}">${t.sub}</span>
+                                <p class="font-bold text-slate-700">${t.task}</p>
                             </div>
                         </div>
-                    `;
-                }).join('');
-            }
-            document.getElementById('parent-form').classList.toggle('hidden', !!locked);
-            document.getElementById('parent-info').classList.toggle('hidden', !locked);
-            if (locked) document.getElementById('confirm-date').innerText = locked.date;
-        }
-
-        function renderTeacherTasksTable() {
-            const body = document.getElementById('tasks-table-body');
-            if (!body) return;
-            if (tasks.length === 0) {
-                body.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-300 font-bold italic">Keine Aufgaben vorhanden</td></tr>';
-                return;
-            }
-            body.innerHTML = tasks.map(t => {
-                const date = t.createdAt ? t.createdAt.toDate().toLocaleDateString('de-CH') : '-';
-                return `
-                    <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-all">
-                        <td class="py-4 font-bold text-slate-600 text-xs">${t.who === 'all' ? 'Alle' : t.who}</td>
-                        <td class="py-4"><span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjects[t.sub]}">${t.sub}</span></td>
-                        <td class="py-4 font-bold text-slate-700 text-xs">${t.task}</td>
-                        <td class="py-4 text-slate-400 text-[10px] font-bold">${date}</td>
-                        <td class="py-4 text-right">
-                            <button onclick="deleteTask('${t.id}')" class="text-red-400 hover:text-red-600 transition-colors">
-                                <span class="material-symbols-outlined text-[18px]">delete</span>
-                            </button>
-                        </td>
-                    </tr>
+                    </div>
                 `;
             }).join('');
         }
+        document.getElementById('parent-form').classList.toggle('hidden', !!locked);
+        document.getElementById('parent-info').classList.toggle('hidden', !locked);
+        if (locked) document.getElementById('confirm-date').innerText = locked.date;
+    }
 
-        function toggleTask(taskId) {
-            const currentStatus = completions[currentStudent]?.[taskId] || false;
-            db.collection('completions').doc(currentStudent).set({ [taskId]: !currentStatus }, { merge: true });
+    function renderTeacherTasksTable() {
+        const body = document.getElementById('tasks-table-body');
+        if (!body) return;
+        if (tasks.length === 0) {
+            body.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-300 font-bold italic">Keine Aufgaben vorhanden</td></tr>';
+            return;
         }
+        body.innerHTML = tasks.map(t => {
+            const date = t.createdAt ? t.createdAt.toDate().toLocaleDateString('de-CH') : '-';
+            return `
+                <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-all">
+                    <td class="py-4 font-bold text-slate-600 text-xs">${t.who === 'all' ? 'Alle' : t.who}</td>
+                    <td class="py-4"><span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjects[t.sub]}">${t.sub}</span></td>
+                    <td class="py-4 font-bold text-slate-700 text-xs">${t.task}</td>
+                    <td class="py-4 text-slate-400 text-[10px] font-bold">${date}</td>
+                    <td class="py-4 text-right">
+                        <button onclick="deleteTask('${t.id}')" class="text-red-400 hover:text-red-600 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
 
-        function confirmParent() {
-            const name = document.getElementById('parent-name').value;
-            if (!name) return alert("Bitte Name eingeben.");
-            db.collection('confirmations').doc(currentStudent).set({ date: new Date().toLocaleDateString('de-CH'), name: name });
+    function toggleTask(taskId) {
+        const currentStatus = completions[currentStudent]?.[taskId] || false;
+        db.collection('completions').doc(currentStudent).set({ [taskId]: !currentStatus }, { merge: true });
+    }
+
+    function confirmParent() {
+        const name = document.getElementById('parent-name').value;
+        if (!name) return alert("Bitte Name eingeben.");
+        db.collection('confirmations').doc(currentStudent).set({ date: new Date().toLocaleDateString('de-CH'), name: name });
+    }
+
+    function assignTask() {
+        const task = document.getElementById('t-task').value;
+        const who = document.getElementById('t-who').value;
+        const sub = document.getElementById('t-sub').value;
+        if (!task) return;
+        db.collection('tasks').add({ 
+            task, 
+            who, 
+            sub, 
+            createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+        });
+        document.getElementById('t-task').value = '';
+    }
+
+    function deleteTask(id) {
+        if (confirm("Aufgabe wirklich unwiderruflich aus der Cloud löschen?")) {
+            db.collection('tasks').doc(id).delete();
         }
+    }
 
-        function assignTask() {
-            const task = document.getElementById('t-task').value;
-            const who = document.getElementById('t-who').value;
-            const sub = document.getElementById('t-sub').value;
-            if (!task) return;
-            db.collection('tasks').add({ 
-                task, 
-                who, 
-                sub, 
-                createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+    function deleteStudent(studentName) {
+        if (confirm(`Möchtest du ${studentName} wirklich aus der Klassenliste löschen? Alle zugehörigen Erledigungen und Bestätigungen werden ebenfalls entfernt.`)) {
+            // Update students array
+            const updatedStudents = students.filter(s => s !== studentName);
+            
+            // 1. Update classroom settings in Firestore
+            db.collection('settings').doc('classroom').set({ students: updatedStudents }).then(() => {
+                // 2. Clean up student-specific data
+                db.collection('completions').doc(studentName).delete();
+                db.collection('confirmations').doc(studentName).delete();
+                
+                // Note: We don't delete general 'tasks' assigned to 'all', but we could 
+                // delete tasks specifically assigned to only this student if desired.
+                db.collection('tasks').where('who', '==', studentName).get().then(snap => {
+                    snap.forEach(doc => doc.ref.delete());
+                });
+
+                alert(`${studentName} wurde erfolgreich gelöscht.`);
+            }).catch(err => {
+                console.error("Fehler beim Löschen:", err);
+                alert("Fehler beim Löschen des Schülers.");
             });
-            document.getElementById('t-task').value = '';
         }
+    }
 
-        function deleteTask(id) {
-            if (confirm("Aufgabe wirklich unwiderruflich aus der Cloud löschen?")) {
-                db.collection('tasks').doc(id).delete();
-            }
-        }
-
-        function handleFileImport(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const content = e.target.result;
-                const newStudents = content.split('\n')
-                                           .map(s => s.trim())
-                                           .filter(s => s.length > 0);
-                if (newStudents.length > 0) {
-                    if (confirm(`${newStudents.length} Schüler gefunden. Klassenliste jetzt überschreiben?`)) {
-                        db.collection('settings').doc('classroom').set({ students: newStudents });
-                    }
-                } else {
-                    alert("Keine gültigen Namen in der Datei gefunden.");
+    function handleFileImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const content = e.target.result;
+            const newStudents = content.split('\n')
+                                       .map(s => s.trim())
+                                       .filter(s => s.length > 0);
+            if (newStudents.length > 0) {
+                if (confirm(`${newStudents.length} Schüler gefunden. Klassenliste jetzt überschreiben?`)) {
+                    db.collection('settings').doc('classroom').set({ students: newStudents });
                 }
-            };
-            reader.readAsText(file);
-            event.target.value = ''; // Reset for next selection
-        }
+            } else {
+                alert("Keine gültigen Namen in der Datei gefunden.");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // Reset for next selection
+    }
 
-        function renderStats() {
-            const body = document.getElementById('stats-body');
-            if (!body) return;
-            body.innerHTML = students.sort().map(s => {
-                const myTasks = tasks.filter(t => t.who === 'all' || t.who === s);
-                const total = myTasks.length;
-                const done = myTasks.filter(t => completions[s]?.[t.id]).length;
-                const conf = confirmations[s];
-                return `
-                    <tr class="border-b border-slate-50">
-                        <td class="py-4 font-bold text-slate-700">${s}</td>
-                        <td class="py-4 text-xs font-bold ${done === total && total > 0 ? 'text-green-500' : 'text-slate-400'}">${done}/${total} erledigt</td>
-                        <td class="py-4 text-[10px] font-bold text-slate-400">${conf ? conf.date : 'Offen'}</td>
-                        <td class="py-4 text-right">
-                            <button onclick="unlockSession('${s}')" class="text-blue-600 text-[10px] font-black uppercase hover:underline">Entsperren</button>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
+    function renderStats() {
+        const body = document.getElementById('stats-body');
+        if (!body) return;
+        body.innerHTML = students.sort().map(s => {
+            const myTasks = tasks.filter(t => t.who === 'all' || t.who === s);
+            const total = myTasks.length;
+            const done = myTasks.filter(t => completions[s]?.[t.id]).length;
+            const conf = confirmations[s];
+            return `
+                <tr class="border-b border-slate-50 hover:bg-slate-50/30 transition-all">
+                    <td class="py-4 font-bold text-slate-700">${s}</td>
+                    <td class="py-4 text-xs font-bold ${done === total && total > 0 ? 'text-green-500' : 'text-slate-400'}">${done}/${total} erledigt</td>
+                    <td class="py-4 text-[10px] font-bold text-slate-400">${conf ? conf.date : 'Offen'}</td>
+                    <td class="py-4 text-right flex items-center justify-end gap-3">
+                        <button onclick="unlockSession('${s}')" class="text-blue-600 text-[10px] font-black uppercase hover:underline">Entsperren</button>
+                        <button onclick="deleteStudent('${s}')" class="text-slate-300 hover:text-red-500 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
 
-        function unlockSession(s) {
-            db.collection('confirmations').doc(s).delete();
-            alert(`Sitzung für ${s} entsperrt.`);
-        }
+    function unlockSession(s) {
+        db.collection('confirmations').doc(s).delete();
+        alert(`Sitzung für ${s} entsperrt.`);
+    }
 
-        function updateWeek() {
-            const d = new Date();
-            const oneJan = new Date(d.getFullYear(),0,1);
-            const week = Math.ceil((((d - oneJan) / 86400000) + oneJan.getDay() + 1) / 7);
-            document.getElementById('week-label').innerText = `Woche ${week}`;
-        }
+    function updateWeek() {
+        const d = new Date();
+        const oneJan = new Date(d.getFullYear(),0,1);
+        const week = Math.ceil((((d - oneJan) / 86400000) + oneJan.getDay() + 1) / 7);
+        document.getElementById('week-label').innerText = `Woche ${week}`;
+    }
 
-        window.onload = init;
-    </script>
+    window.onload = init;
+</script>
 </body></html>
