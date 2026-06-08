@@ -60,6 +60,7 @@
       onSnapshot(doc(db, "config", "confirmations"), (doc) => {
           if (doc.exists()) {
               parentalConfirmations = doc.data() || {};
+              renderConfirmationSection(); // Update student view confirmation
               if (currentMode === 'teacher') renderTeacherDashboard();
           }
       });
@@ -115,11 +116,29 @@
 
       window.toggleTask = async (taskId, isDone) => {
           if (!currentStudent) return;
+          // Block toggle if already confirmed by parent
+          if (parentalConfirmations[currentStudent]?.status === 'OK') {
+              alert("Aufgaben bereits von Eltern bestätigt. Änderungen nicht mehr möglich.");
+              return;
+          }
           const taskRef = doc(db, "tasks", taskId);
           if (isDone) {
               await updateDoc(taskRef, { done: arrayRemove(currentStudent) });
           } else {
               await updateDoc(taskRef, { done: arrayUnion(currentStudent) });
+          }
+      };
+
+      window.confirmParent = async () => {
+          if (!currentStudent) return;
+          if (confirm('Bestätigen Sie als Elternteil, dass die Hausaufgaben erledigt oder gesehen wurden?')) {
+              const confRef = doc(db, "config", "confirmations");
+              await updateDoc(confRef, {
+                  [currentStudent]: {
+                      status: 'OK',
+                      date: Date.now()
+                  }
+              });
           }
       };
 
@@ -149,6 +168,8 @@
               btnStudent.classList.remove('text-slate-600', 'hover:bg-slate-200');
               btnTeacher.classList.remove('bg-blue-600', 'text-white');
               btnTeacher.classList.add('text-slate-600', 'hover:bg-slate-200');
+              renderTasks();
+              renderConfirmationSection();
           } else {
               document.getElementById('start-view').classList.remove('hidden');
               generateQRCode();
@@ -171,6 +192,8 @@
           const container = document.getElementById('task-container');
           if (!container) return;
           const myTasks = tasks.filter(t => t.who === 'all' || t.who === currentStudent);
+          const isConfirmed = parentalConfirmations[currentStudent]?.status === 'OK';
+
           if (myTasks.length === 0) {
               container.innerHTML = '<div class="text-center py-20 text-slate-300 font-bold border-2 border-dashed border-slate-100 rounded-[32px]">Keine Aufgaben</div>';
               return;
@@ -180,7 +203,7 @@
               return `
                 <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between mb-4">
                     <div class="flex items-center gap-4">
-                        <input type="checkbox" onchange="toggleTask('${t.id}', ${isDone})" ${isDone ? 'checked' : ''} class="w-6 h-6 rounded-lg text-blue-600 cursor-pointer">
+                        <input type="checkbox" onchange="toggleTask('${t.id}', ${isDone})" ${isDone ? 'checked' : ''} ${isConfirmed ? 'disabled' : ''} class="w-6 h-6 rounded-lg text-blue-600 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                         <div>
                             <span class="text-[10px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjects[t.subject]?.color}">${t.subject}</span>
                             <p class="font-bold ${isDone ? 'line-through text-slate-300' : ''}">${t.task}</p>
@@ -189,6 +212,43 @@
                 </div>
               `;
           }).join('');
+      }
+
+      function renderConfirmationSection() {
+          const container = document.getElementById('parent-confirmation-container');
+          if (!container || !currentStudent) return;
+
+          const conf = parentalConfirmations[currentStudent];
+          const isConfirmed = conf && conf.status === 'OK';
+          const dateStr = isConfirmed ? new Date(conf.date).toLocaleDateString('de-DE') : '';
+
+          if (isConfirmed) {
+              container.innerHTML = `
+                <div class="bg-green-50 border-2 border-green-100 p-8 rounded-[40px] text-center transition-all">
+                    <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-icons-outline text-white text-3xl">check</span>
+                    </div>
+                    <h3 class="text-2xl font-black text-green-900 mb-2">Bestätigung der Eltern</h3>
+                    <p class="text-green-700 font-medium mb-6">Bestätigt am ${dateStr}</p>
+                    <button disabled class="w-full max-w-xs bg-green-500 text-white font-bold py-4 rounded-2xl opacity-50 cursor-not-allowed">
+                        Bestätigt
+                    </button>
+                </div>
+              `;
+          } else {
+              container.innerHTML = `
+                <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-xl text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="material-icons-outline text-blue-600 text-3xl">verified_user</span>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-900 mb-2">Bestätigung der Eltern</h3>
+                    <p class="text-slate-500 mb-8 max-w-sm mx-auto">Ich bestätige hiermit, dass ich die oben aufgeführten Hausaufgaben gesehen habe.</p>
+                    <button onclick="confirmParent()" class="w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-200">
+                        Jetzt bestätigen
+                    </button>
+                </div>
+              `;
+          }
       }
 
       function renderTeacherDashboard() {
@@ -313,6 +373,10 @@
 <div class="text-3xl font-black text-slate-200" id="week-label">Woche --</div>
 </div>
 <div id="task-container"></div>
+<!-- Parent Confirmation Section -->
+<div class="mt-12 mb-20" id="parent-confirmation-container">
+<!-- Populated by renderConfirmationSection -->
+</div>
 </div>
 <!-- Teacher View -->
 <div class="view-section hidden" id="teacher-view">
