@@ -1,852 +1,277 @@
-<html lang="de"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>doeltschi | Digitaler Aufgabenplaner</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<style>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>doeltschi | Digitaler Aufgabenplaner Cloud</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outline" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <!-- Firebase SDKs -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, collection, addDoc, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+      // --- DEINE FIREBASE KONFIGURATION ---
+      const firebaseConfig = {
+        apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
+        authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
+        projectId: "doeltschi-hausaufgabenplaner",
+        storageBucket: "doeltschi-hausaufgabenplaner.firebasestorage.app",
+        messagingSenderId: "741131007424",
+        appId: "1:741131007424:web:04427f839b7eb86aa9c425",
+        measurementId: "G-C6GTQJ8C1D"
+      };
+
+      // Initialisierung
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      // --- APP LOGIK ---
+      let students = [];
+      let tasks = [];
+      let currentStudent = localStorage.getItem('doeltschi_user') || null;
+      let currentMode = 'student';
+
+      const subjects = {
+          'DE': { name: 'DEUTSCH', color: '#ef4444' },
+          'MA': { name: 'MATHEMATIK', color: '#3b82f6' },
+          'E': { name: 'ENGLISCH', color: '#eab308' },
+          'F': { name: 'FRANZÖSISCH', color: '#22c55e' },
+          'RZG': { name: 'RZG', color: '#f97316' },
+          'NT': { name: 'NT', color: '#06b6d4' },
+          'MU': { name: 'MUSIK', color: '#a855f7' },
+          'BS': { name: 'SPORT', color: '#d97706' },
+          'MI': { name: 'MEDIEN', color: '#64748b' },
+          'WAH': { name: 'WAH', color: '#f43f5e' }
+      };
+
+      // Live-Sync: Schülerliste
+      onSnapshot(doc(db, "config", "classlist"), (doc) => {
+          if (doc.exists()) {
+              students = doc.data().names || [];
+              renderSelectors();
+              if (currentMode === 'teacher') renderTeacherDashboard();
+          }
+      });
+
+      // Live-Sync: Aufgaben
+      const tasksQuery = query(collection(db, "tasks"), orderBy("createdAt", "desc"));
+      onSnapshot(tasksQuery, (snapshot) => {
+          tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          renderTasks();
+          if (currentMode === 'teacher') renderTeacherDashboard();
+      });
+
+      // Funktionen
+      window.selectStudent = (val) => {
+          if (!val) return;
+          currentStudent = val;
+          localStorage.setItem('doeltschi_user', val);
+          updateUI();
+      };
+
+      window.setMode = (mode) => {
+          if (mode === 'teacher') {
+              const pw = prompt("Passwort für Lehrer-Modus:");
+              if (pw !== 'lehrer123') return;
+              currentMode = 'teacher';
+          } else {
+              currentMode = 'student';
+          }
+          updateUI();
+      };
+
+      window.addTask = async () => {
+          const desc = document.getElementById('task-desc').value;
+          const sub = document.getElementById('task-subject').value;
+          const who = document.getElementById('task-who').value;
+          if (!desc) return;
+          await addDoc(collection(db, "tasks"), {
+              task: desc,
+              subject: sub,
+              who: who,
+              done: [],
+              confirmed: false,
+              createdAt: Date.now()
+          });
+          document.getElementById('task-desc').value = '';
+      };
+
+      window.toggleTask = async (taskId, isDone) => {
+          if (!currentStudent) return;
+          const taskRef = doc(db, "tasks", taskId);
+          if (isDone) {
+              await updateDoc(taskRef, { done: arrayRemove(currentStudent) });
+          } else {
+              await updateDoc(taskRef, { done: arrayUnion(currentStudent) });
+          }
+      };
+
+      window.updateClassList = async () => {
+          const input = document.getElementById('class-input').value;
+          const names = input.split(/[,\n]/).map(n => n.trim()).filter(n => n.length > 0);
+          await setDoc(doc(db, "config", "classlist"), { names });
+          alert("Liste in Cloud gespeichert!");
+      };
+
+      function updateUI() {
+          document.querySelectorAll('.view-section').forEach(s => s.classList.add('hidden'));
+          if (currentMode === 'teacher') {
+              document.getElementById('teacher-view').classList.remove('hidden');
+              renderTeacherDashboard();
+          } else if (currentStudent) {
+              document.getElementById('planer-view').classList.remove('hidden');
+              document.getElementById('display-name').innerText = currentStudent;
+          } else {
+              document.getElementById('start-view').classList.remove('hidden');
+              generateQRCode();
+          }
+      }
+
+      function renderSelectors() {
+          const sel = document.getElementById('student-selector');
+          const tSel = document.getElementById('task-who');
+          if (!sel) return;
+          sel.innerHTML = '<option value="">Wähle deinen Namen...</option>';
+          tSel.innerHTML = '<option value="all">Ganze Klasse</option>';
+          students.forEach(s => {
+              sel.innerHTML += `<option value="${s}">${s}</option>`;
+              tSel.innerHTML += `<option value="${s}">${s}</option>`;
+          });
+      }
+
+      function renderTasks() {
+          const container = document.getElementById('task-container');
+          if (!container) return;
+          const myTasks = tasks.filter(t => t.who === 'all' || t.who === currentStudent);
+          if (myTasks.length === 0) {
+              container.innerHTML = '<div class="text-center py-20 text-slate-300 font-bold border-2 border-dashed border-slate-100 rounded-[32px]">Keine Aufgaben</div>';
+              return;
+          }
+          container.innerHTML = myTasks.map(t => {
+              const isDone = t.done && t.done.includes(currentStudent);
+              return `
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-4">
+                        <input type="checkbox" onchange="toggleTask('${t.id}', ${isDone})" ${isDone ? 'checked' : ''} class="w-6 h-6 rounded-lg text-blue-600 cursor-pointer">
+                        <div>
+                            <span class="text-[10px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjects[t.subject]?.color}">${t.subject}</span>
+                            <p class="font-bold ${isDone ? 'line-through text-slate-300' : ''}">${t.task}</p>
+                        </div>
+                    </div>
+                </div>
+              `;
+          }).join('');
+      }
+
+      function renderTeacherDashboard() {
+          const stats = document.getElementById('stats-body');
+          if (!stats) return;
+          stats.innerHTML = students.map(s => {
+              const studentTasks = tasks.filter(t => t.who === 'all' || t.who === s);
+              const doneCount = studentTasks.filter(t => t.done && t.done.includes(s)).length;
+              return `
+                <tr class="border-b border-slate-50">
+                    <td class="py-4 font-bold text-slate-700">${s}</td>
+                    <td class="py-4 text-xs font-bold text-slate-400">${doneCount}/${studentTasks.length} erledigt</td>
+                    <td class="py-4 text-right">
+                        <button class="text-blue-600 text-[10px] font-black uppercase">Details</button>
+                    </td>
+                </tr>
+              `;
+          }).join('');
+          document.getElementById('class-input').value = students.join('\n');
+      }
+
+      function generateQRCode() {
+          const container = document.getElementById('qrcode');
+          if (!container) return;
+          container.innerHTML = "";
+          new QRCode(container, { text: window.location.href, width: 200, height: 200 });
+      }
+
+      window.onload = () => {
+          const d = new Date();
+          const oneJan = new Date(d.getFullYear(),0,1);
+          const week = Math.ceil((((d - oneJan) / 86400000) + oneJan.getDay() + 1) / 7);
+          document.getElementById('week-label').innerText = `Woche ${week}`;
+          updateUI();
+      };
+    </script>
+
+    <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .dot-pattern { background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px; }
-        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
         @media print { .no-print { display: none !important; } }
-        .view-section { display: none; }
-        .view-section.active { display: block; }
-        .task-done { background-color: #f0fdf4 !important; border-color: #bbf7d0 !important; }
-        .task-done .task-title { text-decoration: line-through; color: #94a3b8; }
-        
-        @keyframes pulse-green {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-        }
-        .animate-pulse-green { animation: pulse-green 2s infinite; }
-
-        #qrcode-container img {
-            margin: 0 auto;
-        }
     </style>
 </head>
 <body class="dot-pattern min-h-screen text-slate-800 pb-20">
-<!-- Global Toast Notification -->
-<div class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 opacity-0 pointer-events-none" id="notification-toast">
-<div class="bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 font-bold">
-<span class="material-symbols-outlined">notifications_active</span>
-<span id="notification-text">Neue Aufgaben verfügbar!</span>
-</div>
-</div>
-<!-- Header -->
-<header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 no-print">
-<div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-<div class="flex items-center gap-3">
-<span class="text-2xl font-extrabold tracking-tight text-blue-600">doeltschi</span>
-<div class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-<span class="material-symbols-outlined text-sm">bolt</span> Lokal Aktiv
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 no-print">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <span class="text-2xl font-extrabold text-blue-600">doeltschi</span>
+            <div class="flex bg-slate-100 p-1 rounded-xl">
+                <button onclick="setMode('student')" class="px-4 py-2 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-sm">Schüler-Ansicht</button>
+                <button onclick="setMode('teacher')" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-600 hover:bg-slate-200">Lehrer-Modus</button>
             </div>
-</div>
-<div class="flex bg-slate-100 p-1 rounded-xl">
-<button class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-blue-600 text-white shadow-sm" id="btn-student" onclick="setMode('student')">
-<span class="material-symbols-outlined text-[18px]">person</span> Schüler-Ansicht
-            </button>
-<button class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:bg-slate-200" id="btn-teacher" onclick="setMode('teacher')">
-<span class="material-symbols-outlined text-[18px]">lock</span> Lehrer-Modus
-            </button>
-</div>
-</div>
-</header>
-<main class="max-w-6xl mx-auto px-6 mt-12">
-<!-- Start-View: Wer bist du? -->
-<div class="view-section active text-center" id="start-view">
-<h1 class="text-5xl font-black text-slate-900 mb-4">Wer bist du?</h1>
-<p class="text-slate-500 mb-10 text-lg">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
-<div class="max-w-md mx-auto mb-16">
-<select class="w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 text-xl font-semibold text-slate-700 shadow-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none appearance-none cursor-pointer" id="student-selector" onchange="selectStudent(this.value)">
-<option value="">Wähle deinen Namen...</option>
-<option value="all">Alle Schüler / Ganze Klasse</option>
-</select>
-</div>
-<!-- QR & App Section -->
-<div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-<div class="bg-white p-10 rounded-[32px] border-2 border-slate-100 shadow-xl flex flex-col items-center">
-<h3 class="text-2xl font-bold mb-2">QR-Code scannen</h3>
-<p class="text-slate-500 mb-8">Scanne diesen Code mit deinem Handy, um deine Aufgaben immer dabei zu haben.</p>
-<div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-inner mb-6 inline-block" id="qrcode-container"></div>
-<p class="text-xs text-slate-400">Automatische Synchronisation aktiv</p>
-</div>
-<div class="bg-white p-10 rounded-[32px] border-2 border-slate-100 shadow-xl text-left">
-<h3 class="text-2xl font-bold mb-6">Als App nutzen</h3>
-<div class="space-y-6">
-<div class="flex gap-4">
-<div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold flex-shrink-0">1</div>
-<div>
-<p class="font-bold">Link im Browser öffnen</p>
-<p class="text-sm text-slate-500">Benutze Safari (iPhone) oder Chrome (Android).</p>
-</div>
-</div>
-<div class="flex gap-4">
-<div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold flex-shrink-0">2</div>
-<div>
-<p class="font-bold">Teilen / Menü wählen</p>
-<p class="text-sm text-slate-500">Tippe auf das Teilen-Symbol oder die drei Punkte oben rechts.</p>
-</div>
-</div>
-<div class="flex gap-4">
-<div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold flex-shrink-0">3</div>
-<div>
-<p class="font-bold">Zum Home-Bildschirm</p>
-<p class="text-sm text-slate-500">Wähle "Zum Home-Bildschirm hinzufügen" aus.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Planer-View (Student) -->
-<div class="view-section" id="planer-view">
-<div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-12" id="student-header">
-<div>
-<div id="back-button-container">
-<button class="text-blue-600 hover:text-blue-700 font-bold flex items-center gap-2 mb-4 group transition-all" onclick="resetSelection()">
-<span class="material-symbols-outlined text-lg group-hover:-translate-x-1 transition-transform">arrow_back</span> Zurück zur Auswahl
-                    </button>
-</div>
-<div class="flex items-center gap-3">
-<h2 class="text-6xl font-black text-slate-900 tracking-tighter" id="current-user-display">Schüler</h2>
-<span class="hidden material-symbols-outlined text-blue-600 text-3xl" id="lock-badge" title="Sitzung gesperrt">lock</span>
-</div>
-<!-- Live Sync Indicator -->
-<div class="mt-4 flex items-center gap-3">
-<div class="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-50 w-fit px-3 py-1.5 rounded-full border border-slate-100 cursor-help" onclick="showSyncExplanation()" title="Klicke für mehr Informationen">
-<span class="w-2 h-2 bg-green-500 rounded-full animate-pulse-green"></span>
-                        Bereit für Update
-                    </div>
-<button class="text-xs font-bold text-blue-600 hover:text-blue-700 uppercase tracking-widest flex items-center gap-1" onclick="showSyncExplanation()">
-<span class="material-symbols-outlined text-sm">refresh</span> Daten manuell aktualisieren
-                    </button>
-</div>
-</div>
-<div class="text-right">
-<div class="text-5xl font-black text-slate-300 tracking-tighter leading-none mb-1" id="week-display">Woche --</div>
-<div class="text-slate-400 font-bold tracking-widest text-sm uppercase" id="date-range-display">--. --. ---- – --. --. ----</div>
-</div>
-</div>
-<div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm mb-8 flex flex-col md:flex-row items-center justify-between gap-4" id="parental-confirmation-box">
-<div class="flex items-center gap-4">
-<span class="material-symbols-outlined text-3xl text-blue-600">verified_user</span>
-<div>
-<h4 class="font-bold text-slate-800">Eltern-Bestätigung</h4>
-<p class="text-sm text-slate-500" id="parent-status-text">Bitte lasse deine Eltern die erledigten Aufgaben bestätigen.</p>
-</div>
-</div>
-<button class="bg-blue-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-700 transition-all flex items-center gap-2" id="btn-parent-confirm" onclick="confirmParental()">
-<span class="material-symbols-outlined">check</span> Bestätigen
-            </button>
-</div>
-<!-- Task Table Header -->
-<div class="grid grid-cols-12 px-6 mb-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
-<div class="col-span-8 md:col-span-9">Aufgabe</div>
-<div class="col-span-4 md:col-span-3 text-right">Status / Datum</div>
-</div>
-<div class="space-y-4 mb-16" id="task-container"></div>
-</div>
-<!-- Teacher-View -->
-<div class="view-section" id="teacher-view">
-<div class="flex justify-between items-start mb-8">
-<h2 class="text-4xl font-black text-slate-900">Lehrer-Dashboard</h2>
-<button class="bg-blue-600 text-white font-bold py-3 px-8 rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center gap-2" onclick="publishChanges()">
-<span class="material-symbols-outlined">send</span> Veröffentlichen
-            </button>
-</div>
-<div class="bg-white p-10 rounded-[32px] border-2 border-slate-100 shadow-xl mb-12">
-<h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
-<span class="material-symbols-outlined text-blue-600">query_stats</span> Klassenfortschritt
-            </h3>
-<div class="overflow-x-auto">
-<table class="w-full text-left">
-<thead>
-<tr class="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
-<th class="pb-4 px-2">Schüler</th>
-<th class="pb-4 px-2">Fortschritt</th>
-<th class="pb-4 px-2">Bestätigung</th>
-<th class="pb-4 px-2 text-right">Sperre / Aktion</th>
-</tr>
-</thead>
-<tbody id="teacher-progress-table">
-<!-- Progress rows will be injected here -->
-</tbody>
-</table>
-</div>
-<div class="mt-8 pt-8 border-t border-slate-100">
-<button class="bg-red-50 text-red-600 hover:bg-red-100 font-bold py-3 px-6 rounded-xl transition-all flex items-center gap-2" onclick="resetAllSessionLocks()">
-<span class="material-symbols-outlined">lock_open</span> Alle Sitzungssperren aufheben
-                </button>
-</div>
-</div>
-<div class="bg-white p-10 rounded-[32px] border-2 border-slate-100 shadow-xl mb-12">
-<h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
-<span class="material-symbols-outlined text-blue-600">group</span> Klassenliste verwalten
-            </h3>
-<div class="flex flex-col gap-4">
-<textarea class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-6 min-h-[120px] outline-none focus:border-blue-500 transition-all" id="class-input" placeholder="Namen durch Kommas oder Zeilenumbrüche trennen..."></textarea>
-<div class="flex flex-col md:flex-row gap-4">
-<button class="flex-1 bg-blue-600 text-white font-bold py-4 px-8 rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2" onclick="updateClassList()">
-<span class="material-symbols-outlined">save</span> Liste aktualisieren
-                    </button>
-<input accept=".txt" class="hidden" id="class-file-input" onchange="handleFileImport(event)" type="file"/>
-<button class="flex-1 bg-slate-100 text-slate-700 font-bold py-4 px-8 rounded-2xl hover:bg-slate-200 transition-all flex items-center justify-center gap-2" onclick="document.getElementById('class-file-input').click()">
-<span class="material-symbols-outlined">file_upload</span> Klassenliste (.txt) importieren
-                    </button>
-</div>
-</div>
-</div>
-<div class="grid md:grid-cols-2 gap-8 mb-8">
-<div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-lg">
-<h3 class="text-xl font-bold mb-4">Aufgabe zuteilen</h3>
-<div class="space-y-4">
-<input class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 outline-none focus:border-blue-500" id="task-desc" placeholder="Was ist zu tun?" type="text"/>
-<div class="grid grid-cols-2 gap-4">
-<select class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 outline-none" id="task-subject">
-<option value="DE">Deutsch</option>
-<option value="MA">Mathematik</option>
-<option value="E">Englisch</option>
-<option value="F">Französisch</option>
-<option value="RZG">RZG</option>
-<option value="NT">NT</option>
-<option value="MU">Musik</option>
-<option value="BS">Sport</option>
-<option value="MI">Medien</option>
-<option value="WAH">WAH</option>
-</select>
-<input class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 outline-none" id="task-date" type="date"/>
-</div>
-<div>
-<label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 px-1" for="task-recipient">Empfänger</label>
-<select class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 outline-none" id="task-recipient">
-<option value="all">Ganze Klasse</option>
-</select>
-</div>
-<button class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-all" onclick="addTask()">Hinzufügen</button>
-</div>
-</div>
-<div class="bg-white p-8 rounded-[32px] border border-slate-100 shadow-lg">
-<h3 class="text-xl font-bold mb-4">Zusammenfassung</h3>
-<div class="space-y-4" id="teacher-stats">
-<div class="flex justify-between items-center bg-slate-50 p-4 rounded-xl">
-<span class="text-slate-600 font-medium">Aktive Aufgaben:</span>
-<span class="text-blue-600 font-bold text-xl" id="stat-task-count">0</span>
-</div>
-<div class="flex justify-between items-center bg-slate-50 p-4 rounded-xl">
-<span class="text-slate-600 font-medium">Schüler:</span>
-<span class="text-slate-900 font-bold text-xl" id="stat-student-count">0</span>
-</div>
-</div>
-</div>
-</div>
-<div class="bg-white p-10 rounded-[32px] border-2 border-slate-100 shadow-xl">
-<h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
-<span class="material-symbols-outlined text-blue-600">assignment</span> Aufgaben verwalten
-            </h3>
-<div class="space-y-4" id="teacher-task-list">
-<!-- Tasks will be rendered here -->
-</div>
-</div>
-</div>
-<!-- Footer Legend -->
-<div class="mt-20 border-t border-slate-200 pt-12 no-print">
-<div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
-<p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Farblegende der Fächer</p>
-<div class="flex flex-wrap gap-3" id="legend-container"></div>
-</div>
-</div>
-</main>
-<footer class="max-w-6xl mx-auto px-6 py-12 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-slate-200 mt-20 no-print">
-<p class="text-slate-400 text-sm font-medium">© 2024 DOELTSCHI AUFGABENPLANER</p>
-<div class="flex gap-8">
-<a class="text-slate-400 hover:text-blue-600 text-sm font-bold uppercase tracking-wider transition-colors" href="#">Datenschutz</a>
-<a class="text-slate-400 hover:text-blue-600 text-sm font-bold uppercase tracking-wider transition-colors" href="#">Impressum</a>
-<a class="text-slate-400 hover:text-blue-600 text-sm font-bold uppercase tracking-wider transition-colors" href="#">Hilfe</a>
-</div>
-</footer>
-<script>
-    const STORAGE_KEY = 'doeltschi-master-data';
-    const COMPLETION_KEY = 'doeltschi-completion-data';
-    const PARENT_KEY = 'doeltschi-parent-confirm';
-    const LOCK_KEY = 'doeltschi-session-lock';
-    const SYNC_STATE_KEY = 'doeltschi-sync-version';
-    
-    let students = ['Lukas Müller', 'Sophie Fischer', 'Emma Weber', 'Maximilian Schmidt'];
-    let tasks = [];
-    let completionStatus = {}; 
-    let parentConfirmations = {}; 
-    let sessionLock = null; 
-    let currentMode = 'student';
-    let selectedStudent = null;
-    let lastKnownSyncVersion = 0;
+        </div>
+    </header>
 
-    const subjects = {
-        'DE': { name: 'DEUTSCH', color: '#ef4444' },
-        'MA': { name: 'MATHEMATIK', color: '#3b82f6' },
-        'E': { name: 'ENGLISCH', color: '#eab308' },
-        'F': { name: 'FRANZÖSISCH', color: '#22c55e' },
-        'RZG': { name: 'RZG', color: '#f97316' },
-        'NT': { name: 'NT', color: '#06b6d4' },
-        'MU': { name: 'MUSIK', color: '#a855f7' },
-        'BS': { name: 'SPORT', color: '#d97706' },
-        'MI': { name: 'MEDIEN', color: '#64748b' },
-        'WAH': { name: 'WAH', color: '#f43f5e' }
-    };
-
-    function init() {
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        if (urlParams.has('data')) {
-            try {
-                // Ensure correct decoding of base64 and UTF-8
-                const binaryString = atob(decodeURIComponent(urlParams.get('data')));
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
-                const decodedData = JSON.parse(new TextDecoder().decode(bytes));
-                
-                if (decodedData.students) students = decodedData.students;
-                if (decodedData.tasks) tasks = decodedData.tasks;
-                
-                localStorage.setItem(STORAGE_KEY, JSON.stringify({ 
-                    tasks: tasks, 
-                    students: students 
-                }));
-                
-                // Clean URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-            } catch(e) { 
-                console.error("Sync failed: Data format incorrect or corrupted.", e); 
-            }
-        } else {
-            loadData();
-        }
-
-        updateWeekInfo();
-        renderLegend();
-        renderStudentOptions();
-        renderRecipientOptions();
-        
-        const savedLock = localStorage.getItem(LOCK_KEY);
-        if (savedLock) {
-            sessionLock = savedLock;
-            selectedStudent = savedLock;
-        }
-
-        updateUI();
-        setInterval(checkLiveSync, 30000);
-        
-        const savedSync = localStorage.getItem(SYNC_STATE_KEY);
-        lastKnownSyncVersion = savedSync ? parseInt(savedSync) : 0;
-    }
-
-    function showNotification(msg) {
-        const toast = document.getElementById('notification-toast');
-        const text = document.getElementById('notification-text');
-        text.innerText = msg;
-        toast.style.opacity = '1';
-        toast.style.transform = 'translate(-50%, 20px)';
-        
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translate(-50%, 0)';
-        }, 5000);
-    }
-
-    function showSyncExplanation() {
-        alert("Da aktuell keine Datenbank verbunden ist, müssen neue Aufgaben über den aktuellen QR-Code des Lehrers empfangen werden. Bitte scanne den Code auf dem Lehrer-Tablet erneut, um deine Liste zu aktualisieren.");
-    }
-
-    function checkLiveSync() {
-        const remoteSyncVersion = parseInt(localStorage.getItem(SYNC_STATE_KEY) || "0");
-        if (remoteSyncVersion > lastKnownSyncVersion) {
-            loadData();
-            lastKnownSyncVersion = remoteSyncVersion;
-            if (currentMode === 'student') {
-                showNotification('Neue Aufgaben verfügbar! Die Liste wurde aktualisiert.');
-            }
-            updateUI();
-        }
-    }
-
-    function publishChanges() {
-        const newVersion = Date.now();
-        localStorage.setItem(SYNC_STATE_KEY, newVersion.toString());
-        lastKnownSyncVersion = newVersion;
-        saveData();
-        alert("Änderungen veröffentlicht! Alle Schüler-Tablets werden in Kürze aktualisiert. Falls nicht, bitte den QR-Code auf der Startseite scannen.");
-    }
-
-    function loadData() {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            const data = JSON.parse(saved);
-            tasks = data.tasks || [];
-            if (data.students) students = data.students;
-        }
-
-        const savedCompletions = localStorage.getItem(COMPLETION_KEY);
-        if (savedCompletions) {
-            completionStatus = JSON.parse(savedCompletions);
-        }
-
-        const savedParents = localStorage.getItem(PARENT_KEY);
-        if (savedParents) {
-            parentConfirmations = JSON.parse(savedParents);
-        }
-
-        const classInput = document.getElementById('class-input');
-        if (classInput) classInput.value = students.join('\n');
-        
-        renderTasks();
-        renderTeacherTasks();
-    }
-
-    function saveData() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ tasks, students }));
-        localStorage.setItem(COMPLETION_KEY, JSON.stringify(completionStatus));
-        localStorage.setItem(PARENT_KEY, JSON.stringify(parentConfirmations));
-        if (sessionLock) {
-            localStorage.setItem(LOCK_KEY, sessionLock);
-        } else {
-            localStorage.removeItem(LOCK_KEY);
-        }
-        generateQRCode();
-        renderTasks();
-        renderTeacherTasks();
-        renderTeacherProgress();
-        updateStats();
-    }
-
-    function updateStats() {
-        const statTask = document.getElementById('stat-task-count');
-        const statStudent = document.getElementById('stat-student-count');
-        if(statTask) statTask.innerText = tasks.length;
-        if(statStudent) statStudent.innerText = students.length;
-    }
-
-    function setMode(mode) {
-        if (mode === 'teacher') {
-            const pw = prompt("Passwort für Lehrer-Modus:");
-            if (pw !== 'lehrer123') {
-                alert("Falsches Passwort.");
-                return;
-            }
-            currentMode = 'teacher';
-            selectedStudent = null;
-        } else {
-            currentMode = 'student';
-            selectedStudent = sessionLock ? sessionLock : null;
-        }
-        updateUI();
-    }
-
-    function updateUI() {
-        const btnS = document.getElementById('btn-student');
-        const btnT = document.getElementById('btn-teacher');
-        
-        if (btnS) btnS.className = currentMode === 'student' ? 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-blue-600 text-white shadow-sm' : 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:bg-slate-200';
-        if (btnT) btnT.className = currentMode === 'teacher' ? 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-blue-600 text-white shadow-sm' : 'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all text-slate-600 hover:bg-slate-200';
-
-        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-        
-        if (currentMode === 'teacher') {
-            document.getElementById('teacher-view').classList.add('active');
-            renderTeacherTasks();
-            renderTeacherProgress();
-            updateStats();
-        } else if (selectedStudent) {
-            document.getElementById('planer-view').classList.add('active');
-            document.getElementById('current-user-display').innerText = selectedStudent === 'all' ? 'Ganze Klasse' : selectedStudent;
-            
-            const lockBadge = document.getElementById('lock-badge');
-            const backBtnContainer = document.getElementById('back-button-container');
-            
-            if (sessionLock) {
-                lockBadge.classList.remove('hidden');
-                backBtnContainer.classList.add('hidden');
-            } else {
-                lockBadge.classList.add('hidden');
-                backBtnContainer.classList.remove('hidden');
-            }
-            
-            updateParentalUI();
-            renderTasks();
-        } else {
-            document.getElementById('start-view').classList.add('active');
-            renderStudentOptions();
-            generateQRCode();
-        }
-    }
-
-    function updateParentalUI() {
-        const box = document.getElementById('parental-confirmation-box');
-        const text = document.getElementById('parent-status-text');
-        const btn = document.getElementById('btn-parent-confirm');
-        
-        if (!selectedStudent || selectedStudent === 'all') {
-            box.classList.add('hidden');
-            return;
-        }
-        box.classList.remove('hidden');
-
-        if (parentConfirmations[selectedStudent]) {
-            text.innerHTML = `<span class="text-green-600 font-bold">Bestätigt am ${parentConfirmations[selectedStudent].date}</span>`;
-            btn.classList.add('opacity-50', 'pointer-events-none');
-            btn.innerText = "Bestätigt";
-        } else {
-            text.innerText = "Bitte lasse deine Eltern die erledigten Aufgaben bestätigen.";
-            btn.classList.remove('opacity-50', 'pointer-events-none');
-            btn.innerText = "Bestätigen";
-        }
-    }
-
-    function confirmParental() {
-        if (!selectedStudent || selectedStudent === 'all') return;
-        if (confirm(`Bestätige als Elternteil, dass ${selectedStudent} die Aufgaben erledigt hat?`)) {
-            const now = new Date();
-            const date = now.toLocaleDateString('de-CH'); 
-            parentConfirmations[selectedStudent] = { date };
-            saveData();
-            updateParentalUI();
-        }
-    }
-
-    function resetParental(studentName) {
-        if (confirm(`Bestätigung für ${studentName} wirklich zurücksetzen?`)) {
-            delete parentConfirmations[studentName];
-            saveData();
-        }
-    }
-
-    function selectStudent(val) {
-        if (!val) return;
-        if (val !== 'all') {
-            const confirmed = confirm(`Identität schützen? Wenn du "${val}" auswählst, wird diese Sitzung für dich reserviert. Nur eine Lehrperson kann dies rückgängig machen.`);
-            if (!confirmed) {
-                document.getElementById('student-selector').value = "";
-                return;
-            }
-            sessionLock = val;
-            localStorage.setItem(LOCK_KEY, val);
-        }
-        selectedStudent = val;
-        updateUI();
-    }
-
-    function resetSelection() {
-        if (sessionLock) {
-            alert("Diese Sitzung ist gesperrt. Bitte wende dich an eine Lehrperson.");
-            return;
-        }
-        selectedStudent = null;
-        const selector = document.getElementById('student-selector');
-        if (selector) selector.value = "";
-        updateUI();
-    }
-
-    function resetSessionLock(studentName) {
-        if (confirm(`Sitzungssperre für ${studentName} wirklich aufheben?`)) {
-            sessionLock = null;
-            localStorage.removeItem(LOCK_KEY);
-            saveData();
-            updateUI();
-        }
-    }
-
-    function resetAllSessionLocks() {
-        if (confirm("Möchten Sie wirklich ALLE Sitzungssperren auf diesem Gerät aufheben?")) {
-            sessionLock = null;
-            localStorage.removeItem(LOCK_KEY);
-            saveData();
-            alert("Alle Sperren aufgehoben.");
-        }
-    }
-
-    function updateClassList() {
-        const input = document.getElementById('class-input').value;
-        if (!input.trim()) return;
-        const newNames = input.split(/[,\n]/).map(n => n.trim()).filter(n => n.length > 0);
-        if (newNames.length > 0) {
-            students = newNames;
-            renderStudentOptions();
-            renderRecipientOptions();
-            saveData();
-            alert("Klassenliste aktualisiert!");
-        }
-    }
-
-    function handleFileImport(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const content = e.target.result;
-            const newNames = content.split(/[,\n\r]/).map(n => n.trim()).filter(n => n.length > 0);
-            if (newNames.length > 0) {
-                students = newNames;
-                document.getElementById('class-input').value = students.join('\n');
-                renderStudentOptions();
-                renderRecipientOptions();
-                saveData();
-                alert("Klassenliste erfolgreich importiert!");
-            }
-        };
-        reader.readAsText(file);
-    }
-
-    function generateQRCode() {
-        const container = document.getElementById('qrcode-container');
-        if (!container) return;
-        container.innerHTML = "";
-        
-        const syncPayload = {
-            students: students,
-            tasks: tasks
-        };
-        
-        // Proper UTF-8 base64 encoding for the payload
-        const jsonStr = JSON.stringify(syncPayload);
-        const encoder = new TextEncoder();
-        const bytes = encoder.encode(jsonStr);
-        let binaryString = "";
-        for (let i = 0; i < bytes.length; i++) {
-            binaryString += String.fromCharCode(bytes[i]);
-        }
-        const dataStr = btoa(binaryString);
-        
-        const syncUrl = `${window.location.origin}${window.location.pathname}?data=${encodeURIComponent(dataStr)}`;
-        
-        // Increase size to 256 for better scannability with larger payloads
-        new QRCode(container, { 
-            text: syncUrl, 
-            width: 256, 
-            height: 256, 
-            colorDark : "#0f172a", 
-            colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.M
-        });
-    }
-
-    function updateWeekInfo() {
-        const now = new Date();
-        const startOfYear = new Date(now.getFullYear(), 0, 1);
-        const pastDaysOfYear = (now - startOfYear) / 86400000;
-        const weekNum = Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
-        const curr = new Date();
-        const monday = new Date(curr.setDate(curr.getDate() - curr.getDay() + 1)).toLocaleDateString('de-CH');
-        const friday = new Date(curr.setDate(curr.getDate() - curr.getDay() + 5)).toLocaleDateString('de-CH');
-        const weekDisplay = document.getElementById('week-display');
-        const dateRangeDisplay = document.getElementById('date-range-display');
-        if (weekDisplay) weekDisplay.innerText = `Woche ${weekNum}`;
-        if (dateRangeDisplay) dateRangeDisplay.innerText = `${monday} – ${friday}`;
-    }
-
-    function renderLegend() {
-        const container = document.getElementById('legend-container');
-        if (!container) return;
-        container.innerHTML = Object.entries(subjects).map(([key, data]) => `
-            <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
-                <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${data.color}"></span>
-                <span class="text-[10px] font-bold text-slate-600 tracking-wider">${data.name}</span>
+    <main class="max-w-4xl mx-auto px-6 mt-12">
+        <!-- Start View -->
+        <div id="start-view" class="view-section text-center">
+            <h1 class="text-5xl font-black mb-4">Wer bist du?</h1>
+            <select id="student-selector" onchange="selectStudent(this.value)" class="max-w-sm w-full bg-white border-2 border-slate-200 rounded-2xl px-6 py-4 text-xl font-bold mb-12 shadow-sm focus:border-blue-500 outline-none cursor-pointer"></select>
+            <div class="bg-white p-12 rounded-[48px] border-2 border-slate-100 shadow-2xl flex flex-col items-center max-w-sm mx-auto">
+                <h3 class="text-2xl font-bold mb-4">QR-Code scannen</h3>
+                <div id="qrcode" class="bg-white p-4 rounded-2xl mb-4"></div>
+                <p class="text-xs text-slate-400 font-bold uppercase">Einmal scannen, immer aktuell.</p>
             </div>
-        `).join('');
-    }
+        </div>
 
-    function renderStudentOptions() {
-        const selector = document.getElementById('student-selector');
-        if(!selector) return;
-        selector.innerHTML = '<option value="">Wähle deinen Namen...</option><option value="all">Alle Schüler / Ganze Klasse</option>';
-        students.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s; opt.textContent = s;
-            selector.appendChild(opt);
-        });
-    }
+        <!-- Planer View -->
+        <div id="planer-view" class="view-section hidden">
+            <div class="flex justify-between items-end mb-12">
+                <h2 id="display-name" class="text-5xl font-black text-slate-900">Name</h2>
+                <div id="week-label" class="text-3xl font-black text-slate-200">Woche --</div>
+            </div>
+            <div id="task-container"></div>
+        </div>
 
-    function renderRecipientOptions() {
-        const recipientSelector = document.getElementById('task-recipient');
-        if(!recipientSelector) return;
-        recipientSelector.innerHTML = '<option value="all">Ganze Klasse</option>';
-        students.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s; opt.textContent = s;
-            recipientSelector.appendChild(opt);
-        });
-    }
-
-    function toggleTask(taskId) {
-        if (!selectedStudent) return;
-        if (!completionStatus[selectedStudent]) {
-            completionStatus[selectedStudent] = {};
-        }
-        completionStatus[selectedStudent][taskId] = !completionStatus[selectedStudent][taskId];
-        saveData();
-    }
-
-    function renderTasks() {
-        const container = document.getElementById('task-container');
-        if (!container) return;
-        
-        const visibleTasks = tasks.filter(t => {
-            if (selectedStudent === 'all') return true;
-            return t.recipient === 'all' || t.recipient === selectedStudent;
-        });
-
-        if (visibleTasks.length === 0) {
-            container.innerHTML = '<div class="text-center py-20 text-slate-400 font-medium bg-white rounded-[32px] border-2 border-dashed border-slate-100">Keine Aufgaben vorhanden.</div>';
-            return;
-        }
-        
-        container.innerHTML = visibleTasks.map(t => {
-            const taskId = t.id || `${t.desc}-${t.date}-${t.subject}`;
-            const isDone = completionStatus[selectedStudent] && completionStatus[selectedStudent][taskId];
-            const statusClass = isDone ? 'task-done' : 'bg-white';
-            const actionText = isDone ? 'Erledigt' : 'Offen';
-            const actionIcon = isDone ? 'check_circle' : 'radio_button_unchecked';
-            const iconColor = isDone ? 'text-green-500' : 'text-slate-300';
-
-            return `
-                <div class="${statusClass} grid grid-cols-12 items-center p-6 rounded-2xl shadow-sm border border-slate-100 hover:border-blue-200 transition-all cursor-pointer group" onclick="toggleTask('${taskId}')">
-                    <div class="col-span-8 md:col-span-9 flex items-center gap-4">
-                        <span class="w-3 h-3 rounded-full shadow-sm flex-shrink-0" style="background-color: ${subjects[t.subject]?.color || '#ccc'}"></span>
-                        <div>
-                            <p class="font-bold text-slate-800 task-title transition-all">${t.desc}</p>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${subjects[t.subject]?.name || 'Allgemein'}</span>
-                                ${t.recipient !== 'all' ? `<span class="text-[9px] font-bold bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full uppercase">Persönlich: ${t.recipient}</span>` : ''}
-                            </div>
-                        </div>
+        <!-- Teacher View -->
+        <div id="teacher-view" class="view-section hidden">
+            <h2 class="text-3xl font-black mb-8">Lehrer-Dashboard</h2>
+            <div class="grid gap-8">
+                <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-lg">
+                    <h3 class="font-bold mb-4 text-blue-600">Aufgabe zuteilen</h3>
+                    <input type="text" id="task-desc" placeholder="Aufgabe..." class="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 mb-3">
+                    <div class="flex gap-2 mb-3">
+                        <select id="task-who" class="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2"></select>
+                        <select id="task-subject" class="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2">
+                            <option value="DE">Deutsch</option><option value="MA">Mathe</option><option value="E">Englisch</option>
+                            <option value="F">Französisch</option><option value="RZG">RZG</option><option value="NT">NT</option>
+                            <option value="MU">Musik</option><option value="BS">Sport</option><option value="MI">Medien</option>
+                            <option value="WAH">WAH</option>
+                        </select>
                     </div>
-                    <div class="col-span-4 md:col-span-3 flex flex-col items-end gap-1">
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-bold ${isDone ? 'text-green-600' : 'text-slate-400'} uppercase tracking-tight">${actionText}</span>
-                            <span class="material-symbols-outlined ${iconColor} transition-colors">${actionIcon}</span>
-                        </div>
-                        <div class="text-slate-400 text-[10px] font-bold whitespace-nowrap">${t.date}</div>
-                    </div>
+                    <button onclick="addTask()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-2xl">Hinzufügen</button>
                 </div>
-            `;
-        }).join('');
-    }
-
-    function renderTeacherTasks() {
-        const container = document.getElementById('teacher-task-list');
-        if (!container) return;
-        if (tasks.length === 0) {
-            container.innerHTML = '<div class="text-center py-10 text-slate-400 italic">Noch keine Aufgaben erstellt.</div>';
-            return;
-        }
-        container.innerHTML = tasks.map((t, index) => `
-            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center group transition-all hover:bg-white hover:shadow-md">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-sm" style="background-color: ${subjects[t.subject]?.color || '#ccc'}">
-                        ${t.subject}
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">${t.desc}</p>
-                        <div class="flex items-center gap-2">
-                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">${t.date}</p>
-                            <span class="text-[10px] font-bold ${t.recipient === 'all' ? 'text-blue-500' : 'text-purple-500'} bg-white px-2 py-0.5 rounded-full border border-slate-100 uppercase">
-                                ${t.recipient === 'all' ? 'Alle' : t.recipient}
-                            </span>
-                        </div>
-                    </div>
+                
+                <div class="bg-white p-8 rounded-[40px] border border-slate-100 shadow-lg">
+                    <h3 class="font-bold mb-4">Klassenliste verwalten</h3>
+                    <textarea id="class-input" class="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-3" rows="3"></textarea>
+                    <button onclick="updateClassList()" class="w-full bg-slate-800 text-white font-bold py-3 rounded-2xl">Cloud-Liste aktualisieren</button>
                 </div>
-                <button onclick="deleteTask(${index})" class="p-2 text-slate-300 hover:text-red-600 transition-colors">
-                    <span class="material-symbols-outlined">delete</span>
-                </button>
+
+                <div class="bg-white p-8 rounded-[40px] shadow-lg">
+                    <h3 class="font-bold mb-4">Fortschritt</h3>
+                    <table class="w-full"><tbody id="stats-body"></tbody></table>
+                </div>
             </div>
-        `).join('');
-    }
-
-    function renderTeacherProgress() {
-        const container = document.getElementById('teacher-progress-table');
-        if (!container) return;
-
-        container.innerHTML = students.map(s => {
-            const studentTasks = tasks.filter(t => t.recipient === 'all' || t.recipient === s);
-            const total = studentTasks.length;
-            const completed = studentTasks.filter(t => {
-                const taskId = t.id || `${t.desc}-${t.date}-${t.subject}`;
-                return completionStatus[s] && completionStatus[s][taskId];
-            }).length;
-            
-            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-            const parentStatus = parentConfirmations[s];
-            const isLocked = sessionLock === s;
-
-            return `
-                <tr class="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                    <td class="py-4 px-2 font-bold text-slate-800">${s}</td>
-                    <td class="py-4 px-2">
-                        <div class="w-full bg-slate-200 rounded-full h-2.5 max-w-[120px]">
-                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${percentage}%"></div>
-                        </div>
-                        <span class="text-[10px] font-bold text-slate-500 uppercase">${completed}/${total} Erledigt</span>
-                    </td>
-                    <td class="py-4 px-2">
-                        ${parentStatus 
-                            ? `<span class="flex items-center gap-1 text-green-600 font-bold text-xs"><span class="material-symbols-outlined text-sm">verified</span> OK (${parentStatus.date})</span>` 
-                            : `<span class="text-slate-300 font-bold text-xs uppercase">Ausstehend</span>`
-                        }
-                    </td>
-                    <td class="py-4 px-2 text-right">
-                        <div class="flex flex-col gap-2 items-end">
-                            ${isLocked ? `
-                                <button onclick="resetSessionLock('${s}')" class="text-xs font-bold text-blue-500 hover:text-blue-700 uppercase tracking-wider flex items-center justify-end gap-1">
-                                    <span class="material-symbols-outlined text-sm">lock_open</span> Sperre aufheben
-                                </button>
-                            ` : ''}
-                            ${parentStatus ? `
-                                <button onclick="resetParental('${s}')" class="text-xs font-bold text-red-500 hover:text-red-700 uppercase tracking-wider flex items-center justify-end gap-1">
-                                    <span class="material-symbols-outlined text-sm">refresh</span> Unterschrift löschen
-                                </button>
-                            ` : ''}
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-
-    function addTask() {
-        const descInput = document.getElementById('task-desc');
-        const subjectInput = document.getElementById('task-subject');
-        const dateInput = document.getElementById('task-date');
-        const recipientInput = document.getElementById('task-recipient');
-        
-        const desc = descInput.value;
-        const subject = subjectInput.value;
-        const dateVal = dateInput.value;
-        const recipient = recipientInput.value;
-        
-        if (!desc || !dateVal || !recipient) {
-            alert("Bitte fülle alle Felder aus.");
-            return;
-        }
-        
-        const date = new Date(dateVal).toLocaleDateString('de-CH');
-        const id = 'task-' + Date.now();
-        tasks.push({ id, desc, subject, date, recipient });
-        saveData();
-        descInput.value = "";
-        dateInput.value = "";
-        recipientInput.value = "all";
-    }
-
-    function deleteTask(index) {
-        if (confirm("Möchtest du diese Aufgabe wirklich löschen?")) {
-            tasks.splice(index, 1);
-            saveData();
-        }
-    }
-
-    window.onload = init;
-</script>
-</body></html>
+        </div>
+    </main>
+</body>
+</html>
