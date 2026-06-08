@@ -156,6 +156,7 @@
 </main>
 <script>
     // --- FIREBASE CONFIG ---
+    // Ensure these are replaced with your actual project config
     const firebaseConfig = {
         apiKey: "DEIN_API_KEY",
         authDomain: "DEIN_PROJEKT.firebaseapp.com",
@@ -173,6 +174,7 @@
     let completions = {};
     let confirmations = {};
     let currentStudent = null;
+    let currentMode = 'student'; // 'student' or 'teacher'
     const subjects = { 'DE':'#ef4444', 'MA':'#3b82f6', 'E':'#eab308', 'F':'#22c55e', 'RZG':'#f97316', 'NT':'#06b6d4' };
 
     function init() {
@@ -182,8 +184,8 @@
         const session = localStorage.getItem('doeltschi_session');
         if (session) {
             currentStudent = session;
-            updateUI();
         }
+        updateUI();
         new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 140, height: 140 });
     }
 
@@ -233,11 +235,15 @@
 
     function setMode(mode) {
         if (mode === 'teacher') {
-            const pw = prompt("Passwort:");
-            if (pw !== 'doeltschi2024') return;
-            document.body.dataset.mode = 'teacher';
+            const pw = prompt("Bitte Passwort eingeben:");
+            if (pw === 'lehrer123') {
+                currentMode = 'teacher';
+            } else {
+                alert("Falsches Passwort.");
+                return;
+            }
         } else {
-            document.body.dataset.mode = 'student';
+            currentMode = 'student';
         }
         updateUI();
     }
@@ -250,22 +256,40 @@
     }
 
     function resetSelection() {
-        if (confirmations[currentStudent]) return alert("Sitzung gesperrt.");
+        if (confirmations[currentStudent]) {
+            alert("Sitzung gesperrt. Bitte Lehrer kontaktieren, um zu entsperren.");
+            return;
+        }
         currentStudent = null;
         localStorage.removeItem('doeltschi_session');
-        document.getElementById('student-selector').value = "";
+        const selector = document.getElementById('student-selector');
+        if(selector) selector.value = "";
         updateUI();
     }
 
     function updateUI() {
-        const isTeacher = document.body.dataset.mode === 'teacher';
+        const btnStudent = document.getElementById('btn-student');
+        const btnTeacher = document.getElementById('btn-teacher');
+
+        // Toggle Header Buttons Style
+        if (currentMode === 'teacher') {
+            btnTeacher.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-sm";
+            btnStudent.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-600 hover:bg-slate-200";
+        } else {
+            btnStudent.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-sm";
+            btnTeacher.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-600 hover:bg-slate-200";
+        }
+
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-        if (isTeacher) {
+        
+        if (currentMode === 'teacher') {
             document.getElementById('teacher-view').classList.add('active');
         } else if (currentStudent) {
             document.getElementById('planer-view').classList.add('active');
             document.getElementById('display-name').innerText = currentStudent;
-            document.getElementById('back-btn').style.display = confirmations[currentStudent] ? 'none' : 'flex';
+            const backBtn = document.getElementById('back-btn');
+            if (backBtn) backBtn.style.display = confirmations[currentStudent] ? 'none' : 'flex';
+            renderTasks();
         } else {
             document.getElementById('start-view').classList.add('active');
         }
@@ -277,7 +301,7 @@
         if (!sel || !tSel) return;
         sel.innerHTML = '<option value="">Wähle deinen Namen...</option>';
         tSel.innerHTML = '<option value="all">Ganze Klasse</option>';
-        students.sort().forEach(s => {
+        [...students].sort().forEach(s => {
             sel.innerHTML += `<option value="${s}">${s}</option>`;
             tSel.innerHTML += `<option value="${s}">${s}</option>`;
         });
@@ -299,7 +323,7 @@
                         <div class="flex items-center gap-4">
                             <input type="checkbox" ${locked ? 'disabled' : ''} onchange="toggleTask('${t.id}')" ${isDone ? 'checked' : ''} class="w-6 h-6 rounded-lg border-2 border-slate-200 text-blue-600 focus:ring-0 cursor-pointer">
                             <div>
-                                <span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjects[t.sub]}">${t.sub}</span>
+                                <span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjects[t.sub] || '#cbd5e1'}">${t.sub}</span>
                                 <p class="font-bold text-slate-700">${t.task}</p>
                             </div>
                         </div>
@@ -307,9 +331,14 @@
                 `;
             }).join('');
         }
-        document.getElementById('parent-form').classList.toggle('hidden', !!locked);
-        document.getElementById('parent-info').classList.toggle('hidden', !locked);
-        if (locked) document.getElementById('confirm-date').innerText = locked.date;
+        
+        const parentForm = document.getElementById('parent-form');
+        const parentInfo = document.getElementById('parent-info');
+        if(parentForm) parentForm.classList.toggle('hidden', !!locked);
+        if(parentInfo) parentInfo.classList.toggle('hidden', !locked);
+        
+        const confirmDateEl = document.getElementById('confirm-date');
+        if (locked && confirmDateEl) confirmDateEl.innerText = locked.date;
     }
 
     function renderTeacherTasksTable() {
@@ -324,7 +353,7 @@
             return `
                 <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-all">
                     <td class="py-4 font-bold text-slate-600 text-xs">${t.who === 'all' ? 'Alle' : t.who}</td>
-                    <td class="py-4"><span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjects[t.sub]}">${t.sub}</span></td>
+                    <td class="py-4"><span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjects[t.sub] || '#cbd5e1'}">${t.sub}</span></td>
                     <td class="py-4 font-bold text-slate-700 text-xs">${t.task}</td>
                     <td class="py-4 text-slate-400 text-[10px] font-bold">${date}</td>
                     <td class="py-4 text-right">
@@ -338,28 +367,34 @@
     }
 
     function toggleTask(taskId) {
+        if (confirmations[currentStudent]) return;
         const currentStatus = completions[currentStudent]?.[taskId] || false;
         db.collection('completions').doc(currentStudent).set({ [taskId]: !currentStatus }, { merge: true });
     }
 
     function confirmParent() {
-        const name = document.getElementById('parent-name').value;
-        if (!name) return alert("Bitte Name eingeben.");
-        db.collection('confirmations').doc(currentStudent).set({ date: new Date().toLocaleDateString('de-CH'), name: name });
+        const nameInput = document.getElementById('parent-name');
+        const name = nameInput ? nameInput.value : '';
+        if (!name) return alert("Bitte Name der Eltern eingeben.");
+        db.collection('confirmations').doc(currentStudent).set({ 
+            date: new Date().toLocaleDateString('de-CH'), 
+            name: name 
+        });
     }
 
     function assignTask() {
-        const task = document.getElementById('t-task').value;
+        const taskInput = document.getElementById('t-task');
+        const task = taskInput ? taskInput.value : '';
         const who = document.getElementById('t-who').value;
         const sub = document.getElementById('t-sub').value;
-        if (!task) return;
+        if (!task) return alert("Aufgabe darf nicht leer sein.");
         db.collection('tasks').add({ 
             task, 
             who, 
             sub, 
             createdAt: firebase.firestore.FieldValue.serverTimestamp() 
         });
-        document.getElementById('t-task').value = '';
+        if(taskInput) taskInput.value = '';
     }
 
     function deleteTask(id) {
@@ -370,21 +405,13 @@
 
     function deleteStudent(studentName) {
         if (confirm(`Möchtest du ${studentName} wirklich aus der Klassenliste löschen? Alle zugehörigen Erledigungen und Bestätigungen werden ebenfalls entfernt.`)) {
-            // Update students array
             const updatedStudents = students.filter(s => s !== studentName);
-            
-            // 1. Update classroom settings in Firestore
             db.collection('settings').doc('classroom').set({ students: updatedStudents }).then(() => {
-                // 2. Clean up student-specific data
                 db.collection('completions').doc(studentName).delete();
                 db.collection('confirmations').doc(studentName).delete();
-                
-                // Note: We don't delete general 'tasks' assigned to 'all', but we could 
-                // delete tasks specifically assigned to only this student if desired.
                 db.collection('tasks').where('who', '==', studentName).get().then(snap => {
                     snap.forEach(doc => doc.ref.delete());
                 });
-
                 alert(`${studentName} wurde erfolgreich gelöscht.`);
             }).catch(err => {
                 console.error("Fehler beim Löschen:", err);
@@ -411,13 +438,13 @@
             }
         };
         reader.readAsText(file);
-        event.target.value = ''; // Reset for next selection
+        event.target.value = ''; 
     }
 
     function renderStats() {
         const body = document.getElementById('stats-body');
         if (!body) return;
-        body.innerHTML = students.sort().map(s => {
+        body.innerHTML = [...students].sort().map(s => {
             const myTasks = tasks.filter(t => t.who === 'all' || t.who === s);
             const total = myTasks.length;
             const done = myTasks.filter(t => completions[s]?.[t.id]).length;
@@ -425,7 +452,7 @@
             return `
                 <tr class="border-b border-slate-50 hover:bg-slate-50/30 transition-all">
                     <td class="py-4 font-bold text-slate-700">${s}</td>
-                    <td class="py-4 text-xs font-bold ${done === total && total > 0 ? 'text-green-500' : 'text-slate-400'}">${done}/${total} erledigt</td>
+                    <td class="py-4 text-xs font-bold ${total > 0 && done === total ? 'text-green-500' : 'text-slate-400'}">${done}/${total} erledigt</td>
                     <td class="py-4 text-[10px] font-bold text-slate-400">${conf ? conf.date : 'Offen'}</td>
                     <td class="py-4 text-right flex items-center justify-end gap-3">
                         <button onclick="unlockSession('${s}')" class="text-blue-600 text-[10px] font-black uppercase hover:underline">Entsperren</button>
@@ -447,7 +474,8 @@
         const d = new Date();
         const oneJan = new Date(d.getFullYear(),0,1);
         const week = Math.ceil((((d - oneJan) / 86400000) + oneJan.getDay() + 1) / 7);
-        document.getElementById('week-label').innerText = `Woche ${week}`;
+        const weekLabel = document.getElementById('week-label');
+        if(weekLabel) weekLabel.innerText = `Woche ${week}`;
     }
 
     window.onload = init;
