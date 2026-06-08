@@ -135,7 +135,18 @@
 </table>
 </div>
 </div>
-<div class="bg-white p-8 rounded-[40px] border-2 border-slate-100 shadow-xl">
+<div class="bg-white p-8 rounded-[40px] border-2 border-slate-100 shadow-xl"><div class="mb-8 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+<h4 class="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">person_add</span>
+        Schüler einzeln hinzufügen
+    </h4>
+<div class="flex gap-3">
+<input class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-blue-500 transition-all" id="new-student-name" placeholder="Vorname Nachname" type="text"/>
+<button class="bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2" onclick="addSingleStudent()">
+            Hinzufügen
+        </button>
+</div>
+</div>
 <h3 class="font-bold mb-6 flex items-center gap-2"><span class="material-symbols-outlined">groups</span> Klassenliste &amp; Fortschritt</h3>
 <div class="overflow-x-auto">
 <table class="w-full text-left text-sm">
