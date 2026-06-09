@@ -127,7 +127,6 @@
 <th class="pb-4">Wer</th>
 <th class="pb-4">Fach</th>
 <th class="pb-4">Aufgabe</th>
-<th class="pb-4">Termin</th>
 <th class="pb-4 text-right">Aktion</th>
 </tr>
 </thead>
@@ -155,7 +154,6 @@
 <tr>
 <th class="pb-4">Schüler</th>
 <th class="pb-4">Status</th>
-<th class="pb-4">Eltern</th>
 <th class="pb-4 text-right">Aktionen</th>
 </tr>
 </thead>
@@ -187,7 +185,7 @@
     let currentStudent = null;
     let currentMode = 'student'; 
     let qrInstance = null;
-    let isSyncing = false; // Robust status tracking
+    let isSyncing = false; 
     const subjects = { 'DE':'#ef4444', 'MA':'#3b82f6', 'E':'#eab308', 'F':'#22c55e', 'RZG':'#f97316', 'NT':'#06b6d4' };
 
     function init() {
@@ -203,7 +201,6 @@
 
     function generateQR() {
         const container = document.getElementById("qrcode");
-        // Nur generieren, wenn Sichtbar (start-view ist aktiv)
         if (!container || !document.getElementById('start-view').classList.contains('active')) return;
         container.innerHTML = "";
         qrInstance = new QRCode(container, { text: window.location.href, width: 140, height: 140 });
@@ -251,7 +248,8 @@
                 const nameInput = document.getElementById('new-student-name');
                 const isTyping = nameInput && document.activeElement === nameInput;
                 
-                if (!isTyping) {
+                // Nur wenn NICHT getippt wird ODER wir gerade nicht synchronisieren (um Flackern bei optimistischen Updates zu vermeiden)
+                if (!isTyping && !isSyncing) {
                     students = doc.data().students;
                     renderAll();
                 }
@@ -323,7 +321,7 @@
             renderTasks();
         } else {
             document.getElementById('start-view').classList.add('active');
-            generateQR(); // QR Code nur generieren wenn start-view aktiv wird
+            generateQR();
         }
     }
 
@@ -382,18 +380,16 @@
         const body = document.getElementById('tasks-table-body');
         if (!body) return;
         if (tasks.length === 0) {
-            body.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-300 font-bold italic">Keine Aufgaben vorhanden</td></tr>';
+            body.innerHTML = '<tr><td colspan="4" class="py-8 text-center text-slate-300 font-bold italic">Keine Aufgaben vorhanden</td></tr>';
             return;
         }
         body.innerHTML = tasks.map(t => {
-            const date = t.createdAt ? t.createdAt.toDate().toLocaleDateString('de-CH') : '-';
             const subjectColor = subjects[t.sub] || '#cbd5e1';
             return `
                 <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-all">
                     <td class="py-4 font-bold text-slate-600 text-xs">${t.who === 'all' ? 'Alle' : t.who}</td>
                     <td class="py-4"><span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjectColor}">${t.sub || 'N/A'}</span></td>
                     <td class="py-4 font-bold text-slate-700 text-xs">${t.task || 'Ohne Titel'}</td>
-                    <td class="py-4 text-slate-400 text-[10px] font-bold">${date}</td>
                     <td class="py-4 text-right">
                         <button onclick="deleteTask('${t.id}')" class="text-red-400 hover:text-red-600 transition-colors">
                             <span class="material-symbols-outlined text-[18px]">delete</span>
@@ -442,7 +438,7 @@
     }
 
     async function addIndividualStudent() {
-        if (isSyncing) return; // Verhindere Mehrfachklicks
+        if (isSyncing) return;
         
         const nameInput = document.getElementById('new-student-name');
         const btn = document.getElementById('add-student-btn');
@@ -452,18 +448,25 @@
         if (students.includes(name)) return alert("Schüler existiert bereits.");
         
         isSyncing = true;
+        const previousStudents = [...students];
+        
+        // Optimistisches Update: UI sofort aktualisieren
+        students = [...students, name];
+        renderAll();
+
         nameInput.value = '';
         btn.disabled = true;
-        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Hinzufügen...';
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Speichern...';
 
         try {
-            const updatedList = [...students, name];
-            await syncToCloud(updatedList);
-            // Lokales Update erfolgt über Snapshot-Listener
+            await syncToCloud(students);
         } catch (error) {
             console.error("Fehler beim Speichern:", error);
-            alert("Fehler beim Speichern in der Cloud. Bitte Internetverbindung prüfen.");
-            nameInput.value = name; // Name bei Fehler wiederherstellen
+            alert("Cloud-Synchronisation fehlgeschlagen (Timeout oder Netzwerkfehler). Bitte versuchen Sie es erneut.");
+            // Rollback bei Fehler
+            students = previousStudents;
+            nameInput.value = name;
+            renderAll();
         } finally {
             isSyncing = false;
             btn.disabled = false;
@@ -475,7 +478,13 @@
         if (isSyncing) return;
         if (confirm(`Möchtest du ${studentName} wirklich aus der Klassenliste löschen?`)) {
             isSyncing = true;
+            const previousStudents = [...students];
             const updatedStudents = students.filter(s => s !== studentName);
+            
+            // Optimistisches Update
+            students = updatedStudents;
+            renderStats();
+
             try {
                 await syncToCloud(updatedStudents);
                 await db.collection('completions').doc(studentName).delete();
@@ -483,6 +492,8 @@
             } catch (error) {
                 console.error("Fehler beim Löschen:", error);
                 alert("Löschen fehlgeschlagen.");
+                students = previousStudents;
+                renderStats();
             } finally {
                 isSyncing = false;
             }
@@ -520,8 +531,14 @@
     }
 
     async function syncToCloud(newList) {
+        // Timeout-Logic: 5 Sekunden
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Cloud Sync Timeout")), 5000)
+        );
+        
         try {
-            return await db.collection('settings').doc('classroom').set({ students: newList });
+            const syncPromise = db.collection('settings').doc('classroom').set({ students: newList });
+            return await Promise.race([syncPromise, timeoutPromise]);
         } catch (error) {
             console.error("Sync Error:", error);
             throw error;
@@ -543,7 +560,6 @@
                 <tr class="border-b border-slate-50 hover:bg-slate-50/30 transition-all">
                     <td class="py-4 font-bold text-slate-700">${s}</td>
                     <td class="py-4 text-xs font-bold ${total > 0 && done === total ? 'text-green-500' : 'text-slate-400'}">${done}/${total} erledigt</td>
-                    <td class="py-4 text-[10px] font-bold text-slate-400">${conf ? conf.date : 'Offen'}</td>
                     <td class="py-4 text-right flex items-center justify-end gap-3">
                         <button onclick="unlockSession('${s}')" class="text-blue-600 text-[10px] font-black uppercase hover:underline">Entsperren</button>
                         <button onclick="deleteStudent('${s}')" class="text-slate-300 hover:text-red-500 transition-colors">
