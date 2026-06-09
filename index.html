@@ -21,6 +21,14 @@
         @media print { .no-print { display: none !important; } }
         .task-done { background-color: #f0fdf4 !important; border-color: #bbf7d0 !important; opacity: 0.8; }
         .task-done p { text-decoration: line-through; color: #94a3b8; }
+        
+        /* Status Colors */
+        .status-active { background-color: #dcfce7; color: #15803d; }
+        .status-active span { background-color: #22c55e; }
+        .status-syncing { background-color: #fef9c3; color: #a16207; }
+        .status-syncing span { background-color: #eab308; }
+        .status-error { background-color: #fee2e2; color: #b91c1c; }
+        .status-error span { background-color: #ef4444; }
     </style>
 </head>
 <body class="dot-pattern min-h-screen text-slate-800 pb-20">
@@ -28,9 +36,10 @@
 <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
 <div class="flex items-center gap-3">
 <span class="text-2xl font-extrabold tracking-tight text-blue-600">doeltschi</span>
-<div class="flex items-center gap-2 bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider" id="cloud-status">
-<span class="w-2 h-2 bg-blue-500 rounded-full pulse-blue"></span> Cloud Aktiv
-            </div>
+<div class="flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider status-active transition-colors duration-300" id="cloud-status-container">
+<span class="w-2 h-2 rounded-full pulse-blue" id="status-dot"></span>
+<span id="status-text">Cloud Aktiv</span>
+</div>
 </div>
 <div class="flex bg-slate-100 p-1 rounded-xl">
 <button class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-sm" id="btn-student" onclick="setMode('student')">
@@ -88,7 +97,12 @@
 </div>
 <!-- Teacher View -->
 <div class="view-section" id="teacher-view">
-<h2 class="text-3xl font-black mb-8 tracking-tighter">Lehrer-Dashboard</h2>
+<div class="flex justify-between items-center mb-8">
+<h2 class="text-3xl font-black tracking-tighter">Lehrer-Dashboard</h2>
+<button class="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all" onclick="testConnection()">
+<span class="material-symbols-outlined text-[18px]">cloud_sync</span> Cloud-Verbindung prüfen
+            </button>
+</div>
 <div class="grid gap-8">
 <div class="bg-white p-8 rounded-[40px] border-2 border-slate-100 shadow-xl">
 <div class="flex justify-between items-center mb-4">
@@ -115,7 +129,9 @@
 <option value="NT">NT</option>
 </select>
 </div>
-<button class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-700 transition-all" onclick="assignTask()">Cloud-Zuweisung</button>
+<button class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2" id="assign-btn" onclick="assignTask()">
+<span>Cloud-Zuweisung</span>
+</button>
 </div>
 </div>
 <div class="bg-white p-8 rounded-[40px] border-2 border-slate-100 shadow-xl">
@@ -137,8 +153,7 @@
 <div class="bg-white p-8 rounded-[40px] border-2 border-slate-100 shadow-xl">
 <div class="mb-8 p-6 bg-slate-50 rounded-3xl border border-slate-100">
 <h4 class="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-<span class="material-symbols-outlined text-sm">person_add</span>
-                        Schüler einzeln hinzufügen
+<span class="material-symbols-outlined text-sm">person_add</span> Schüler einzeln hinzufügen
                     </h4>
 <div class="flex gap-3">
 <input class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-blue-500 transition-all" id="new-student-name" placeholder="Vorname Nachname" type="text"/>
@@ -199,6 +214,54 @@
         updateUI();
     }
 
+    // Visual Status Indicator logic
+    function setCloudStatus(status) {
+        const container = document.getElementById('cloud-status-container');
+        const text = document.getElementById('status-text');
+        
+        container.classList.remove('status-active', 'status-syncing', 'status-error');
+        
+        if (status === 'active') {
+            container.classList.add('status-active');
+            text.innerText = 'Cloud Aktiv';
+        } else if (status === 'syncing') {
+            container.classList.add('status-syncing');
+            text.innerText = 'Synchronisiere...';
+        } else if (status === 'error') {
+            container.classList.add('status-error');
+            text.innerText = 'Cloud Fehler';
+        }
+    }
+
+    function handleError(error) {
+        console.error("Firebase Error:", error);
+        setCloudStatus('error');
+        
+        let msg = "Unbekannter Fehler.";
+        if (error.code === 'permission-denied') {
+            msg = "Permission Denied - Bitte Firebase Rules prüfen.";
+        } else if (error.code === 'not-found') {
+            msg = "Datenbank oder Dokument nicht gefunden.";
+        } else if (error.code === 'unavailable') {
+            msg = "Cloud nicht erreichbar (Offline?).";
+        } else if (error.message && error.message.includes("Timeout")) {
+            msg = "Synchronisations-Timeout.";
+        }
+        
+        alert(`Kritischer Fehler: ${msg}\n\nDetails: ${error.message || error}`);
+    }
+
+    async function testConnection() {
+        setCloudStatus('syncing');
+        try {
+            await db.collection('settings').doc('classroom').get();
+            setCloudStatus('active');
+            alert("Verbindung erfolgreich hergestellt!");
+        } catch (e) {
+            handleError(e);
+        }
+    }
+
     function generateQR() {
         const container = document.getElementById("qrcode");
         if (!container || !document.getElementById('start-view').classList.contains('active')) return;
@@ -207,6 +270,7 @@
     }
 
     async function loadStudents() {
+        setCloudStatus('syncing');
         try {
             const doc = await db.collection('settings').doc('classroom').get();
             if (doc.exists && doc.data().students) {
@@ -216,8 +280,9 @@
                 await syncToCloud(students);
             }
             renderAll();
+            setCloudStatus('active');
         } catch (error) {
-            console.error("Error loading students:", error);
+            handleError(error);
         }
     }
 
@@ -227,34 +292,32 @@
             renderTasks();
             renderTeacherTasksTable();
             renderStats();
-        }, error => console.error("Tasks Listener Error:", error));
+        }, error => handleError(error));
 
         db.collection('completions').onSnapshot(snap => {
             completions = {};
             snap.docs.forEach(doc => completions[doc.id] = doc.data());
             renderTasks();
             renderStats();
-        }, error => console.error("Completions Listener Error:", error));
+        }, error => handleError(error));
 
         db.collection('confirmations').onSnapshot(snap => {
             confirmations = {};
             snap.docs.forEach(doc => confirmations[doc.id] = doc.data());
             renderTasks();
             renderStats();
-        }, error => console.error("Confirmations Listener Error:", error));
+        }, error => handleError(error));
 
         db.collection('settings').doc('classroom').onSnapshot(doc => {
             if (doc.exists && doc.data().students) {
                 const nameInput = document.getElementById('new-student-name');
                 const isTyping = nameInput && document.activeElement === nameInput;
-                
-                // Nur wenn NICHT getippt wird ODER wir gerade nicht synchronisieren (um Flackern bei optimistischen Updates zu vermeiden)
                 if (!isTyping && !isSyncing) {
                     students = doc.data().students;
                     renderAll();
                 }
             }
-        }, error => console.error("Classroom Listener Error:", error));
+        }, error => handleError(error));
     }
 
     function renderAll() {
@@ -402,38 +465,70 @@
 
     function toggleTask(taskId) {
         if (confirmations[currentStudent]) return;
+        setCloudStatus('syncing');
         const currentStatus = completions[currentStudent]?.[taskId] || false;
-        db.collection('completions').doc(currentStudent).set({ [taskId]: !currentStatus }, { merge: true });
+        db.collection('completions').doc(currentStudent).set({ [taskId]: !currentStatus }, { merge: true })
+            .then(() => setCloudStatus('active'))
+            .catch(handleError);
     }
 
     function confirmParent() {
         const nameInput = document.getElementById('parent-name');
         const name = nameInput ? nameInput.value.trim() : '';
         if (!name) return alert("Bitte Name der Eltern eingeben.");
+        
+        setCloudStatus('syncing');
         db.collection('confirmations').doc(currentStudent).set({ 
             date: new Date().toLocaleDateString('de-CH'), 
             name: name 
-        });
+        }).then(() => setCloudStatus('active'))
+          .catch(handleError);
     }
 
-    function assignTask() {
+    async function assignTask() {
         const taskInput = document.getElementById('t-task');
+        const btn = document.getElementById('assign-btn');
         const task = taskInput ? taskInput.value.trim() : '';
         const who = document.getElementById('t-who').value;
         const sub = document.getElementById('t-sub').value;
+        
         if (!task) return alert("Aufgabe darf nicht leer sein.");
-        db.collection('tasks').add({ 
-            task, 
-            who, 
-            sub, 
-            createdAt: firebase.firestore.FieldValue.serverTimestamp() 
-        });
-        if(taskInput) taskInput.value = '';
+        
+        setCloudStatus('syncing');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span><span>Sende...</span>';
+
+        // Robust protection: timeout to re-enable UI
+        const forceEnable = setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<span>Cloud-Zuweisung</span>';
+            setCloudStatus('error');
+        }, 5000);
+
+        try {
+            await db.collection('tasks').add({ 
+                task, 
+                who, 
+                sub, 
+                createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+            });
+            if(taskInput) taskInput.value = '';
+            setCloudStatus('active');
+        } catch (error) {
+            handleError(error);
+        } finally {
+            clearTimeout(forceEnable);
+            btn.disabled = false;
+            btn.innerHTML = '<span>Cloud-Zuweisung</span>';
+        }
     }
 
     function deleteTask(id) {
         if (confirm("Aufgabe wirklich unwiderruflich aus der Cloud löschen?")) {
-            db.collection('tasks').doc(id).delete();
+            setCloudStatus('syncing');
+            db.collection('tasks').doc(id).delete()
+                .then(() => setCloudStatus('active'))
+                .catch(handleError);
         }
     }
 
@@ -448,9 +543,9 @@
         if (students.includes(name)) return alert("Schüler existiert bereits.");
         
         isSyncing = true;
+        setCloudStatus('syncing');
         const previousStudents = [...students];
         
-        // Optimistisches Update: UI sofort aktualisieren
         students = [...students, name];
         renderAll();
 
@@ -458,16 +553,24 @@
         btn.disabled = true;
         btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Speichern...';
 
+        // 5s Safety Force-Unlock
+        const safetyUnlock = setTimeout(() => {
+            isSyncing = false;
+            btn.disabled = false;
+            btn.innerHTML = 'Hinzufügen';
+            setCloudStatus('error');
+        }, 5000);
+
         try {
             await syncToCloud(students);
+            setCloudStatus('active');
         } catch (error) {
-            console.error("Fehler beim Speichern:", error);
-            alert("Cloud-Synchronisation fehlgeschlagen (Timeout oder Netzwerkfehler). Bitte versuchen Sie es erneut.");
-            // Rollback bei Fehler
+            handleError(error);
             students = previousStudents;
             nameInput.value = name;
             renderAll();
         } finally {
+            clearTimeout(safetyUnlock);
             isSyncing = false;
             btn.disabled = false;
             btn.innerHTML = 'Hinzufügen';
@@ -478,10 +581,10 @@
         if (isSyncing) return;
         if (confirm(`Möchtest du ${studentName} wirklich aus der Klassenliste löschen?`)) {
             isSyncing = true;
+            setCloudStatus('syncing');
             const previousStudents = [...students];
             const updatedStudents = students.filter(s => s !== studentName);
             
-            // Optimistisches Update
             students = updatedStudents;
             renderStats();
 
@@ -489,9 +592,9 @@
                 await syncToCloud(updatedStudents);
                 await db.collection('completions').doc(studentName).delete();
                 await db.collection('confirmations').doc(studentName).delete();
+                setCloudStatus('active');
             } catch (error) {
-                console.error("Fehler beim Löschen:", error);
-                alert("Löschen fehlgeschlagen.");
+                handleError(error);
                 students = previousStudents;
                 renderStats();
             } finally {
@@ -513,11 +616,13 @@
             if (newStudents.length > 0) {
                 if (confirm(`${newStudents.length} Schüler gefunden. Die aktuelle Klassenliste wird durch diese neue Liste ersetzt. Fortfahren?`)) {
                     isSyncing = true;
+                    setCloudStatus('syncing');
                     try {
                         await syncToCloud(newStudents);
+                        setCloudStatus('active');
                         alert("Klassenliste erfolgreich importiert.");
                     } catch (error) {
-                        alert("Fehler beim Importieren.");
+                        handleError(error);
                     } finally {
                         isSyncing = false;
                     }
@@ -531,16 +636,14 @@
     }
 
     async function syncToCloud(newList) {
-        // Timeout-Logic: 5 Sekunden
         const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Cloud Sync Timeout")), 5000)
+            setTimeout(() => reject(new Error("Cloud Sync Timeout (5s)")), 5000)
         );
         
         try {
             const syncPromise = db.collection('settings').doc('classroom').set({ students: newList });
             return await Promise.race([syncPromise, timeoutPromise]);
         } catch (error) {
-            console.error("Sync Error:", error);
             throw error;
         }
     }
@@ -555,7 +658,6 @@
             const myTasks = tasks.filter(t => t.who === 'all' || t.who === s);
             const total = myTasks.length;
             const done = myTasks.filter(t => completions[s]?.[t.id]).length;
-            const conf = confirmations[s];
             return `
                 <tr class="border-b border-slate-50 hover:bg-slate-50/30 transition-all">
                     <td class="py-4 font-bold text-slate-700">${s}</td>
@@ -573,7 +675,10 @@
 
     function unlockSession(s) {
         if (confirm(`Sitzung für ${s} entsperren? Die Bestätigung der Eltern wird gelöscht.`)) {
-            db.collection('confirmations').doc(s).delete();
+            setCloudStatus('syncing');
+            db.collection('confirmations').doc(s).delete()
+                .then(() => setCloudStatus('active'))
+                .catch(handleError);
         }
     }
 
