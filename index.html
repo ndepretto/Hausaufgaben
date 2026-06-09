@@ -185,7 +185,8 @@
     let completions = {};
     let confirmations = {};
     let currentStudent = null;
-    let currentMode = 'student'; // 'student' or 'teacher'
+    let currentMode = 'student'; 
+    let qrInstance = null;
     const subjects = { 'DE':'#ef4444', 'MA':'#3b82f6', 'E':'#eab308', 'F':'#22c55e', 'RZG':'#f97316', 'NT':'#06b6d4' };
 
     function init() {
@@ -197,7 +198,14 @@
             currentStudent = session;
         }
         updateUI();
-        new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 140, height: 140 });
+        generateQR();
+    }
+
+    function generateQR() {
+        const container = document.getElementById("qrcode");
+        if (!container) return;
+        container.innerHTML = "";
+        qrInstance = new QRCode(container, { text: window.location.href, width: 140, height: 140 });
     }
 
     async function loadStudents() {
@@ -209,15 +217,13 @@
                 students = ['Lukas Müller', 'Sophie Fischer', 'Emma Weber', 'Maximilian Schmidt'];
                 await syncToCloud(students);
             }
-            renderSelectors();
-            renderStats();
+            renderAll();
         } catch (error) {
             console.error("Error loading students:", error);
         }
     }
 
     function setupListeners() {
-        // Listen for Tasks
         db.collection('tasks').orderBy('createdAt', 'desc').onSnapshot(snap => {
             tasks = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderTasks();
@@ -225,7 +231,6 @@
             renderStats();
         });
 
-        // Listen for Completions
         db.collection('completions').onSnapshot(snap => {
             completions = {};
             snap.docs.forEach(doc => completions[doc.id] = doc.data());
@@ -233,7 +238,6 @@
             renderStats();
         });
 
-        // Listen for Parent Confirmations
         db.collection('confirmations').onSnapshot(snap => {
             confirmations = {};
             snap.docs.forEach(doc => confirmations[doc.id] = doc.data());
@@ -241,20 +245,23 @@
             renderStats();
         });
 
-        // Listen for Student List changes
         db.collection('settings').doc('classroom').onSnapshot(doc => {
             if (doc.exists && doc.data().students) {
-                // Nur updaten wenn User nicht gerade im Teacher-Dashboard Namen editiert oder tippt
                 const nameInput = document.getElementById('new-student-name');
                 const isTyping = nameInput && document.activeElement === nameInput;
                 
                 if (!isTyping) {
                     students = doc.data().students;
-                    renderSelectors();
-                    renderStats();
+                    renderAll();
                 }
             }
         });
+    }
+
+    function renderAll() {
+        renderSelectors();
+        renderStats();
+        generateQR();
     }
 
     function setMode(mode) {
@@ -345,7 +352,7 @@
         } else {
             container.innerHTML = myTasks.map(t => {
                 const isDone = completions[currentStudent]?.[t.id];
-                const subjectColor = subjects[t.sub] || '#cbd5e1'; // Safe Navigation/Fallback
+                const subjectColor = subjects[t.sub] || '#cbd5e1';
                 return `
                     <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between transition-all ${isDone ? 'task-done' : ''}">
                         <div class="flex items-center gap-4">
@@ -440,21 +447,21 @@
         if (!name) return alert("Bitte Name eingeben.");
         if (students.includes(name)) return alert("Schüler existiert bereits.");
         
+        // Responsive Fix: Clear and Disable immediately
+        nameInput.value = '';
         btn.disabled = true;
         btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Hinzufügen...';
 
         try {
             const updatedList = [...students, name];
             await syncToCloud(updatedList);
-            nameInput.value = '';
-            // Lokale students Variable aktualisieren für UI Reaktivität falls Snapshot verzögert
+            // Local update for immediate UI feedback
             students = updatedList; 
-            renderSelectors();
-            renderStats();
-            console.log(`${name} wurde erfolgreich hinzugefügt.`);
+            renderAll();
         } catch (error) {
             console.error("Fehler beim Speichern:", error);
-            alert("Fehler beim Speichern in der Cloud.");
+            alert("Fehler beim Speichern in der Cloud. Bitte Internetverbindung prüfen.");
+            nameInput.value = name; // Restore name on failure
         } finally {
             btn.disabled = false;
             btn.innerHTML = 'Hinzufügen';
@@ -469,10 +476,10 @@
                 students = updatedStudents;
                 await db.collection('completions').doc(studentName).delete();
                 await db.collection('confirmations').doc(studentName).delete();
-                renderSelectors();
-                renderStats();
+                renderAll();
             } catch (error) {
                 console.error("Fehler beim Löschen:", error);
+                alert("Löschen fehlgeschlagen.");
             }
         }
     }
@@ -483,7 +490,6 @@
         const reader = new FileReader();
         reader.onload = async (e) => {
             const content = e.target.result;
-            // Split bei Zeilenumbruch, trimmen und leere Zeilen entfernen
             const newStudents = content.split(/\r?\n/)
                                        .map(s => s.trim())
                                        .filter(s => s.length > 0);
@@ -493,8 +499,7 @@
                     try {
                         await syncToCloud(newStudents);
                         students = newStudents;
-                        renderSelectors();
-                        renderStats();
+                        renderAll();
                         alert("Klassenliste erfolgreich importiert.");
                     } catch (error) {
                         alert("Fehler beim Importieren.");
@@ -509,7 +514,6 @@
     }
 
     function syncToCloud(newList) {
-        // Direkte Firebase-Aktion ohne Mutation der globalen students (außerhalb dieser Funktion gesteuert)
         return db.collection('settings').doc('classroom').set({ students: newList });
     }
 
@@ -543,7 +547,6 @@
     function unlockSession(s) {
         if (confirm(`Sitzung für ${s} entsperren? Die Bestätigung der Eltern wird gelöscht.`)) {
             db.collection('confirmations').doc(s).delete();
-            alert(`Sitzung für ${s} entsperrt.`);
         }
     }
 
