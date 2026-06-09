@@ -94,10 +94,10 @@
 <div class="flex justify-between items-center mb-4">
 <h3 class="font-bold text-blue-600 flex items-center gap-2"><span class="material-symbols-outlined">add_task</span> Aufgabe zuteilen</h3>
 <div class="flex items-center gap-2">
-<label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-black uppercase px-3 py-2 rounded-lg transition-all flex items-center gap-1" for="import-file">
+<label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-black uppercase px-3 py-2 rounded-lg transition-all flex items-center gap-1" for="file-input">
 <span class="material-symbols-outlined text-sm">upload_file</span> Klassenliste importieren (.txt)
                         </label>
-<input accept=".txt" class="hidden" id="import-file" onchange="handleFileImport(event)" type="file"/>
+<input accept=".txt" class="hidden" id="file-input" onchange="handleFileImport(event)" type="file"/>
 </div>
 </div>
 <div class="space-y-4">
@@ -135,16 +135,17 @@
 </table>
 </div>
 </div>
-<div class="bg-white p-8 rounded-[40px] border-2 border-slate-100 shadow-xl"><div class="mb-8 p-6 bg-slate-50 rounded-3xl border border-slate-100">
+<div class="bg-white p-8 rounded-[40px] border-2 border-slate-100 shadow-xl">
+<div class="mb-8 p-6 bg-slate-50 rounded-3xl border border-slate-100">
 <h4 class="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
 <span class="material-symbols-outlined text-sm">person_add</span>
-        Schüler einzeln hinzufügen
-    </h4>
+                        Schüler einzeln hinzufügen
+                    </h4>
 <div class="flex gap-3">
 <input class="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-blue-500 transition-all" id="new-student-name" placeholder="Vorname Nachname" type="text"/>
-<button class="bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2" onclick="addSingleStudent()">
-            Hinzufügen
-        </button>
+<button class="bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-all shadow-sm flex items-center gap-2 disabled:opacity-50" id="add-student-btn" onclick="addIndividualStudent()">
+                            Hinzufügen
+                        </button>
 </div>
 </div>
 <h3 class="font-bold mb-6 flex items-center gap-2"><span class="material-symbols-outlined">groups</span> Klassenliste &amp; Fortschritt</h3>
@@ -167,7 +168,6 @@
 </main>
 <script>
     // --- FIREBASE CONFIG ---
-    // Ensure these are replaced with your actual project config
     const firebaseConfig = {
         apiKey: "DEIN_API_KEY",
         authDomain: "DEIN_PROJEKT.firebaseapp.com",
@@ -180,7 +180,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let students = ['Lukas Müller', 'Sophie Fischer', 'Emma Weber', 'Maximilian Schmidt'];
+    let students = [];
     let tasks = [];
     let completions = {};
     let confirmations = {};
@@ -201,12 +201,19 @@
     }
 
     async function loadStudents() {
-        const doc = await db.collection('settings').doc('classroom').get();
-        if (doc.exists && doc.data().students) {
-            students = doc.data().students;
+        try {
+            const doc = await db.collection('settings').doc('classroom').get();
+            if (doc.exists && doc.data().students) {
+                students = doc.data().students;
+            } else {
+                students = ['Lukas Müller', 'Sophie Fischer', 'Emma Weber', 'Maximilian Schmidt'];
+                await syncToCloud(students);
+            }
+            renderSelectors();
+            renderStats();
+        } catch (error) {
+            console.error("Error loading students:", error);
         }
-        renderSelectors();
-        renderStats();
     }
 
     function setupListeners() {
@@ -237,9 +244,15 @@
         // Listen for Student List changes
         db.collection('settings').doc('classroom').onSnapshot(doc => {
             if (doc.exists && doc.data().students) {
-                students = doc.data().students;
-                renderSelectors();
-                renderStats();
+                // Nur updaten wenn User nicht gerade im Teacher-Dashboard Namen editiert oder tippt
+                const nameInput = document.getElementById('new-student-name');
+                const isTyping = nameInput && document.activeElement === nameInput;
+                
+                if (!isTyping) {
+                    students = doc.data().students;
+                    renderSelectors();
+                    renderStats();
+                }
             }
         });
     }
@@ -282,7 +295,6 @@
         const btnStudent = document.getElementById('btn-student');
         const btnTeacher = document.getElementById('btn-teacher');
 
-        // Toggle Header Buttons Style
         if (currentMode === 'teacher') {
             btnTeacher.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all bg-blue-600 text-white shadow-sm";
             btnStudent.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-600 hover:bg-slate-200";
@@ -310,9 +322,13 @@
         const sel = document.getElementById('student-selector');
         const tSel = document.getElementById('t-who');
         if (!sel || !tSel) return;
+        
+        const sortedStudents = [...students].sort((a, b) => a.localeCompare(b));
+        
         sel.innerHTML = '<option value="">Wähle deinen Namen...</option>';
         tSel.innerHTML = '<option value="all">Ganze Klasse</option>';
-        [...students].sort().forEach(s => {
+        
+        sortedStudents.forEach(s => {
             sel.innerHTML += `<option value="${s}">${s}</option>`;
             tSel.innerHTML += `<option value="${s}">${s}</option>`;
         });
@@ -329,13 +345,14 @@
         } else {
             container.innerHTML = myTasks.map(t => {
                 const isDone = completions[currentStudent]?.[t.id];
+                const subjectColor = subjects[t.sub] || '#cbd5e1'; // Safe Navigation/Fallback
                 return `
                     <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex items-center justify-between transition-all ${isDone ? 'task-done' : ''}">
                         <div class="flex items-center gap-4">
                             <input type="checkbox" ${locked ? 'disabled' : ''} onchange="toggleTask('${t.id}')" ${isDone ? 'checked' : ''} class="w-6 h-6 rounded-lg border-2 border-slate-200 text-blue-600 focus:ring-0 cursor-pointer">
                             <div>
-                                <span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjects[t.sub] || '#cbd5e1'}">${t.sub}</span>
-                                <p class="font-bold text-slate-700">${t.task}</p>
+                                <span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjectColor}">${t.sub || 'TASK'}</span>
+                                <p class="font-bold text-slate-700">${t.task || 'Kein Inhalt'}</p>
                             </div>
                         </div>
                     </div>
@@ -361,11 +378,12 @@
         }
         body.innerHTML = tasks.map(t => {
             const date = t.createdAt ? t.createdAt.toDate().toLocaleDateString('de-CH') : '-';
+            const subjectColor = subjects[t.sub] || '#cbd5e1';
             return `
                 <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-all">
                     <td class="py-4 font-bold text-slate-600 text-xs">${t.who === 'all' ? 'Alle' : t.who}</td>
-                    <td class="py-4"><span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjects[t.sub] || '#cbd5e1'}">${t.sub}</span></td>
-                    <td class="py-4 font-bold text-slate-700 text-xs">${t.task}</td>
+                    <td class="py-4"><span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full" style="background:${subjectColor}">${t.sub || 'N/A'}</span></td>
+                    <td class="py-4 font-bold text-slate-700 text-xs">${t.task || 'Ohne Titel'}</td>
                     <td class="py-4 text-slate-400 text-[10px] font-bold">${date}</td>
                     <td class="py-4 text-right">
                         <button onclick="deleteTask('${t.id}')" class="text-red-400 hover:text-red-600 transition-colors">
@@ -385,7 +403,7 @@
 
     function confirmParent() {
         const nameInput = document.getElementById('parent-name');
-        const name = nameInput ? nameInput.value : '';
+        const name = nameInput ? nameInput.value.trim() : '';
         if (!name) return alert("Bitte Name der Eltern eingeben.");
         db.collection('confirmations').doc(currentStudent).set({ 
             date: new Date().toLocaleDateString('de-CH'), 
@@ -395,7 +413,7 @@
 
     function assignTask() {
         const taskInput = document.getElementById('t-task');
-        const task = taskInput ? taskInput.value : '';
+        const task = taskInput ? taskInput.value.trim() : '';
         const who = document.getElementById('t-who').value;
         const sub = document.getElementById('t-sub').value;
         if (!task) return alert("Aufgabe darf nicht leer sein.");
@@ -414,20 +432,48 @@
         }
     }
 
-    function deleteStudent(studentName) {
-        if (confirm(`Möchtest du ${studentName} wirklich aus der Klassenliste löschen? Alle zugehörigen Erledigungen und Bestätigungen werden ebenfalls entfernt.`)) {
+    async function addIndividualStudent() {
+        const nameInput = document.getElementById('new-student-name');
+        const btn = document.getElementById('add-student-btn');
+        const name = nameInput ? nameInput.value.trim() : '';
+        
+        if (!name) return alert("Bitte Name eingeben.");
+        if (students.includes(name)) return alert("Schüler existiert bereits.");
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Hinzufügen...';
+
+        try {
+            const updatedList = [...students, name];
+            await syncToCloud(updatedList);
+            nameInput.value = '';
+            // Lokale students Variable aktualisieren für UI Reaktivität falls Snapshot verzögert
+            students = updatedList; 
+            renderSelectors();
+            renderStats();
+            console.log(`${name} wurde erfolgreich hinzugefügt.`);
+        } catch (error) {
+            console.error("Fehler beim Speichern:", error);
+            alert("Fehler beim Speichern in der Cloud.");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Hinzufügen';
+        }
+    }
+
+    async function deleteStudent(studentName) {
+        if (confirm(`Möchtest du ${studentName} wirklich aus der Klassenliste löschen?`)) {
             const updatedStudents = students.filter(s => s !== studentName);
-            db.collection('settings').doc('classroom').set({ students: updatedStudents }).then(() => {
-                db.collection('completions').doc(studentName).delete();
-                db.collection('confirmations').doc(studentName).delete();
-                db.collection('tasks').where('who', '==', studentName).get().then(snap => {
-                    snap.forEach(doc => doc.ref.delete());
-                });
-                alert(`${studentName} wurde erfolgreich gelöscht.`);
-            }).catch(err => {
-                console.error("Fehler beim Löschen:", err);
-                alert("Fehler beim Löschen des Schülers.");
-            });
+            try {
+                await syncToCloud(updatedStudents);
+                students = updatedStudents;
+                await db.collection('completions').doc(studentName).delete();
+                await db.collection('confirmations').doc(studentName).delete();
+                renderSelectors();
+                renderStats();
+            } catch (error) {
+                console.error("Fehler beim Löschen:", error);
+            }
         }
     }
 
@@ -435,14 +481,24 @@
         const file = event.target.files[0];
         if (!file) return;
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             const content = e.target.result;
-            const newStudents = content.split('\n')
+            // Split bei Zeilenumbruch, trimmen und leere Zeilen entfernen
+            const newStudents = content.split(/\r?\n/)
                                        .map(s => s.trim())
                                        .filter(s => s.length > 0);
+            
             if (newStudents.length > 0) {
-                if (confirm(`${newStudents.length} Schüler gefunden. Klassenliste jetzt überschreiben?`)) {
-                    db.collection('settings').doc('classroom').set({ students: newStudents });
+                if (confirm(`${newStudents.length} Schüler gefunden. Die aktuelle Klassenliste wird durch diese neue Liste ersetzt. Fortfahren?`)) {
+                    try {
+                        await syncToCloud(newStudents);
+                        students = newStudents;
+                        renderSelectors();
+                        renderStats();
+                        alert("Klassenliste erfolgreich importiert.");
+                    } catch (error) {
+                        alert("Fehler beim Importieren.");
+                    }
                 }
             } else {
                 alert("Keine gültigen Namen in der Datei gefunden.");
@@ -452,10 +508,18 @@
         event.target.value = ''; 
     }
 
+    function syncToCloud(newList) {
+        // Direkte Firebase-Aktion ohne Mutation der globalen students (außerhalb dieser Funktion gesteuert)
+        return db.collection('settings').doc('classroom').set({ students: newList });
+    }
+
     function renderStats() {
         const body = document.getElementById('stats-body');
         if (!body) return;
-        body.innerHTML = [...students].sort().map(s => {
+        
+        const sortedStudents = [...students].sort((a, b) => a.localeCompare(b));
+        
+        body.innerHTML = sortedStudents.map(s => {
             const myTasks = tasks.filter(t => t.who === 'all' || t.who === s);
             const total = myTasks.length;
             const done = myTasks.filter(t => completions[s]?.[t.id]).length;
@@ -477,8 +541,10 @@
     }
 
     function unlockSession(s) {
-        db.collection('confirmations').doc(s).delete();
-        alert(`Sitzung für ${s} entsperrt.`);
+        if (confirm(`Sitzung für ${s} entsperren? Die Bestätigung der Eltern wird gelöscht.`)) {
+            db.collection('confirmations').doc(s).delete();
+            alert(`Sitzung für ${s} entsperrt.`);
+        }
     }
 
     function updateWeek() {
