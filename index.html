@@ -187,6 +187,7 @@
     let currentStudent = null;
     let currentMode = 'student'; 
     let qrInstance = null;
+    let isSyncing = false; // Robust status tracking
     const subjects = { 'DE':'#ef4444', 'MA':'#3b82f6', 'E':'#eab308', 'F':'#22c55e', 'RZG':'#f97316', 'NT':'#06b6d4' };
 
     function init() {
@@ -198,12 +199,12 @@
             currentStudent = session;
         }
         updateUI();
-        generateQR();
     }
 
     function generateQR() {
         const container = document.getElementById("qrcode");
-        if (!container) return;
+        // Nur generieren, wenn Sichtbar (start-view ist aktiv)
+        if (!container || !document.getElementById('start-view').classList.contains('active')) return;
         container.innerHTML = "";
         qrInstance = new QRCode(container, { text: window.location.href, width: 140, height: 140 });
     }
@@ -229,21 +230,21 @@
             renderTasks();
             renderTeacherTasksTable();
             renderStats();
-        });
+        }, error => console.error("Tasks Listener Error:", error));
 
         db.collection('completions').onSnapshot(snap => {
             completions = {};
             snap.docs.forEach(doc => completions[doc.id] = doc.data());
             renderTasks();
             renderStats();
-        });
+        }, error => console.error("Completions Listener Error:", error));
 
         db.collection('confirmations').onSnapshot(snap => {
             confirmations = {};
             snap.docs.forEach(doc => confirmations[doc.id] = doc.data());
             renderTasks();
             renderStats();
-        });
+        }, error => console.error("Confirmations Listener Error:", error));
 
         db.collection('settings').doc('classroom').onSnapshot(doc => {
             if (doc.exists && doc.data().students) {
@@ -255,7 +256,7 @@
                     renderAll();
                 }
             }
-        });
+        }, error => console.error("Classroom Listener Error:", error));
     }
 
     function renderAll() {
@@ -322,6 +323,7 @@
             renderTasks();
         } else {
             document.getElementById('start-view').classList.add('active');
+            generateQR(); // QR Code nur generieren wenn start-view aktiv wird
         }
     }
 
@@ -440,6 +442,8 @@
     }
 
     async function addIndividualStudent() {
+        if (isSyncing) return; // Verhindere Mehrfachklicks
+        
         const nameInput = document.getElementById('new-student-name');
         const btn = document.getElementById('add-student-btn');
         const name = nameInput ? nameInput.value.trim() : '';
@@ -447,7 +451,7 @@
         if (!name) return alert("Bitte Name eingeben.");
         if (students.includes(name)) return alert("Schüler existiert bereits.");
         
-        // Responsive Fix: Clear and Disable immediately
+        isSyncing = true;
         nameInput.value = '';
         btn.disabled = true;
         btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">sync</span> Hinzufügen...';
@@ -455,31 +459,32 @@
         try {
             const updatedList = [...students, name];
             await syncToCloud(updatedList);
-            // Local update for immediate UI feedback
-            students = updatedList; 
-            renderAll();
+            // Lokales Update erfolgt über Snapshot-Listener
         } catch (error) {
             console.error("Fehler beim Speichern:", error);
             alert("Fehler beim Speichern in der Cloud. Bitte Internetverbindung prüfen.");
-            nameInput.value = name; // Restore name on failure
+            nameInput.value = name; // Name bei Fehler wiederherstellen
         } finally {
+            isSyncing = false;
             btn.disabled = false;
             btn.innerHTML = 'Hinzufügen';
         }
     }
 
     async function deleteStudent(studentName) {
+        if (isSyncing) return;
         if (confirm(`Möchtest du ${studentName} wirklich aus der Klassenliste löschen?`)) {
+            isSyncing = true;
             const updatedStudents = students.filter(s => s !== studentName);
             try {
                 await syncToCloud(updatedStudents);
-                students = updatedStudents;
                 await db.collection('completions').doc(studentName).delete();
                 await db.collection('confirmations').doc(studentName).delete();
-                renderAll();
             } catch (error) {
                 console.error("Fehler beim Löschen:", error);
                 alert("Löschen fehlgeschlagen.");
+            } finally {
+                isSyncing = false;
             }
         }
     }
@@ -496,13 +501,14 @@
             
             if (newStudents.length > 0) {
                 if (confirm(`${newStudents.length} Schüler gefunden. Die aktuelle Klassenliste wird durch diese neue Liste ersetzt. Fortfahren?`)) {
+                    isSyncing = true;
                     try {
                         await syncToCloud(newStudents);
-                        students = newStudents;
-                        renderAll();
                         alert("Klassenliste erfolgreich importiert.");
                     } catch (error) {
                         alert("Fehler beim Importieren.");
+                    } finally {
+                        isSyncing = false;
                     }
                 }
             } else {
@@ -513,8 +519,13 @@
         event.target.value = ''; 
     }
 
-    function syncToCloud(newList) {
-        return db.collection('settings').doc('classroom').set({ students: newList });
+    async function syncToCloud(newList) {
+        try {
+            return await db.collection('settings').doc('classroom').set({ students: newList });
+        } catch (error) {
+            console.error("Sync Error:", error);
+            throw error;
+        }
     }
 
     function renderStats() {
