@@ -308,9 +308,9 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-        // FIREBASE CONFIGURATION (Session 290)
+        // FIREBASE CONFIGURATION (Session 290 Restored)
         const firebaseConfig = {
-            apiKey: "AIzaSyD-mock-key-12345",
+            apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
             authDomain: "edu-dashboard-4b.firebaseapp.com",
             projectId: "edu-dashboard-4b",
             storageBucket: "edu-dashboard-4b.appspot.com",
@@ -337,7 +337,7 @@
 
         const showView = (viewName) => {
             Object.values(views).forEach(v => v.classList.add('hidden'));
-            views[viewName].classList.remove('hidden');
+            if(views[viewName]) views[viewName].classList.remove('hidden');
             
             document.getElementById('nav-student').classList.remove('bg-primary/10', 'text-primary');
             document.getElementById('nav-admin').classList.remove('bg-primary/10', 'text-primary');
@@ -348,9 +348,10 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        // QR Code Generation - pointing to pure URL
+        // QR Code Generation - pointing to pure URL to avoid parameter issues
+        const cleanURL = window.location.origin + window.location.pathname;
         new QRCode(document.getElementById("qrcode"), {
-            text: window.location.origin + window.location.pathname,
+            text: cleanURL,
             width: 120,
             height: 120,
             colorDark : "#0058bc",
@@ -358,38 +359,41 @@
             correctLevel : QRCode.CorrectLevel.H
         });
 
-        // Real-time Listeners
-        // 1. Student List (Using config/class for name definitions)
-        // 2. Student Details/Progress (Using students collection)
-        // 3. Tasks (Using tasks collection)
-
-        // Listen for all student records
-        db.collection('students').orderBy('name').onSnapshot(snapshot => {
-            studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            updateStudentDropdowns();
-            updateProgressTable();
-            
-            // If current student is logged in, ensure we have the freshest data
-            if (currentStudentId) {
-                const updated = studentsData.find(s => s.id === currentStudentId);
-                if (updated) {
-                    renderStudentTasks();
-                    checkConfirmationStatus(updated);
+        // Real-time Listeners with Robustness
+        const initDataListeners = () => {
+            // Listen for students - ensure handling of errors (e.g. offline/perms)
+            db.collection('students').orderBy('name').onSnapshot(snapshot => {
+                studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                updateStudentDropdowns();
+                updateProgressTable();
+                
+                if (currentStudentId) {
+                    const updated = studentsData.find(s => s.id === currentStudentId);
+                    if (updated) {
+                        renderStudentTasks();
+                        checkConfirmationStatus(updated);
+                    }
                 }
-            }
-        });
+            }, err => console.error("Firestore Student Listener Error:", err));
 
-        db.collection('tasks').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-            tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderStudentTasks();
-            renderAdminTasks();
-            updateProgressTable();
-        });
+            // Listen for tasks
+            db.collection('tasks').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+                tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderStudentTasks();
+                renderAdminTasks();
+                updateProgressTable();
+            }, err => console.error("Firestore Task Listener Error:", err));
+        };
+
+        // Initialize listeners immediately
+        initDataListeners();
 
         function updateStudentDropdowns() {
             const dropdown = document.getElementById('student-dropdown');
             const targetSelect = document.getElementById('task-target');
             
+            if (!dropdown || !targetSelect) return;
+
             const currentVal = dropdown.value;
             dropdown.innerHTML = '<option value="">Namen wählen...</option>';
             targetSelect.innerHTML = '<option value="all">Ganze Klasse</option>';
@@ -406,6 +410,7 @@
             if (!student) return;
 
             const container = document.getElementById('student-task-container');
+            if(!container) return;
             container.innerHTML = '';
 
             const relevantTasks = tasksData.filter(t => t.target === 'all' || t.target === student.name);
@@ -452,13 +457,16 @@
                 updated = [...completed, taskId];
             }
             
-            await db.collection('students').doc(currentStudentId).update({
-                completedTasks: updated
-            });
+            try {
+                await db.collection('students').doc(currentStudentId).update({
+                    completedTasks: updated
+                });
+            } catch(e) { console.error("Error toggling task:", e); }
         }
 
         function renderAdminTasks() {
             const container = document.getElementById('admin-task-list');
+            if(!container) return;
             container.innerHTML = '';
             
             tasksData.forEach(task => {
@@ -482,12 +490,15 @@
 
         async function deleteTask(id) {
             if (confirm('Aufgabe wirklich unwiderruflich löschen?')) {
-                await db.collection('tasks').doc(id).delete();
+                try {
+                    await db.collection('tasks').doc(id).delete();
+                } catch(e) { console.error("Error deleting task:", e); }
             }
         }
 
         function updateProgressTable() {
             const tbody = document.getElementById('progress-table-body');
+            if(!tbody) return;
             tbody.innerHTML = '';
 
             studentsData.forEach(s => {
@@ -531,25 +542,24 @@
             });
         }
 
-        // Actions
+        // Event Listeners
         document.getElementById('btn-enter-student').addEventListener('click', () => {
             const id = document.getElementById('student-dropdown').value;
             if (!id) return alert('Bitte wähle deinen Namen aus.');
             
-            // Reset input fields for the new selection
             document.getElementById('parent-name').value = '';
-            
             currentStudentId = id;
             const student = studentsData.find(s => s.id === id);
-            document.getElementById('current-student-name').innerText = student.name;
-            showView('studentTasks');
-            renderStudentTasks();
-            checkConfirmationStatus(student);
+            if(student) {
+                document.getElementById('current-student-name').innerText = student.name;
+                showView('studentTasks');
+                renderStudentTasks();
+                checkConfirmationStatus(student);
+            }
         });
 
         document.getElementById('btn-logout-student').addEventListener('click', () => {
             currentStudentId = null;
-            // Clear inputs on logout as well for safety
             document.getElementById('parent-name').value = '';
             showView('selector');
         });
@@ -579,73 +589,83 @@
 
             if (!desc || !date) return alert('Bitte alle Felder ausfüllen');
 
-            await db.collection('tasks').add({
-                subject, 
-                target, 
-                description: desc, 
-                date, 
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            document.getElementById('task-desc').value = '';
+            try {
+                await db.collection('tasks').add({
+                    subject, 
+                    target, 
+                    description: desc, 
+                    date, 
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.getElementById('task-desc').value = '';
+            } catch(e) { console.error("Error adding task:", e); }
         });
 
         document.getElementById('btn-add-student').addEventListener('click', async () => {
             const name = document.getElementById('new-student-name').value.trim();
             if (!name) return;
             
-            // 1. Add to students collection for progress tracking
-            await db.collection('students').add({
-                name, completedTasks: [], confirmed: false, parentName: '', confDate: ''
-            });
+            try {
+                // 1. Add to students collection
+                await db.collection('students').add({
+                    name, completedTasks: [], confirmed: false, parentName: '', confDate: ''
+                });
 
-            // 2. Update the master name list (config/class)
-            const classDoc = await db.collection('config').doc('class').get();
-            let names = [];
-            if(classDoc.exists) names = classDoc.data().names || [];
-            if(!names.includes(name)) {
-                names.push(name);
-                await db.collection('config').doc('class').set({ names }, { merge: true });
-            }
+                // 2. Update config/class path for consistent list handling
+                const classDocRef = db.collection('config').doc('class');
+                const classDoc = await classDocRef.get();
+                let names = [];
+                if(classDoc.exists) names = classDoc.data().names || [];
+                if(!names.includes(name)) {
+                    names.push(name);
+                    await classDocRef.set({ names }, { merge: true });
+                }
 
-            document.getElementById('new-student-name').value = '';
+                document.getElementById('new-student-name').value = '';
+            } catch(e) { console.error("Error adding student:", e); }
         });
 
         async function deleteStudent(id) {
             if (confirm('Schüler wirklich löschen?')) {
-                const s = studentsData.find(x => x.id === id);
-                if(s) {
-                    // Remove from master list
-                    const classDoc = await db.collection('config').doc('class').get();
-                    if(classDoc.exists) {
-                        let names = classDoc.data().names || [];
-                        names = names.filter(n => n !== s.name);
-                        await db.collection('config').doc('class').set({ names }, { merge: true });
+                try {
+                    const s = studentsData.find(x => x.id === id);
+                    if(s) {
+                        const classDocRef = db.collection('config').doc('class');
+                        const classDoc = await classDocRef.get();
+                        if(classDoc.exists) {
+                            let names = classDoc.data().names || [];
+                            names = names.filter(n => n !== s.name);
+                            await classDocRef.set({ names }, { merge: true });
+                        }
                     }
-                }
-                await db.collection('students').doc(id).delete();
+                    await db.collection('students').doc(id).delete();
+                } catch(e) { console.error("Error deleting student:", e); }
             }
         }
 
         async function resetStudent(id) {
             if (confirm('Fortschritt und Bestätigung für diesen Schüler zurücksetzen?')) {
-                await db.collection('students').doc(id).update({
-                    completedTasks: [],
-                    confirmed: false,
-                    parentName: '',
-                    confDate: ''
-                });
+                try {
+                    await db.collection('students').doc(id).update({
+                        completedTasks: [],
+                        confirmed: false,
+                        parentName: '',
+                        confDate: ''
+                    });
+                } catch(e) { console.error("Error resetting student:", e); }
             }
         }
 
         document.getElementById('btn-reset-all').addEventListener('click', async () => {
             if (confirm('ACHTUNG: Möchtest du wirklich ALLE Daten (Aufgaben & Bestätigungen) zurücksetzen?')) {
-                const batch = db.batch();
-                studentsData.forEach(s => {
-                    const ref = db.collection('students').doc(s.id);
-                    batch.update(ref, { completedTasks: [], confirmed: false, parentName: '', confDate: '' });
-                });
-                await batch.commit();
+                try {
+                    const batch = db.batch();
+                    studentsData.forEach(s => {
+                        const ref = db.collection('students').doc(s.id);
+                        batch.update(ref, { completedTasks: [], confirmed: false, parentName: '', confDate: '' });
+                    });
+                    await batch.commit();
+                } catch(e) { console.error("Error resetting all:", e); }
             }
         });
 
@@ -654,11 +674,13 @@
             if (!pName) return alert('Bitte geben Sie Ihren Namen als Bestätigung ein.');
             
             const today = new Date().toLocaleDateString('de-CH');
-            await db.collection('students').doc(currentStudentId).update({
-                confirmed: true,
-                parentName: pName,
-                confDate: today
-            });
+            try {
+                await db.collection('students').doc(currentStudentId).update({
+                    confirmed: true,
+                    parentName: pName,
+                    confDate: today
+                });
+            } catch(e) { console.error("Error confirming parent:", e); }
         });
 
         function checkConfirmationStatus(student) {
@@ -672,12 +694,10 @@
                 success.classList.remove('hidden');
                 dateDisplay.innerText = student.confDate;
                 parentDisplay.innerText = "Bestätigt durch: " + student.parentName;
-                // Pre-fill the input even if hidden, just for consistent state
                 document.getElementById('parent-name').value = student.parentName || '';
             } else {
                 form.classList.remove('hidden');
                 success.classList.add('hidden');
-                // Ensure field is empty for a new confirmation or if unconfirmed
                 document.getElementById('parent-name').value = '';
             }
         }
@@ -688,22 +708,24 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = async function(e) {
-                const lines = e.target.result.split('\n');
-                const batch = db.batch();
-                let masterNames = [];
-                
-                lines.forEach(line => {
-                    const name = line.trim();
-                    if (name) {
-                        const ref = db.collection('students').doc();
-                        batch.set(ref, { name, completedTasks: [], confirmed: false, parentName: '', confDate: '' });
-                        masterNames.push(name);
-                    }
-                });
-                
-                await db.collection('config').doc('class').set({ names: masterNames }, { merge: true });
-                await batch.commit();
-                alert('Klassenliste erfolgreich importiert!');
+                try {
+                    const lines = e.target.result.split('\n');
+                    const batch = db.batch();
+                    let masterNames = [];
+                    
+                    lines.forEach(line => {
+                        const name = line.trim();
+                        if (name) {
+                            const ref = db.collection('students').doc();
+                            batch.set(ref, { name, completedTasks: [], confirmed: false, parentName: '', confDate: '' });
+                            masterNames.push(name);
+                        }
+                    });
+                    
+                    await db.collection('config').doc('class').set({ names: masterNames }, { merge: true });
+                    await batch.commit();
+                    alert('Klassenliste erfolgreich importiert!');
+                } catch(err) { console.error("Error importing list:", err); }
             };
             reader.readAsText(file);
         });
