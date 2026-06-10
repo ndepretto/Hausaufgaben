@@ -6,6 +6,7 @@
 <title>Wer – Was – Bis wann | Bulletproof Master</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- qrcodejs library correctly placed in head -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
         :root {
@@ -55,6 +56,11 @@
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        #qrcode canvas, #qrcode img {
+            margin: 0 auto;
+            display: block;
         }
     </style>
 <script id="tailwind-config">
@@ -110,7 +116,7 @@
 </header>
 <main class="max-w-3xl mx-auto px-6 py-12">
 <!-- View: Student Selector (Initial State) -->
-<section class="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500" id="view-selector">
+<section class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500" id="view-selector">
 <div class="text-center space-y-3">
 <h2 class="text-4xl font-extrabold tracking-tight">Schüler-Ansicht</h2>
 <p class="text-slate-500 text-lg">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
@@ -121,7 +127,7 @@
 <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Dein Name</label>
 <div class="relative">
 <select class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-lg appearance-none cursor-pointer" id="student-dropdown">
-<option value="">Warte auf Klassenliste vom Lehrer...</option>
+<option value="">Warte auf Klassenliste...</option>
 </select>
 <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
 <span class="material-symbols-outlined">expand_more</span>
@@ -131,16 +137,25 @@
 <button class="w-full py-4 bg-primary text-white font-bold text-lg rounded-xl hover:shadow-lg hover:shadow-primary/20 active:scale-[0.98] transition-all" id="btn-enter-student">Anmelden</button>
 </div>
 </div>
-<!-- App Promo Section -->
-<div class="glass-card p-8 rounded-lg border border-slate-200 flex flex-col md:flex-row items-center gap-8 shadow-sm">
-<div class="p-2 bg-white border border-slate-100 rounded-lg shrink-0" id="qrcode"></div>
-<div class="space-y-3 text-center md:text-left">
-<h3 class="font-bold text-xl">Als App nutzen</h3>
-<p class="text-slate-600 text-sm leading-relaxed">Scanne den Code mit deinem Handy, um das Aufgabenheft direkt auf deinem Home-Bildschirm zu speichern.</p>
-<div class="flex flex-wrap justify-center md:justify-start gap-3 pt-2">
-<span class="flex items-center gap-1 text-[10px] font-bold uppercase text-slate-400"><span class="material-symbols-outlined text-sm">qr_code_scanner</span> Scannen</span>
-<span class="flex items-center gap-1 text-[10px] font-bold uppercase text-slate-400"><span class="material-symbols-outlined text-sm">add_box</span> Zum Home-Bildschirm</span>
+<!-- App Promo Section (Prominent QR Code) -->
+<div class="glass-card p-8 rounded-lg border-2 border-primary/10 flex flex-col items-center text-center gap-6 shadow-md" id="qrcode-container">
+<div class="space-y-2">
+<h3 class="font-extrabold text-2xl text-slate-800">Als App nutzen</h3>
+<p class="text-slate-500 text-sm max-w-md mx-auto leading-relaxed">Scanne den Code mit deinem Handy, um das Aufgabenheft direkt auf deinem Home-Bildschirm zu speichern und Live-Updates zu erhalten.</p>
 </div>
+<div class="p-4 bg-white border-4 border-white rounded-2xl shadow-inner flex items-center justify-center" style="min-width: 152px; min-height: 152px;">
+<div id="qrcode"></div>
+</div>
+<div class="flex flex-wrap justify-center gap-6 pt-2">
+<span class="flex items-center gap-2 text-xs font-bold uppercase text-slate-400">
+<span class="material-symbols-outlined text-primary text-lg">qr_code_scanner</span> Scannen
+                </span>
+<span class="flex items-center gap-2 text-xs font-bold uppercase text-slate-400">
+<span class="material-symbols-outlined text-primary text-lg">add_box</span> Zum Home-Bildschirm
+                </span>
+<span class="flex items-center gap-2 text-xs font-bold uppercase text-slate-400">
+<span class="material-symbols-outlined text-primary text-lg">sync</span> Live Sync
+                </span>
 </div>
 </div>
 </section>
@@ -318,7 +333,7 @@
         appId: "1:123456789:web:mock123"
     };
 
-    // 2. Full Initialization before fetching
+    // 2. Full Initialization
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
@@ -355,27 +370,42 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Clean URL QR Code Generation
-    const initQRCode = () => {
-        const qrContainer = document.getElementById("qrcode");
-        if (qrContainer) {
-            qrContainer.innerHTML = '';
-            // Points to the base URL only
-            const cleanURL = window.location.origin + window.location.pathname;
-            new QRCode(qrContainer, {
-                text: cleanURL,
-                width: 120,
-                height: 120,
+    // Fixed QR Code Generation - Independent of data loading
+    const generateQRCode = () => {
+        const qrElement = document.getElementById("qrcode");
+        if (!qrElement) return;
+        
+        // Clean container before redraw
+        qrElement.innerHTML = '';
+        
+        // Check if library is available
+        if (typeof QRCode === "undefined") {
+            console.error("QRCode library not loaded yet.");
+            setTimeout(generateQRCode, 100); 
+            return;
+        }
+
+        try {
+            // Use current URL with location.href
+            const qrUrl = window.location.href;
+            
+            new QRCode(qrElement, {
+                text: qrUrl,
+                width: 144,
+                height: 144,
                 colorDark : "#0058bc",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.Level.H
             });
+            console.log("QR Code successfully generated for: ", qrUrl);
+        } catch (e) {
+            console.error("QR Code Error:", e);
+            qrElement.innerHTML = '<div class="text-[10px] text-slate-300">Fehler beim Laden</div>';
         }
     };
 
-    // Real-time Listeners with Robustness
+    // Real-time Listeners
     const initDataListeners = () => {
-        // 3. Ensure 'config/class' is read correctly in real-time
         db.collection('config').doc('class').onSnapshot(doc => {
             if(doc.exists) {
                 configData = doc.data();
@@ -383,7 +413,6 @@
             }
         }, err => console.error("Config Listener Error:", err));
 
-        // Listen for students
         db.collection('students').orderBy('name').onSnapshot(snapshot => {
             studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             updateStudentDropdowns();
@@ -398,7 +427,6 @@
             }
         }, err => console.error("Firestore Student Listener Error:", err));
 
-        // Listen for tasks
         db.collection('tasks').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
             tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderStudentTasks();
@@ -415,9 +443,8 @@
 
         const currentVal = dropdown.value;
         
-        // 4. Fallback message if list is empty
         if (studentsData.length === 0) {
-            dropdown.innerHTML = '<option value="">Warte auf Klassenliste vom Lehrer...</option>';
+            dropdown.innerHTML = '<option value="">Warte auf Klassenliste...</option>';
             return;
         }
 
@@ -754,9 +781,14 @@
     });
 
     // Initialize App
-    document.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('load', () => {
+        // 1. First trigger QR code generation immediately to avoid "Laden..." hang
+        generateQRCode();
+        
+        // 2. Initialize Firebase background listeners
         initDataListeners();
-        initQRCode();
+        
+        // 3. Set default view
         showView('selector');
     });
 </script>
