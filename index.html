@@ -3,340 +3,587 @@
 <html class="light" lang="de"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Wer – Was – Bis wann | Lehrer-Modus</title>
+<title>Wer – Was – Bis wann | Bulletproof Master</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <style>
+        :root {
+            --primary: #0058bc;
+            --background: #f9f9fe;
+            --surface: #ffffff;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
             vertical-align: middle;
         }
         .glass-panel {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-        }
-        .worksheet-border {
-            border: 2px solid #ededf2;
-        }
-        .subject-bar {
-            width: 6px;
-            height: 100%;
-            position: absolute;
-            left: 0;
-            top: 0;
+            border: 1px solid #e2e2e7;
         }
         @keyframes pulse-live {
-            0% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.1); }
-            100% { opacity: 1; transform: scale(1); }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
         }
         .live-indicator {
             animation: pulse-live 2s infinite;
         }
+        .subject-tag {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 14px;
+            color: white;
+        }
+        /* Subject Colors */
+        .bg-de { background-color: #ef4444; } /* Deutsch */
+        .bg-ma { background-color: #3b82f6; } /* Mathe */
+        .bg-e { background-color: #10b981; }  /* Englisch */
+        .bg-nmg { background-color: #f59e0b; }/* NMG */
+        .bg-bg { background-color: #8b5cf6; } /* Bildnerisches Gestalten */
+        .bg-mu { background-color: #ec4899; } /* Musik */
+        .bg-sp { background-color: #64748b; } /* Sport */
+        .bg-other { background-color: #94a3b8; }
     </style>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
-                    "colors": {
-                        "secondary-fixed": "#e2dfff",
-                        "surface-variant": "#e2e2e7",
-                        "surface-bright": "#f9f9fe",
-                        "on-tertiary-container": "#fffbff",
-                        "on-background": "#1a1c1f",
-                        "inverse-surface": "#2e3034",
-                        "on-error": "#ffffff",
-                        "surface-container-lowest": "#ffffff",
-                        "on-secondary-fixed-variant": "#3631b4",
-                        "on-secondary": "#ffffff",
-                        "on-tertiary-fixed": "#351000",
-                        "on-tertiary": "#ffffff",
-                        "secondary": "#4c4aca",
-                        "tertiary": "#9e3d00",
-                        "primary": "#0058bc",
-                        "tertiary-fixed-dim": "#ffb595",
-                        "secondary-container": "#6664e4",
-                        "surface-tint": "#005bc1",
-                        "on-secondary-container": "#fffbff",
-                        "surface-container-highest": "#e2e2e7",
-                        "on-error-container": "#93000a",
-                        "inverse-on-surface": "#f0f0f5",
-                        "primary-container": "#0070eb",
-                        "on-primary-container": "#fefcff",
-                        "background": "#f9f9fe",
-                        "primary-fixed": "#d8e2ff",
-                        "on-primary-fixed-variant": "#004493",
-                        "error-container": "#ffdad6",
-                        "on-primary": "#ffffff",
-                        "inverse-primary": "#adc6ff",
+                    colors: {
+                        primary: "#0058bc",
+                        "primary-container": "#d8e2ff",
+                        "on-primary-container": "#001a41",
+                        background: "#f9f9fe",
+                        surface: "#ffffff",
                         "surface-container": "#ededf2",
-                        "on-tertiary-fixed-variant": "#7c2e00",
-                        "on-secondary-fixed": "#0c006a",
-                        "surface-container-high": "#e8e8ed",
-                        "error": "#ba1a1a",
-                        "on-surface-variant": "#414755",
-                        "on-surface": "#1a1c1f",
-                        "surface": "#f9f9fe",
-                        "secondary-fixed-dim": "#c2c1ff",
-                        "surface-dim": "#d9dade",
-                        "primary-fixed-dim": "#adc6ff",
-                        "tertiary-container": "#c64f00",
-                        "outline": "#717786",
-                        "on-primary-fixed": "#001a41"
+                        outline: "#717786",
+                        error: "#ba1a1a",
+                        "on-error": "#ffffff"
                     },
-                    "borderRadius": {
-                        "DEFAULT": "1rem",
-                        "lg": "2rem",
-                        "xl": "3rem",
-                        "full": "9999px"
-                    },
-                    "spacing": {
-                        "container-margin": "2rem",
-                        "stack-padding": "1.25rem",
-                        "input-padding": "1rem",
-                        "gutter": "1.5rem"
-                    },
-                    "fontFamily": {
-                        "label-caps": ["Inter"],
-                        "h1": ["Inter"],
-                        "h2": ["Inter"],
-                        "body-md": ["Inter"],
-                        "subject-tag": ["Inter"],
-                        "body-lg": ["Inter"]
-                    },
-                    "fontSize": {
-                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
-                        "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
-                        "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
-                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
-                        "subject-tag": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
-                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+                    borderRadius: {
+                        DEFAULT: "1rem",
+                        lg: "1.5rem"
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-background text-on-surface font-body-md min-h-screen">
-<!-- Top Navigation Anchor -->
-<header class="bg-surface sticky top-0 z-50 border-b border-outline-variant">
-<div class="flex justify-between items-center w-full px-gutter max-w-[1100px] mx-auto h-16">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">school</span>
-<span class="font-h2 text-h2 font-bold text-on-surface">Wer – Was – Bis wann</span>
+<body class="min-h-screen text-slate-900 pb-20">
+<!-- Header -->
+<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+<div class="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-xl">assignment</span>
+</div>
+<h1 class="font-bold text-lg tracking-tight">Wer – Was – Bis wann</h1>
 </div>
 <div class="flex items-center gap-4">
-<div class="flex items-center gap-2 bg-surface-container-high px-3 py-1.5 rounded-full" id="cloud-status">
-<span class="w-2.5 h-2.5 bg-green-500 rounded-full live-indicator"></span>
-<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Connected Live</span>
+<div class="hidden sm:flex items-center gap-2 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100" id="cloud-status">
+<span class="w-2 h-2 bg-emerald-500 rounded-full live-indicator"></span>
+<span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Connected Live</span>
 </div>
-<button class="p-2 rounded-full hover:bg-surface-container-high transition-colors" onclick="window.location.reload()">
-<span class="material-symbols-outlined text-primary">refresh</span>
+<button class="p-2 hover:bg-slate-100 rounded-full transition-colors" id="view-toggle" title="Ansicht wechseln">
+<span class="material-symbols-outlined text-slate-600">settings</span>
 </button>
 </div>
 </div>
 </header>
-<main class="max-w-[1100px] mx-auto px-gutter py-12">
-<!-- Login Overlay (Password Protection) -->
-<div class="fixed inset-0 z-[100] flex items-center justify-center bg-surface px-4" id="login-overlay">
-<div class="w-full max-w-md p-8 bg-surface-container-low rounded-xl worksheet-border text-center">
-<div class="mb-6">
-<div class="w-16 h-16 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center mx-auto mb-4">
-<span class="material-symbols-outlined text-4xl">lock</span>
+<main class="max-w-3xl mx-auto px-6 py-10">
+<!-- View: Student Selector (Initial State) -->
+<section class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500" id="view-selector">
+<div class="text-center space-y-2">
+<h2 class="text-3xl font-extrabold tracking-tight">Schüler-Ansicht</h2>
+<p class="text-slate-500">Bitte wähle deinen Namen aus der Liste aus.</p>
 </div>
-<h1 class="font-h1 text-h1 mb-2">Lehrer-Modus</h1>
-<p class="text-on-surface-variant">Bitte geben Sie das Passwort ein, um die Schüler-Erfassung zu verwalten.</p>
+<div class="bg-white p-8 rounded-lg shadow-sm border border-slate-200">
+<label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Dein Name</label>
+<select class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all text-lg appearance-none" id="student-dropdown">
+<option value="">Namen wählen...</option>
+</select>
+<button class="w-full mt-6 py-4 bg-primary text-white font-bold rounded-xl hover:opacity-90 active:scale-[0.98] transition-all" id="btn-enter-student">Anmelden</button>
 </div>
-<div class="space-y-4">
-<input class="w-full px-input-padding py-3 bg-surface rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" id="admin-password" placeholder="Passwort eingeben" type="password"/>
-<button class="w-full py-4 bg-primary text-on-primary font-bold rounded-lg hover:opacity-90 active:scale-[0.98] transition-all" onclick="checkPassword()">Anmelden</button>
-<p class="text-error font-label-caps text-label-caps hidden" id="login-error">Falsches Passwort. Bitte erneut versuchen.</p>
+<div class="grid grid-cols-2 gap-4 text-[11px] text-slate-400 font-medium">
+<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-de"></span> Deutsch</div>
+<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-ma"></span> Mathematik</div>
+<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-e"></span> Englisch</div>
+<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-nmg"></span> NMG</div>
 </div>
-</div>
-</div>
-<!-- Main Content (Hidden until login) -->
-<div class="hidden animate-in fade-in duration-500" id="admin-content">
-<div class="grid grid-cols-1 md:grid-cols-12 gap-8">
-<!-- Sidebar / Quick Actions -->
-<aside class="md:col-span-4 space-y-6">
-<div class="bg-surface-container-low p-6 rounded-lg worksheet-border">
-<h3 class="font-h2 text-h2 mb-4">Klassen-Setup</h3>
-<p class="text-body-md text-on-surface-variant mb-6">Fügen Sie hier neue Schüler zu Ihrer digitalen Klassenliste hinzu. Die Daten werden sofort in der Cloud synchronisiert.</p>
-<div class="space-y-4">
-<label class="block font-label-caps text-label-caps text-outline uppercase">Einzelner Schüler</label>
-<div class="flex gap-2">
-<input class="flex-1 px-4 py-3 bg-surface rounded-lg border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" id="new-student-name" placeholder="Name eingeben" type="text"/>
-<button class="bg-primary text-on-primary p-3 rounded-lg flex items-center justify-center hover:opacity-90 active:scale-95 transition-all" onclick="addStudent()">
-<span class="material-symbols-outlined">person_add</span>
-</button>
-</div>
-</div>
-<div class="mt-8 pt-8 border-t border-outline-variant">
-<div class="flex items-center gap-3 text-primary mb-4">
-<span class="material-symbols-outlined">info</span>
-<span class="font-label-caps text-label-caps uppercase">Cloud-Technik</span>
-</div>
-<p class="text-[13px] text-on-surface-variant leading-relaxed">System nutzt Firebase <code>arrayUnion</code> für atomare Updates. Dies verhindert Schreibkonflikte bei gleichzeitigen Zugriffen.</p>
-</div>
-</div>
-<!-- Visual Context Image -->
-<div class="relative h-64 rounded-lg overflow-hidden group">
-<img class="w-full h-full object-cover grayscale-[20%] group-hover:scale-105 transition-transform duration-700" data-alt="A clean, modern classroom environment with a minimalist wooden desk and a digital tablet showing an organized student management interface. The lighting is soft and natural, coming from a large window. The color palette consists of soft blues, whites, and light wood tones, creating a calm and professional atmosphere for digital learning administration." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQs0WaYSSPdW0d9xZ6X-FdOPVfYTnICRokACf0FddweffqNP6rMrbfHCYwgQ5NdEPOPAOmA2woBVgNqM89TLVqUu0EVPuhxi_9NFF7DCL07ZMUGPcqdUjF-W17E-o6BEO_DDpKmMl9Ay-EZ5UsApfH18BYRre-srqsHwuhHJwxoQ-m5fDgCAS3Dmo4JOszsOkn-PuVmzB5m3OmfuumK7PutOHAGrTqxMpVrqlQJ1oZzQu6CTkuBK3CuvcJalyrr_XmoO874AcyYOU"/>
-<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4">
-<span class="text-white font-label-caps text-[10px] uppercase tracking-widest opacity-80">Workspace</span>
-<h4 class="text-white font-bold">Effiziente Cloud-Verwaltung</h4>
-</div>
-</div>
-</aside>
-<!-- Student List Canvas -->
-<div class="md:col-span-8">
-<div class="bg-surface p-8 rounded-lg worksheet-border min-h-[600px]">
-<div class="flex justify-between items-end mb-8">
+</section>
+<!-- View: Student Task List -->
+<section class="hidden space-y-6" id="view-student-tasks">
+<div class="flex items-center justify-between mb-8">
 <div>
-<h2 class="font-h1 text-h1">Aktuelle Klassenliste</h2>
-<p class="text-on-surface-variant">Schuljahr 2024/2025 – Klasse 4b</p>
+<h2 class="text-2xl font-bold" id="current-student-name">...</h2>
+<p class="text-slate-500 text-sm">Deine persönlichen Aufgaben &amp; Klassenaufgaben</p>
 </div>
-<span class="bg-primary-container text-on-primary-container px-4 py-2 rounded-full font-label-caps text-label-caps" id="student-count">0 Schüler</span>
+<button class="text-xs font-bold text-slate-400 hover:text-primary transition-colors" id="btn-logout-student">Abmelden</button>
 </div>
-<div class="space-y-3" id="student-list">
-<!-- Empty State -->
-<div class="flex flex-col items-center justify-center py-20 text-center" id="empty-state">
-<span class="material-symbols-outlined text-6xl text-outline-variant mb-4">groups</span>
-<p class="text-on-surface-variant font-medium">Noch keine Schüler erfasst.</p>
-<p class="text-outline text-sm">Nutzen Sie das Feld links, um zu starten.</p>
+<div class="space-y-4" id="student-task-container">
+<!-- Tasks loaded via JS -->
 </div>
-<!-- List items will be injected here -->
+<!-- Parental Confirmation Section -->
+<div class="mt-12 bg-blue-50 border-2 border-dashed border-primary/30 p-8 rounded-lg" id="parent-confirmation-block">
+<div class="flex items-center gap-4 mb-6">
+<div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">verified_user</span>
+</div>
+<div>
+<h3 class="font-bold text-lg">Bestätigung der Eltern</h3>
+<p class="text-sm text-slate-600">Digitale Unterschrift nach Erledigung aller Aufgaben.</p>
+</div>
+</div>
+<div class="space-y-4" id="confirmation-form">
+<input class="w-full p-4 border-slate-200 rounded-xl" id="parent-name" placeholder="Name der Erziehungsberechtigten" type="text"/>
+<button class="w-full py-4 bg-primary text-white font-bold rounded-xl hover:opacity-90" id="btn-confirm-parent">Gesehen &amp; Bestätigen</button>
+</div>
+<div class="hidden text-center py-4 text-emerald-600 font-bold bg-white rounded-xl border border-emerald-200" id="confirmation-success">
+<span class="material-symbols-outlined mr-2">check_circle</span> Bestätigt am <span id="conf-date-display">--</span>
+</div>
+</div>
+</section>
+<!-- View: Admin Login -->
+<section class="hidden animate-in fade-in duration-300" id="view-admin-login">
+<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-sm border border-slate-200 text-center">
+<span class="material-symbols-outlined text-4xl text-primary mb-4">lock</span>
+<h2 class="text-2xl font-bold mb-6">Lehrer-Modus</h2>
+<input class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl mb-4 text-center" id="admin-pass" placeholder="Passwort eingeben" type="password"/>
+<button class="w-full py-4 bg-primary text-white font-bold rounded-xl" id="btn-login-admin">Anmelden</button>
+<p class="text-red-500 text-xs mt-4 hidden" id="admin-error">Falsches Passwort.</p>
+</div>
+</section>
+<!-- View: Admin Dashboard -->
+<section class="hidden space-y-12" id="view-admin-dashboard">
+<div class="flex items-center justify-between border-b border-slate-200 pb-6">
+<h2 class="text-3xl font-extrabold tracking-tight">Klassen-Dashboard</h2>
+<button class="px-4 py-2 text-slate-500 font-bold text-sm hover:text-slate-800 transition-colors" id="btn-admin-logout">Abmelden</button>
+</div>
+<!-- Task Creation -->
+<div class="bg-white p-8 rounded-lg border border-slate-200 space-y-6">
+<h3 class="font-bold text-lg flex items-center gap-2"><span class="material-symbols-outlined text-primary">add_circle</span> Neue Aufgabe</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Fach</label>
+<select class="w-full p-3 bg-slate-50 border-slate-200 rounded-lg" id="task-subject">
+<option value="de">Deutsch</option>
+<option value="ma">Mathematik</option>
+<option value="e">Englisch</option>
+<option value="nmg">NMG</option>
+<option value="bg">BG</option>
+<option value="mu">Musik</option>
+<option value="sp">Sport</option>
+<option value="other">Anderes</option>
+</select>
+</div>
+<div>
+<label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Zuweisung</label>
+<select class="w-full p-3 bg-slate-50 border-slate-200 rounded-lg" id="task-target">
+<option value="all">Ganze Klasse</option>
+<!-- Students added here via JS -->
+</select>
+</div>
+<div class="md:col-span-2">
+<label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Beschreibung</label>
+<input class="w-full p-3 bg-slate-50 border-slate-200 rounded-lg" id="task-desc" placeholder="z.B. Arbeitsblatt S. 12 lösen" type="text"/>
+</div>
+<div>
+<label class="block text-[10px] font-bold uppercase text-slate-400 mb-1">Bis wann (TT.MM.JJJJ)</label>
+<input class="w-full p-3 bg-slate-50 border-slate-200 rounded-lg" id="task-date" placeholder="z.B. 12.10.2024" type="text"/>
+</div>
+<div class="flex items-end">
+<button class="w-full py-3 bg-primary text-white font-bold rounded-lg hover:bg-blue-700 transition-colors" id="btn-add-task">Hinzufügen</button>
 </div>
 </div>
 </div>
+<!-- Task Management List -->
+<div class="space-y-4">
+<h3 class="font-bold text-lg">Aktive Aufgaben</h3>
+<div class="space-y-2" id="admin-task-list">
+<!-- Tasks loaded via JS -->
 </div>
 </div>
+<!-- Student Management & Progress -->
+<div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
+<div class="p-6 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+<h3 class="font-bold text-lg">Schüler &amp; Fortschritt</h3>
+<div class="flex gap-2">
+<input accept=".txt" class="hidden" id="import-list" type="file"/>
+<button class="text-[10px] font-bold uppercase bg-white border border-slate-300 px-3 py-1.5 rounded hover:bg-slate-50" onclick="document.getElementById('import-list').click()">Liste Importieren (.txt)</button>
+<button class="text-[10px] font-bold uppercase bg-red-50 text-red-600 border border-red-100 px-3 py-1.5 rounded hover:bg-red-100" id="btn-reset-all">Alles Zurücksetzen</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+<th class="px-6 py-4">Name</th>
+<th class="px-6 py-4">Erledigt</th>
+<th class="px-6 py-4">Status Bestätigung</th>
+<th class="px-6 py-4 text-right">Aktion</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100" id="progress-table-body">
+<!-- Student rows added here -->
+</tbody>
+</table>
+</div>
+<div class="p-6 bg-slate-50 border-t border-slate-200 flex gap-2">
+<input class="flex-1 p-2 border-slate-200 rounded-lg text-sm" id="new-student-name" placeholder="Neuer Schüler-Name" type="text"/>
+<button class="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm" id="btn-add-student">Hinzufügen</button>
+</div>
+</div>
+</section>
 </main>
-<!-- Footer Anchor -->
-<footer class="bg-surface mt-20 border-t border-outline-variant">
-<div class="w-full max-w-[1100px] mx-auto py-8 px-gutter flex flex-col md:flex-row justify-between items-center gap-4">
-<span class="font-label-caps text-label-caps font-bold text-on-surface-variant">© 2024 Wer – Was – Bis wann</span>
-<div class="flex gap-6">
-<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">Datenschutz</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">Impressum</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md" href="#">Hilfe</a>
-</div>
-</div>
+<!-- Footer -->
+<footer class="fixed bottom-0 left-0 right-0 py-4 px-6 bg-white/50 backdrop-blur-sm border-t border-slate-100 flex justify-center">
+<p class="text-[10px] font-bold uppercase text-slate-400 tracking-widest">© 2024 Digitales Aufgabenheft 4b</p>
 </footer>
-<script type="module">
-        /* Mocking Firebase functionality for demonstration since actual config depends on session 290 context */
-        /* In a real scenario, you would import the actual SDKs here */
-        
-        // Emulated Database State
-        let students = [];
-        const DATABASE_ID = "school_class_4b_2024";
-
-        window.checkPassword = function() {
-            const pass = document.getElementById('admin-password').value;
-            const errorMsg = document.getElementById('login-error');
-            
-            if(pass === 'lehrer123') {
-                document.getElementById('login-overlay').classList.add('hidden');
-                document.getElementById('admin-content').classList.remove('hidden');
-                renderList();
-            } else {
-                errorMsg.classList.remove('hidden');
-                setTimeout(() => errorMsg.classList.add('hidden'), 3000);
-            }
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+        // FIREBASE CONFIGURATION (Placeholder - In production use specific credentials)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-mock-key-12345",
+            authDomain: "edu-dashboard-4b.firebaseapp.com",
+            projectId: "edu-dashboard-4b",
+            storageBucket: "edu-dashboard-4b.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:mock123"
         };
 
-        window.addStudent = function() {
-            const nameInput = document.getElementById('new-student-name');
-            const name = nameInput.value.trim();
-            
-            if(name) {
-                // FIREBASE LOGIC EMULATION (Session 290 Update)
-                // Real usage:
-                // import { doc, updateDoc, arrayUnion } from "firebase/firestore";
-                // const classRef = doc(db, "classes", "4b");
-                // await updateDoc(classRef, { students: arrayUnion(name) });
-                
-                // Emulated UI Response:
-                students.push(name);
-                nameInput.value = '';
-                renderList();
-                
-                // Simulate Cloud Sync Toast
-                showToast(`Schüler "${name}" wurde zur Cloud hinzugefügt.`);
-            }
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // App State
+        let currentStudent = null;
+        let isAdmin = false;
+        let studentsData = [];
+        let tasksData = [];
+
+        // DOM Elements
+        const views = {
+            selector: document.getElementById('view-selector'),
+            studentTasks: document.getElementById('view-student-tasks'),
+            adminLogin: document.getElementById('view-admin-login'),
+            adminDashboard: document.getElementById('view-admin-dashboard')
         };
 
-        function renderList() {
-            const listContainer = document.getElementById('student-list');
-            const emptyState = document.getElementById('empty-state');
-            const countBadge = document.getElementById('student-count');
+        const showView = (viewName) => {
+            Object.values(views).forEach(v => v.classList.add('hidden'));
+            views[viewName].classList.remove('hidden');
+        };
+
+        // Data Syncing
+        db.collection('students').orderBy('name').onSnapshot(snapshot => {
+            studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            updateStudentDropdowns();
+            updateProgressTable();
+            if (currentStudent) {
+                const updated = studentsData.find(s => s.name === currentStudent.name);
+                if (updated) {
+                    currentStudent = updated;
+                    renderStudentTasks();
+                    checkConfirmationStatus();
+                }
+            }
+        });
+
+        db.collection('tasks').orderBy('date', 'desc').onSnapshot(snapshot => {
+            tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderStudentTasks();
+            renderAdminTasks();
+            updateProgressTable();
+        });
+
+        // UI Updates
+        function updateStudentDropdowns() {
+            const dropdown = document.getElementById('student-dropdown');
+            const targetSelect = document.getElementById('task-target');
             
-            if(students.length === 0) {
-                emptyState.classList.remove('hidden');
-                listContainer.querySelectorAll('.student-card').forEach(el => el.remove());
-                countBadge.innerText = "0 Schüler";
+            const currentVal = dropdown.value;
+            dropdown.innerHTML = '<option value="">Namen wählen...</option>';
+            targetSelect.innerHTML = '<option value="all">Ganze Klasse</option>';
+            
+            studentsData.forEach(s => {
+                dropdown.innerHTML += `<option value="${s.name}">${s.name}</option>`;
+                targetSelect.innerHTML += `<option value="${s.name}">${s.name}</option>`;
+            });
+            dropdown.value = currentVal;
+        }
+
+        function renderStudentTasks() {
+            if (!currentStudent) return;
+            const container = document.getElementById('student-task-container');
+            container.innerHTML = '';
+
+            const relevantTasks = tasksData.filter(t => t.target === 'all' || t.target === currentStudent.name);
+            
+            if (relevantTasks.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 text-slate-400 italic">Keine Aufgaben aktuell.</div>';
                 return;
             }
 
-            emptyState.classList.add('hidden');
-            countBadge.innerText = `${students.length} Schüler`;
-            
-            // Clear only dynamic items
-            const oldItems = listContainer.querySelectorAll('.student-card');
-            oldItems.forEach(el => el.remove());
+            relevantTasks.forEach(task => {
+                const isCompleted = (currentStudent.completedTasks || []).includes(task.id);
+                const isLocked = currentStudent.confirmed;
 
-            students.forEach((name, index) => {
                 const card = document.createElement('div');
-                card.className = "student-card group flex items-center justify-between p-4 bg-surface rounded-lg worksheet-border relative overflow-hidden hover:shadow-lg hover:shadow-primary/5 transition-all duration-300";
+                card.className = `p-4 bg-white rounded-xl border-2 transition-all flex items-center gap-4 ${isCompleted ? 'border-emerald-100 opacity-60' : 'border-slate-100'}`;
+                
                 card.innerHTML = `
-                    <div class="subject-bar bg-primary"></div>
-                    <div class="flex items-center gap-4 pl-4">
-                        <div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-bold text-primary">
-                            ${index + 1}
-                        </div>
-                        <div>
-                            <p class="font-label-caps text-label-caps text-outline uppercase mb-0.5">Schüler</p>
-                            <p class="font-h2 text-lg text-on-surface">${name}</p>
-                        </div>
+                    <div class="subject-tag bg-${task.subject}">${task.subject.toUpperCase()}</div>
+                    <div class="flex-1">
+                        <p class="font-bold text-slate-800">${task.description}</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Bis: ${task.date}</p>
                     </div>
-                    <div class="flex gap-2 pr-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button class="p-2 text-outline hover:text-primary hover:bg-primary-container/10 rounded-full transition-colors">
-                            <span class="material-symbols-outlined">edit</span>
-                        </button>
-                        <button onclick="removeStudent(${index})" class="p-2 text-outline hover:text-error hover:bg-error-container/10 rounded-full transition-colors">
-                            <span class="material-symbols-outlined">delete</span>
-                        </button>
-                    </div>
+                    <button 
+                        ${isLocked ? 'disabled' : ''}
+                        onclick="toggleTask('${task.id}')"
+                        class="w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200 text-transparent hover:border-primary'}"
+                    >
+                        <span class="material-symbols-outlined text-sm">check</span>
+                    </button>
                 `;
-                listContainer.appendChild(card);
+                container.appendChild(card);
             });
         }
 
-        window.removeStudent = function(index) {
-            students.splice(index, 1);
-            renderList();
+        async function toggleTask(taskId) {
+            const completed = currentStudent.completedTasks || [];
+            let updated;
+            if (completed.includes(taskId)) {
+                updated = completed.filter(id => id !== taskId);
+            } else {
+                updated = [...completed, taskId];
+            }
+            
+            await db.collection('students').doc(currentStudent.id).update({
+                completedTasks: updated
+            });
         }
 
-        function showToast(msg) {
-            const toast = document.createElement('div');
-            toast.className = "fixed bottom-8 left-1/2 -translate-x-1/2 bg-on-background text-background px-6 py-3 rounded-full shadow-xl z-[200] animate-bounce flex items-center gap-3";
-            toast.innerHTML = `<span class="material-symbols-outlined text-green-400">cloud_done</span> ${msg}`;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+        function renderAdminTasks() {
+            const container = document.getElementById('admin-task-list');
+            container.innerHTML = '';
+            
+            tasksData.forEach(task => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg text-sm";
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 bg-${task.subject} rounded flex items-center justify-center text-[10px] font-bold text-white uppercase">${task.subject}</span>
+                        <div>
+                            <p class="font-bold">${task.description}</p>
+                            <p class="text-[10px] text-slate-400">${task.target === 'all' ? 'Ganze Klasse' : task.target} • ${task.date}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteTask('${task.id}')" class="text-red-400 hover:text-red-600 p-1">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
         }
 
-        // Support Enter Key for login
-        document.getElementById('admin-password').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') checkPassword();
+        async function deleteTask(id) {
+            if (confirm('Aufgabe wirklich löschen?')) {
+                await db.collection('tasks').doc(id).delete();
+            }
+        }
+
+        function updateProgressTable() {
+            const tbody = document.getElementById('progress-table-body');
+            tbody.innerHTML = '';
+
+            studentsData.forEach(s => {
+                const relevantTasksCount = tasksData.filter(t => t.target === 'all' || t.target === s.name).length;
+                const completedCount = (s.completedTasks || []).filter(id => tasksData.some(t => t.id === id)).length;
+                const percentage = relevantTasksCount > 0 ? Math.round((completedCount / relevantTasksCount) * 100) : 0;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-bold text-sm">${s.name}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-primary" style="width: ${percentage}%"></div>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-500">${completedCount}/${relevantTasksCount}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        ${s.confirmed ? 
+                            `<span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Gesehen: ${s.confDate}</span>` : 
+                            `<span class="text-[10px] font-bold text-slate-400">Offen</span>`
+                        }
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="resetStudent('${s.id}')" class="p-1 text-slate-300 hover:text-orange-500 transition-colors" title="Schüler zurücksetzen">
+                            <span class="material-symbols-outlined text-sm">restart_alt</span>
+                        </button>
+                        <button onclick="deleteStudent('${s.id}')" class="p-1 text-slate-300 hover:text-red-500 transition-colors ml-2" title="Schüler löschen">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Logic Actions
+        document.getElementById('btn-enter-student').addEventListener('click', () => {
+            const name = document.getElementById('student-dropdown').value;
+            if (!name) return alert('Bitte Namen wählen');
+            currentStudent = studentsData.find(s => s.name === name);
+            document.getElementById('current-student-name').innerText = name;
+            showView('studentTasks');
+            renderStudentTasks();
+            checkConfirmationStatus();
         });
 
-        // Support Enter Key for adding students
-        document.getElementById('new-student-name').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') addStudent();
+        document.getElementById('btn-logout-student').addEventListener('click', () => {
+            currentStudent = null;
+            showView('selector');
         });
+
+        document.getElementById('view-toggle').addEventListener('click', () => {
+            if (isAdmin) showView('adminDashboard');
+            else showView('adminLogin');
+        });
+
+        document.getElementById('btn-login-admin').addEventListener('click', () => {
+            const pass = document.getElementById('admin-pass').value;
+            if (pass === 'lehrer123') {
+                isAdmin = true;
+                showView('adminDashboard');
+                document.getElementById('admin-pass').value = '';
+                document.getElementById('admin-error').classList.add('hidden');
+            } else {
+                document.getElementById('admin-error').classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('btn-admin-logout').addEventListener('click', () => {
+            isAdmin = false;
+            showView('selector');
+        });
+
+        document.getElementById('btn-add-task').addEventListener('click', async () => {
+            const subject = document.getElementById('task-subject').value;
+            const target = document.getElementById('task-target').value;
+            const desc = document.getElementById('task-desc').value;
+            const date = document.getElementById('task-date').value;
+
+            if (!desc || !date) return alert('Bitte alle Felder ausfüllen');
+
+            await db.collection('tasks').add({
+                subject, target, description: desc, date, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            document.getElementById('task-desc').value = '';
+        });
+
+        document.getElementById('btn-add-student').addEventListener('click', async () => {
+            const name = document.getElementById('new-student-name').value.trim();
+            if (!name) return;
+            await db.collection('students').add({
+                name, completedTasks: [], confirmed: false, parentName: '', confDate: ''
+            });
+            document.getElementById('new-student-name').value = '';
+        });
+
+        async function deleteStudent(id) {
+            if (confirm('Schüler wirklich löschen?')) {
+                await db.collection('students').doc(id).delete();
+            }
+        }
+
+        async function resetStudent(id) {
+            if (confirm('Erledigte Aufgaben für diesen Schüler zurücksetzen?')) {
+                await db.collection('students').doc(id).update({
+                    completedTasks: [],
+                    confirmed: false,
+                    parentName: '',
+                    confDate: ''
+                });
+            }
+        }
+
+        document.getElementById('btn-reset-all').addEventListener('click', async () => {
+            if (confirm('Alle Aufgaben für ALLE Schüler zurücksetzen und Bestätigungen löschen?')) {
+                const batch = db.batch();
+                studentsData.forEach(s => {
+                    const ref = db.collection('students').doc(s.id);
+                    batch.update(ref, { completedTasks: [], confirmed: false, parentName: '', confDate: '' });
+                });
+                await batch.commit();
+            }
+        });
+
+        document.getElementById('btn-confirm-parent').addEventListener('click', async () => {
+            const pName = document.getElementById('parent-name').value.trim();
+            if (!pName) return alert('Bitte Namen der Eltern eingeben');
+            
+            const today = new Date().toLocaleDateString('de-CH');
+            await db.collection('students').doc(currentStudent.id).update({
+                confirmed: true,
+                parentName: pName,
+                confDate: today
+            });
+        });
+
+        function checkConfirmationStatus() {
+            const form = document.getElementById('confirmation-form');
+            const success = document.getElementById('confirmation-success');
+            const dateDisplay = document.getElementById('conf-date-display');
+            
+            if (currentStudent.confirmed) {
+                form.classList.add('hidden');
+                success.classList.remove('hidden');
+                dateDisplay.innerText = currentStudent.confDate;
+            } else {
+                form.classList.remove('hidden');
+                success.classList.add('hidden');
+            }
+        }
+
+        // Import Logic
+        document.getElementById('import-list').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const lines = e.target.result.split('\n');
+                const batch = db.batch();
+                lines.forEach(line => {
+                    const name = line.trim();
+                    if (name) {
+                        const ref = db.collection('students').doc();
+                        batch.set(ref, { name, completedTasks: [], confirmed: false, parentName: '', confDate: '' });
+                    }
+                });
+                await batch.commit();
+                alert('Liste importiert!');
+            };
+            reader.readAsText(file);
+        });
+
+        // Initialize App
+        showView('selector');
+
     </script>
 </body></html>
