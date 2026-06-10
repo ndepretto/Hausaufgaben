@@ -6,8 +6,6 @@
 <title>Wer – Was – Bis wann | Bulletproof Master</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- qrcodejs library correctly placed in head -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
         :root {
             --primary: #0058bc;
@@ -58,9 +56,11 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-        #qrcode canvas, #qrcode img {
+        #qrcode img {
             margin: 0 auto;
             display: block;
+            max-width: 100%;
+            height: auto;
         }
     </style>
 <script id="tailwind-config">
@@ -127,7 +127,7 @@
 <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Dein Name</label>
 <div class="relative">
 <select class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-lg appearance-none cursor-pointer" id="student-dropdown">
-<option value="">Warte auf Klassenliste...</option>
+<option value="">Warte auf Klassenliste vom Lehrer...</option>
 </select>
 <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
 <span class="material-symbols-outlined">expand_more</span>
@@ -143,19 +143,22 @@
 <h3 class="font-extrabold text-2xl text-slate-800">Als App nutzen</h3>
 <p class="text-slate-500 text-sm max-w-md mx-auto leading-relaxed">Scanne den Code mit deinem Handy, um das Aufgabenheft direkt auf deinem Home-Bildschirm zu speichern und Live-Updates zu erhalten.</p>
 </div>
-<div class="p-4 bg-white border-4 border-white rounded-2xl shadow-inner flex items-center justify-center" style="min-width: 152px; min-height: 152px;">
-<div id="qrcode"></div>
+<!-- Pure white background for scanability -->
+<div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-inner flex items-center justify-center min-w-[200px] min-h-[200px] relative z-10">
+<div class="w-full h-full flex items-center justify-center" id="qrcode">
+<!-- QR Code will be injected here via JS API -->
+</div>
 </div>
 <div class="flex flex-wrap justify-center gap-6 pt-2">
 <span class="flex items-center gap-2 text-xs font-bold uppercase text-slate-400">
 <span class="material-symbols-outlined text-primary text-lg">qr_code_scanner</span> Scannen
-                </span>
+                    </span>
 <span class="flex items-center gap-2 text-xs font-bold uppercase text-slate-400">
 <span class="material-symbols-outlined text-primary text-lg">add_box</span> Zum Home-Bildschirm
-                </span>
+                    </span>
 <span class="flex items-center gap-2 text-xs font-bold uppercase text-slate-400">
 <span class="material-symbols-outlined text-primary text-lg">sync</span> Live Sync
-                </span>
+                    </span>
 </div>
 </div>
 </section>
@@ -223,8 +226,8 @@
 <span class="w-8 h-8 bg-primary rounded flex items-center justify-center text-white">
 <span class="material-symbols-outlined text-sm">add</span>
 </span>
-                Neue Aufgabe erstellen
-            </h3>
+                    Neue Aufgabe erstellen
+                </h3>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 <div>
 <label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Fachbereich</label>
@@ -276,10 +279,10 @@
 <input accept=".txt" class="hidden" id="import-list" type="file"/>
 <button class="text-[10px] font-bold uppercase bg-white border border-slate-300 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors shadow-sm" onclick="document.getElementById('import-list').click()">
 <span class="material-symbols-outlined text-sm mr-1">upload_file</span> Liste Importieren
-                    </button>
+                        </button>
 <button class="text-[10px] font-bold uppercase bg-red-50 text-red-600 border border-red-100 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors" id="btn-reset-all">
 <span class="material-symbols-outlined text-sm mr-1">restart_alt</span> Alles Zurücksetzen
-                    </button>
+                        </button>
 </div>
 </div>
 <div class="overflow-x-auto">
@@ -323,473 +326,458 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-    // 1. Initial configuration
-    const firebaseConfig = {
-        apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
-        authDomain: "edu-dashboard-4b.firebaseapp.com",
-        projectId: "edu-dashboard-4b",
-        storageBucket: "edu-dashboard-4b.appspot.com",
-        messagingSenderId: "123456789",
-        appId: "1:123456789:web:mock123"
-    };
-
-    // 2. Full Initialization
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    // App State
-    let currentStudentId = null;
-    let studentsData = [];
-    let tasksData = [];
-    let configData = { names: [] };
-
-    // DOM Elements
-    const views = {
-        selector: document.getElementById('view-selector'),
-        studentTasks: document.getElementById('view-student-tasks'),
-        adminLogin: document.getElementById('view-admin-login'),
-        adminDashboard: document.getElementById('view-admin-dashboard')
-    };
-
-    // View Management
-    const showView = (viewName) => {
-        Object.values(views).forEach(v => {
-            if(v) v.classList.add('hidden');
-        });
-        if(views[viewName]) views[viewName].classList.remove('hidden');
-        
-        const navStudent = document.getElementById('nav-student');
-        const navAdmin = document.getElementById('nav-admin');
-        
-        if(navStudent) navStudent.classList.remove('bg-primary/10', 'text-primary');
-        if(navAdmin) navAdmin.classList.remove('bg-primary/10', 'text-primary');
-        
-        if((viewName === 'selector' || viewName === 'studentTasks') && navStudent) navStudent.classList.add('bg-primary/10', 'text-primary');
-        if((viewName === 'adminLogin' || viewName === 'adminDashboard') && navAdmin) navAdmin.classList.add('bg-primary/10', 'text-primary');
-        
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    // Fixed QR Code Generation - Independent of data loading
-    const generateQRCode = () => {
-        const qrElement = document.getElementById("qrcode");
-        if (!qrElement) return;
-        
-        // Clean container before redraw
-        qrElement.innerHTML = '';
-        
-        // Check if library is available
-        if (typeof QRCode === "undefined") {
-            console.error("QRCode library not loaded yet.");
-            setTimeout(generateQRCode, 100); 
-            return;
-        }
-
-        try {
-            // Use current URL with location.href
-            const qrUrl = window.location.href;
-            
-            new QRCode(qrElement, {
-                text: qrUrl,
-                width: 144,
-                height: 144,
-                colorDark : "#0058bc",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.Level.H
-            });
-            console.log("QR Code successfully generated for: ", qrUrl);
-        } catch (e) {
-            console.error("QR Code Error:", e);
-            qrElement.innerHTML = '<div class="text-[10px] text-slate-300">Fehler beim Laden</div>';
-        }
-    };
-
-    // Real-time Listeners
-    const initDataListeners = () => {
-        db.collection('config').doc('class').onSnapshot(doc => {
-            if(doc.exists) {
-                configData = doc.data();
-                updateStudentDropdowns();
-            }
-        }, err => console.error("Config Listener Error:", err));
-
-        db.collection('students').orderBy('name').onSnapshot(snapshot => {
-            studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            updateStudentDropdowns();
-            updateProgressTable();
-            
-            if (currentStudentId) {
-                const updated = studentsData.find(s => s.id === currentStudentId);
-                if (updated) {
-                    renderStudentTasks();
-                    checkConfirmationStatus(updated);
-                }
-            }
-        }, err => console.error("Firestore Student Listener Error:", err));
-
-        db.collection('tasks').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-            tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderStudentTasks();
-            renderAdminTasks();
-            updateProgressTable();
-        }, err => console.error("Firestore Task Listener Error:", err));
-    };
-
-    function updateStudentDropdowns() {
-        const dropdown = document.getElementById('student-dropdown');
-        const targetSelect = document.getElementById('task-target');
-        
-        if (!dropdown || !targetSelect) return;
-
-        const currentVal = dropdown.value;
-        
-        if (studentsData.length === 0) {
-            dropdown.innerHTML = '<option value="">Warte auf Klassenliste...</option>';
-            return;
-        }
-
-        dropdown.innerHTML = '<option value="">Namen wählen...</option>';
-        targetSelect.innerHTML = '<option value="all">Ganze Klasse</option>';
-        
-        studentsData.forEach(s => {
-            dropdown.innerHTML += `<option value="${s.id}">${s.name}</option>`;
-            targetSelect.innerHTML += `<option value="${s.name}">${s.name}</option>`;
-        });
-        dropdown.value = currentVal;
-    }
-
-    function renderStudentTasks() {
-        const student = studentsData.find(s => s.id === currentStudentId);
-        if (!student) return;
-
-        const container = document.getElementById('student-task-container');
-        if(!container) return;
-        container.innerHTML = '';
-
-        const relevantTasks = tasksData.filter(t => t.target === 'all' || t.target === student.name);
-        
-        if (relevantTasks.length === 0) {
-            container.innerHTML = '<div class="text-center py-16 bg-white rounded-xl border border-dashed border-slate-200 text-slate-400 italic">Keine Aufgaben für dich aktuell. Genieße die Freizeit!</div>';
-            return;
-        }
-
-        relevantTasks.forEach(task => {
-            const isCompleted = (student.completedTasks || []).includes(task.id);
-            const isLocked = student.confirmed;
-
-            const card = document.createElement('div');
-            card.className = `p-6 bg-white rounded-2xl border-2 transition-all flex items-center gap-6 ${isCompleted ? 'border-emerald-100 opacity-60 grayscale-[0.5]' : 'border-slate-100 shadow-sm'}`;
-            
-            card.innerHTML = `
-                <div class="subject-tag bg-${task.subject} shadow-sm">${task.subject.toUpperCase()}</div>
-                <div class="flex-1">
-                    <p class="font-bold text-lg text-slate-800 leading-tight">${task.description}</p>
-                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-1">Bis: ${task.date}</p>
-                </div>
-                <button 
-                    ${isLocked ? 'disabled' : ''}
-                    onclick="toggleTask('${task.id}')"
-                    class="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-200' : 'border-slate-200 text-transparent hover:border-primary active:scale-90'}"
-                >
-                    <span class="material-symbols-outlined text-xl">check</span>
-                </button>
-            `;
-            container.appendChild(card);
-        });
-    }
-
-    async function toggleTask(taskId) {
-        const student = studentsData.find(s => s.id === currentStudentId);
-        if (!student || student.confirmed) return;
-
-        const completed = student.completedTasks || [];
-        let updated;
-        if (completed.includes(taskId)) {
-            updated = completed.filter(id => id !== taskId);
-        } else {
-            updated = [...completed, taskId];
-        }
-        
-        try {
-            await db.collection('students').doc(currentStudentId).update({
-                completedTasks: updated
-            });
-        } catch(e) { console.error("Error toggling task:", e); }
-    }
-
-    function renderAdminTasks() {
-        const container = document.getElementById('admin-task-list');
-        if(!container) return;
-        container.innerHTML = '';
-        
-        tasksData.forEach(task => {
-            const div = document.createElement('div');
-            div.className = "flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm hover:border-primary/20 transition-all";
-            div.innerHTML = `
-                <div class="flex items-center gap-4">
-                    <span class="w-10 h-10 bg-${task.subject} rounded-lg flex items-center justify-center text-[11px] font-extrabold text-white uppercase">${task.subject}</span>
-                    <div>
-                        <p class="font-bold text-slate-800">${task.description}</p>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">${task.target === 'all' ? '👤 Ganze Klasse' : '👤 ' + task.target} • 🗓️ ${task.date}</p>
-                    </div>
-                </div>
-                <button onclick="deleteTask('${task.id}')" class="w-9 h-9 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
-                    <span class="material-symbols-outlined">delete</span>
-                </button>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    async function deleteTask(id) {
-        if (confirm('Aufgabe wirklich unwiderruflich löschen?')) {
-            try {
-                await db.collection('tasks').doc(id).delete();
-            } catch(e) { console.error("Error deleting task:", e); }
-        }
-    }
-
-    function updateProgressTable() {
-        const tbody = document.getElementById('progress-table-body');
-        if(!tbody) return;
-        tbody.innerHTML = '';
-
-        studentsData.forEach(s => {
-            const relevantTasksCount = tasksData.filter(t => t.target === 'all' || t.target === s.name).length;
-            const completedCount = (s.completedTasks || []).filter(id => tasksData.some(t => t.id === id)).length;
-            const percentage = relevantTasksCount > 0 ? Math.round((completedCount / relevantTasksCount) * 100) : 0;
-
-            const tr = document.createElement('tr');
-            tr.className = "hover:bg-slate-50 transition-colors";
-            tr.innerHTML = `
-                <td class="px-8 py-5 font-bold text-slate-800">${s.name}</td>
-                <td class="px-8 py-5">
-                    <div class="flex items-center gap-3">
-                        <div class="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-primary transition-all duration-500" style="width: ${percentage}%"></div>
-                        </div>
-                        <span class="text-[10px] font-extrabold text-slate-500">${completedCount}/${relevantTasksCount}</span>
-                    </div>
-                </td>
-                <td class="px-8 py-5">
-                    ${s.confirmed ? 
-                        `<div class="flex flex-col">
-                            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full inline-block mb-1">BESTÄTIGT</span>
-                            <span class="text-[10px] text-slate-400 font-bold uppercase">${s.confDate}</span>
-                         </div>` : 
-                        `<span class="text-[10px] font-bold text-slate-300 uppercase tracking-widest">OFFEN</span>`
-                    }
-                </td>
-                <td class="px-8 py-5 text-right">
-                    <div class="flex items-center justify-end gap-1">
-                        <button onclick="resetStudent('${s.id}')" class="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all" title="Schüler zurücksetzen">
-                            <span class="material-symbols-outlined text-sm">restart_alt</span>
-                        </button>
-                        <button onclick="deleteStudent('${s.id}')" class="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Schüler löschen">
-                            <span class="material-symbols-outlined text-sm">delete</span>
-                        </button>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    // Event Listeners
-    document.getElementById('btn-enter-student').addEventListener('click', () => {
-        const id = document.getElementById('student-dropdown').value;
-        if (!id) return alert('Bitte wähle deinen Namen aus.');
-        
-        currentStudentId = id;
-        const student = studentsData.find(s => s.id === id);
-        if(student) {
-            document.getElementById('current-student-name').innerText = student.name;
-            showView('studentTasks');
-            renderStudentTasks();
-            checkConfirmationStatus(student);
-        }
-    });
-
-    document.getElementById('btn-logout-student').addEventListener('click', () => {
-        currentStudentId = null;
-        const parentInput = document.getElementById('parent-name');
-        if(parentInput) parentInput.value = '';
-        showView('selector');
-    });
-
-    document.getElementById('btn-login-admin').addEventListener('click', () => {
-        const pass = document.getElementById('admin-pass').value;
-        if (pass === 'lehrer123') {
-            showView('adminDashboard');
-            document.getElementById('admin-pass').value = '';
-            document.getElementById('admin-error').classList.add('hidden');
-        } else {
-            document.getElementById('admin-error').classList.remove('hidden');
-        }
-    });
-
-    document.getElementById('btn-admin-logout').addEventListener('click', () => {
-        showView('selector');
-    });
-
-    document.getElementById('btn-add-task').addEventListener('click', async () => {
-        const subject = document.getElementById('task-subject').value;
-        const target = document.getElementById('task-target').value;
-        const desc = document.getElementById('task-desc').value;
-        const date = document.getElementById('task-date').value;
-
-        if (!desc || !date) return alert('Bitte alle Felder ausfüllen');
-
-        try {
-            await db.collection('tasks').add({
-                subject, 
-                target, 
-                description: desc, 
-                date, 
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            document.getElementById('task-desc').value = '';
-        } catch(e) { console.error("Error adding task:", e); }
-    });
-
-    document.getElementById('btn-add-student').addEventListener('click', async () => {
-        const name = document.getElementById('new-student-name').value.trim();
-        if (!name) return;
-        
-        try {
-            await db.collection('students').add({
-                name, completedTasks: [], confirmed: false, parentName: '', confDate: ''
-            });
-
-            const classDocRef = db.collection('config').doc('class');
-            const classDoc = await classDocRef.get();
-            let names = [];
-            if(classDoc.exists) names = classDoc.data().names || [];
-            if(!names.includes(name)) {
-                names.push(name);
-                await classDocRef.set({ names }, { merge: true });
-            }
-
-            document.getElementById('new-student-name').value = '';
-        } catch(e) { console.error("Error adding student:", e); }
-    });
-
-    async function deleteStudent(id) {
-        if (confirm('Schüler wirklich löschen?')) {
-            try {
-                const s = studentsData.find(x => x.id === id);
-                if(s) {
-                    const classDocRef = db.collection('config').doc('class');
-                    const classDoc = await classDocRef.get();
-                    if(classDoc.exists) {
-                        let names = classDoc.data().names || [];
-                        names = names.filter(n => n !== s.name);
-                        await classDocRef.set({ names }, { merge: true });
-                    }
-                }
-                await db.collection('students').doc(id).delete();
-            } catch(e) { console.error("Error deleting student:", e); }
-        }
-    }
-
-    async function resetStudent(id) {
-        if (confirm('Fortschritt und Bestätigung für diesen Schüler zurücksetzen?')) {
-            try {
-                await db.collection('students').doc(id).update({
-                    completedTasks: [],
-                    confirmed: false,
-                    parentName: '',
-                    confDate: ''
-                });
-            } catch(e) { console.error("Error resetting student:", e); }
-        }
-    }
-
-    document.getElementById('btn-reset-all').addEventListener('click', async () => {
-        if (confirm('ACHTUNG: Möchtest du wirklich ALLE Daten (Fortschritt & Bestätigungen) zurücksetzen?')) {
-            try {
-                const batch = db.batch();
-                studentsData.forEach(s => {
-                    const ref = db.collection('students').doc(s.id);
-                    batch.update(ref, { completedTasks: [], confirmed: false, parentName: '', confDate: '' });
-                });
-                await batch.commit();
-            } catch(e) { console.error("Error resetting all:", e); }
-        }
-    });
-
-    document.getElementById('btn-confirm-parent').addEventListener('click', async () => {
-        const pName = document.getElementById('parent-name').value.trim();
-        if (!pName) return alert('Bitte geben Sie Ihren Namen als Bestätigung ein.');
-        
-        const today = new Date().toLocaleDateString('de-CH');
-        try {
-            await db.collection('students').doc(currentStudentId).update({
-                confirmed: true,
-                parentName: pName,
-                confDate: today
-            });
-        } catch(e) { console.error("Error confirming parent:", e); }
-    });
-
-    function checkConfirmationStatus(student) {
-        const form = document.getElementById('confirmation-form');
-        const success = document.getElementById('confirmation-success');
-        const dateDisplay = document.getElementById('conf-date-display');
-        const parentDisplay = document.getElementById('conf-parent-display');
-        const parentNameInput = document.getElementById('parent-name');
-        
-        if (student.confirmed) {
-            if(form) form.classList.add('hidden');
-            if(success) success.classList.remove('hidden');
-            if(dateDisplay) dateDisplay.innerText = student.confDate;
-            if(parentDisplay) parentDisplay.innerText = "Bestätigt durch: " + student.parentName;
-            if(parentNameInput) parentNameInput.value = student.parentName || '';
-        } else {
-            if(form) form.classList.remove('hidden');
-            if(success) success.classList.add('hidden');
-            if(parentNameInput) parentNameInput.value = '';
-        }
-    }
-
-    // List Import
-    document.getElementById('import-list').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            try {
-                const lines = e.target.result.split('\n');
-                const batch = db.batch();
-                let masterNames = [];
-                
-                lines.forEach(line => {
-                    const name = line.trim();
-                    if (name) {
-                        const ref = db.collection('students').doc();
-                        batch.set(ref, { name, completedTasks: [], confirmed: false, parentName: '', confDate: '' });
-                        masterNames.push(name);
-                    }
-                });
-                
-                await db.collection('config').doc('class').set({ names: masterNames }, { merge: true });
-                await batch.commit();
-                alert('Klassenliste erfolgreich importiert!');
-            } catch(err) { console.error("Error importing list:", err); }
+        // 1. Initial configuration (Preserved)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
+            authDomain: "edu-dashboard-4b.firebaseapp.com",
+            projectId: "edu-dashboard-4b",
+            storageBucket: "edu-dashboard-4b.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:mock123"
         };
-        reader.readAsText(file);
-    });
 
-    // Initialize App
-    window.addEventListener('load', () => {
-        // 1. First trigger QR code generation immediately to avoid "Laden..." hang
-        generateQRCode();
-        
-        // 2. Initialize Firebase background listeners
-        initDataListeners();
-        
-        // 3. Set default view
-        showView('selector');
-    });
-</script>
+        // 2. Full Initialization
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // App State
+        let currentStudentId = null;
+        let studentsData = [];
+        let tasksData = [];
+        let configData = { names: [] };
+
+        // DOM Elements
+        const views = {
+            selector: document.getElementById('view-selector'),
+            studentTasks: document.getElementById('view-student-tasks'),
+            adminLogin: document.getElementById('view-admin-login'),
+            adminDashboard: document.getElementById('view-admin-dashboard')
+        };
+
+        // View Management
+        const showView = (viewName) => {
+            Object.values(views).forEach(v => {
+                if(v) v.classList.add('hidden');
+            });
+            if(views[viewName]) views[viewName].classList.remove('hidden');
+            
+            const navStudent = document.getElementById('nav-student');
+            const navAdmin = document.getElementById('nav-admin');
+            
+            if(navStudent) navStudent.classList.remove('bg-primary/10', 'text-primary');
+            if(navAdmin) navAdmin.classList.remove('bg-primary/10', 'text-primary');
+            
+            if((viewName === 'selector' || viewName === 'studentTasks') && navStudent) navStudent.classList.add('bg-primary/10', 'text-primary');
+            if((viewName === 'adminLogin' || viewName === 'adminDashboard') && navAdmin) navAdmin.classList.add('bg-primary/10', 'text-primary');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (viewName === 'selector') {
+                generateQRCode();
+            }
+        };
+
+        // Robust QR Code Generation using static API for maximum reliability
+        const generateQRCode = () => {
+            const qrContainer = document.getElementById("qrcode");
+            if (!qrContainer) return;
+
+            // Use the current page URL
+            const currentUrl = window.location.href;
+            const encodedUrl = encodeURIComponent(currentUrl);
+            
+            // Primary Method: qrserver.com API
+            // Fallback is inherent because it's just an image tag
+            qrContainer.innerHTML = `
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}&color=0058bc&bgcolor=ffffff" 
+                     alt="QR Code" 
+                     class="w-[180px] h-[180px] object-contain transition-opacity duration-500 opacity-0"
+                     onload="this.classList.remove('opacity-0')"
+                     onerror="this.parentElement.innerHTML='<div class=\'text-center p-4\'><span class=\'material-symbols-outlined text-4xl text-slate-300\'>link_off</span><p class=\'text-[11px] text-slate-500 mt-2\'>Verbindung zum QR-Service fehlgeschlagen.</p></div>'" />
+            `;
+        };
+
+        // Real-time Listeners
+        const initDataListeners = () => {
+            db.collection('config').doc('class').onSnapshot(doc => {
+                if(doc.exists) {
+                    configData = doc.data();
+                    updateStudentDropdowns();
+                }
+            }, err => console.error("Config Listener Error:", err));
+
+            db.collection('students').orderBy('name').onSnapshot(snapshot => {
+                studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                updateStudentDropdowns();
+                updateProgressTable();
+                
+                if (currentStudentId) {
+                    const updated = studentsData.find(s => s.id === currentStudentId);
+                    if (updated) {
+                        renderStudentTasks();
+                        checkConfirmationStatus(updated);
+                    }
+                }
+            }, err => console.error("Firestore Student Listener Error:", err));
+
+            db.collection('tasks').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+                tasksData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderStudentTasks();
+                renderAdminTasks();
+                updateProgressTable();
+            }, err => console.error("Firestore Task Listener Error:", err));
+        };
+
+        function updateStudentDropdowns() {
+            const dropdown = document.getElementById('student-dropdown');
+            const targetSelect = document.getElementById('task-target');
+            
+            if (!dropdown || !targetSelect) return;
+
+            const currentVal = dropdown.value;
+            
+            if (studentsData.length === 0) {
+                dropdown.innerHTML = '<option value="">Warte auf Klassenliste vom Lehrer...</option>';
+                return;
+            }
+
+            dropdown.innerHTML = '<option value="">Namen wählen...</option>';
+            targetSelect.innerHTML = '<option value="all">Ganze Klasse</option>';
+            
+            studentsData.forEach(s => {
+                dropdown.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                targetSelect.innerHTML += `<option value="${s.name}">${s.name}</option>`;
+            });
+            dropdown.value = currentVal;
+        }
+
+        function renderStudentTasks() {
+            const student = studentsData.find(s => s.id === currentStudentId);
+            if (!student) return;
+
+            const container = document.getElementById('student-task-container');
+            if(!container) return;
+            container.innerHTML = '';
+
+            const relevantTasks = tasksData.filter(t => t.target === 'all' || t.target === student.name);
+            
+            if (relevantTasks.length === 0) {
+                container.innerHTML = '<div class="text-center py-16 bg-white rounded-xl border border-dashed border-slate-200 text-slate-400 italic">Keine Aufgaben für dich aktuell. Genieße die Freizeit!</div>';
+                return;
+            }
+
+            relevantTasks.forEach(task => {
+                const isCompleted = (student.completedTasks || []).includes(task.id);
+                const isLocked = student.confirmed;
+
+                const card = document.createElement('div');
+                card.className = `p-6 bg-white rounded-2xl border-2 transition-all flex items-center gap-6 ${isCompleted ? 'border-emerald-100 opacity-60 grayscale-[0.5]' : 'border-slate-100 shadow-sm'}`;
+                
+                card.innerHTML = `
+                    <div class="subject-tag bg-${task.subject} shadow-sm">${task.subject.toUpperCase()}</div>
+                    <div class="flex-1">
+                        <p class="font-bold text-lg text-slate-800 leading-tight">${task.description}</p>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-1">Bis: ${task.date}</p>
+                    </div>
+                    <button 
+                        ${isLocked ? 'disabled' : ''}
+                        onclick="toggleTask('${task.id}')"
+                        class="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${isCompleted ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-200' : 'border-slate-200 text-transparent hover:border-primary active:scale-90'}"
+                    >
+                        <span class="material-symbols-outlined text-xl">check</span>
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        async function toggleTask(taskId) {
+            const student = studentsData.find(s => s.id === currentStudentId);
+            if (!student || student.confirmed) return;
+
+            const completed = student.completedTasks || [];
+            let updated;
+            if (completed.includes(taskId)) {
+                updated = completed.filter(id => id !== taskId);
+            } else {
+                updated = [...completed, taskId];
+            }
+            
+            try {
+                await db.collection('students').doc(currentStudentId).update({
+                    completedTasks: updated
+                });
+            } catch(e) { console.error("Error toggling task:", e); }
+        }
+
+        function renderAdminTasks() {
+            const container = document.getElementById('admin-task-list');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            tasksData.forEach(task => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm hover:border-primary/20 transition-all";
+                div.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <span class="w-10 h-10 bg-${task.subject} rounded-lg flex items-center justify-center text-[11px] font-extrabold text-white uppercase">${task.subject}</span>
+                        <div>
+                            <p class="font-bold text-slate-800">${task.description}</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tight">${task.target === 'all' ? '👤 Ganze Klasse' : '👤 ' + task.target} • 🗓️ ${task.date}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteTask('${task.id}')" class="w-9 h-9 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function deleteTask(id) {
+            if (confirm('Aufgabe wirklich unwiderruflich löschen?')) {
+                try {
+                    await db.collection('tasks').doc(id).delete();
+                } catch(e) { console.error("Error deleting task:", e); }
+            }
+        }
+
+        function updateProgressTable() {
+            const tbody = document.getElementById('progress-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            studentsData.forEach(s => {
+                const relevantTasksCount = tasksData.filter(t => t.target === 'all' || t.target === s.name).length;
+                const completedCount = (s.completedTasks || []).filter(id => tasksData.some(t => t.id === id)).length;
+                const percentage = relevantTasksCount > 0 ? Math.round((completedCount / relevantTasksCount) * 100) : 0;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-8 py-5 font-bold text-slate-800">${s.name}</td>
+                    <td class="px-8 py-5">
+                        <div class="flex items-center gap-3">
+                            <div class="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-primary transition-all duration-500" style="width: ${percentage}%"></div>
+                            </div>
+                            <span class="text-[10px] font-extrabold text-slate-500">${completedCount}/${relevantTasksCount}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-5">
+                        ${s.confirmed ? 
+                            `<div class="flex flex-col">
+                                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full inline-block mb-1">BESTÄTIGT</span>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase">${s.confDate}</span>
+                             </div>` : 
+                            `<span class="text-[10px] font-bold text-slate-300 uppercase tracking-widest">OFFEN</span>`
+                        }
+                    </td>
+                    <td class="px-8 py-5 text-right">
+                        <div class="flex items-center justify-end gap-1">
+                            <button onclick="resetStudent('${s.id}')" class="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all" title="Schüler zurücksetzen">
+                                <span class="material-symbols-outlined text-sm">restart_alt</span>
+                            </button>
+                            <button onclick="deleteStudent('${s.id}')" class="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Schüler löschen">
+                                <span class="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Event Listeners
+        document.getElementById('btn-enter-student').addEventListener('click', () => {
+            const id = document.getElementById('student-dropdown').value;
+            if (!id) return alert('Bitte wähle deinen Namen aus.');
+            
+            currentStudentId = id;
+            const student = studentsData.find(s => s.id === id);
+            if(student) {
+                document.getElementById('current-student-name').innerText = student.name;
+                showView('studentTasks');
+                renderStudentTasks();
+                checkConfirmationStatus(student);
+            }
+        });
+
+        document.getElementById('btn-logout-student').addEventListener('click', () => {
+            currentStudentId = null;
+            const parentInput = document.getElementById('parent-name');
+            if(parentInput) parentInput.value = '';
+            showView('selector');
+        });
+
+        document.getElementById('btn-login-admin').addEventListener('click', () => {
+            const pass = document.getElementById('admin-pass').value;
+            if (pass === 'lehrer123') {
+                showView('adminDashboard');
+                document.getElementById('admin-pass').value = '';
+                document.getElementById('admin-error').classList.add('hidden');
+            } else {
+                document.getElementById('admin-error').classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('btn-admin-logout').addEventListener('click', () => {
+            showView('selector');
+        });
+
+        document.getElementById('btn-add-task').addEventListener('click', async () => {
+            const subject = document.getElementById('task-subject').value;
+            const target = document.getElementById('task-target').value;
+            const desc = document.getElementById('task-desc').value;
+            const date = document.getElementById('task-date').value;
+
+            if (!desc || !date) return alert('Bitte alle Felder ausfüllen');
+
+            try {
+                await db.collection('tasks').add({
+                    subject, 
+                    target, 
+                    description: desc, 
+                    date, 
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.getElementById('task-desc').value = '';
+            } catch(e) { console.error("Error adding task:", e); }
+        });
+
+        document.getElementById('btn-add-student').addEventListener('click', async () => {
+            const name = document.getElementById('new-student-name').value.trim();
+            if (!name) return;
+            
+            try {
+                await db.collection('students').add({
+                    name, completedTasks: [], confirmed: false, parentName: '', confDate: ''
+                });
+
+                const classDocRef = db.collection('config').doc('class');
+                const classDoc = await classDocRef.get();
+                let names = [];
+                if(classDoc.exists) names = classDoc.data().names || [];
+                if(!names.includes(name)) {
+                    names.push(name);
+                    await classDocRef.set({ names }, { merge: true });
+                }
+
+                document.getElementById('new-student-name').value = '';
+            } catch(e) { console.error("Error adding student:", e); }
+        });
+
+        async function deleteStudent(id) {
+            if (confirm('Schüler wirklich löschen?')) {
+                try {
+                    const s = studentsData.find(x => x.id === id);
+                    if(s) {
+                        const classDocRef = db.collection('config').doc('class');
+                        const classDoc = await classDocRef.get();
+                        if(classDoc.exists) {
+                            let names = classDoc.data().names || [];
+                            names = names.filter(n => n !== s.name);
+                            await classDocRef.set({ names }, { merge: true });
+                        }
+                    }
+                    await db.collection('students').doc(id).delete();
+                } catch(e) { console.error("Error deleting student:", e); }
+            }
+        }
+
+        async function resetStudent(id) {
+            if (confirm('Fortschritt und Bestätigung für diesen Schüler zurücksetzen?')) {
+                try {
+                    await db.collection('students').doc(id).update({
+                        completedTasks: [],
+                        confirmed: false,
+                        parentName: '',
+                        confDate: ''
+                    });
+                } catch(e) { console.error("Error resetting student:", e); }
+            }
+        }
+
+        document.getElementById('btn-reset-all').addEventListener('click', async () => {
+            if (confirm('ACHTUNG: Möchtest du wirklich ALLE Daten (Fortschritt & Bestätigungen) zurücksetzen?')) {
+                try {
+                    const batch = db.batch();
+                    studentsData.forEach(s => {
+                        const ref = db.collection('students').doc(s.id);
+                        batch.update(ref, { completedTasks: [], confirmed: false, parentName: '', confDate: '' });
+                    });
+                    await batch.commit();
+                } catch(e) { console.error("Error resetting all:", e); }
+            }
+        });
+
+        document.getElementById('btn-confirm-parent').addEventListener('click', async () => {
+            const pName = document.getElementById('parent-name').value.trim();
+            if (!pName) return alert('Bitte geben Sie Ihren Namen als Bestätigung ein.');
+            
+            const today = new Date().toLocaleDateString('de-CH');
+            try {
+                await db.collection('students').doc(currentStudentId).update({
+                    confirmed: true,
+                    parentName: pName,
+                    confDate: today
+                });
+            } catch(e) { console.error("Error confirming parent:", e); }
+        });
+
+        function checkConfirmationStatus(student) {
+            const form = document.getElementById('confirmation-form');
+            const success = document.getElementById('confirmation-success');
+            const dateDisplay = document.getElementById('conf-date-display');
+            const parentDisplay = document.getElementById('conf-parent-display');
+            const parentNameInput = document.getElementById('parent-name');
+            
+            if (student.confirmed) {
+                if(form) form.classList.add('hidden');
+                if(success) success.classList.remove('hidden');
+                if(dateDisplay) dateDisplay.innerText = student.confDate;
+                if(parentDisplay) parentDisplay.innerText = "Bestätigt durch: " + student.parentName;
+                if(parentNameInput) parentNameInput.value = student.parentName || '';
+            } else {
+                if(form) form.classList.remove('hidden');
+                if(success) success.classList.add('hidden');
+                if(parentNameInput) parentNameInput.value = '';
+            }
+        }
+
+        // List Import
+        document.getElementById('import-list').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const lines = e.target.result.split('\n');
+                    const batch = db.batch();
+                    let masterNames = [];
+                    
+                    lines.forEach(line => {
+                        const name = line.trim();
+                        if (name) {
+                            const ref = db.collection('students').doc();
+                            batch.set(ref, { name, completedTasks: [], confirmed: false, parentName: '', confDate: '' });
+                            masterNames.push(name);
+                        }
+                    });
+                    
+                    await db.collection('config').doc('class').set({ names: masterNames }, { merge: true });
+                    await batch.commit();
+                    alert('Klassenliste erfolgreich importiert!');
+                } catch(err) { console.error("Error importing list:", err); }
+            };
+            reader.readAsText(file);
+        });
+
+        // Initialize App
+        window.addEventListener('load', () => {
+            initDataListeners();
+            showView('selector');
+            generateQRCode();
+        });
+    </script>
 </body></html>
