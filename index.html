@@ -6,8 +6,6 @@
 <title>Wer – Was – Bis wann | Diagnose-Modus</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
 <style>
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -25,6 +23,10 @@
             background-color: #0058bc;
             border-style: solid;
             color: white;
+        }
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
         }
     </style>
 <script id="tailwind-config">
@@ -118,7 +120,7 @@
 </head>
 <body class="bg-background text-on-surface min-h-screen flex flex-col font-body-md">
 <!-- Diagnose Top Header -->
-<header class="bg-surface border-b border-outline-variant sticky top-0 z-50">
+<header class="bg-surface border-b border-outline-variant sticky top-0 z-40">
 <div class="flex justify-between items-center w-full px-gutter max-w-[1100px] mx-auto h-16">
 <div class="flex items-center gap-4">
 <span class="font-h2 text-h2 font-bold text-on-surface">Wer – Was – Bis wann</span>
@@ -136,7 +138,7 @@
 <span class="material-symbols-outlined text-[18px]">delete_sweep</span>
                     APP-CACHE LEEREN
                 </button>
-<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors">
+<button class="p-2 hover:bg-surface-container-high rounded-full transition-colors" onclick="location.reload()">
 <span class="material-symbols-outlined text-primary">refresh</span>
 </button>
 </div>
@@ -148,35 +150,51 @@
 <!-- Timeout Warning -->
 <div class="hidden w-full bg-tertiary-container text-on-tertiary-container py-2 px-gutter text-center font-semibold" id="timeout-warning">
 <span class="material-symbols-outlined mr-2">cloud_off</span>
-            Verbindung zur Cloud dauert ungewöhnlich lange - Prüfe deine Internetverbindung oder die Firebase Regeln.
+            Verbindung zur Cloud dauert ungewöhnlich lange - Prüfe deine Internetverbindung.
         </div>
 </header>
 <main class="flex-1 w-full max-w-[1100px] mx-auto px-gutter py-8">
 <!-- Role Switcher Section -->
-<section class="mb-12 flex justify-center">
+<section class="mb-8 flex justify-center">
 <div class="bg-surface-container-low p-1 rounded-lg flex gap-1 shadow-sm border border-outline-variant">
 <button class="px-6 py-2 rounded-lg font-label-caps text-label-caps transition-all bg-primary text-on-primary" id="role-student" onclick="setRole('student')">
                     Schüler-Ansicht
                 </button>
-<button class="px-6 py-2 rounded-lg font-label-caps text-label-caps transition-all text-on-surface-variant hover:bg-surface-container-high" id="role-teacher" onclick="setRole('teacher')">
+<button class="px-6 py-2 rounded-lg font-label-caps text-label-caps transition-all text-on-surface-variant hover:bg-surface-container-high" id="role-teacher" onclick="requestTeacherAccess()">
                     Lehrer-Modus
                 </button>
 </div>
 </section>
+<!-- Student Selection (Visible if Teacher or if multiple students exist) -->
+<section class="mb-8 hidden" id="student-selector-section">
+<div class="flex items-center justify-between bg-white p-4 rounded-xl border border-outline-variant shadow-sm">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">person_search</span>
+<select class="bg-transparent border-none focus:ring-0 font-bold text-on-surface cursor-pointer" id="student-select" onchange="switchStudent(this.value)">
+<option value="demo-student">Demo Schüler</option>
+</select>
+</div>
+<div class="hidden flex gap-2" id="teacher-actions">
+<button class="px-4 py-2 bg-primary text-on-primary rounded-lg font-label-caps text-label-caps flex items-center gap-2" onclick="showAddTaskModal()">
+<span class="material-symbols-outlined text-[18px]">add</span> NEUE AUFGABE
+                    </button>
+</div>
+</div>
+</section>
 <!-- Diagnose Dashboard -->
 <div class="grid grid-cols-1 md:grid-cols-12 gap-8 mb-12">
-<!-- Main Content Area (Worksheet) -->
+<!-- Main Content Area -->
 <div class="md:col-span-8 space-y-8">
-<h1 class="font-h1 text-h1 text-on-surface">Mein Hausaufgabenplaner</h1>
-<!-- Loading State / Empty State -->
+<h1 class="font-h1 text-h1 text-on-surface" id="dashboard-title">Mein Hausaufgabenplaner</h1>
+<!-- Loading State -->
 <div class="flex flex-col items-center justify-center py-20 bg-white border border-outline-variant rounded-lg" id="tasks-loader">
 <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-<p class="text-on-surface-variant font-body-md">Warte auf Cloud-Daten...</p>
+<p class="text-on-surface-variant font-body-md">Lade Hausaufgaben...</p>
 </div>
 <div class="hidden space-y-6" id="tasks-container">
 <!-- Cards will be injected here -->
 </div>
-<!-- Parental Confirmation Mockup (Always visible for Diagnosis) -->
+<!-- Parental Confirmation -->
 <div class="confirmation-box rounded-lg p-8 flex flex-col items-center gap-6 transition-all duration-300" id="parent-signature">
 <div class="text-center">
 <span class="font-label-caps text-label-caps block mb-2 opacity-70">ABSCHLUSS DER WOCHE</span>
@@ -188,32 +206,57 @@
 </button>
 </div>
 </div>
-<!-- Sidebar Info / Diagnose Info -->
+<!-- Sidebar -->
 <aside class="md:col-span-4 space-y-6">
+<!-- QR Code Section for Student -->
+<div class="bg-white p-6 rounded-lg border border-outline-variant shadow-sm text-center" id="student-qr-section">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-4">MEIN ZUGANGS-CODE</h3>
+<div class="bg-surface-container-low p-4 rounded-lg inline-block mb-4">
+<img alt="QR Code" class="w-32 h-32 opacity-50 grayscale" id="student-qr" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdadvBVhQaclBn_dzQzX55xCAfyzl08mqQZXipo52rH261p6TSXkSF47PEWkzUWQBERs2OUXSuAX54Xe_560R3Ha1Z-hIw_lq7LBVUV4c0i6yKE8LJA2YK2_wdrjIaTcNtT-Ft_L8SP7OUG1mmKXvESpORbI1Z6hiM3ajv9q_poxhM3uQCStiFTJYfi5HyjTLtTp6pNONaIzDycrdMnImUAF11f_dae_WHOES_tB91AIT6ApG3zoFPrg4EEF9mo1vXyavm7l3YFgA"/>
+</div>
+<p class="text-xs text-on-surface-variant">Zeige diesen Code deiner Lehrkraft zum Scannen.</p>
+</div>
 <div class="bg-surface-container-high p-6 rounded-lg border border-outline-variant">
 <h3 class="font-h2 text-h2 text-primary mb-4">Systemstatus</h3>
 <ul class="space-y-4">
 <li class="flex justify-between items-center border-b border-outline-variant pb-2">
 <span class="font-label-caps text-label-caps">PROJECT ID</span>
-<span class="text-on-surface-variant text-xs truncate ml-4">doeltschi-hausaufgaben...</span>
+<span class="text-on-surface-variant text-xs truncate ml-4">doeltschi-haus...</span>
 </li>
 <li class="flex justify-between items-center border-b border-outline-variant pb-2">
-<span class="font-label-caps text-label-caps">SDK VERSION</span>
-<span class="text-on-surface-variant text-xs">v10.7.0</span>
+<span class="font-label-caps text-label-caps">ROLLE</span>
+<span class="text-on-surface-variant text-xs" id="current-role-display">Schüler</span>
 </li>
 <li class="flex justify-between items-center border-b border-outline-variant pb-2">
 <span class="font-label-caps text-label-caps">LOCAL CACHE</span>
-<span class="text-on-surface-variant text-xs" id="cache-size">Berechne...</span>
+<span class="text-on-surface-variant text-xs" id="cache-size">0.00 KB</span>
 </li>
 </ul>
-</div>
-<div class="p-6 rounded-lg bg-primary-fixed text-on-primary-fixed-variant">
-<h4 class="font-bold mb-2">Entwickler-Notiz</h4>
-<p class="text-sm">In dieser Diagnose-Version werden Echtzeit-Snapshots direkt überwacht. Fehler erscheinen rot markiert im Header.</p>
 </div>
 </aside>
 </div>
 </main>
+<!-- Teacher Login Modal -->
+<div class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4" id="login-modal">
+<div class="absolute inset-0 modal-overlay" onclick="closeLoginModal()"></div>
+<div class="bg-white w-full max-w-md rounded-2xl p-8 relative shadow-2xl animate-in fade-in zoom-in duration-200">
+<h2 class="text-h2 font-h2 mb-6">Lehrer-Login</h2>
+<p class="text-on-surface-variant mb-6">Bitte gib das Passwort ein, um in den Lehrer-Modus zu wechseln.</p>
+<div class="space-y-4">
+<div>
+<label class="block text-label-caps font-label-caps text-on-surface-variant mb-2">PASSWORT</label>
+<input class="w-full p-input-padding rounded-lg border border-outline focus:ring-2 focus:ring-primary outline-none" id="teacher-password" placeholder="••••••••" type="password"/>
+</div>
+<div class="text-error text-sm hidden" id="login-error">Falsches Passwort. Bitte versuche es erneut.</div>
+<button class="w-full py-4 bg-primary text-on-primary rounded-xl font-bold hover:bg-primary-container transition-all" onclick="verifyTeacherPassword()">
+                    Anmelden
+                </button>
+</div>
+<button class="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface" onclick="closeLoginModal()">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+</div>
 <!-- Footer -->
 <footer class="bg-surface border-t border-outline-variant py-8">
 <div class="w-full max-w-[1100px] mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-4">
@@ -229,7 +272,7 @@
 <!-- Firebase Implementation -->
 <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
@@ -244,7 +287,13 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- Diagnostic Logic ---
+        // --- Core Application State ---
+        window.appState = {
+            role: 'student', // 'student' or 'teacher'
+            currentStudentId: 'demo-student',
+            isConfirmed: false
+        };
+
         const statusText = document.getElementById('status-text');
         const statusDot = document.getElementById('status-dot');
         const statusPulse = document.getElementById('status-pulse');
@@ -256,39 +305,55 @@
 
         let dataReceived = false;
 
-        // 5s Timeout Detection
+        // 10s Timeout Detection
         const connectionTimeout = setTimeout(() => {
             if (!dataReceived) {
                 timeoutWarning.classList.remove('hidden');
                 statusText.innerText = "TIMEOUT";
                 statusDot.classList.replace('bg-primary', 'bg-tertiary');
             }
-        }, 5000);
+        }, 10000);
+
+        // Subjects configuration
+        const subjects = {
+            'Mathe': '#0058bc',
+            'Deutsch': '#ba1a1a',
+            'Englisch': '#4c4aca',
+            'Sachunterricht': '#9e3d00',
+            'Kunst': '#6664e4'
+        };
 
         // Firebase Snapshot Subscription
-        try {
-            statusText.innerText = "CONNECTING...";
-            
-            const unsub = onSnapshot(collection(db, "homework"), (snapshot) => {
-                dataReceived = true;
-                clearTimeout(connectionTimeout);
-                timeoutWarning.classList.add('hidden');
+        function startListening() {
+            try {
+                statusText.innerText = "CONNECTING...";
                 
-                statusText.innerText = "CONNECTED (LIVE)";
-                statusText.classList.add('text-primary');
-                statusDot.classList.replace('bg-primary', 'bg-green-500');
-                statusPulse.classList.replace('bg-primary', 'bg-green-500');
+                // For demo/diagnose, we listen to all tasks. 
+                // In production, teacher sees all, student sees only theirs.
+                const q = collection(db, "homework");
                 
-                loader.classList.add('hidden');
-                container.classList.remove('hidden');
-                
-                renderTasks(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            }, (error) => {
-                console.error("Firebase Error:", error);
-                showCriticalError(error.message);
-            });
-        } catch (globalError) {
-            showCriticalError(globalError.message);
+                onSnapshot(q, (snapshot) => {
+                    dataReceived = true;
+                    clearTimeout(connectionTimeout);
+                    timeoutWarning.classList.add('hidden');
+                    
+                    statusText.innerText = "CONNECTED (LIVE)";
+                    statusText.classList.add('text-primary');
+                    statusDot.classList.replace('bg-primary', 'bg-green-500');
+                    statusPulse.classList.replace('bg-primary', 'bg-green-500');
+                    
+                    loader.classList.add('hidden');
+                    container.classList.remove('hidden');
+                    
+                    const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    renderTasks(tasks);
+                }, (error) => {
+                    console.error("Firebase Error:", error);
+                    showCriticalError(error.message);
+                });
+            } catch (globalError) {
+                showCriticalError(globalError.message);
+            }
         }
 
         function showCriticalError(msg) {
@@ -310,13 +375,15 @@
                 return;
             }
 
-            container.innerHTML = tasks.map(task => `
+            container.innerHTML = tasks.map(task => {
+                const subjectColor = subjects[task.subject] || '#717786';
+                return `
                 <div class="subject-card-shadow bg-white rounded-lg border border-outline-variant overflow-hidden flex transition-all hover:translate-y-[-2px]">
-                    <div class="w-1.5 h-full" style="background-color: ${task.color || '#0058bc'}"></div>
+                    <div class="w-1.5 h-full" style="background-color: ${subjectColor}"></div>
                     <div class="p-6 flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                         <div>
                             <span class="font-label-caps text-label-caps text-on-surface-variant block mb-1">WER</span>
-                            <span class="font-subject-tag text-subject-tag px-3 py-1 rounded-full bg-surface-container-high" style="color: ${task.color || '#0058bc'}">
+                            <span class="font-subject-tag text-subject-tag px-3 py-1 rounded-full bg-surface-container-high" style="color: ${subjectColor}">
                                 ${task.subject || 'Unbekannt'}
                             </span>
                         </div>
@@ -335,48 +402,98 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
+
+        // Initialize
+        startListening();
+        updateCacheSize();
     </script>
 <script>
-        // --- Helper Interactions ---
-        function clearAppCache() {
-            if(confirm("Bist du sicher? Alle lokalen Daten werden gelöscht und die App wird neu geladen.")) {
-                localStorage.clear();
-                window.location.reload();
+        // --- Interactions & UI Logic ---
+        
+        function requestTeacherAccess() {
+            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('teacher-password').focus();
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('teacher-password').value = '';
+        }
+
+        function verifyTeacherPassword() {
+            const password = document.getElementById('teacher-password').value;
+            if (password === 'lehrer123') {
+                setRole('teacher');
+                closeLoginModal();
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
             }
         }
+
+        // Handle Enter key in password field
+        document.getElementById('teacher-password')?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') verifyTeacherPassword();
+        });
 
         function setRole(role) {
             const studentBtn = document.getElementById('role-student');
             const teacherBtn = document.getElementById('role-teacher');
+            const selector = document.getElementById('student-selector-section');
+            const teacherActions = document.getElementById('teacher-actions');
+            const title = document.getElementById('dashboard-title');
+            const roleDisplay = document.getElementById('current-role-display');
+            const qrSection = document.getElementById('student-qr-section');
+            const confirmationBox = document.getElementById('parent-signature');
             
             if (role === 'student') {
                 studentBtn.classList.replace('text-on-surface-variant', 'text-on-primary');
                 studentBtn.classList.add('bg-primary');
                 teacherBtn.classList.replace('text-on-primary', 'text-on-surface-variant');
                 teacherBtn.classList.remove('bg-primary');
-                teacherBtn.classList.add('hover:bg-surface-container-high');
+                
+                selector.classList.add('hidden');
+                teacherActions.classList.add('hidden');
+                title.innerText = "Mein Hausaufgabenplaner";
+                roleDisplay.innerText = "Schüler";
+                qrSection.classList.remove('hidden');
+                confirmationBox.classList.remove('hidden');
             } else {
                 teacherBtn.classList.replace('text-on-surface-variant', 'text-on-primary');
                 teacherBtn.classList.add('bg-primary');
                 studentBtn.classList.replace('text-on-primary', 'text-on-surface-variant');
                 studentBtn.classList.remove('bg-primary');
-                studentBtn.classList.add('hover:bg-surface-container-high');
-                alert("Lehrer-Modus aktiviert (Demo-Einschränkung)");
+                
+                selector.classList.remove('hidden');
+                teacherActions.classList.remove('hidden');
+                title.innerText = "Lehrer-Übersicht";
+                roleDisplay.innerText = "Lehrer";
+                qrSection.classList.add('hidden');
+                confirmationBox.classList.add('hidden'); // Teachers don't sign for themselves
             }
         }
 
-        let isConfirmed = false;
+        function switchStudent(id) {
+            console.log("Switching view to student:", id);
+            // In a real app, this would filter the snapshot query
+        }
+
+        function showAddTaskModal() {
+            alert("Aufgaben-Erstellung Modus (Simulation)");
+        }
+
         function toggleConfirmation() {
             const box = document.getElementById('parent-signature');
             const btn = document.getElementById('confirm-btn');
             const icon = document.getElementById('confirm-icon');
             const text = document.getElementById('confirm-text');
             
-            isConfirmed = !isConfirmed;
+            appState.isConfirmed = !appState.isConfirmed;
             
-            if (isConfirmed) {
+            if (appState.isConfirmed) {
                 box.classList.add('active');
                 btn.classList.replace('bg-white', 'bg-green-500');
                 btn.classList.replace('text-primary', 'text-white');
@@ -393,7 +510,16 @@
             }
         }
 
-        // Cache Size Simulation
-        document.getElementById('cache-size').innerText = (JSON.stringify(localStorage).length / 1024).toFixed(2) + " KB";
+        function clearAppCache() {
+            if(confirm("Bist du sicher? Alle lokalen Daten werden gelöscht und die App wird neu geladen.")) {
+                localStorage.clear();
+                window.location.reload();
+            }
+        }
+
+        function updateCacheSize() {
+            const size = (JSON.stringify(localStorage).length / 1024).toFixed(2);
+            document.getElementById('cache-size').innerText = size + " KB";
+        }
     </script>
 </body></html>
