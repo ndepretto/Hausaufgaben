@@ -50,6 +50,12 @@
         .bg-mu { background-color: #ec4899; } /* Musik */
         .bg-sp { background-color: #64748b; } /* Sport */
         .bg-other { background-color: #94a3b8; }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -109,7 +115,7 @@
 <h2 class="text-4xl font-extrabold tracking-tight">Schüler-Ansicht</h2>
 <p class="text-slate-500 text-lg">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
 </div>
-<div class="bg-white p-8 sm:p-10 rounded-lg shadow-xl border border-slate-200">
+<div class="glass-card p-8 sm:p-10 rounded-lg shadow-xl border border-slate-200">
 <div class="space-y-6">
 <div>
 <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Dein Name</label>
@@ -126,7 +132,7 @@
 </div>
 </div>
 <!-- App Promo Section -->
-<div class="bg-white p-8 rounded-lg border border-slate-200 flex flex-col md:flex-row items-center gap-8 shadow-sm">
+<div class="glass-card p-8 rounded-lg border border-slate-200 flex flex-col md:flex-row items-center gap-8 shadow-sm">
 <div class="p-2 bg-white border border-slate-100 rounded-lg shrink-0" id="qrcode"></div>
 <div class="space-y-3 text-center md:text-left">
 <h3 class="font-bold text-xl">Als App nutzen</h3>
@@ -151,7 +157,7 @@
 <!-- Tasks loaded via JS -->
 </div>
 <!-- Parental Confirmation Section -->
-<div class="mt-12 bg-white border-2 border-primary/20 p-8 rounded-lg shadow-sm" id="parent-confirmation-block">
+<div class="mt-12 glass-card border-2 border-primary/20 p-8 rounded-lg shadow-sm" id="parent-confirmation-block">
 <div class="flex items-start gap-4 mb-8">
 <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary shrink-0">
 <span class="material-symbols-outlined text-2xl">verified_user</span>
@@ -177,7 +183,7 @@
 </section>
 <!-- View: Admin Login -->
 <section class="hidden animate-in fade-in duration-300" id="view-admin-login">
-<div class="max-w-md mx-auto bg-white p-10 rounded-lg shadow-xl border border-slate-200 text-center space-y-6">
+<div class="max-w-md mx-auto glass-card p-10 rounded-lg shadow-xl border border-slate-200 text-center space-y-6">
 <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary mx-auto">
 <span class="material-symbols-outlined text-3xl">lock</span>
 </div>
@@ -197,7 +203,7 @@
 <button class="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-lg transition-colors" id="btn-admin-logout">Abmelden</button>
 </div>
 <!-- Task Creation -->
-<div class="bg-white p-8 rounded-lg border border-slate-200 shadow-sm space-y-8">
+<div class="glass-card p-8 rounded-lg border border-slate-200 shadow-sm space-y-8">
 <h3 class="font-bold text-xl flex items-center gap-3">
 <span class="w-8 h-8 bg-primary rounded flex items-center justify-center text-white">
 <span class="material-symbols-outlined text-sm">add</span>
@@ -245,7 +251,7 @@
 </div>
 </div>
 <!-- Student Management & Progress -->
-<div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+<div class="glass-card rounded-lg border border-slate-200 shadow-sm overflow-hidden">
 <div class="p-8 border-b border-slate-200 bg-slate-50/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 <div>
 <h3 class="font-bold text-xl">Schüler-Fortschritt</h3>
@@ -283,7 +289,7 @@
 </div>
 </section>
 </main>
-<!-- Footer with Legend -->
+<!-- Footer -->
 <footer class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-200 pt-4 pb-6 px-6 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
 <div class="max-w-5xl mx-auto space-y-4">
 <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
@@ -302,7 +308,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-        // FIREBASE CONFIGURATION
+        // FIREBASE CONFIGURATION (Session 290)
         const firebaseConfig = {
             apiKey: "AIzaSyD-mock-key-12345",
             authDomain: "edu-dashboard-4b.firebaseapp.com",
@@ -316,7 +322,7 @@
         const db = firebase.firestore();
 
         // App State
-        let currentStudent = null;
+        let currentStudentId = null;
         let isAdmin = false;
         let studentsData = [];
         let tasksData = [];
@@ -333,7 +339,6 @@
             Object.values(views).forEach(v => v.classList.add('hidden'));
             views[viewName].classList.remove('hidden');
             
-            // Reset active nav state
             document.getElementById('nav-student').classList.remove('bg-primary/10', 'text-primary');
             document.getElementById('nav-admin').classList.remove('bg-primary/10', 'text-primary');
             
@@ -343,9 +348,9 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        // QR Code Generation
+        // QR Code Generation - pointing to pure URL
         new QRCode(document.getElementById("qrcode"), {
-            text: window.location.href,
+            text: window.location.origin + window.location.pathname,
             width: 120,
             height: 120,
             colorDark : "#0058bc",
@@ -353,17 +358,23 @@
             correctLevel : QRCode.CorrectLevel.H
         });
 
-        // Data Syncing
+        // Real-time Listeners
+        // 1. Student List (Using config/class for name definitions)
+        // 2. Student Details/Progress (Using students collection)
+        // 3. Tasks (Using tasks collection)
+
+        // Listen for all student records
         db.collection('students').orderBy('name').onSnapshot(snapshot => {
             studentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             updateStudentDropdowns();
             updateProgressTable();
-            if (currentStudent) {
-                const updated = studentsData.find(s => s.id === currentStudent.id);
+            
+            // If current student is logged in, ensure we have the freshest data
+            if (currentStudentId) {
+                const updated = studentsData.find(s => s.id === currentStudentId);
                 if (updated) {
-                    currentStudent = updated;
                     renderStudentTasks();
-                    checkConfirmationStatus();
+                    checkConfirmationStatus(updated);
                 }
             }
         });
@@ -375,7 +386,6 @@
             updateProgressTable();
         });
 
-        // UI Updates
         function updateStudentDropdowns() {
             const dropdown = document.getElementById('student-dropdown');
             const targetSelect = document.getElementById('task-target');
@@ -392,11 +402,13 @@
         }
 
         function renderStudentTasks() {
-            if (!currentStudent) return;
+            const student = studentsData.find(s => s.id === currentStudentId);
+            if (!student) return;
+
             const container = document.getElementById('student-task-container');
             container.innerHTML = '';
 
-            const relevantTasks = tasksData.filter(t => t.target === 'all' || t.target === currentStudent.name);
+            const relevantTasks = tasksData.filter(t => t.target === 'all' || t.target === student.name);
             
             if (relevantTasks.length === 0) {
                 container.innerHTML = '<div class="text-center py-16 bg-white rounded-xl border border-dashed border-slate-200 text-slate-400 italic">Keine Aufgaben für dich aktuell. Genieße die Freizeit!</div>';
@@ -404,8 +416,8 @@
             }
 
             relevantTasks.forEach(task => {
-                const isCompleted = (currentStudent.completedTasks || []).includes(task.id);
-                const isLocked = currentStudent.confirmed;
+                const isCompleted = (student.completedTasks || []).includes(task.id);
+                const isLocked = student.confirmed;
 
                 const card = document.createElement('div');
                 card.className = `p-6 bg-white rounded-2xl border-2 transition-all flex items-center gap-6 ${isCompleted ? 'border-emerald-100 opacity-60 grayscale-[0.5]' : 'border-slate-100 shadow-sm'}`;
@@ -429,7 +441,10 @@
         }
 
         async function toggleTask(taskId) {
-            const completed = currentStudent.completedTasks || [];
+            const student = studentsData.find(s => s.id === currentStudentId);
+            if (!student || student.confirmed) return;
+
+            const completed = student.completedTasks || [];
             let updated;
             if (completed.includes(taskId)) {
                 updated = completed.filter(id => id !== taskId);
@@ -437,7 +452,7 @@
                 updated = [...completed, taskId];
             }
             
-            await db.collection('students').doc(currentStudent.id).update({
+            await db.collection('students').doc(currentStudentId).update({
                 completedTasks: updated
             });
         }
@@ -516,19 +531,20 @@
             });
         }
 
-        // Event Listeners
+        // Actions
         document.getElementById('btn-enter-student').addEventListener('click', () => {
             const id = document.getElementById('student-dropdown').value;
             if (!id) return alert('Bitte wähle deinen Namen aus.');
-            currentStudent = studentsData.find(s => s.id === id);
-            document.getElementById('current-student-name').innerText = currentStudent.name;
+            currentStudentId = id;
+            const student = studentsData.find(s => s.id === id);
+            document.getElementById('current-student-name').innerText = student.name;
             showView('studentTasks');
             renderStudentTasks();
-            checkConfirmationStatus();
+            checkConfirmationStatus(student);
         });
 
         document.getElementById('btn-logout-student').addEventListener('click', () => {
-            currentStudent = null;
+            currentStudentId = null;
             showView('selector');
         });
 
@@ -571,14 +587,36 @@
         document.getElementById('btn-add-student').addEventListener('click', async () => {
             const name = document.getElementById('new-student-name').value.trim();
             if (!name) return;
+            
+            // 1. Add to students collection for progress tracking
             await db.collection('students').add({
                 name, completedTasks: [], confirmed: false, parentName: '', confDate: ''
             });
+
+            // 2. Update the master name list (config/class)
+            const classDoc = await db.collection('config').doc('class').get();
+            let names = [];
+            if(classDoc.exists) names = classDoc.data().names || [];
+            if(!names.includes(name)) {
+                names.push(name);
+                await db.collection('config').doc('class').set({ names }, { merge: true });
+            }
+
             document.getElementById('new-student-name').value = '';
         });
 
         async function deleteStudent(id) {
             if (confirm('Schüler wirklich löschen?')) {
+                const s = studentsData.find(x => x.id === id);
+                if(s) {
+                    // Remove from master list
+                    const classDoc = await db.collection('config').doc('class').get();
+                    if(classDoc.exists) {
+                        let names = classDoc.data().names || [];
+                        names = names.filter(n => n !== s.name);
+                        await db.collection('config').doc('class').set({ names }, { merge: true });
+                    }
+                }
                 await db.collection('students').doc(id).delete();
             }
         }
@@ -609,32 +647,32 @@
             const pName = document.getElementById('parent-name').value.trim();
             if (!pName) return alert('Bitte geben Sie Ihren Namen als Bestätigung ein.');
             
-            const today = new Date().toLocaleDateString('de-CH'); // TT.MM.JJJJ
-            await db.collection('students').doc(currentStudent.id).update({
+            const today = new Date().toLocaleDateString('de-CH');
+            await db.collection('students').doc(currentStudentId).update({
                 confirmed: true,
                 parentName: pName,
                 confDate: today
             });
         });
 
-        function checkConfirmationStatus() {
+        function checkConfirmationStatus(student) {
             const form = document.getElementById('confirmation-form');
             const success = document.getElementById('confirmation-success');
             const dateDisplay = document.getElementById('conf-date-display');
             const parentDisplay = document.getElementById('conf-parent-display');
             
-            if (currentStudent.confirmed) {
+            if (student.confirmed) {
                 form.classList.add('hidden');
                 success.classList.remove('hidden');
-                dateDisplay.innerText = currentStudent.confDate;
-                parentDisplay.innerText = "Bestätigt durch: " + currentStudent.parentName;
+                dateDisplay.innerText = student.confDate;
+                parentDisplay.innerText = "Bestätigt durch: " + student.parentName;
             } else {
                 form.classList.remove('hidden');
                 success.classList.add('hidden');
             }
         }
 
-        // Import Logic
+        // List Import
         document.getElementById('import-list').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -642,13 +680,18 @@
             reader.onload = async function(e) {
                 const lines = e.target.result.split('\n');
                 const batch = db.batch();
+                let masterNames = [];
+                
                 lines.forEach(line => {
                     const name = line.trim();
                     if (name) {
                         const ref = db.collection('students').doc();
                         batch.set(ref, { name, completedTasks: [], confirmed: false, parentName: '', confDate: '' });
+                        masterNames.push(name);
                     }
                 });
+                
+                await db.collection('config').doc('class').set({ names: masterNames }, { merge: true });
                 await batch.commit();
                 alert('Klassenliste erfolgreich importiert!');
             };
