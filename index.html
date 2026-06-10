@@ -535,6 +535,10 @@
         document.getElementById('btn-enter-student').addEventListener('click', () => {
             const id = document.getElementById('student-dropdown').value;
             if (!id) return alert('Bitte wähle deinen Namen aus.');
+            
+            // Reset input fields for the new selection
+            document.getElementById('parent-name').value = '';
+            
             currentStudentId = id;
             const student = studentsData.find(s => s.id === id);
             document.getElementById('current-student-name').innerText = student.name;
@@ -545,6 +549,8 @@
 
         document.getElementById('btn-logout-student').addEventListener('click', () => {
             currentStudentId = null;
+            // Clear inputs on logout as well for safety
+            document.getElementById('parent-name').value = '';
             showView('selector');
         });
 
@@ -666,9 +672,13 @@
                 success.classList.remove('hidden');
                 dateDisplay.innerText = student.confDate;
                 parentDisplay.innerText = "Bestätigt durch: " + student.parentName;
+                // Pre-fill the input even if hidden, just for consistent state
+                document.getElementById('parent-name').value = student.parentName || '';
             } else {
                 form.classList.remove('hidden');
                 success.classList.add('hidden');
+                // Ensure field is empty for a new confirmation or if unconfirmed
+                document.getElementById('parent-name').value = '';
             }
         }
 
