@@ -256,6 +256,9 @@
 <button class="text-[10px] font-bold uppercase bg-slate-100 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors border border-slate-200" onclick="exportClassList()">
                         Export (.txt)
                     </button>
+<button class="text-[10px] font-bold uppercase bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors border border-red-100" onclick="clearClasslistTextarea()">
+                        Liste leeren
+                    </button>
 </div>
 </div>
 <div class="space-y-4">
@@ -593,7 +596,6 @@ Erika Musterfrau..." rows="6"></textarea>
         reader.onload = (e) => {
             try {
                 const content = e.target.result;
-                // Split logic handles: newline (\n), carriage return (\r\n), and commas
                 const names = content.split(/[\n\r,]+/)
                                     .map(n => n.trim())
                                     .filter(n => n !== "");
@@ -604,18 +606,13 @@ Erika Musterfrau..." rows="6"></textarea>
                 }
 
                 const textarea = document.getElementById('classlist-textarea');
-                // We add these names to the existing ones in textarea
                 const existingText = textarea.value.trim();
                 const newText = existingText 
                     ? existingText + '\n' + names.join('\n')
                     : names.join('\n');
                 
                 textarea.value = newText;
-                
-                // Show success and remind to save
                 alert(`Erfolgreich geladen: ${names.length} Namen wurden zum Textfeld hinzugefügt. Vergessen Sie nicht, die Änderungen zu speichern.`);
-                
-                // Reset input so the same file can be imported again if needed
                 input.value = '';
             } catch (err) {
                 console.error("FileReader Error:", err);
@@ -628,6 +625,12 @@ Erika Musterfrau..." rows="6"></textarea>
         };
 
         reader.readAsText(file);
+    }
+
+    function clearClasslistTextarea() {
+        if (confirm("Möchtest du das Textfeld der Klassenliste wirklich leeren? Die Liste wird erst in der Cloud gelöscht, wenn du danach auf 'Änderungen speichern' klickst.")) {
+            document.getElementById('classlist-textarea').value = '';
+        }
     }
 
     async function saveClassList() {
