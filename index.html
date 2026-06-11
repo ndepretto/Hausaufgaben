@@ -260,9 +260,11 @@ Erika Musterfrau..." rows="6"></textarea>
 </div>
 <!-- Progress Tracking -->
 <div class="space-y-6">
-<div class="flex items-center justify-between">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 <h3 class="font-bold text-xl">Lernfortschritt &amp; Bestätigung</h3>
-<button class="text-[10px] font-bold uppercase bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors" id="btn-reset-confirmations">Bestätigungen Reset</button>
+<div class="flex gap-2">
+<button class="text-[10px] font-bold uppercase bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors border border-red-100" id="btn-reset-confirmations">Bestätigungen Reset</button>
+</div>
 </div>
 <div class="glass-card rounded-lg border border-slate-200 overflow-hidden overflow-x-auto">
 <table class="w-full text-left border-collapse min-w-[600px]">
@@ -279,7 +281,13 @@ Erika Musterfrau..." rows="6"></textarea>
 </div>
 </div>
 <div class="space-y-6">
+<div class="flex items-center justify-between">
 <h3 class="font-bold text-xl">Aktive Aufgaben verwalten</h3>
+<button class="flex items-center gap-2 px-4 py-2 bg-white border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all text-[10px] font-bold uppercase rounded-lg shadow-sm" onclick="deleteAllTasks()">
+<span class="material-symbols-outlined text-sm">delete_sweep</span>
+                    Alle Aufgaben löschen
+                </button>
+</div>
 <div class="grid gap-3" id="admin-task-list"></div>
 </div>
 </section>
@@ -648,6 +656,23 @@ Erika Musterfrau..." rows="6"></textarea>
         if(confirm('Aufgabe wirklich löschen?')) await db.collection('tasks').doc(id).delete();
     }
 
+    async function deleteAllTasks() {
+        if (confirm('Möchtest du wirklich ALLE Aufgaben für die gesamte Klasse unwiderruflich löschen?')) {
+            try {
+                const snapshot = await db.collection('tasks').get();
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                alert('Alle Aufgaben wurden gelöscht.');
+            } catch (error) {
+                console.error("Fehler beim Löschen der Aufgaben: ", error);
+                alert('Es gab einen Fehler beim Löschen der Aufgaben.');
+            }
+        }
+    }
+
     function updateProgressTable() {
         const tbody = document.getElementById('progress-table-body');
         if(!tbody) return;
@@ -688,9 +713,22 @@ Erika Musterfrau..." rows="6"></textarea>
                         <span class="material-symbols-outlined text-xl">restart_alt</span>
                     </button>
                 </td>
+                <td class="px-8 py-5 text-right">
+                    <button onclick="removeStudent('${name}')" class="text-slate-300 hover:text-red-500 transition-colors" title="Schüler löschen">
+                        <span class="material-symbols-outlined text-xl">delete</span>
+                    </button>
+                </td>
             `;
             tbody.appendChild(tr);
         });
+    }
+
+    async function removeStudent(name) {
+        if(confirm(`Möchtest du ${name} wirklich aus der Klassenliste löschen?`)) {
+            const newClasslist = classlist.filter(n => n !== name);
+            await db.collection("config").doc("classlist").set({ names: newClasslist });
+            await db.collection("students").doc(name).delete();
+        }
     }
 
     async function resetStudentProgress(name) {
@@ -717,64 +755,4 @@ Erika Musterfrau..." rows="6"></textarea>
         }
     };
 </script>
-<script>
-    async function removeStudent(name) {
-        if(confirm(`Möchtest du ${name} wirklich aus der Klassenliste löschen?`)) {
-            const newClasslist = classlist.filter(n => n !== name);
-            await db.collection("config").doc("classlist").set({ names: newClasslist });
-            await db.collection("students").doc(name).delete();
-        }
-    }
-
-    // Override updateProgressTable to include the delete button
-    const originalUpdateProgressTable = updateProgressTable;
-    updateProgressTable = function() {
-        const tbody = document.getElementById('progress-table-body');
-        if(!tbody) return;
-        tbody.innerHTML = '';
-        
-        classlist.sort().forEach(name => {
-            const s = studentProgress[name] || { done: [], confirmed: false };
-            const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === name);
-            const total = relevantTasks.length;
-            const completed = (s.done || []).filter(id => tasks.some(t => t.id === id)).length;
-            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-            
-            const tr = document.createElement('tr');
-            tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0";
-            tr.innerHTML = `
-                <td class="px-8 py-5">
-                    <div class="font-bold text-slate-800">${name}</div>
-                    <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">${total} Aufgaben</div>
-                </td>
-                <td class="px-8 py-5 text-center">
-                    <div class="flex flex-col items-center gap-1.5">
-                        <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 rounded-full">${completed}/${total}</span>
-                        <div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-primary" style="width: ${percent}%"></div>
-                        </div>
-                    </div>
-                </td>
-                <td class="px-8 py-5 text-center">
-                    ${s.confirmed ? 
-                        `<div class="flex flex-col items-center">
-                            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full ring-1 ring-emerald-100">BESTÄTIGT</span>
-                            <span class="text-[9px] text-slate-400 font-bold mt-1 uppercase">${s.confDate}</span>
-                         </div>` : 
-                        `<span class="text-[10px] font-bold text-slate-300 border border-slate-200 px-3 py-1 rounded-full uppercase">OFFEN</span>`}
-                </td>
-                <td class="px-8 py-5 text-right">
-                    <button onclick="resetStudentProgress('${name}')" class="text-slate-300 hover:text-orange-500 transition-colors" title="Status zurücksetzen">
-                        <span class="material-symbols-outlined text-xl">restart_alt</span>
-                    </button>
-                </td>
-                <td class="px-8 py-5 text-right">
-                    <button onclick="removeStudent('${name}')" class="text-slate-300 hover:text-red-500 transition-colors" title="Schüler löschen">
-                        <span class="material-symbols-outlined text-xl">delete</span>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    };
-</script></body></html>
+</body></html>
