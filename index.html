@@ -87,7 +87,7 @@
 <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
 <span class="material-symbols-outlined text-2xl">assignment</span>
 </div>
-<h1 class="font-bold text-lg tracking-tight hidden sm:block">Wer – Was – Bis wann</h1>
+<h1 class="font-bold text-lg tracking-tight hidden sm:block">Döltschi – Wer – Was – Bis wann</h1>
 </div>
 <div class="flex items-center gap-2 sm:gap-4">
 <div class="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
@@ -271,7 +271,7 @@ Erika Musterfrau..." rows="6"></textarea>
 <th class="px-8 py-4">Schüler/in</th>
 <th class="px-8 py-4 text-center">Aufgaben</th>
 <th class="px-8 py-4 text-center">Bestätigung</th>
-<th class="px-8 py-4 text-right">Reset Name</th>
+<th class="px-8 py-4 text-right">Reset Name</th><th class="px-8 py-4 text-right">Löschen</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-slate-100" id="progress-table-body"></tbody>
@@ -717,4 +717,64 @@ Erika Musterfrau..." rows="6"></textarea>
         }
     };
 </script>
-</body></html>
+<script>
+    async function removeStudent(name) {
+        if(confirm(`Möchtest du ${name} wirklich aus der Klassenliste löschen?`)) {
+            const newClasslist = classlist.filter(n => n !== name);
+            await db.collection("config").doc("classlist").set({ names: newClasslist });
+            await db.collection("students").doc(name).delete();
+        }
+    }
+
+    // Override updateProgressTable to include the delete button
+    const originalUpdateProgressTable = updateProgressTable;
+    updateProgressTable = function() {
+        const tbody = document.getElementById('progress-table-body');
+        if(!tbody) return;
+        tbody.innerHTML = '';
+        
+        classlist.sort().forEach(name => {
+            const s = studentProgress[name] || { done: [], confirmed: false };
+            const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === name);
+            const total = relevantTasks.length;
+            const completed = (s.done || []).filter(id => tasks.some(t => t.id === id)).length;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+            
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0";
+            tr.innerHTML = `
+                <td class="px-8 py-5">
+                    <div class="font-bold text-slate-800">${name}</div>
+                    <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">${total} Aufgaben</div>
+                </td>
+                <td class="px-8 py-5 text-center">
+                    <div class="flex flex-col items-center gap-1.5">
+                        <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 rounded-full">${completed}/${total}</span>
+                        <div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-primary" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-8 py-5 text-center">
+                    ${s.confirmed ? 
+                        `<div class="flex flex-col items-center">
+                            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full ring-1 ring-emerald-100">BESTÄTIGT</span>
+                            <span class="text-[9px] text-slate-400 font-bold mt-1 uppercase">${s.confDate}</span>
+                         </div>` : 
+                        `<span class="text-[10px] font-bold text-slate-300 border border-slate-200 px-3 py-1 rounded-full uppercase">OFFEN</span>`}
+                </td>
+                <td class="px-8 py-5 text-right">
+                    <button onclick="resetStudentProgress('${name}')" class="text-slate-300 hover:text-orange-500 transition-colors" title="Status zurücksetzen">
+                        <span class="material-symbols-outlined text-xl">restart_alt</span>
+                    </button>
+                </td>
+                <td class="px-8 py-5 text-right">
+                    <button onclick="removeStudent('${name}')" class="text-slate-300 hover:text-red-500 transition-colors" title="Schüler löschen">
+                        <span class="material-symbols-outlined text-xl">delete</span>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    };
+</script></body></html>
