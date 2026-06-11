@@ -2,7 +2,7 @@
 
 <html class="light" lang="de"><head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
 <title>Wer – Was – Bis wann | Digitales Aufgabenheft</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -18,6 +18,7 @@
             background-color: var(--background);
             background-image: radial-gradient(#d1d5db 1px, transparent 1px);
             background-size: 20px 20px;
+            -webkit-tap-highlight-color: transparent;
         }
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -55,11 +56,13 @@
         .bg-other { background-color: #94a3b8; }
         
         .glass-card {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
         #qrcode img { margin: 0 auto; }
+        
+        select { -webkit-appearance: none; }
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -85,7 +88,7 @@
         }
     </script>
 </head>
-<body class="min-h-screen text-slate-900 pb-32">
+<body class="min-h-screen text-slate-900 pb-40">
 <!-- Header -->
 <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
 <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -149,14 +152,14 @@
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-8">
 <div>
 <h2 class="text-3xl font-extrabold" id="display-student-name">...</h2>
-<p class="text-slate-500">Deine persönlichen Aufgaben &amp; Klassenaufgaben</p>
+<p class="text-slate-500">Deine Aufgaben &amp; Klassenaufgaben</p>
 </div>
 <button class="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-lg transition-colors" onclick="showView('start-view')">Abmelden</button>
 </div>
 <div class="space-y-4" id="task-list-container">
 <!-- Tasks injected here -->
 </div>
-<!-- Confirmation -->
+<!-- Confirmation Section -->
 <div class="mt-12 glass-card border-2 border-primary/20 p-8 rounded-lg shadow-sm" id="parent-confirmation-block">
 <div class="flex items-start gap-4 mb-8">
 <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary shrink-0">
@@ -200,25 +203,29 @@
 <h2 class="text-4xl font-extrabold tracking-tight">Lehrer Dashboard</h2>
 <button class="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-lg transition-colors" onclick="showView('start-view')">Abmelden</button>
 </div>
-<!-- Student Enrollment -->
+<!-- Classlist Management -->
 <div class="glass-card p-8 rounded-lg border border-slate-200 shadow-sm space-y-6">
+<div class="flex items-center justify-between">
 <h3 class="font-bold text-xl flex items-center gap-3">
-<span class="w-8 h-8 bg-primary rounded flex items-center justify-center text-white">
-<span class="material-symbols-outlined text-sm">person_add</span>
-</span>
-                Schüler hinzufügen
-            </h3>
-<div class="flex gap-4">
-<input class="flex-1 p-3.5 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10" id="new-student-name" placeholder="Vorname Nachname" type="text"/>
-<button class="px-8 py-3.5 bg-primary text-white font-bold rounded-xl shadow-md hover:bg-blue-700 transition-all" id="btn-add-student">Hinzufügen</button>
+<span class="material-symbols-outlined text-primary">groups</span>
+                    Klassenliste verwalten
+                </h3>
+<div class="flex gap-2">
+<input accept=".txt" class="hidden" id="import-list" type="file"/>
+<button class="text-[10px] font-bold uppercase bg-slate-100 text-slate-600 px-4 py-2 rounded-lg" onclick="document.getElementById('import-list').click()">Import (.txt)</button>
+</div>
+</div>
+<div class="space-y-4">
+<p class="text-sm text-slate-500">Ein Name pro Zeile eingeben oder Datei importieren.</p>
+<textarea class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10 font-mono text-sm" id="classlist-textarea" placeholder="Max Mustermann
+Erika Musterfrau..." rows="6"></textarea>
+<button class="w-full py-3 bg-primary text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-md" id="btn-save-classlist">Klassenliste speichern</button>
 </div>
 </div>
 <!-- Task Assignment -->
 <div class="glass-card p-8 rounded-lg border border-slate-200 shadow-sm space-y-8">
 <h3 class="font-bold text-xl flex items-center gap-3">
-<span class="w-8 h-8 bg-primary rounded flex items-center justify-center text-white">
-<span class="material-symbols-outlined text-sm">add</span>
-</span>
+<span class="material-symbols-outlined text-primary">add_task</span>
                 Neue Aufgabe erstellen
             </h3>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -246,7 +253,7 @@
 <input class="w-full p-3.5 bg-slate-50 border-slate-200 rounded-xl" id="task-desc" placeholder="Hausaufgabe..." type="text"/>
 </div>
 <div>
-<label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Frist (DD.MM.YYYY)</label>
+<label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Frist (TT.MM.JJJJ)</label>
 <input class="w-full p-3.5 bg-slate-50 border-slate-200 rounded-xl" id="task-date" placeholder="z.B. 24.12.2024" type="text"/>
 </div>
 <div class="flex items-end">
@@ -254,24 +261,20 @@
 </div>
 </div>
 </div>
-<!-- Management -->
+<!-- Progress Tracking -->
 <div class="space-y-6">
 <div class="flex items-center justify-between">
-<h3 class="font-bold text-xl">Klassenverwaltung</h3>
-<div class="flex gap-2">
-<input accept=".txt" class="hidden" id="import-list" type="file"/>
-<button class="text-[10px] font-bold uppercase bg-slate-100 text-slate-600 px-4 py-2 rounded-lg" onclick="document.getElementById('import-list').click()">Import (.txt)</button>
-<button class="text-[10px] font-bold uppercase bg-red-50 text-red-600 px-4 py-2 rounded-lg" id="btn-reset-all">Reset Status</button>
+<h3 class="font-bold text-xl">Lernfortschritt &amp; Bestätigung</h3>
+<button class="text-[10px] font-bold uppercase bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors" id="btn-reset-confirmations">Bestätigungen Reset</button>
 </div>
-</div>
-<div class="glass-card rounded-lg border border-slate-200 overflow-hidden">
-<table class="w-full text-left border-collapse">
+<div class="glass-card rounded-lg border border-slate-200 overflow-hidden overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[600px]">
 <thead>
 <tr class="bg-slate-50 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
 <th class="px-8 py-4">Schüler/in</th>
 <th class="px-8 py-4 text-center">Aufgaben</th>
 <th class="px-8 py-4 text-center">Bestätigung</th>
-<th class="px-8 py-4 text-right">Aktion</th>
+<th class="px-8 py-4 text-right">Reset Name</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-slate-100" id="progress-table-body"></tbody>
@@ -279,7 +282,7 @@
 </div>
 </div>
 <div class="space-y-6">
-<h3 class="font-bold text-xl">Aktive Aufgaben</h3>
+<h3 class="font-bold text-xl">Aktive Aufgaben verwalten</h3>
 <div class="grid gap-3" id="admin-task-list"></div>
 </div>
 </section>
@@ -303,31 +306,38 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-    // 1. Firebase Configuration
+    // Firebase Config from Session 290
     const firebaseConfig = {
         apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
-        authDomain: "doeltschi-planner.firebaseapp.com",
-        projectId: "doeltschi-planner",
-        storageBucket: "doeltschi-planner.appspot.com",
+        authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
+        projectId: "doeltschi-hausaufgabenplaner",
+        storageBucket: "doeltschi-hausaufgabenplaner.firebasestorage.app",
         messagingSenderId: "741131007424",
         appId: "1:741131007424:web:04427f839b7eb86aa9c425",
         measurementId: "G-C6GTQJ8C1D"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     // App State
-    let currentStudentId = null;
-    let students = [];
+    let currentStudentName = localStorage.getItem('currentStudentName') || null;
+    let classlist = [];
     let tasks = [];
-    let studentsInitialLoaded = false;
+    let studentProgress = {};
 
-    // View Switcher
+    // Initialization
+    window.onload = () => {
+        initSync();
+        showView(currentStudentName ? 'planer-view' : 'start-view');
+    };
+
     function showView(viewId) {
         document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
         const target = document.getElementById('view-' + viewId);
         if (target) target.classList.remove('hidden');
         
+        // Update nav styling
         const navStudent = document.getElementById('nav-student');
         const navAdmin = document.getElementById('nav-admin');
         navStudent.classList.remove('bg-primary/10', 'text-primary');
@@ -337,6 +347,7 @@
         if (viewId === 'adminLogin' || viewId === 'adminDashboard') navAdmin.classList.add('bg-primary/10', 'text-primary');
         
         if (viewId === 'start-view') generateQRCode();
+        if (currentStudentName && viewId === 'planer-view') refreshStudentUI();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -344,7 +355,6 @@
         const qrEl = document.getElementById("qrcode");
         if (!qrEl) return;
         qrEl.innerHTML = "";
-        // Use current URL to ensure the student lands on the live version
         new QRCode(qrEl, {
             text: window.location.href,
             width: 180,
@@ -355,95 +365,107 @@
         });
     }
 
-    // Data Synchronization
+    // Data Sync
     function initSync() {
-        // Real-time Students - Optimized to populate dropdown immediately
-        db.collection('students').orderBy('name').onSnapshot(snap => {
-            students = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            studentsInitialLoaded = true;
-            updateDropdowns();
-            updateProgressTable();
-            if (currentStudentId) refreshStudentUI();
-        }, (error) => {
-            console.error("Firestore Error Students:", error);
+        // Sync Classlist
+        db.collection("config").doc("classlist").onSnapshot(doc => {
+            if (doc.exists) {
+                classlist = doc.data().names || [];
+                updateDropdownsAndTextarea();
+                syncStudentProgress();
+            }
         });
 
-        // Real-time Tasks
-        db.collection('tasks').orderBy('date').onSnapshot(snap => {
-            tasks = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Sync Tasks
+        db.collection("tasks").orderBy("date").onSnapshot(snap => {
+            tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             renderAdminTasks();
+            if (currentStudentName) refreshStudentUI();
             updateProgressTable();
-            if (currentStudentId) refreshStudentUI();
-        }, (error) => {
-            console.error("Firestore Error Tasks:", error);
+        });
+
+        // Sync Student Progress (Realtime updates for all students)
+        db.collection("students").onSnapshot(snap => {
+            snap.forEach(doc => {
+                studentProgress[doc.id] = doc.data();
+            });
+            updateProgressTable();
+            if (currentStudentName) refreshStudentUI();
         });
     }
 
-    function updateDropdowns() {
+    function updateDropdownsAndTextarea() {
         const dropdown = document.getElementById('student-dropdown');
         const targetSelect = document.getElementById('task-target');
-        if (!dropdown) return;
+        const textarea = document.getElementById('classlist-textarea');
+        
+        if (!dropdown || !targetSelect) return;
 
-        const currentVal = dropdown.value;
-        
-        // Handle loading state
-        if (!studentsInitialLoaded) {
-            dropdown.innerHTML = '<option disabled selected value="">Lade Klassenliste...</option>';
-        } else {
-            dropdown.innerHTML = '<option disabled selected value="">Wähle deinen Namen...</option>';
-        }
-        
+        dropdown.innerHTML = '<option disabled selected value="">Wähle deinen Namen...</option>';
         targetSelect.innerHTML = '<option value="all">Alle</option>';
         
-        students.forEach(s => {
-            const option = document.createElement('option');
-            option.value = s.id;
-            option.textContent = s.name;
-            if (currentVal === s.id) option.selected = true;
-            dropdown.appendChild(option);
-            
-            const targetOption = document.createElement('option');
-            targetOption.value = s.id;
-            targetOption.textContent = s.name;
-            targetSelect.appendChild(targetOption);
+        classlist.sort().forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            dropdown.appendChild(opt.cloneNode(true));
+            targetSelect.appendChild(opt);
+        });
+
+        if (document.activeElement !== textarea) {
+            textarea.value = classlist.join('\n');
+        }
+    }
+
+    function syncStudentProgress() {
+        // Ensure every student in classlist has a document
+        classlist.forEach(name => {
+            if (!studentProgress[name]) {
+                db.collection("students").doc(name).set({
+                    done: [],
+                    confirmed: false,
+                    parentName: '',
+                    confDate: ''
+                }, { merge: true });
+            }
         });
     }
 
     // Student Logic
     document.getElementById('btn-enter-student').onclick = () => {
-        const id = document.getElementById('student-dropdown').value;
-        if (!id) return;
-        currentStudentId = id;
+        const name = document.getElementById('student-dropdown').value;
+        if (!name) return;
+        currentStudentName = name;
+        localStorage.setItem('currentStudentName', name);
         refreshStudentUI();
         showView('planer-view');
     };
 
     function refreshStudentUI() {
-        const student = students.find(s => s.id === currentStudentId);
+        const student = studentProgress[currentStudentName];
         if (!student) return;
         
-        document.getElementById('display-student-name').innerText = student.name;
+        document.getElementById('display-student-name').innerText = currentStudentName;
         
-        // Task List
         const container = document.getElementById('task-list-container');
-        const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === currentStudentId);
+        const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === currentStudentName);
         container.innerHTML = '';
 
         if (relevantTasks.length === 0) {
             container.innerHTML = '<div class="py-16 text-center text-slate-400 italic">Keine anstehenden Aufgaben.</div>';
         } else {
             relevantTasks.forEach(task => {
-                const done = (student.done || []).includes(task.id);
+                const isDone = (student.done || []).includes(task.id);
                 const locked = student.confirmed;
                 const card = document.createElement('div');
-                card.className = `p-6 bg-white rounded-2xl border-2 transition-all flex items-center gap-6 ${done ? 'border-emerald-100 opacity-60' : 'border-slate-100 shadow-sm'}`;
+                card.className = `p-6 bg-white rounded-2xl border-2 transition-all flex items-center gap-6 ${isDone ? 'border-emerald-100 opacity-60' : 'border-slate-100 shadow-sm'}`;
                 card.innerHTML = `
                     <div class="subject-tag bg-${task.subject}">${task.subject.toUpperCase()}</div>
                     <div class="flex-1">
                         <p class="font-bold text-lg text-slate-800">${task.desc}</p>
                         <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-1">Frist: ${task.date}</p>
                     </div>
-                    <button onclick="toggleTask('${task.id}')" ${locked ? 'disabled' : ''} class="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${done ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200 text-transparent hover:border-primary'}">
+                    <button onclick="toggleTask('${task.id}')" ${locked ? 'disabled' : ''} class="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200 text-transparent hover:border-primary'}">
                         <span class="material-symbols-outlined text-xl">check</span>
                     </button>
                 `;
@@ -451,7 +473,6 @@
             });
         }
 
-        // Confirmation Status
         const form = document.getElementById('confirmation-form');
         const success = document.getElementById('confirmation-success');
         if (student.confirmed) {
@@ -466,18 +487,18 @@
     }
 
     async function toggleTask(taskId) {
-        const student = students.find(s => s.id === currentStudentId);
+        const student = studentProgress[currentStudentName];
         if (!student || student.confirmed) return;
         const done = student.done || [];
         const newDone = done.includes(taskId) ? done.filter(id => id !== taskId) : [...done, taskId];
-        await db.collection('students').doc(currentStudentId).update({ done: newDone });
+        await db.collection('students').doc(currentStudentName).update({ done: newDone });
     }
 
     document.getElementById('btn-confirm-parent').onclick = async () => {
         const pName = document.getElementById('parent-name').value.trim();
-        if (!pName) return alert('Name erforderlich');
+        if (!pName) return alert('Bitte Name der Eltern eingeben');
         const date = new Date().toLocaleDateString('de-CH');
-        await db.collection('students').doc(currentStudentId).update({
+        await db.collection('students').doc(currentStudentName).update({
             confirmed: true, parentName: pName, confDate: date
         });
     };
@@ -492,17 +513,23 @@
         }
     };
 
-    document.getElementById('btn-add-student').onclick = async () => {
-        const name = document.getElementById('new-student-name').value.trim();
-        if (!name) return alert('Bitte Name eingeben');
-        await db.collection('students').add({ 
-            name, 
-            done: [], 
-            confirmed: false,
-            parentName: '',
-            confDate: ''
-        });
-        document.getElementById('new-student-name').value = '';
+    document.getElementById('btn-save-classlist').onclick = async () => {
+        const text = document.getElementById('classlist-textarea').value;
+        const names = text.split('\n').map(n => n.trim()).filter(n => n !== "");
+        if (confirm(`Soll die Klassenliste mit ${names.length} Schülern gespeichert werden?`)) {
+            await db.collection("config").doc("classlist").set({ names });
+            alert("Liste aktualisiert.");
+        }
+    };
+
+    document.getElementById('import-list').onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            document.getElementById('classlist-textarea').value = event.target.result;
+        };
+        reader.readAsText(file);
     };
 
     document.getElementById('btn-add-task').onclick = async () => {
@@ -510,8 +537,13 @@
         const who = document.getElementById('task-target').value;
         const desc = document.getElementById('task-desc').value;
         const date = document.getElementById('task-date').value;
-        if (!desc || !date) return alert('Bitte Felder füllen');
-        await db.collection('tasks').add({ subject, who, desc, date, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        if (!desc || !date) return alert('Bitte alle Felder füllen');
+        
+        await db.collection('tasks').add({
+            subject, who, desc, date, 
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
         document.getElementById('task-desc').value = '';
     };
 
@@ -520,8 +552,6 @@
         if (!list) return;
         list.innerHTML = '';
         tasks.forEach(task => {
-            const student = students.find(s => s.id === task.who);
-            const targetName = task.who === 'all' ? 'Alle' : (student ? student.name : 'Gelöscht');
             const div = document.createElement('div');
             div.className = "flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm";
             div.innerHTML = `
@@ -529,23 +559,29 @@
                     <span class="w-10 h-10 bg-${task.subject} rounded-lg flex items-center justify-center text-[11px] font-extrabold text-white uppercase">${task.subject}</span>
                     <div>
                         <p class="font-bold text-slate-800">${task.desc}</p>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase">👤 ${targetName} • 🗓️ ${task.date}</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">👤 ${task.who === 'all' ? 'Alle' : task.who} • 🗓️ ${task.date}</p>
                     </div>
                 </div>
-                <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-red-500 transition-colors"><span class="material-symbols-outlined">delete</span></button>
+                <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
+                    <span class="material-symbols-outlined">delete</span>
+                </button>
             `;
             list.appendChild(div);
         });
     }
 
-    async function deleteTask(id) { if(confirm('Aufgabe wirklich löschen?')) await db.collection('tasks').doc(id).delete(); }
+    async function deleteTask(id) {
+        if(confirm('Aufgabe wirklich löschen?')) await db.collection('tasks').doc(id).delete();
+    }
 
     function updateProgressTable() {
         const tbody = document.getElementById('progress-table-body');
         if(!tbody) return;
         tbody.innerHTML = '';
-        students.forEach(s => {
-            const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === s.id);
+        
+        classlist.sort().forEach(name => {
+            const s = studentProgress[name] || { done: [], confirmed: false };
+            const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === name);
             const total = relevantTasks.length;
             const completed = (s.done || []).filter(id => tasks.some(t => t.id === id)).length;
             const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -554,12 +590,12 @@
             tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0";
             tr.innerHTML = `
                 <td class="px-8 py-5">
-                    <div class="font-bold text-slate-800">${s.name}</div>
-                    <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">${total} Aufgaben zugewiesen</div>
+                    <div class="font-bold text-slate-800">${name}</div>
+                    <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">${total} Aufgaben</div>
                 </td>
                 <td class="px-8 py-5 text-center">
                     <div class="flex flex-col items-center gap-1.5">
-                        <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 rounded-full">${completed} / ${total}</span>
+                        <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 rounded-full">${completed}/${total}</span>
                         <div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                             <div class="h-full bg-primary" style="width: ${percent}%"></div>
                         </div>
@@ -569,13 +605,13 @@
                     ${s.confirmed ? 
                         `<div class="flex flex-col items-center">
                             <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full ring-1 ring-emerald-100">BESTÄTIGT</span>
-                            <span class="text-[9px] text-slate-400 font-bold mt-1 uppercase">${s.confDate} • ${s.parentName}</span>
+                            <span class="text-[9px] text-slate-400 font-bold mt-1 uppercase">${s.confDate}</span>
                          </div>` : 
                         `<span class="text-[10px] font-bold text-slate-300 border border-slate-200 px-3 py-1 rounded-full uppercase">OFFEN</span>`}
                 </td>
                 <td class="px-8 py-5 text-right">
-                    <button onclick="deleteStudent('${s.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
-                        <span class="material-symbols-outlined text-xl">person_remove</span>
+                    <button onclick="resetStudentProgress('${name}')" class="text-slate-300 hover:text-orange-500 transition-colors">
+                        <span class="material-symbols-outlined text-xl">restart_alt</span>
                     </button>
                 </td>
             `;
@@ -583,52 +619,28 @@
         });
     }
 
-    async function deleteStudent(id) { if(confirm('Schüler/in wirklich aus der Liste entfernen?')) await db.collection('students').doc(id).delete(); }
-
-    document.getElementById('btn-reset-all').onclick = async () => {
-        if(confirm('Alle Fortschritte und Eltern-Bestätigungen der gesamten Klasse zurücksetzen? (Aufgaben bleiben erhalten)')) {
-            const batch = db.batch();
-            students.forEach(s => {
-                batch.update(db.collection('students').doc(s.id), { 
-                    done: [], 
-                    confirmed: false, 
-                    parentName: '', 
-                    confDate: '' 
-                });
+    async function resetStudentProgress(name) {
+        if(confirm(`Status für ${name} wirklich zurücksetzen?`)) {
+            await db.collection('students').doc(name).update({
+                confirmed: false,
+                parentName: '',
+                confDate: ''
             });
-            await batch.commit();
         }
-    };
+    }
 
-    document.getElementById('import-list').onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            const names = event.target.result.split('\n').filter(n => n.trim());
-            if (names.length === 0) return;
-            
+    document.getElementById('btn-reset-confirmations').onclick = async () => {
+        if(confirm('Alle Bestätigungen der Eltern für die gesamte Klasse zurücksetzen? (Aufgaben-Häkchen bleiben erhalten)')) {
             const batch = db.batch();
-            names.forEach(n => {
-                const ref = db.collection('students').doc();
-                batch.set(ref, { 
-                    name: n.trim(), 
-                    done: [], 
+            classlist.forEach(name => {
+                batch.update(db.collection('students').doc(name), {
                     confirmed: false,
                     parentName: '',
                     confDate: ''
                 });
             });
             await batch.commit();
-            alert(`${names.length} Schüler wurden erfolgreich importiert.`);
-        };
-        reader.readAsText(file);
-    };
-
-    // Initial Load
-    window.onload = () => {
-        initSync();
-        showView('start-view');
+        }
     };
 </script>
 </body></html>
