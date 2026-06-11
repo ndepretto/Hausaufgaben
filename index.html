@@ -3,7 +3,7 @@
 <html class="light" lang="de"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
-<title>Wer – Was – Bis wann | Digitales Aufgabenheft</title>
+<title>Wer – Was – Bis wann | Digitales Aufgabenheft (Diagnostic Fix)</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -461,42 +461,64 @@ Erika Musterfrau..." rows="6"></textarea>
     }
 
     function initSync() {
-        // Clear previous subscriptions if any
-        unsubscribeList.forEach(unsub => unsub());
-        unsubscribeList = [];
+        try {
+            // Clear previous subscriptions if any
+            unsubscribeList.forEach(unsub => unsub());
+            unsubscribeList = [];
 
-        if (!currentClassName) return;
+            if (!currentClassName) return;
 
-        const classRef = db.collection("classes").doc(currentClassName);
+            const classRef = db.collection("classes").doc(currentClassName);
 
-        const unsubConfig = classRef.collection("config").doc("classlist").onSnapshot(doc => {
-            if (doc.exists) {
-                classlist = doc.data().names || [];
-                updateDropdownsAndTextarea();
-                syncStudentProgress();
-            } else {
-                classlist = [];
-                updateDropdownsAndTextarea();
-            }
-        });
-        unsubscribeList.push(unsubConfig);
-
-        const unsubTasks = classRef.collection("tasks").orderBy("createdAt", "desc").onSnapshot(snap => {
-            tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            renderAdminTasks();
-            if (currentStudentName) refreshStudentUI();
-            updateProgressTable();
-        });
-        unsubscribeList.push(unsubTasks);
-
-        const unsubStudents = classRef.collection("students").onSnapshot(snap => {
-            snap.forEach(doc => {
-                studentProgress[doc.id] = doc.data();
+            const unsubConfig = classRef.collection("config").doc("classlist").onSnapshot(doc => {
+                try {
+                    if (doc.exists) {
+                        classlist = doc.data().names || [];
+                        updateDropdownsAndTextarea();
+                        syncStudentProgress();
+                    } else {
+                        classlist = [];
+                        updateDropdownsAndTextarea();
+                    }
+                } catch (e) {
+                    console.error("Fehler beim Verarbeiten der Klassenliste:", e);
+                }
+            }, (err) => {
+                alert('Fehler beim Synchronisieren der Klassenliste: ' + err.message);
             });
-            updateProgressTable();
-            if (currentStudentName) refreshStudentUI();
-        });
-        unsubscribeList.push(unsubStudents);
+            unsubscribeList.push(unsubConfig);
+
+            const unsubTasks = classRef.collection("tasks").orderBy("createdAt", "desc").onSnapshot(snap => {
+                try {
+                    tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    renderAdminTasks();
+                    if (currentStudentName) refreshStudentUI();
+                    updateProgressTable();
+                } catch (e) {
+                    console.error("Fehler beim Verarbeiten der Aufgaben:", e);
+                }
+            }, (err) => {
+                alert('Fehler beim Synchronisieren der Aufgaben: ' + err.message);
+            });
+            unsubscribeList.push(unsubTasks);
+
+            const unsubStudents = classRef.collection("students").onSnapshot(snap => {
+                try {
+                    snap.forEach(doc => {
+                        studentProgress[doc.id] = doc.data();
+                    });
+                    updateProgressTable();
+                    if (currentStudentName) refreshStudentUI();
+                } catch (e) {
+                    console.error("Fehler beim Verarbeiten der Schülerdaten:", e);
+                }
+            }, (err) => {
+                alert('Fehler beim Synchronisieren der Schülerdaten: ' + err.message);
+            });
+            unsubscribeList.push(unsubStudents);
+        } catch (error) {
+            alert('Fehler beim Starten der Synchronisation: ' + error.message);
+        }
     }
 
     function generateQRCode() {
@@ -514,7 +536,7 @@ Erika Musterfrau..." rows="6"></textarea>
         });
     }
 
-    // Existing Student UI Logic (Refactored for namespaced data)
+    // Student UI Logic
     document.getElementById('btn-enter-student').onclick = () => {
         const name = document.getElementById('student-dropdown').value;
         if (!name) return;
@@ -530,51 +552,56 @@ Erika Musterfrau..." rows="6"></textarea>
     };
 
     async function toggleTask(taskId) {
-        const student = studentProgress[currentStudentName];
-        if (!student || student.confirmed) return;
-        const done = student.done || [];
-        const newDone = done.includes(taskId) ? done.filter(id => id !== taskId) : [...done, taskId];
-        await db.collection('classes').doc(currentClassName).collection('students').doc(currentStudentName).update({ done: newDone });
+        try {
+            const student = studentProgress[currentStudentName];
+            if (!student || student.confirmed) return;
+            const done = student.done || [];
+            const newDone = done.includes(taskId) ? done.filter(id => id !== taskId) : [...done, taskId];
+            await db.collection('classes').doc(currentClassName).collection('students').doc(currentStudentName).update({ done: newDone });
+        } catch (error) {
+            alert('Fehler beim Ändern des Aufgabenstatus: ' + error.message);
+        }
     }
 
     document.getElementById('btn-confirm-parent').onclick = async () => {
-        const pName = document.getElementById('parent-name').value.trim();
-        if (!pName) return alert('Bitte Name der Eltern eingeben');
-        const date = new Date().toLocaleDateString('de-CH');
-        await db.collection('classes').doc(currentClassName).collection('students').doc(currentStudentName).update({
-            confirmed: true, parentName: pName, confDate: date
-        });
+        try {
+            const pName = document.getElementById('parent-name').value.trim();
+            if (!pName) return alert('Bitte Name der Eltern eingeben');
+            const date = new Date().toLocaleDateString('de-CH');
+            await db.collection('classes').doc(currentClassName).collection('students').doc(currentStudentName).update({
+                confirmed: true, parentName: pName, confDate: date
+            });
+        } catch (error) {
+            alert('Fehler beim Speichern der Bestätigung: ' + error.message);
+        }
     };
 
-    // Corrected Import Function
+    // Import Function
     function importClass(input) {
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
         const reader = new FileReader();
 
         reader.onload = async (e) => {
-            const content = e.target.result;
-            // Split by newline or comma, then trim and filter empty strings
-            const names = content
-                .split(/[\n,]+/)
-                .map(n => n.trim())
-                .filter(n => n !== "");
+            try {
+                const content = e.target.result;
+                const names = content
+                    .split(/[\n,]+/)
+                    .map(n => n.trim())
+                    .filter(n => n !== "");
 
-            if (names.length === 0) {
-                alert("Keine gültigen Namen in der Datei gefunden.");
-                return;
-            }
+                if (names.length === 0) {
+                    alert("Keine gültigen Namen in der Datei gefunden.");
+                    return;
+                }
 
-            if (confirm(`Sollen ${names.length} Schüler/innen in die Klasse "${currentClassName}" importiert werden?`)) {
-                try {
+                if (confirm(`Sollen ${names.length} Schüler/innen in die Klasse "${currentClassName}" importiert werden?`)) {
                     await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names });
                     alert("Klassenliste erfolgreich importiert.");
-                    // Reset file input for next use
                     input.value = '';
-                } catch (err) {
-                    console.error("Fehler beim Import:", err);
-                    alert("Fehler beim Speichern der Liste.");
                 }
+            } catch (err) {
+                alert("Fehler beim Importieren der Klassenliste: " + err.message);
             }
         };
 
@@ -585,91 +612,123 @@ Erika Musterfrau..." rows="6"></textarea>
         reader.readAsText(file);
     }
 
-    // Existing Admin Logic (Refactored)
+    // Admin Logic
     document.getElementById('btn-save-classlist').onclick = async () => {
-        const text = document.getElementById('classlist-textarea').value;
-        const names = text.split('\n').map(n => n.trim()).filter(n => n !== "");
-        if (confirm(`Soll die Klassenliste für ${currentClassName} mit ${names.length} Schülern gespeichert werden?`)) {
-            await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names });
-            alert("Liste aktualisiert.");
+        try {
+            const text = document.getElementById('classlist-textarea').value;
+            const names = text.split('\n').map(n => n.trim()).filter(n => n !== "");
+            if (confirm(`Soll die Klassenliste für ${currentClassName} mit ${names.length} Schülern gespeichert werden?`)) {
+                await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names });
+                alert("Liste aktualisiert.");
+            }
+        } catch (error) {
+            alert('Fehler beim Speichern der Klassenliste: ' + error.message);
         }
     };
 
     document.getElementById('btn-add-task').onclick = async () => {
-        const subject = document.getElementById('task-subject').value;
-        const who = document.getElementById('task-target').value;
-        const desc = document.getElementById('task-desc').value;
-        const dueDate = document.getElementById('task-date').value;
-        if (!desc || !dueDate) return alert('Bitte Beschreibung und Datum ausfüllen');
-        
-        await db.collection('classes').doc(currentClassName).collection('tasks').add({
-            subject, who, desc, dueDate, 
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        document.getElementById('task-desc').value = '';
-        document.getElementById('task-date').value = '';
+        try {
+            const subject = document.getElementById('task-subject').value;
+            const who = document.getElementById('task-target').value;
+            const desc = document.getElementById('task-desc').value;
+            const dueDate = document.getElementById('task-date').value;
+            if (!desc || !dueDate) return alert('Bitte Beschreibung und Datum ausfüllen');
+            
+            await db.collection('classes').doc(currentClassName).collection('tasks').add({
+                subject, who, desc, dueDate, 
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            document.getElementById('task-desc').value = '';
+            document.getElementById('task-date').value = '';
+        } catch (error) {
+            alert('Fehler beim Erstellen der Aufgabe: ' + error.message);
+        }
     };
 
     async function deleteTask(id) {
-        if(confirm('Aufgabe wirklich löschen?')) await db.collection('classes').doc(currentClassName).collection('tasks').doc(id).delete();
+        try {
+            if(confirm('Aufgabe wirklich löschen?')) await db.collection('classes').doc(currentClassName).collection('tasks').doc(id).delete();
+        } catch (error) {
+            alert('Fehler beim Löschen der Aufgabe: ' + error.message);
+        }
     }
 
     async function deleteAllTasks() {
-        if (confirm('Möchtest du wirklich ALLE Aufgaben für diese Klasse unwiderruflich löschen?')) {
-            const snapshot = await db.collection('classes').doc(currentClassName).collection('tasks').get();
-            const batch = db.batch();
-            snapshot.docs.forEach(doc => batch.delete(doc.ref));
-            await batch.commit();
+        try {
+            if (confirm('Möchtest du wirklich ALLE Aufgaben für diese Klasse unwiderruflich löschen?')) {
+                const snapshot = await db.collection('classes').doc(currentClassName).collection('tasks').get();
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+            }
+        } catch (error) {
+            alert('Fehler beim Löschen aller Aufgaben: ' + error.message);
         }
     }
 
     async function removeStudent(name) {
-        if(confirm(`Möchtest du ${name} wirklich aus der Klassenliste löschen?`)) {
-            const newClasslist = classlist.filter(n => n !== name);
-            await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names: newClasslist });
-            await db.collection("classes").doc(currentClassName).collection("students").doc(name).delete();
+        try {
+            if(confirm(`Möchtest du ${name} wirklich aus der Klassenliste löschen?`)) {
+                const newClasslist = classlist.filter(n => n !== name);
+                await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names: newClasslist });
+                await db.collection("classes").doc(currentClassName).collection("students").doc(name).delete();
+            }
+        } catch (error) {
+            alert('Fehler beim Entfernen des Schülers: ' + error.message);
         }
     }
 
     async function resetStudentProgress(name) {
-        if(confirm(`Status für ${name} wirklich zurücksetzen?`)) {
-            await db.collection('classes').doc(currentClassName).collection('students').doc(name).update({
-                confirmed: false,
-                parentName: '',
-                confDate: ''
-            });
-        }
-    }
-
-    async function handleResetConfirmations() {
-        if(confirm('Alle Bestätigungen der Eltern für diese Klasse zurücksetzen?')) {
-            const batch = db.batch();
-            classlist.forEach(name => {
-                batch.update(db.collection('classes').doc(currentClassName).collection('students').doc(name), {
+        try {
+            if(confirm(`Status für ${name} wirklich zurücksetzen?`)) {
+                await db.collection('classes').doc(currentClassName).collection('students').doc(name).update({
                     confirmed: false,
                     parentName: '',
                     confDate: ''
                 });
-            });
-            await batch.commit();
+            }
+        } catch (error) {
+            alert('Fehler beim Zurücksetzen des Schülerstatus: ' + error.message);
+        }
+    }
+
+    async function handleResetConfirmations() {
+        try {
+            if(confirm('Alle Bestätigungen der Eltern für diese Klasse zurücksetzen?')) {
+                const batch = db.batch();
+                classlist.forEach(name => {
+                    batch.update(db.collection('classes').doc(currentClassName).collection('students').doc(name), {
+                        confirmed: false,
+                        parentName: '',
+                        confDate: ''
+                    });
+                });
+                await batch.commit();
+            }
+        } catch (error) {
+            alert('Fehler beim Zurücksetzen aller Bestätigungen: ' + error.message);
         }
     }
 
     function syncStudentProgress() {
-        classlist.forEach(name => {
-            if (!studentProgress[name]) {
-                db.collection("classes").doc(currentClassName).collection("students").doc(name).set({
-                    done: [],
-                    confirmed: false,
-                    parentName: '',
-                    confDate: ''
-                }, { merge: true });
-            }
-        });
+        try {
+            classlist.forEach(name => {
+                if (!studentProgress[name]) {
+                    db.collection("classes").doc(currentClassName).collection("students").doc(name).set({
+                        done: [],
+                        confirmed: false,
+                        parentName: '',
+                        confDate: ''
+                    }, { merge: true });
+                }
+            });
+        } catch (error) {
+            console.error("Fehler beim Initialisieren des Schülerfortschritts:", error);
+        }
     }
 
-    // Helper functions (same as original but using state variables)
+    // Helper functions
     function renderLegend() {
         const container = document.getElementById('legend-container');
         if (!container) return;
