@@ -249,7 +249,7 @@
                     Klassenliste verwalten
                 </h3>
 <div class="flex gap-2">
-<input accept=".txt" class="hidden" id="import-list" type="file"/>
+<input accept=".txt" class="hidden" id="import-list" onchange="importClass(this)" type="file"/>
 <button class="text-[10px] font-bold uppercase bg-slate-100 text-slate-600 px-4 py-2 rounded-lg" onclick="document.getElementById('import-list').click()">Import (.txt)</button>
 </div>
 </div>
@@ -545,6 +545,45 @@ Erika Musterfrau..." rows="6"></textarea>
             confirmed: true, parentName: pName, confDate: date
         });
     };
+
+    // Corrected Import Function
+    function importClass(input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        const reader = new FileReader();
+
+        reader.onload = async (e) => {
+            const content = e.target.result;
+            // Split by newline or comma, then trim and filter empty strings
+            const names = content
+                .split(/[\n,]+/)
+                .map(n => n.trim())
+                .filter(n => n !== "");
+
+            if (names.length === 0) {
+                alert("Keine gültigen Namen in der Datei gefunden.");
+                return;
+            }
+
+            if (confirm(`Sollen ${names.length} Schüler/innen in die Klasse "${currentClassName}" importiert werden?`)) {
+                try {
+                    await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names });
+                    alert("Klassenliste erfolgreich importiert.");
+                    // Reset file input for next use
+                    input.value = '';
+                } catch (err) {
+                    console.error("Fehler beim Import:", err);
+                    alert("Fehler beim Speichern der Liste.");
+                }
+            }
+        };
+
+        reader.onerror = () => {
+            alert("Fehler beim Lesen der Datei.");
+        };
+
+        reader.readAsText(file);
+    }
 
     // Existing Admin Logic (Refactored)
     document.getElementById('btn-save-classlist').onclick = async () => {
