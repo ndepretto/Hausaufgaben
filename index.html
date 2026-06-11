@@ -54,6 +54,23 @@
         #qrcode img { margin: 0 auto; }
         
         select { -webkit-appearance: none; }
+
+        .collapsible-content {
+            max-height: 2000px;
+            transition: max-height 0.3s ease-in-out, opacity 0.2s ease-in-out;
+            overflow: hidden;
+        }
+        .collapsible-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .rotate-icon {
+            transition: transform 0.3s ease;
+        }
+        .collapsed .rotate-icon {
+            transform: rotate(-90deg);
+        }
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -258,14 +275,18 @@ Erika Musterfrau..." rows="6"></textarea>
 </div>
 </div>
 </div>
-<!-- Progress Tracking -->
-<div class="space-y-6">
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-<h3 class="font-bold text-xl">Lernfortschritt &amp; Bestätigung</h3>
+<!-- Progress Tracking (Collapsible) -->
+<div class="space-y-6" id="collapsible-progress-section">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer group" onclick="toggleProgressCollapse()">
+<h3 class="font-bold text-xl flex items-center gap-2">
+<span class="material-symbols-outlined text-primary rotate-icon">expand_more</span>
+            Lernfortschritt &amp; Bestätigung
+        </h3>
 <div class="flex gap-2">
-<button class="text-[10px] font-bold uppercase bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors border border-red-100" id="btn-reset-confirmations">Bestätigungen Reset</button>
+<button class="text-[10px] font-bold uppercase bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors border border-red-100" id="btn-reset-confirmations" onclick="event.stopPropagation()">Bestätigungen Reset</button>
 </div>
 </div>
+<div class="collapsible-content" id="progress-collapse-content">
 <div class="glass-card rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
 <div class="overflow-x-auto">
 <table class="w-full text-left border-collapse min-w-[700px]">
@@ -281,6 +302,7 @@ Erika Musterfrau..." rows="6"></textarea>
 <!-- Injected by updateProgressTable() -->
 </tbody>
 </table>
+</div>
 </div>
 </div>
 </div>
@@ -419,6 +441,13 @@ Erika Musterfrau..." rows="6"></textarea>
             colorLight: "#ffffff",
             correctLevel: QRCode.CorrectLevel.H
         });
+    }
+
+    function toggleProgressCollapse() {
+        const container = document.getElementById('collapsible-progress-section');
+        const content = document.getElementById('progress-collapse-content');
+        container.classList.toggle('collapsed');
+        content.classList.toggle('collapsed');
     }
 
     // Data Sync
@@ -754,7 +783,7 @@ Erika Musterfrau..." rows="6"></textarea>
         }
     }
 
-    document.getElementById('btn-reset-confirmations').onclick = async () => {
+    async function handleResetConfirmations() {
         if(confirm('Alle Bestätigungen der Eltern für die gesamte Klasse zurücksetzen? (Aufgaben-Häkchen bleiben erhalten)')) {
             const batch = db.batch();
             classlist.forEach(name => {
@@ -766,6 +795,6 @@ Erika Musterfrau..." rows="6"></textarea>
             });
             await batch.commit();
         }
-    };
+    }
 </script>
 </body></html>
