@@ -266,18 +266,22 @@ Erika Musterfrau..." rows="6"></textarea>
 <button class="text-[10px] font-bold uppercase bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors border border-red-100" id="btn-reset-confirmations">Bestätigungen Reset</button>
 </div>
 </div>
-<div class="glass-card rounded-lg border border-slate-200 overflow-hidden overflow-x-auto">
-<table class="w-full text-left border-collapse min-w-[600px]">
+<div class="glass-card rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[700px]">
 <thead>
-<tr class="bg-slate-50 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-<th class="px-8 py-4">Schüler/in</th>
-<th class="px-8 py-4 text-center">Aufgaben</th>
-<th class="px-8 py-4 text-center">Bestätigung</th>
-<th class="px-8 py-4 text-right">Reset Name</th><th class="px-8 py-4 text-right">Löschen</th>
+<tr class="bg-slate-50/50 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+<th class="px-8 py-5 border-b border-slate-100">Schüler/in</th>
+<th class="px-8 py-5 border-b border-slate-100 w-48">Erledigte Aufgaben</th>
+<th class="px-8 py-5 border-b border-slate-100 text-center">Status Eltern</th>
+<th class="px-8 py-5 border-b border-slate-100 text-right">Aktionen</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-slate-100" id="progress-table-body"></tbody>
+<tbody class="divide-y divide-slate-50" id="progress-table-body">
+<!-- Injected by updateProgressTable() -->
+</tbody>
 </table>
+</div>
 </div>
 </div>
 <div class="space-y-6">
@@ -376,7 +380,6 @@ Erika Musterfrau..." rows="6"></textarea>
         const target = document.getElementById('view-' + viewId);
         if (target) target.classList.remove('hidden');
         
-        // Update nav styling
         const navStudent = document.getElementById('nav-student');
         const navAdmin = document.getElementById('nav-admin');
         navStudent.classList.remove('bg-primary/10', 'text-primary');
@@ -511,7 +514,6 @@ Erika Musterfrau..." rows="6"></textarea>
         
         document.getElementById('display-student-name').innerText = currentStudentName;
         
-        // Hide logout button if locked
         const logoutBtn = document.getElementById('btn-logout-student');
         if (isLocked) {
             logoutBtn.classList.add('hidden');
@@ -686,37 +688,48 @@ Erika Musterfrau..." rows="6"></textarea>
             const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
             
             const tr = document.createElement('tr');
-            tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0";
+            tr.className = "hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0";
             tr.innerHTML = `
                 <td class="px-8 py-5">
-                    <div class="font-bold text-slate-800">${name}</div>
-                    <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">${total} Aufgaben</div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-primary font-bold text-xs">
+                            ${name.charAt(0)}
+                        </div>
+                        <div>
+                            <div class="font-bold text-slate-800 leading-tight">${name}</div>
+                            <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5 tracking-wider">${total} Aufgaben total</div>
+                        </div>
+                    </div>
                 </td>
-                <td class="px-8 py-5 text-center">
-                    <div class="flex flex-col items-center gap-1.5">
-                        <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 rounded-full">${completed}/${total}</span>
-                        <div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-primary" style="width: ${percent}%"></div>
+                <td class="px-8 py-5">
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-center text-[10px] font-bold">
+                            <span class="${percent === 100 ? 'text-emerald-600' : 'text-slate-500'}">${completed}/${total} erledigt</span>
+                            <span class="text-slate-400">${percent}%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full ${percent === 100 ? 'bg-emerald-500' : 'bg-primary'} transition-all duration-500" style="width: ${percent}%"></div>
                         </div>
                     </div>
                 </td>
                 <td class="px-8 py-5 text-center">
                     ${s.confirmed ? 
-                        `<div class="flex flex-col items-center">
-                            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full ring-1 ring-emerald-100">BESTÄTIGT</span>
-                            <span class="text-[9px] text-slate-400 font-bold mt-1 uppercase">${s.confDate}</span>
+                        `<div class="inline-flex flex-col items-center">
+                            <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full ring-1 ring-emerald-200 uppercase tracking-tight">OK • ${s.confDate}</span>
+                            <span class="text-[9px] text-slate-400 font-medium mt-1 truncate max-w-[120px]">${s.parentName}</span>
                          </div>` : 
-                        `<span class="text-[10px] font-bold text-slate-300 border border-slate-200 px-3 py-1 rounded-full uppercase">OFFEN</span>`}
+                        `<span class="inline-block text-[10px] font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-tight border border-slate-200/50">Ausstehend</span>`}
                 </td>
                 <td class="px-8 py-5 text-right">
-                    <button onclick="resetStudentProgress('${name}')" class="text-slate-300 hover:text-orange-500 transition-colors">
-                        <span class="material-symbols-outlined text-xl">restart_alt</span>
-                    </button>
-                </td>
-                <td class="px-8 py-5 text-right">
-                    <button onclick="removeStudent('${name}')" class="text-slate-300 hover:text-red-500 transition-colors" title="Schüler löschen">
-                        <span class="material-symbols-outlined text-xl">delete</span>
-                    </button>
+                    <div class="flex items-center justify-end gap-1">
+                        <button onclick="resetStudentProgress('${name}')" class="p-2 text-slate-300 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all" title="Status zurücksetzen">
+                            <span class="material-symbols-outlined text-xl">restart_alt</span>
+                        </button>
+                        <div class="w-px h-6 bg-slate-100 mx-1"></div>
+                        <button onclick="removeStudent('${name}')" class="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Schüler löschen">
+                            <span class="material-symbols-outlined text-xl">delete</span>
+                        </button>
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
