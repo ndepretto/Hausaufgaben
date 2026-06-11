@@ -92,7 +92,7 @@
 <!-- Header -->
 <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
 <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-<div class="flex items-center gap-3 cursor-pointer" onclick="showView('start-view')">
+<div class="flex items-center gap-3 cursor-pointer" onclick="handleLogoClick()">
 <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
 <span class="material-symbols-outlined text-2xl">assignment</span>
 </div>
@@ -104,7 +104,7 @@
 <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Connected Live</span>
 </div>
 <div class="flex items-center gap-1 border-l border-slate-200 pl-4 ml-2">
-<button class="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600" id="nav-student" onclick="showView('start-view')" title="Schüler-Ansicht">
+<button class="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600" id="nav-student" onclick="handleStudentNav()" title="Schüler-Ansicht">
 <span class="material-symbols-outlined">person</span>
 </button>
 <button class="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600" id="nav-admin" onclick="showView('adminLogin')" title="Lehrer-Modus">
@@ -154,7 +154,7 @@
 <h2 class="text-3xl font-extrabold" id="display-student-name">...</h2>
 <p class="text-slate-500">Deine Aufgaben &amp; Klassenaufgaben</p>
 </div>
-<button class="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-lg transition-colors" onclick="showView('start-view')">Abmelden</button>
+<button class="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-lg transition-colors" id="btn-logout-student" onclick="logoutStudent()">Abmelden</button>
 </div>
 <div class="space-y-4" id="task-list-container">
 <!-- Tasks injected here -->
@@ -202,6 +202,19 @@
 <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-200 pb-8">
 <h2 class="text-4xl font-extrabold tracking-tight">Lehrer Dashboard</h2>
 <button class="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-lg transition-colors" onclick="showView('start-view')">Abmelden</button>
+</div>
+<!-- Session & Lock Management -->
+<div class="glass-card p-8 rounded-lg border-2 border-orange-200 shadow-sm space-y-6 bg-orange-50/30">
+<div class="flex items-center justify-between">
+<h3 class="font-bold text-xl flex items-center gap-3">
+<span class="material-symbols-outlined text-orange-600">lock_open</span>
+                    Identitätsschutz / Sitzungssperre
+                </h3>
+</div>
+<div class="flex flex-col sm:flex-row items-center gap-4">
+<p class="text-sm text-slate-600 flex-1">Falls ein Schüler sein Gerät gesperrt hat (Sitzungsschutz), kannst du hier die Sperre für dieses Gerät aufheben.</p>
+<button class="whitespace-nowrap px-6 py-3 bg-orange-600 text-white font-bold rounded-xl shadow-md hover:bg-orange-700 transition-all" onclick="resetDeviceLock()">Gerätesperre aufheben</button>
+</div>
 </div>
 <!-- Classlist Management -->
 <div class="glass-card p-8 rounded-lg border border-slate-200 shadow-sm space-y-6">
@@ -306,7 +319,7 @@ Erika Musterfrau..." rows="6"></textarea>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-    // Firebase Config from Session 290
+    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
         authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
@@ -322,6 +335,7 @@ Erika Musterfrau..." rows="6"></textarea>
 
     // App State
     let currentStudentName = localStorage.getItem('currentStudentName') || null;
+    let isLocked = localStorage.getItem('doeltschi_locked') === 'true';
     let classlist = [];
     let tasks = [];
     let studentProgress = {};
@@ -329,7 +343,12 @@ Erika Musterfrau..." rows="6"></textarea>
     // Initialization
     window.onload = () => {
         initSync();
-        showView(currentStudentName ? 'planer-view' : 'start-view');
+        
+        if (isLocked && currentStudentName) {
+            showView('planer-view');
+        } else {
+            showView(currentStudentName ? 'planer-view' : 'start-view');
+        }
     };
 
     function showView(viewId) {
@@ -351,6 +370,20 @@ Erika Musterfrau..." rows="6"></textarea>
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function handleLogoClick() {
+        if (!isLocked) {
+            showView('start-view');
+        }
+    }
+
+    function handleStudentNav() {
+        if (isLocked && currentStudentName) {
+            showView('planer-view');
+        } else {
+            showView(currentStudentName ? 'planer-view' : 'start-view');
+        }
+    }
+
     function generateQRCode() {
         const qrEl = document.getElementById("qrcode");
         if (!qrEl) return;
@@ -367,7 +400,6 @@ Erika Musterfrau..." rows="6"></textarea>
 
     // Data Sync
     function initSync() {
-        // Sync Classlist
         db.collection("config").doc("classlist").onSnapshot(doc => {
             if (doc.exists) {
                 classlist = doc.data().names || [];
@@ -376,7 +408,6 @@ Erika Musterfrau..." rows="6"></textarea>
             }
         });
 
-        // Sync Tasks
         db.collection("tasks").orderBy("date").onSnapshot(snap => {
             tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             renderAdminTasks();
@@ -384,7 +415,6 @@ Erika Musterfrau..." rows="6"></textarea>
             updateProgressTable();
         });
 
-        // Sync Student Progress (Realtime updates for all students)
         db.collection("students").onSnapshot(snap => {
             snap.forEach(doc => {
                 studentProgress[doc.id] = doc.data();
@@ -418,7 +448,6 @@ Erika Musterfrau..." rows="6"></textarea>
     }
 
     function syncStudentProgress() {
-        // Ensure every student in classlist has a document
         classlist.forEach(name => {
             if (!studentProgress[name]) {
                 db.collection("students").doc(name).set({
@@ -435,17 +464,40 @@ Erika Musterfrau..." rows="6"></textarea>
     document.getElementById('btn-enter-student').onclick = () => {
         const name = document.getElementById('student-dropdown').value;
         if (!name) return;
+        
         currentStudentName = name;
+        isLocked = true;
+        
         localStorage.setItem('currentStudentName', name);
+        localStorage.setItem('doeltschi_locked', 'true');
+        
         refreshStudentUI();
         showView('planer-view');
     };
+
+    function logoutStudent() {
+        if (isLocked) {
+            alert("Du kannst dich nicht abmelden, da dieses Gerät gesperrt ist. Bitte wende dich an deine Lehrperson.");
+            return;
+        }
+        currentStudentName = null;
+        localStorage.removeItem('currentStudentName');
+        showView('start-view');
+    }
 
     function refreshStudentUI() {
         const student = studentProgress[currentStudentName];
         if (!student) return;
         
         document.getElementById('display-student-name').innerText = currentStudentName;
+        
+        // Hide logout button if locked
+        const logoutBtn = document.getElementById('btn-logout-student');
+        if (isLocked) {
+            logoutBtn.classList.add('hidden');
+        } else {
+            logoutBtn.classList.remove('hidden');
+        }
         
         const container = document.getElementById('task-list-container');
         const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === currentStudentName);
@@ -512,6 +564,14 @@ Erika Musterfrau..." rows="6"></textarea>
             document.getElementById('admin-error').classList.remove('hidden');
         }
     };
+
+    function resetDeviceLock() {
+        if (confirm("Möchtest du die Identitätssperre auf diesem Gerät wirklich aufheben?")) {
+            localStorage.removeItem('doeltschi_locked');
+            localStorage.removeItem('currentStudentName');
+            location.reload();
+        }
+    }
 
     document.getElementById('btn-save-classlist').onclick = async () => {
         const text = document.getElementById('classlist-textarea').value;
