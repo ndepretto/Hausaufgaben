@@ -3,7 +3,7 @@
 <html class="light" lang="de"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
-<title>Wer – Was – Bis wann | Digitales Aufgabenheft</title>
+<title>Wer – Was – Bis wann - Funktionaler Listen-Import Fix Final v2</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -249,7 +249,7 @@
                     Klassenliste verwalten
                 </h3>
 <div class="flex flex-wrap gap-2">
-<input accept=".txt" class="hidden" id="import-list" onchange="importClass(this)" type="file"/>
+<input accept=".txt" class="hidden" id="import-list" onchange="importClass(event)" type="file"/>
 <button class="text-[10px] font-bold uppercase bg-slate-100 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors border border-slate-200" onclick="document.getElementById('import-list').click()">
                         Import (.txt)
                     </button>
@@ -259,7 +259,7 @@
 </div>
 </div>
 <div class="space-y-4">
-<p class="text-sm text-slate-500">Ein Name pro Zeile eingeben.</p>
+<p class="text-sm text-slate-500">Ein Name pro Zeile eingeben. Nach dem Import bitte speichern.</p>
 <textarea class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10 font-mono text-sm" id="classlist-textarea" placeholder="Max Mustermann
 Erika Musterfrau..." rows="6"></textarea>
 <button class="w-full py-4 bg-primary text-white font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all shadow-md active:scale-[0.99]" id="btn-save-classlist" onclick="saveClassList()">
@@ -583,23 +583,50 @@ Erika Musterfrau..." rows="6"></textarea>
         URL.revokeObjectURL(url);
     }
 
-    function importClass(input) {
+    function importClass(event) {
+        const input = event.target;
         if (!input.files || !input.files[0]) return;
+        
         const file = input.files[0];
         const reader = new FileReader();
 
-        reader.onload = async (e) => {
+        reader.onload = (e) => {
             try {
-                const names = e.target.result.split(/[\n,]+/).map(n => n.trim()).filter(n => n !== "");
-                if (names.length === 0) return alert("Keine gültigen Namen gefunden.");
+                const content = e.target.result;
+                // Split logic handles: newline (\n), carriage return (\r\n), and commas
+                const names = content.split(/[\n\r,]+/)
+                                    .map(n => n.trim())
+                                    .filter(n => n !== "");
 
-                if (confirm(`Sollen ${names.length} Schüler/innen importiert werden?`)) {
-                    await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names });
-                    alert("Erfolgreich importiert.");
-                    input.value = '';
+                if (names.length === 0) {
+                    alert("Keine gültigen Namen in der Datei gefunden.");
+                    return;
                 }
-            } catch (err) { alert("Import-Fehler: " + err.message); }
+
+                const textarea = document.getElementById('classlist-textarea');
+                // We add these names to the existing ones in textarea
+                const existingText = textarea.value.trim();
+                const newText = existingText 
+                    ? existingText + '\n' + names.join('\n')
+                    : names.join('\n');
+                
+                textarea.value = newText;
+                
+                // Show success and remind to save
+                alert(`Erfolgreich geladen: ${names.length} Namen wurden zum Textfeld hinzugefügt. Vergessen Sie nicht, die Änderungen zu speichern.`);
+                
+                // Reset input so the same file can be imported again if needed
+                input.value = '';
+            } catch (err) {
+                console.error("FileReader Error:", err);
+                alert("Fehler beim Lesen der Datei: " + err.message);
+            }
         };
+
+        reader.onerror = (err) => {
+            alert("Fehler beim Datei-Import: Der Dateizugriff wurde verweigert oder die Datei ist beschädigt.");
+        };
+
         reader.readAsText(file);
     }
 
