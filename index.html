@@ -243,21 +243,28 @@
 </div>
 <!-- Classlist Management -->
 <div class="glass-card p-8 rounded-lg border border-slate-200 shadow-sm space-y-6">
-<div class="flex items-center justify-between">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 <h3 class="font-bold text-xl flex items-center gap-3">
 <span class="material-symbols-outlined text-primary">groups</span>
                     Klassenliste verwalten
                 </h3>
-<div class="flex gap-2">
+<div class="flex flex-wrap gap-2">
 <input accept=".txt" class="hidden" id="import-list" onchange="importClass(this)" type="file"/>
-<button class="text-[10px] font-bold uppercase bg-slate-100 text-slate-600 px-4 py-2 rounded-lg" onclick="document.getElementById('import-list').click()">Import (.txt)</button>
+<button class="text-[10px] font-bold uppercase bg-slate-100 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors border border-slate-200" onclick="document.getElementById('import-list').click()">
+                        Import (.txt)
+                    </button>
+<button class="text-[10px] font-bold uppercase bg-slate-100 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors border border-slate-200" onclick="exportClassList()">
+                        Export (.txt)
+                    </button>
 </div>
 </div>
 <div class="space-y-4">
-<p class="text-sm text-slate-500">Ein Name pro Zeile eingeben oder Datei importieren.</p>
+<p class="text-sm text-slate-500">Ein Name pro Zeile eingeben.</p>
 <textarea class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10 font-mono text-sm" id="classlist-textarea" placeholder="Max Mustermann
 Erika Musterfrau..." rows="6"></textarea>
-<button class="w-full py-3 bg-primary text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-md" id="btn-save-classlist">Klassenliste speichern</button>
+<button class="w-full py-4 bg-primary text-white font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all shadow-md active:scale-[0.99]" id="btn-save-classlist" onclick="saveClassList()">
+                    Änderungen speichern
+                </button>
 </div>
 </div>
 <!-- Task Assignment -->
@@ -372,7 +379,7 @@ Erika Musterfrau..." rows="6"></textarea>
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Multi-Class Support
+    // State
     let currentClassName = new URLSearchParams(window.location.search).get('class') || localStorage.getItem('currentClassName') || null;
     let currentStudentName = localStorage.getItem('currentStudentName') || null;
     let isLocked = localStorage.getItem('doeltschi_locked') === 'true';
@@ -409,11 +416,9 @@ Erika Musterfrau..." rows="6"></textarea>
             showView('class-selection');
         }
 
-        // Fix: Keydown listener for textareas to allow new lines
         const classlistTextarea = document.getElementById('classlist-textarea');
         if (classlistTextarea) {
             classlistTextarea.addEventListener('keydown', (e) => {
-                // By not calling preventDefault on Enter here, it allows standard multiline behavior
                 if (e.key === 'Enter') {
                     e.stopPropagation();
                 }
@@ -431,8 +436,8 @@ Erika Musterfrau..." rows="6"></textarea>
         navStudent.classList.remove('bg-primary/10', 'text-primary');
         navAdmin.classList.remove('bg-primary/10', 'text-primary');
         
-        if (viewId === 'start-view' || viewId === 'planer-view' || viewId === 'class-selection') navStudent.classList.add('bg-primary/10', 'text-primary');
-        if (viewId === 'adminLogin' || viewId === 'adminDashboard') navAdmin.classList.add('bg-primary/10', 'text-primary');
+        if (['start-view', 'planer-view', 'class-selection'].includes(viewId)) navStudent.classList.add('bg-primary/10', 'text-primary');
+        if (['adminLogin', 'adminDashboard'].includes(viewId)) navAdmin.classList.add('bg-primary/10', 'text-primary');
         
         if (viewId === 'start-view') generateQRCode();
         if (currentStudentName && viewId === 'planer-view') refreshStudentUI();
@@ -456,7 +461,6 @@ Erika Musterfrau..." rows="6"></textarea>
         currentClassName = input;
         localStorage.setItem('currentClassName', input);
         
-        // Update URL without reload
         const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?class=' + input;
         window.history.pushState({path:newurl},'',newurl);
         
@@ -473,7 +477,6 @@ Erika Musterfrau..." rows="6"></textarea>
 
     function initSync() {
         try {
-            // Clear previous subscriptions if any
             unsubscribeList.forEach(unsub => unsub());
             unsubscribeList = [];
 
@@ -491,12 +494,8 @@ Erika Musterfrau..." rows="6"></textarea>
                         classlist = [];
                         updateDropdownsAndTextarea();
                     }
-                } catch (e) {
-                    console.error("Fehler beim Verarbeiten der Klassenliste:", e);
-                }
-            }, (err) => {
-                alert('Fehler beim Synchronisieren der Klassenliste: ' + err.message);
-            });
+                } catch (e) { console.error(e); }
+            }, (err) => { alert('Sync-Fehler: ' + err.message); });
             unsubscribeList.push(unsubConfig);
 
             const unsubTasks = classRef.collection("tasks").orderBy("createdAt", "desc").onSnapshot(snap => {
@@ -505,31 +504,19 @@ Erika Musterfrau..." rows="6"></textarea>
                     renderAdminTasks();
                     if (currentStudentName) refreshStudentUI();
                     updateProgressTable();
-                } catch (e) {
-                    console.error("Fehler beim Verarbeiten der Aufgaben:", e);
-                }
-            }, (err) => {
-                alert('Fehler beim Synchronisieren der Aufgaben: ' + err.message);
-            });
+                } catch (e) { console.error(e); }
+            }, (err) => { alert('Aufgaben-Fehler: ' + err.message); });
             unsubscribeList.push(unsubTasks);
 
             const unsubStudents = classRef.collection("students").onSnapshot(snap => {
                 try {
-                    snap.forEach(doc => {
-                        studentProgress[doc.id] = doc.data();
-                    });
+                    snap.forEach(doc => { studentProgress[doc.id] = doc.data(); });
                     updateProgressTable();
                     if (currentStudentName) refreshStudentUI();
-                } catch (e) {
-                    console.error("Fehler beim Verarbeiten der Schülerdaten:", e);
-                }
-            }, (err) => {
-                alert('Fehler beim Synchronisieren der Schülerdaten: ' + err.message);
-            });
+                } catch (e) { console.error(e); }
+            }, (err) => { alert('Schülerdaten-Fehler: ' + err.message); });
             unsubscribeList.push(unsubStudents);
-        } catch (error) {
-            alert('Fehler beim Starten der Synchronisation: ' + error.message);
-        }
+        } catch (error) { alert('Initialisierungsfehler: ' + error.message); }
     }
 
     function generateQRCode() {
@@ -551,13 +538,10 @@ Erika Musterfrau..." rows="6"></textarea>
     document.getElementById('btn-enter-student').onclick = () => {
         const name = document.getElementById('student-dropdown').value;
         if (!name) return;
-        
         currentStudentName = name;
         isLocked = true;
-        
         localStorage.setItem('currentStudentName', name);
         localStorage.setItem('doeltschi_locked', 'true');
-        
         refreshStudentUI();
         showView('planer-view');
     };
@@ -569,9 +553,7 @@ Erika Musterfrau..." rows="6"></textarea>
             const done = student.done || [];
             const newDone = done.includes(taskId) ? done.filter(id => id !== taskId) : [...done, taskId];
             await db.collection('classes').doc(currentClassName).collection('students').doc(currentStudentName).update({ done: newDone });
-        } catch (error) {
-            alert('Fehler beim Ändern des Aufgabenstatus: ' + error.message);
-        }
+        } catch (error) { alert('Statusfehler: ' + error.message); }
     }
 
     document.getElementById('btn-confirm-parent').onclick = async () => {
@@ -582,12 +564,25 @@ Erika Musterfrau..." rows="6"></textarea>
             await db.collection('classes').doc(currentClassName).collection('students').doc(currentStudentName).update({
                 confirmed: true, parentName: pName, confDate: date
             });
-        } catch (error) {
-            alert('Fehler beim Speichern der Bestätigung: ' + error.message);
-        }
+        } catch (error) { alert('Speicherfehler: ' + error.message); }
     };
 
-    // Import Function
+    // Class Management
+    function exportClassList() {
+        const text = document.getElementById('classlist-textarea').value;
+        if (!text.trim()) return alert("Keine Liste zum Exportieren vorhanden.");
+        
+        const blob = new Blob([text], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `klassenliste_${currentClassName || 'export'}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
     function importClass(input) {
         if (!input.files || !input.files[0]) return;
         const file = input.files[0];
@@ -595,48 +590,35 @@ Erika Musterfrau..." rows="6"></textarea>
 
         reader.onload = async (e) => {
             try {
-                const content = e.target.result;
-                const names = content
-                    .split(/[\n,]+/)
-                    .map(n => n.trim())
-                    .filter(n => n !== "");
+                const names = e.target.result.split(/[\n,]+/).map(n => n.trim()).filter(n => n !== "");
+                if (names.length === 0) return alert("Keine gültigen Namen gefunden.");
 
-                if (names.length === 0) {
-                    alert("Keine gültigen Namen in der Datei gefunden.");
-                    return;
-                }
-
-                if (confirm(`Sollen ${names.length} Schüler/innen in die Klasse "${currentClassName}" importiert werden?`)) {
+                if (confirm(`Sollen ${names.length} Schüler/innen importiert werden?`)) {
                     await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names });
-                    alert("Klassenliste erfolgreich importiert.");
+                    alert("Erfolgreich importiert.");
                     input.value = '';
                 }
-            } catch (err) {
-                alert("Fehler beim Importieren der Klassenliste: " + err.message);
-            }
+            } catch (err) { alert("Import-Fehler: " + err.message); }
         };
-
-        reader.onerror = () => {
-            alert("Fehler beim Lesen der Datei.");
-        };
-
         reader.readAsText(file);
     }
 
-    // Admin Logic
-    document.getElementById('btn-save-classlist').onclick = async () => {
+    async function saveClassList() {
         try {
             const text = document.getElementById('classlist-textarea').value;
             const names = text.split('\n').map(n => n.trim()).filter(n => n !== "");
-            if (confirm(`Soll die Klassenliste für ${currentClassName} mit ${names.length} Schülern gespeichert werden?`)) {
+            
+            if (confirm(`Soll die Klassenliste mit ${names.length} Schülern gespeichert werden?`)) {
                 await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names });
-                alert("Liste aktualisiert.");
+                alert("Klassenliste erfolgreich gespeichert.");
             }
         } catch (error) {
-            alert('Fehler beim Speichern der Klassenliste: ' + error.message);
+            console.error("Firebase Fehler:", error);
+            alert('Fehler beim Speichern der Klassenliste: ' + (error.message || 'Unbekannter Fehler'));
         }
-    };
+    }
 
+    // Task Logic
     async function addTask() {
         try {
             const subject = document.getElementById('task-subject').value;
@@ -652,17 +634,13 @@ Erika Musterfrau..." rows="6"></textarea>
             
             document.getElementById('task-desc').value = '';
             document.getElementById('task-date').value = '';
-        } catch (error) {
-            alert('Fehler beim Erstellen der Aufgabe: ' + error.message);
-        }
+        } catch (error) { alert('Zuweisungs-Fehler: ' + error.message); }
     }
 
     async function deleteTask(id) {
         try {
             if(confirm('Aufgabe wirklich löschen?')) await db.collection('classes').doc(currentClassName).collection('tasks').doc(id).delete();
-        } catch (error) {
-            alert('Fehler beim Löschen der Aufgabe: ' + error.message);
-        }
+        } catch (error) { alert('Lösch-Fehler: ' + error.message); }
     }
 
     async function deleteAllTasks() {
@@ -673,73 +651,55 @@ Erika Musterfrau..." rows="6"></textarea>
                 snapshot.docs.forEach(doc => batch.delete(doc.ref));
                 await batch.commit();
             }
-        } catch (error) {
-            alert('Fehler beim Löschen aller Aufgaben: ' + error.message);
-        }
+        } catch (error) { alert('Fehler: ' + error.message); }
     }
 
-    async function removeStudent(name) {
-        try {
-            if(confirm(`Möchtest du ${name} wirklich aus der Klassenliste löschen?`)) {
-                const newClasslist = classlist.filter(n => n !== name);
-                await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names: newClasslist });
-                await db.collection("classes").doc(currentClassName).collection("students").doc(name).delete();
-            }
-        } catch (error) {
-            alert('Fehler beim Entfernen des Schülers: ' + error.message);
-        }
-    }
-
+    // Progress
     async function resetStudentProgress(name) {
         try {
             if(confirm(`Status für ${name} wirklich zurücksetzen?`)) {
                 await db.collection('classes').doc(currentClassName).collection('students').doc(name).update({
-                    confirmed: false,
-                    parentName: '',
-                    confDate: ''
+                    confirmed: false, parentName: '', confDate: ''
                 });
             }
-        } catch (error) {
-            alert('Fehler beim Zurücksetzen des Schülerstatus: ' + error.message);
-        }
+        } catch (error) { alert('Fehler: ' + error.message); }
     }
 
     async function handleResetConfirmations() {
         try {
-            if(confirm('Alle Bestätigungen der Eltern für diese Klasse zurücksetzen?')) {
+            if(confirm('Alle Bestätigungen zurücksetzen?')) {
                 const batch = db.batch();
                 classlist.forEach(name => {
                     batch.update(db.collection('classes').doc(currentClassName).collection('students').doc(name), {
-                        confirmed: false,
-                        parentName: '',
-                        confDate: ''
+                        confirmed: false, parentName: '', confDate: ''
                     });
                 });
                 await batch.commit();
             }
-        } catch (error) {
-            alert('Fehler beim Zurücksetzen aller Bestätigungen: ' + error.message);
-        }
+        } catch (error) { alert('Fehler: ' + error.message); }
+    }
+
+    async function removeStudent(name) {
+        try {
+            if(confirm(`${name} wirklich entfernen?`)) {
+                const newClasslist = classlist.filter(n => n !== name);
+                await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names: newClasslist });
+                await db.collection("classes").doc(currentClassName).collection("students").doc(name).delete();
+            }
+        } catch (error) { alert('Fehler: ' + error.message); }
     }
 
     function syncStudentProgress() {
-        try {
-            classlist.forEach(name => {
-                if (!studentProgress[name]) {
-                    db.collection("classes").doc(currentClassName).collection("students").doc(name).set({
-                        done: [],
-                        confirmed: false,
-                        parentName: '',
-                        confDate: ''
-                    }, { merge: true });
-                }
-            });
-        } catch (error) {
-            console.error("Fehler beim Initialisieren des Schülerfortschritts:", error);
-        }
+        classlist.forEach(name => {
+            if (!studentProgress[name]) {
+                db.collection("classes").doc(currentClassName).collection("students").doc(name).set({
+                    done: [], confirmed: false, parentName: '', confDate: ''
+                }, { merge: true });
+            }
+        });
     }
 
-    // Helper functions
+    // UI Helpers
     function renderLegend() {
         const container = document.getElementById('legend-container');
         if (!container) return;
@@ -754,9 +714,7 @@ Erika Musterfrau..." rows="6"></textarea>
     function initSubjectSelect() {
         const select = document.getElementById('task-subject');
         if (!select) return;
-        select.innerHTML = Object.entries(subjects).map(([code, data]) => `
-            <option value="${code}">${data.name}</option>
-        `).join('');
+        select.innerHTML = Object.entries(subjects).map(([code, data]) => `<option value="${code}">${data.name}</option>`).join('');
     }
 
     function handleLogoClick() {
@@ -791,8 +749,7 @@ Erika Musterfrau..." rows="6"></textarea>
         targetSelect.innerHTML = '<option value="all">Alle</option>';
         classlist.sort().forEach(name => {
             const opt = document.createElement('option');
-            opt.value = name;
-            opt.textContent = name;
+            opt.value = name; opt.textContent = name;
             dropdown.appendChild(opt.cloneNode(true));
             targetSelect.appendChild(opt);
         });
@@ -803,7 +760,7 @@ Erika Musterfrau..." rows="6"></textarea>
 
     function logoutStudent() {
         if (isLocked) {
-            alert("Du kannst dich nicht abmelden, da dieses Gerät gesperrt ist. Bitte wende dich an deine Lehrperson.");
+            alert("Sitzung gesperrt. Wende dich an deine Lehrperson.");
             return;
         }
         currentStudentName = null;
@@ -812,7 +769,7 @@ Erika Musterfrau..." rows="6"></textarea>
     }
 
     function formatDate(dateStr) {
-        if (!dateStr) return 'Kein Datum';
+        if (!dateStr) return '--';
         try {
             const d = new Date(dateStr);
             if (isNaN(d.getTime())) return dateStr;
@@ -876,7 +833,7 @@ Erika Musterfrau..." rows="6"></textarea>
     };
 
     function resetDeviceLock() {
-        if (confirm("Möchtest du die Identitätssperre auf diesem Gerät wirklich aufheben?")) {
+        if (confirm("Identitätssperre auf diesem Gerät wirklich aufheben?")) {
             localStorage.removeItem('doeltschi_locked');
             localStorage.removeItem('currentStudentName');
             location.reload();
