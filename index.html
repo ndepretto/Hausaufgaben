@@ -117,7 +117,7 @@
 </div>
 </header>
 <main class="flex-1 max-w-4xl mx-auto px-6 py-12 w-full">
-<!-- View: Class Selection (SCREEN_242 style) -->
+<!-- View: Class Selection -->
 <section class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500" id="view-class-selection">
 <div class="text-center space-y-4 mb-12">
 <h2 class="text-5xl font-black tracking-tight">Klasse wählen</h2>
@@ -131,7 +131,7 @@
 <button class="w-full py-4 bg-primary text-white font-bold text-lg rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-primary/20" id="btn-select-class">Klasse öffnen</button>
 </div>
 </section>
-<!-- View: Start (Student Picker - SCREEN_160 style) -->
+<!-- View: Start (Student Picker) -->
 <section class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500" id="view-start-view">
 <div class="text-center space-y-4 mb-12">
 <h2 class="text-5xl font-black tracking-tight">Wer bist du?</h2>
@@ -139,7 +139,7 @@
 </div>
 <div class="w-full max-w-md mx-auto mb-16 relative">
 <select class="w-full h-16 px-6 bg-white border-2 border-slate-200 rounded-2xl text-xl font-bold text-slate-700 shadow-sm appearance-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all cursor-pointer outline-none" id="student-dropdown">
-<option disabled="" selected="" value="">Lade Namen...</option>
+<option disabled="" selected="" value="">Warte auf Daten...</option>
 </select>
 <div class="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
 <span class="material-symbols-outlined text-3xl">expand_more</span>
@@ -212,7 +212,6 @@
 <button class="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs uppercase rounded-lg transition-colors" onclick="showView('start-view')">Abmelden</button>
 </div>
 </div>
-<!-- Dashboard Stats -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 <div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
 <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Erledigungsquote Gesamt</p>
@@ -233,7 +232,6 @@
 <p class="text-[10px] text-slate-400 font-bold mt-1" id="admin-class-label">Klasse: --</p>
 </div>
 </div>
-<!-- Class QR & URL -->
 <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-8">
 <div class="p-4 bg-white rounded-2xl shadow-inner border border-slate-100" id="admin-qrcode"></div>
 <div class="space-y-3 text-center md:text-left">
@@ -242,7 +240,6 @@
 <button class="text-primary font-bold text-xs uppercase tracking-widest hover:underline" onclick="window.print()">Code Drucken</button>
 </div>
 </div>
-<!-- Classlist Management -->
 <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
 <div class="flex items-center justify-between flex-wrap gap-4">
 <h3 class="font-bold text-xl flex items-center gap-3">
@@ -266,7 +263,6 @@
 </div>
 </div>
 </div>
-<!-- Task Assignment -->
 <div class="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm space-y-8">
 <h3 class="font-bold text-xl flex items-center gap-3">
 <span class="material-symbols-outlined text-primary">add_task</span>
@@ -298,7 +294,6 @@
 </div>
 </div>
 </div>
-<!-- Progress Tracking -->
 <div class="space-y-6">
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer group" onclick="toggleProgressCollapse()">
 <h3 class="font-bold text-xl flex items-center gap-2">
@@ -325,7 +320,6 @@
 </div>
 </div>
 </div>
-<!-- Active Tasks -->
 <div class="space-y-6">
 <div class="flex items-center justify-between">
 <h3 class="font-bold text-xl">Aktive Aufgaben</h3>
@@ -360,6 +354,7 @@
             getFirestore, collection, doc, onSnapshot, setDoc, addDoc, deleteDoc, updateDoc, getDocs, query, orderBy, writeBatch, serverTimestamp, arrayUnion, arrayRemove, deleteField 
         } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
+        // Global Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyD7-v7M9q8yK4...", 
             authDomain: "doeltschi-hausaufgaben.firebaseapp.com",
@@ -394,11 +389,17 @@
             'WAH': { name: 'WAH', color: '#c2410c' }
         };
 
+        // Strict Class-Scoping Path Generator
+        const getClassDoc = () => doc(db, "classes", currentClassName);
+        const getStudentColl = () => collection(db, "classes", currentClassName, "students");
+        const getTaskColl = () => collection(db, "classes", currentClassName, "tasks");
+
         window.addEventListener('load', () => {
             renderLegend();
             initSubjectSelect();
             initImportHandlers();
             
+            // Step 2: Init function checks for class parameter and sets global class variable
             if (currentClassName) {
                 initSync();
                 if (currentStudentName) showView('planer-view');
@@ -478,25 +479,29 @@
             showView('start-view');
         };
 
+        // Step 1: strictly enforce class-scoping
         function initSync() {
             unsubscribeList.forEach(unsub => unsub());
             unsubscribeList = [];
             if (!currentClassName) return;
 
-            const unsubStudents = onSnapshot(collection(db, "classes", currentClassName, "students"), (snap) => {
+            // Sync student list for this specific class
+            const unsubStudents = onSnapshot(getStudentColl(), (snap) => {
                 studentData = {};
                 classlist = [];
                 snap.forEach(docSnap => {
                     studentData[docSnap.id] = docSnap.data();
                     classlist.push(docSnap.id);
                 });
+                // Step 5: Population happens only after data is loaded
                 updateDropdownsAndTextarea();
                 if (!document.getElementById('view-adminDashboard').classList.contains('hidden')) renderTeacherDashboard();
                 if (currentStudentName) refreshStudentUI();
             });
             unsubscribeList.push(unsubStudents);
 
-            const qTasks = query(collection(db, "classes", currentClassName, "tasks"), orderBy("createdAt", "desc"));
+            // Sync tasks for this specific class
+            const qTasks = query(getTaskColl(), orderBy("createdAt", "desc"));
             const unsubTasks = onSnapshot(qTasks, (snap) => {
                 tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 if (!document.getElementById('view-adminDashboard').classList.contains('hidden')) renderTeacherDashboard();
@@ -511,7 +516,6 @@
             const qrNameDisplay = document.getElementById('qr-class-name');
             if (qrNameDisplay) qrNameDisplay.innerText = currentClassName.toUpperCase();
             
-            // Calc stats
             let totalPossible = 0, totalDone = 0;
             tasks.forEach(t => {
                 if (t.who === 'all') { totalPossible += classlist.length; t.done?.forEach(s => totalDone++); }
@@ -619,6 +623,7 @@
             await updateDoc(sRef, { confirmed: true, parentName: pName, confDate: date });
         };
 
+        // Step 4: Save to class-specific path
         window.updateClassList = async () => {
             const text = document.getElementById('classlist-textarea').value;
             const newNames = text.split('\n').map(n => n.trim()).filter(n => n !== "");
@@ -643,8 +648,8 @@
 
         window.deleteWholeClass = async () => {
             if (confirm(`ACHTUNG: Klasse "${currentClassName}" und ALLE Daten unwiderruflich löschen?`)) {
-                const taskSnap = await getDocs(collection(db, "classes", currentClassName, "tasks"));
-                const studentSnap = await getDocs(collection(db, "classes", currentClassName, "students"));
+                const taskSnap = await getDocs(getTaskColl());
+                const studentSnap = await getDocs(getStudentColl());
                 const batch = writeBatch(db);
                 taskSnap.docs.forEach(d => batch.delete(d.ref));
                 studentSnap.docs.forEach(d => batch.delete(d.ref));
@@ -679,7 +684,7 @@
 
         window.deleteAllTasks = async () => {
             if (confirm('Sollen wirklich ALLE Aufgaben der Klasse gelöscht werden?')) {
-                const snapshot = await getDocs(collection(db, 'classes', currentClassName, 'tasks'));
+                const snapshot = await getDocs(getTaskColl());
                 const batch = writeBatch(db);
                 snapshot.docs.forEach(d => batch.delete(d.ref));
                 await batch.commit();
@@ -786,7 +791,6 @@
             if (prevVal && classlist.includes(prevVal)) dropdown.value = prevVal;
             if (document.activeElement !== textarea) textarea.value = classlist.join('\n');
             
-            // Session Lock check
             const lockHint = document.getElementById('identity-lock-hint');
             if (currentStudentName && classlist.includes(currentStudentName)) {
                 dropdown.disabled = true;
@@ -799,6 +803,7 @@
 
         function generateQRCodes() {
             if (!currentClassName) return;
+            // Step 6: encodeURIComponent handled in URL building
             const baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
             const fullUrl = baseUrl + '?class=' + encodeURIComponent(currentClassName);
 
@@ -855,7 +860,7 @@
             const desc = document.getElementById('task-desc').value.trim();
             const dueDate = document.getElementById('task-date').value.trim();
             if (!desc) return alert('Bitte eine Beschreibung eingeben');
-            await addDoc(collection(db, 'classes', currentClassName, 'tasks'), {
+            await addDoc(getTaskColl(), {
                 subject, who, desc, dueDate, createdAt: serverTimestamp(), done: []
             });
             document.getElementById('task-desc').value = '';
