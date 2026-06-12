@@ -122,6 +122,13 @@
 </div>
 <div class="hidden text-primary font-bold bg-white p-4 rounded-xl text-center border border-primary-fixed" id="parent-status"></div>
 </div>
+<!-- Color Legend Student View -->
+<div class="mt-12 p-6 bg-white rounded-[2rem] border border-surface-container shadow-sm no-print">
+<h4 class="text-xs font-bold text-outline-variant uppercase tracking-widest mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">palette</span> Fächer-Farben
+            </h4>
+<div class="flex flex-wrap gap-4" id="color-legend-student"></div>
+</div>
 </div>
 <!-- 3. Teacher-View -->
 <div class="view-section" id="teacher-view">
@@ -190,7 +197,7 @@
 </div>
 </div>
 <!-- Task Overview -->
-<div class="bg-white p-8 rounded-[2rem] border border-surface-container shadow-xl">
+<div class="bg-white p-8 rounded-[2rem] border border-surface-container shadow-xl mb-8">
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
 <h3 class="text-xl font-bold flex items-center gap-2">
 <span class="material-symbols-outlined text-primary">list_alt</span> Aktuelle Aufgaben
@@ -200,6 +207,13 @@
                 </button>
 </div>
 <div class="grid sm:grid-cols-2 gap-3" id="teacher-tasks"></div>
+</div>
+<!-- Color Legend Teacher View -->
+<div class="p-6 bg-white rounded-[2rem] border border-surface-container shadow-sm no-print">
+<h4 class="text-xs font-bold text-outline-variant uppercase tracking-widest mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">palette</span> Fächer-Farben
+            </h4>
+<div class="flex flex-wrap gap-4" id="color-legend-teacher"></div>
 </div>
 </div>
 </main>
@@ -251,6 +265,7 @@
         }
         
         renderSubjectOptions();
+        renderColorLegends();
         updateWeekDisplay();
     }
 
@@ -422,6 +437,23 @@
         });
     }
 
+    function renderColorLegends() {
+        const containers = [
+            document.getElementById('color-legend-student'),
+            document.getElementById('color-legend-teacher')
+        ];
+        
+        containers.forEach(container => {
+            if (!container) return;
+            container.innerHTML = Object.entries(subjects).map(([id, data]) => `
+                <div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container rounded-full">
+                    <span class="w-2.5 h-2.5 rounded-full shadow-sm" style="background-color: ${data.color}"></span>
+                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wide">${data.name}</span>
+                </div>
+            `).join('');
+        });
+    }
+
     function addTask() {
         if (!currentClass) return;
         const who = document.getElementById('task-who').value;
@@ -472,6 +504,7 @@
         }
         container.innerHTML = myTasks.map(t => {
             const isDone = t.doneBy && t.doneBy.includes(currentUser);
+            const subData = subjects[t.subject] || { name: t.subject, color: '#ccc' };
             return `
             <div class="bg-white p-6 rounded-2xl border border-surface-container flex items-center justify-between shadow-sm hover:shadow-md transition-shadow ${isLocked ? 'opacity-80' : ''}">
                 <div class="flex items-center gap-4">
@@ -479,7 +512,10 @@
                         <input type="checkbox" ${isDone ? 'checked' : ''} ${isLocked ? 'disabled' : ''} onchange="toggleTask('${t.id}', this.checked)" class="w-6 h-6 rounded-lg border-2 border-surface-container text-primary focus:ring-primary transition-all disabled:opacity-50">
                     </label>
                     <div>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full text-white inline-block mb-1" style="background:${subjects[t.subject].color}">${subjects[t.subject].name}</span>
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <span class="w-2 h-2 rounded-full" style="background-color: ${subData.color}"></span>
+                            <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">${subData.name}</span>
+                        </div>
                         <p class="font-bold text-on-surface ${isDone ? 'line-through text-outline-variant opacity-60' : ''}">${t.desc}</p>
                     </div>
                 </div>
@@ -545,19 +581,23 @@
             container.innerHTML = '<div class="col-span-full"><p class="text-on-surface-variant italic">Keine Aufgaben erstellt.</p></div>';
             return;
         }
-        container.innerHTML = tasks.map(t => `
-        <div class="p-4 bg-surface-container-low rounded-xl flex justify-between items-center border border-surface-container">
-            <div class="min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="text-[9px] font-bold px-2 py-0.5 rounded-full text-white" style="background:${subjects[t.subject].color}">${subjects[t.subject].name}</span>
-                    <span class="text-[10px] font-bold text-outline-variant uppercase">${t.who}</span>
+        container.innerHTML = tasks.map(t => {
+            const subData = subjects[t.subject] || { name: t.subject, color: '#ccc' };
+            return `
+            <div class="p-4 bg-surface-container-low rounded-xl flex justify-between items-center border border-surface-container">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-2 h-2 rounded-full" style="background-color: ${subData.color}"></span>
+                        <span class="text-[9px] font-bold text-outline-variant uppercase">${subData.name}</span>
+                        <span class="text-[8px] bg-white px-1.5 py-0.5 rounded text-outline-variant font-bold uppercase">${t.who}</span>
+                    </div>
+                    <p class="font-bold text-sm truncate">${t.desc}</p>
                 </div>
-                <p class="font-bold text-sm truncate">${t.desc}</p>
-            </div>
-            <button onclick="db.collection('classes').doc('${currentClass}').collection('tasks').doc('${t.id}').delete()" class="text-on-surface-variant hover:text-error transition-colors p-2">
-                <span class="material-symbols-outlined">delete</span>
-            </button>
-        </div>`).join('');
+                <button onclick="db.collection('classes').doc('${currentClass}').collection('tasks').doc('${t.id}').delete()" class="text-on-surface-variant hover:text-error transition-colors p-2">
+                    <span class="material-symbols-outlined">delete</span>
+                </button>
+            </div>`;
+        }).join('');
     }
 
     function confirmParent() {
@@ -605,9 +645,8 @@
     function deleteEntireClass() {
         if(!currentClass) return;
         if(confirm("Bist du sicher? Alle Schüler und Aufgaben für diese Klasse werden gelöscht.")) {
-            // Complex delete needed for subcollections, but at minimum clear the names list
             db.collection('classes').doc(currentClass).set({ students: [] });
-            alert("Schülerliste geleert. Für vollständiges Löschen aller Aufgaben bitte manuell in Firebase löschen oder Einzeltasks entfernen.");
+            alert("Schülerliste geleert.");
         }
     }
 
