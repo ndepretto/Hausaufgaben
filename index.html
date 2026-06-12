@@ -14,65 +14,23 @@
             theme: {
                 extend: {
                     colors: {
-                        "surface-variant": "#e2e2e7",
-                        "secondary-container": "#6664e4",
-                        "primary": "#0058bc",
-                        "primary-fixed": "#d8e2ff",
-                        "tertiary": "#9e3d00",
-                        "outline-variant": "#c1c6d7",
-                        "on-primary-container": "#fefcff",
-                        "inverse-primary": "#adc6ff",
-                        "on-secondary-fixed-variant": "#3631b4",
-                        "secondary-fixed": "#e2dfff",
-                        "surface-bright": "#f9f9fe",
-                        "secondary-fixed-dim": "#c2c1ff",
-                        "tertiary-fixed-dim": "#ffb595",
-                        "surface-dim": "#d9dade",
-                        "secondary": "#4c4aca",
-                        "surface-tint": "#005bc1",
-                        "error": "#ba1a1a",
-                        "on-tertiary": "#ffffff",
-                        "on-surface-variant": "#414755",
-                        "inverse-surface": "#2e3034",
-                        "outline": "#717786",
-                        "on-tertiary-fixed": "#351000",
+                        "primary": "#2563eb",
                         "on-primary": "#ffffff",
-                        "on-error": "#ffffff",
-                        "on-tertiary-container": "#fffbff",
-                        "surface-container-lowest": "#ffffff",
-                        "on-secondary-container": "#fffbff",
-                        "on-secondary": "#ffffff",
-                        "surface-container-high": "#e8e8ed",
-                        "surface-container-highest": "#e2e2e7",
-                        "primary-fixed-dim": "#adc6ff",
-                        "on-background": "#1a1c1f",
-                        "tertiary-fixed": "#ffdbcc",
                         "background": "#f9f9fe",
-                        "surface": "#f9f9fe",
-                        "on-primary-fixed-variant": "#004493",
-                        "inverse-on-surface": "#f0f0f5",
-                        "tertiary-container": "#c64f00",
-                        "error-container": "#ffdad6",
+                        "surface": "#ffffff",
                         "on-surface": "#1a1c1f",
-                        "on-secondary-fixed": "#0c006a",
-                        "on-primary-fixed": "#001a41",
-                        "surface-container": "#ededf2",
+                        "outline-variant": "#e2e2e7",
+                        "surface-container": "#f1f5f9",
+                        "on-surface-variant": "#414755",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6",
                         "on-error-container": "#93000a",
-                        "primary-container": "#0070eb",
-                        "on-tertiary-fixed-variant": "#7c2e00",
-                        "surface-container-low": "#f3f3f8"
                     },
                     borderRadius: {
                         DEFAULT: "1rem",
                         lg: "2rem",
                         xl: "3rem",
                         full: "9999px"
-                    },
-                    spacing: {
-                        gutter: "1.5rem",
-                        "container-margin": "2rem",
-                        "stack-padding": "1.25rem",
-                        "input-padding": "1rem"
                     },
                     fontFamily: {
                         sans: ["Inter", "sans-serif"]
@@ -84,8 +42,8 @@
 <style>
         body {
             background-color: #f9f9fe;
-            background-image: radial-gradient(#d1d5db 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-image: radial-gradient(#cbd5e1 0.8px, transparent 0.8px);
+            background-size: 32px 32px;
             -webkit-tap-highlight-color: transparent;
         }
         .material-symbols-outlined {
@@ -94,12 +52,10 @@
             display: inline-block;
             line-height: 1;
         }
-        @keyframes pulse-live {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(1.1); }
-        }
-        .live-indicator {
-            animation: pulse-live 2s infinite;
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         .subject-tag {
             width: 40px;
@@ -112,11 +68,6 @@
             font-size: 14px;
             color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
         }
         .collapsible-content {
             max-height: 5000px;
@@ -138,152 +89,161 @@
             margin: 0 auto;
             display: block;
         }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; background-image: none !important; }
+        }
     </style>
 </head>
-<body class="min-h-screen text-on-surface pb-48">
-<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-surface-variant">
+<body class="min-h-screen text-on-surface flex flex-col font-sans">
+<header class="bg-white/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50 no-print">
 <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-<div class="flex items-center gap-3 cursor-pointer" onclick="handleLogoClick()">
-<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-on-primary shadow-md">
-<span class="material-symbols-outlined text-2xl">assignment</span>
+<div class="flex items-center gap-2 cursor-pointer" onclick="handleLogoClick()">
+<span class="text-2xl font-black tracking-tighter text-primary">Döltschi</span>
+<div class="hidden md:flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full text-[10px] font-bold uppercase text-primary border border-blue-100">
+<span class="material-symbols-outlined text-[14px]">cloud_done</span>
+<span>Cloud Aktiv</span>
 </div>
-<h1 class="font-bold text-lg tracking-tight hidden sm:block">Döltschi | Digitaler Aufgabenplaner</h1>
 </div>
-<div class="flex items-center gap-2 sm:gap-4">
-<div class="hidden text-[10px] font-bold text-outline bg-surface-container px-3 py-1.5 rounded-full uppercase tracking-wider border border-outline-variant" id="class-indicator"></div>
-<div class="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
-<span class="w-2 h-2 bg-emerald-500 rounded-full live-indicator"></span>
-<span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Connected Live</span>
-</div>
-<div class="flex items-center gap-1 border-l border-surface-variant pl-4 ml-2">
-<button class="p-2 hover:bg-surface-container rounded-lg transition-colors text-on-surface-variant" id="nav-student" onclick="handleStudentNav()" title="Schüler-Ansicht">
-<span class="material-symbols-outlined">person</span>
+<div class="flex items-center gap-4">
+<nav class="flex items-center bg-slate-100 rounded-full p-1 border border-slate-200">
+<button class="px-4 py-1.5 rounded-full text-xs font-bold transition-all" id="nav-student" onclick="handleStudentNav()">Schüler-Ansicht</button>
+<button class="px-4 py-1.5 rounded-full text-xs font-bold transition-all" id="nav-admin" onclick="showView('adminLogin')">Lehrer-Modus</button>
+</nav>
+<button class="p-2 hover:bg-slate-200 rounded-full transition-colors text-primary" onclick="window.location.reload()">
+<span class="material-symbols-outlined">refresh</span>
 </button>
-<button class="p-2 hover:bg-surface-container rounded-lg transition-colors text-on-surface-variant" id="nav-admin" onclick="showView('adminLogin')" title="Lehrer-Modus">
-<span class="material-symbols-outlined">settings</span>
-</button>
-</div>
 </div>
 </div>
 </header>
-<main class="max-w-3xl mx-auto px-6 py-12">
-<!-- View: Class Selection -->
-<section class="hidden space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500" id="view-class-selection">
-<div class="text-center space-y-3">
-<h2 class="text-4xl font-extrabold tracking-tight">Klasse wählen</h2>
-<p class="text-on-surface-variant text-lg">Gib den Namen deiner Klasse ein, um fortzufahren.</p>
+<main class="flex-1 max-w-4xl mx-auto px-6 py-12 w-full">
+<!-- View: Class Selection (SCREEN_242 style) -->
+<section class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500" id="view-class-selection">
+<div class="text-center space-y-4 mb-12">
+<h2 class="text-5xl font-black tracking-tight">Klasse wählen</h2>
+<p class="text-slate-500 text-lg">Gib den Namen deiner Klasse ein, um fortzufahren.</p>
 </div>
-<div class="glass-card p-8 sm:p-10 rounded-lg shadow-xl border border-surface-variant">
-<div class="space-y-6">
-<div>
-<label class="block text-[11px] font-bold text-outline uppercase tracking-widest mb-3">Klassen-Name</label>
-<input class="w-full p-4 bg-surface-container-low border-outline-variant rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-lg" id="class-input" placeholder="z.B. B4b" type="text"/>
+<div class="max-w-md mx-auto glass-card p-10 rounded-3xl shadow-2xl border border-outline-variant text-center space-y-6">
+<div class="space-y-4">
+<label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Klassen-Name</label>
+<input class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center text-xl font-bold focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all" id="class-input" placeholder="z.B. B4b" type="text"/>
 </div>
-<button class="w-full py-4 bg-primary text-on-primary font-bold text-lg rounded-xl hover:shadow-lg hover:shadow-primary/20 active:scale-[0.98] transition-all" id="btn-select-class">Klasse öffnen</button>
-</div>
+<button class="w-full py-4 bg-primary text-white font-bold text-lg rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-primary/20" id="btn-select-class">Klasse öffnen</button>
 </div>
 </section>
-<!-- View: Start (Student Picker) -->
-<section class="hidden space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500" id="view-start-view">
-<div class="text-center space-y-3">
-<h2 class="text-4xl font-extrabold tracking-tight">Schüler-Ansicht</h2>
-<p class="text-on-surface-variant text-lg">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
+<!-- View: Start (Student Picker - SCREEN_160 style) -->
+<section class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500" id="view-start-view">
+<div class="text-center space-y-4 mb-12">
+<h2 class="text-5xl font-black tracking-tight">Wer bist du?</h2>
+<p class="text-slate-500 text-lg">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
 </div>
-<div class="glass-card p-8 sm:p-10 rounded-lg shadow-xl border border-surface-variant">
-<div class="space-y-6">
-<div>
-<label class="block text-[11px] font-bold text-outline uppercase tracking-widest mb-3">Dein Name</label>
-<div class="relative">
-<select class="w-full p-4 bg-surface-container-low border-outline-variant rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-lg appearance-none cursor-pointer" id="student-dropdown">
+<div class="w-full max-w-md mx-auto mb-16 relative">
+<select class="w-full h-16 px-6 bg-white border-2 border-slate-200 rounded-2xl text-xl font-bold text-slate-700 shadow-sm appearance-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all cursor-pointer outline-none" id="student-dropdown">
 <option disabled="" selected="" value="">Lade Namen...</option>
 </select>
-<div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-outline">
-<span class="material-symbols-outlined">expand_more</span>
+<div class="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+<span class="material-symbols-outlined text-3xl">expand_more</span>
 </div>
+<div class="hidden text-[10px] font-bold text-primary uppercase flex items-center justify-center gap-1 mt-4" id="identity-lock-hint">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+                    Identitätsschutz aktiv.
+                </div>
 </div>
+<div class="bg-white p-10 rounded-[3rem] border-2 border-slate-100 shadow-2xl flex flex-col items-center max-w-sm mx-auto text-center">
+<h3 class="text-2xl font-bold mb-4">QR-Code scannen</h3>
+<div class="bg-white p-4 rounded-2xl mb-4 border border-slate-100" id="qrcode"></div>
+<p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Einmal scannen, immer aktuell.</p>
 </div>
-<button class="w-full py-4 bg-primary text-on-primary font-bold text-lg rounded-xl hover:shadow-lg hover:shadow-primary/20 active:scale-[0.98] transition-all" id="btn-enter-student">Anmelden</button>
-<button class="w-full text-outline text-xs font-bold uppercase tracking-widest hover:text-on-surface transition-colors" onclick="clearClass()">Klasse wechseln</button>
-</div>
-</div>
-<div class="glass-card p-8 rounded-lg border-2 border-primary/10 flex flex-col items-center text-center gap-6 shadow-md" id="qrcode-container">
-<div class="space-y-2">
-<h3 class="font-extrabold text-2xl text-on-surface">Direkt-Zugriff</h3>
-<p class="text-on-surface-variant text-sm max-w-md mx-auto leading-relaxed">Scanne diesen Code, um direkt zu dieser Klasse zu gelangen.</p>
-</div>
-<div class="p-6 bg-white border border-surface-variant rounded-2xl shadow-inner flex items-center justify-center min-w-[200px] min-h-[200px]">
-<div id="qrcode"></div>
-</div>
+<div class="text-center mt-8">
+<button class="text-slate-400 text-[10px] font-bold uppercase tracking-widest hover:text-slate-600 transition-colors" onclick="clearClass()">Klasse wechseln</button>
 </div>
 </section>
 <!-- View: Planer (Student Tasks) -->
-<section class="hidden space-y-8 animate-in fade-in duration-300" id="view-planer-view">
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-variant pb-8">
-<div>
-<h2 class="text-3xl font-extrabold truncate max-w-[300px]" id="display-student-name">...</h2>
-<p class="text-on-surface-variant">Deine persönlichen &amp; Klassenaufgaben</p>
+<section class="hidden space-y-10 animate-in fade-in duration-300" id="view-planer-view">
+<div class="flex flex-col md:flex-row justify-between items-center gap-6 border-b border-slate-200 pb-8">
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 text-primary font-bold hover:underline" onclick="logoutStudent()">
+<span class="material-symbols-outlined">arrow_back</span>
+<span class="text-2xl font-black" id="display-student-name">...</span>
+</button>
 </div>
-<button class="px-6 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-bold text-sm rounded-lg transition-colors" id="btn-logout-student" onclick="logoutStudent()">Abmelden</button>
+<div class="text-center md:text-right">
+<h2 class="text-3xl font-black text-slate-900" id="current-week-display">Woche --</h2>
+<p class="text-slate-500 font-medium" id="current-date-range">--</p>
+</div>
 </div>
 <div class="space-y-4" id="task-list-container">
 <!-- Tasks injected here -->
 </div>
-<div class="mt-12 glass-card border-2 border-primary/20 p-8 rounded-lg shadow-sm" id="parent-confirmation-block">
-<div class="flex items-start gap-4 mb-8">
-<div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary shrink-0">
-<span class="material-symbols-outlined text-2xl">verified_user</span>
+<div class="mt-12 bg-white border-2 border-dashed border-slate-300 p-10 rounded-[3rem] flex flex-col items-center text-center shadow-md transition-all" id="parent-confirmation-block">
+<div class="w-16 h-16 bg-blue-50 text-primary rounded-full flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-4xl" id="confirmation-icon">verified_user</span>
 </div>
-<div>
-<h3 class="font-bold text-xl">Bestätigung der Eltern</h3>
-<p class="text-on-surface-variant leading-relaxed">Bitte bestätigen Sie digital, dass alle Aufgaben für diese Woche gesehen wurden.</p>
+<h3 class="text-2xl font-black text-slate-900 mb-2">Bestätigung der Eltern</h3>
+<p class="text-slate-500 mb-8 max-w-md mx-auto text-sm font-medium" id="confirmation-desc">Bitte bestätigen Sie digital, dass alle Aufgaben für diese Woche gesehen wurden.</p>
+<div class="w-full max-w-sm space-y-4" id="confirmation-form">
+<input class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-center focus:ring-2 focus:ring-primary font-bold outline-none" id="parent-name" placeholder="Name der Erziehungsberechtigten" type="text"/>
+<button class="w-full py-4 bg-primary text-white font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 shadow-lg shadow-primary/10 transition-all" id="btn-confirm-parent">Gesehen &amp; Bestätigen</button>
 </div>
-</div>
-<div class="space-y-4" id="confirmation-form">
-<input class="w-full p-4 border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/20" id="parent-name" placeholder="Name der Erziehungsberechtigten" type="text"/>
-<button class="w-full py-4 bg-primary text-on-primary font-bold rounded-xl hover:opacity-90 shadow-lg shadow-primary/10 transition-all" id="btn-confirm-parent">Gesehen &amp; Bestätigen</button>
-</div>
-<div class="hidden flex flex-col items-center justify-center py-10 bg-emerald-50 rounded-xl border-2 border-emerald-100 text-emerald-700" id="confirmation-success">
-<span class="material-symbols-outlined text-5xl mb-4">check_circle</span>
-<p class="font-extrabold text-xl">Erfolgreich bestätigt</p>
-<p class="text-sm opacity-80">Datum: <span id="conf-date-display">--</span></p>
-<p class="text-xs mt-2 uppercase tracking-widest font-bold" id="conf-parent-display"></p>
+<div class="hidden space-y-2" id="confirmation-success">
+<p class="text-[10px] font-black text-primary uppercase bg-blue-100 px-4 py-1 rounded-full inline-block">Bestätigt &amp; Gesperrt</p>
+<p class="text-sm font-bold text-slate-700 mt-2" id="conf-info-display">Bestätigt am -- von --</p>
 </div>
 </div>
 </section>
 <!-- View: Admin Login -->
-<section class="hidden animate-in fade-in duration-300" id="view-adminLogin">
-<div class="max-w-md mx-auto glass-card p-10 rounded-lg shadow-xl border border-surface-variant text-center space-y-6">
-<div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center text-primary mx-auto">
-<span class="material-symbols-outlined text-3xl">lock</span>
-</div>
+<section class="hidden animate-in fade-in duration-300 py-20" id="view-adminLogin">
+<div class="max-w-md mx-auto bg-white p-10 rounded-3xl shadow-2xl border border-outline-variant text-center space-y-8">
+<span class="material-symbols-outlined text-primary text-6xl">lock</span>
 <div>
-<h2 class="text-2xl font-bold">Lehrer-Modus</h2>
-<p class="text-on-surface-variant text-sm">Bitte gib das Passwort ein.</p>
+<h2 class="text-2xl font-black">Lehrer-Modus</h2>
+<p class="text-slate-500 text-sm">Passwort erforderlich (Standard: lehrer123)</p>
 </div>
-<input class="w-full p-4 bg-surface-container-low border-outline-variant rounded-xl text-center text-lg focus:ring-2 focus:ring-primary/20" id="admin-pass" placeholder="Passwort" type="password"/>
-<button class="w-full py-4 bg-primary text-on-primary font-bold rounded-xl hover:opacity-95 shadow-lg shadow-primary/10 transition-all" id="btn-login-admin">Anmelden</button>
+<input class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center text-lg font-bold focus:ring-2 focus:ring-primary outline-none" id="admin-pass" placeholder="Passwort" type="password"/>
+<button class="w-full py-4 bg-primary text-white font-bold rounded-2xl hover:bg-blue-700 shadow-lg shadow-primary/10 transition-all" id="btn-login-admin">Anmelden</button>
 <p class="text-error text-sm font-medium hidden" id="admin-error">Falsches Passwort.</p>
 </div>
 </section>
 <!-- View: Admin Dashboard -->
-<section class="hidden space-y-12 animate-in fade-in duration-300" id="view-adminDashboard">
-<div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-surface-variant pb-8">
-<h2 class="text-4xl font-extrabold tracking-tight">Dashboard</h2>
+<section class="hidden space-y-10 animate-in fade-in duration-300" id="view-adminDashboard">
+<div class="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-200 pb-8">
+<h2 class="text-4xl font-black tracking-tight">Lehrer Dashboard</h2>
 <div class="flex gap-2">
-<button class="px-6 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-bold text-sm rounded-lg transition-colors" onclick="showView('start-view')">Abmelden</button>
+<button class="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs uppercase rounded-lg transition-colors" onclick="showView('start-view')">Abmelden</button>
 </div>
 </div>
-<!-- Class QR Code in Admin Dashboard -->
-<div class="glass-card p-8 rounded-lg border border-surface-variant shadow-sm flex flex-col sm:flex-row items-center gap-8">
-<div class="p-4 bg-white rounded-xl shadow-inner border border-surface-variant" id="admin-qrcode"></div>
-<div class="space-y-3 text-center sm:text-left">
+<!-- Dashboard Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
+<p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Erledigungsquote Gesamt</p>
+<div class="text-3xl font-black text-primary" id="total-progress-percent">0%</div>
+<div class="w-full bg-slate-100 h-2 rounded-full mt-3 overflow-hidden">
+<div class="bg-primary h-full transition-all duration-500" id="total-progress-bar" style="width: 0%"></div>
+</div>
+</div>
+<div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm">
+<p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Elternbestätigungen</p>
+<div class="text-3xl font-black text-slate-700" id="confirmed-count">0/0</div>
+<p class="text-xs text-slate-400 mt-1" id="confirmed-pending-text">Lädt...</p>
+</div>
+<div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm flex flex-col items-center justify-center">
+<div class="flex items-center gap-2 text-primary font-bold text-xs uppercase">
+<span class="material-symbols-outlined text-sm">cloud_sync</span> Cloud Sync Aktiv
+                    </div>
+<p class="text-[10px] text-slate-400 font-bold mt-1" id="admin-class-label">Klasse: --</p>
+</div>
+</div>
+<!-- Class QR & URL -->
+<div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-8">
+<div class="p-4 bg-white rounded-2xl shadow-inner border border-slate-100" id="admin-qrcode"></div>
+<div class="space-y-3 text-center md:text-left">
 <h3 class="font-bold text-xl">Klassen-Direktlink</h3>
-<p class="text-on-surface-variant text-sm leading-relaxed">Drucke diesen Code aus oder hänge ihn im Klassenzimmer auf. Er führt die Schüler direkt zur Klassenauswahl der <span class="font-bold text-primary" id="qr-class-name">...</span>.</p>
+<p class="text-slate-500 text-sm leading-relaxed max-w-md">Scanne oder drucke diesen QR-Code. Er führt Schüler direkt zur Auswahl für <span class="font-bold text-primary" id="qr-class-name">--</span>.</p>
 <button class="text-primary font-bold text-xs uppercase tracking-widest hover:underline" onclick="window.print()">Code Drucken</button>
 </div>
 </div>
 <!-- Classlist Management -->
-<div class="glass-card p-8 rounded-lg border border-surface-variant shadow-sm space-y-6">
+<div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
 <div class="flex items-center justify-between flex-wrap gap-4">
 <h3 class="font-bold text-xl flex items-center gap-3">
 <span class="material-symbols-outlined text-primary">groups</span>
@@ -292,95 +252,84 @@
 <div class="flex gap-2">
 <input accept=".txt" class="hidden" id="import-list" type="file"/>
 <input accept=".docx" class="hidden" id="import-docx" type="file"/>
-<button class="text-[10px] font-bold uppercase bg-surface-container text-on-surface-variant px-4 py-2 rounded-lg hover:bg-surface-container-high transition-all" onclick="document.getElementById('import-list').click()">Import (.txt)</button>
-<button class="text-[10px] font-bold uppercase bg-surface-container text-on-surface-variant px-4 py-2 rounded-lg hover:bg-surface-container-high transition-all" onclick="document.getElementById('import-docx').click()">Import (.docx)</button>
+<button class="text-[10px] font-bold uppercase bg-slate-100 px-4 py-2 rounded-lg hover:bg-slate-200 transition-all" onclick="document.getElementById('import-list').click()">Import (.txt)</button>
+<button class="text-[10px] font-bold uppercase bg-slate-100 px-4 py-2 rounded-lg hover:bg-slate-200 transition-all" onclick="document.getElementById('import-docx').click()">Import (.docx)</button>
 </div>
 </div>
 <div class="space-y-4">
-<p class="text-sm text-on-surface-variant italic">Ein Name pro Zeile eingeben oder Datei importieren.</p>
-<textarea class="w-full p-4 bg-surface-container-low border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/10 font-mono text-sm" id="classlist-textarea" placeholder="Max Mustermann..." rows="6"></textarea>
+<textarea class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-primary/10 font-sans text-sm min-h-[150px]" id="classlist-textarea" placeholder="Einen Namen pro Zeile eingeben..."></textarea>
 <div class="flex flex-col sm:flex-row gap-3">
-<button class="flex-1 py-3 bg-primary text-on-primary font-bold rounded-xl hover:opacity-90 transition-all shadow-md" id="btn-save-classlist" onclick="updateClassList()">Liste in Cloud speichern</button>
-<button class="px-6 py-3 bg-error-container text-on-error-container border border-error/10 hover:bg-error/10 font-bold rounded-xl transition-all flex items-center justify-center gap-2" onclick="deleteWholeClass()">
+<button class="flex-1 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all shadow-md uppercase text-xs tracking-widest" onclick="updateClassList()">Namen in Cloud speichern</button>
+<button class="px-6 py-3 bg-error-container text-on-error-container border border-error/10 hover:opacity-80 font-bold rounded-xl transition-all flex items-center justify-center gap-2 uppercase text-xs" onclick="deleteWholeClass()">
 <span class="material-symbols-outlined text-xl">delete_forever</span> Klasse löschen
                         </button>
 </div>
 </div>
 </div>
 <!-- Task Assignment -->
-<div class="glass-card p-8 rounded-lg border border-surface-variant shadow-sm space-y-8">
+<div class="bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm space-y-8">
 <h3 class="font-bold text-xl flex items-center gap-3">
 <span class="material-symbols-outlined text-primary">add_task</span>
                     Neue Aufgabe erstellen
                 </h3>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 <div>
-<label class="block text-[10px] font-bold uppercase text-outline mb-2">Fach</label>
-<div class="relative">
-<select class="w-full p-3.5 bg-surface-container-low border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/10 appearance-none" id="task-subject"></select>
-<div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-outline">
-<span class="material-symbols-outlined">expand_more</span>
-</div>
-</div>
+<label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Fach</label>
+<select class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10" id="task-subject"></select>
 </div>
 <div>
-<label class="block text-[10px] font-bold uppercase text-outline mb-2">Empfänger</label>
-<div class="relative">
-<select class="w-full p-3.5 bg-surface-container-low border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/10 appearance-none" id="task-target">
+<label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Empfänger</label>
+<select class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10" id="task-target">
 <option value="all">Alle Schüler</option>
 </select>
-<div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-outline">
-<span class="material-symbols-outlined">expand_more</span>
-</div>
-</div>
 </div>
 <div>
-<label class="block text-[10px] font-bold uppercase text-outline mb-2">Frist (Datum)</label>
-<input class="w-full p-3.5 bg-surface-container-low border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/10" id="task-date" type="date"/>
+<label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Frist (z.B. Freitag)</label>
+<input class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10" id="task-date" placeholder="Z.B. 24. Mai" type="text"/>
 </div>
-<div class="md:col-span-2 lg:col-span-3">
-<label class="block text-[10px] font-bold uppercase text-outline mb-2">Aufgabenbeschreibung</label>
-<input class="w-full p-3.5 bg-surface-container-low border-outline-variant rounded-xl focus:ring-2 focus:ring-primary/10" id="task-desc" placeholder="z.B. S. 45 Nr. 1-3 lösen" type="text"/>
+<div class="md:col-span-3">
+<label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Aufgabenbeschreibung</label>
+<input class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10" id="task-desc" placeholder="z.B. Arbeitsheft S. 42 lesen..." type="text"/>
 </div>
-<div class="md:col-span-2 lg:col-span-3">
-<button class="w-full py-4 bg-primary text-on-primary font-bold rounded-xl shadow-md hover:bg-blue-700 transition-all flex items-center justify-center gap-2" id="btn-add-task">
+<div class="md:col-span-3">
+<button class="w-full py-4 bg-primary text-white font-black uppercase tracking-widest rounded-xl shadow-md hover:bg-blue-700 transition-all flex items-center justify-center gap-2" id="btn-add-task">
 <span class="material-symbols-outlined">add</span> Aufgabe zuweisen
                         </button>
 </div>
 </div>
 </div>
 <!-- Progress Tracking -->
-<div class="space-y-6" id="progress-section">
+<div class="space-y-6">
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer group" onclick="toggleProgressCollapse()">
 <h3 class="font-bold text-xl flex items-center gap-2">
 <span class="material-symbols-outlined text-primary rotate-icon transition-transform" id="progress-chevron">expand_more</span>
-                        Lernfortschritt &amp; Elternbestätigung
+                        Lernfortschritt &amp; Bestätigung
                     </h3>
-<button class="text-[10px] font-bold uppercase bg-error-container text-on-error-container px-4 py-2 rounded-lg hover:opacity-80 transition-all" onclick="event.stopPropagation(); handleResetConfirmations()">Alle Resets</button>
+<button class="text-[10px] font-bold uppercase bg-error-container text-on-error-container px-4 py-2 rounded-lg hover:opacity-80 transition-all" onclick="event.stopPropagation(); handleResetConfirmations()">Alle Zurücksetzen</button>
 </div>
 <div class="collapsible-content" id="progress-collapse-content">
-<div class="glass-card rounded-2xl border border-surface-variant overflow-hidden shadow-sm p-2">
+<div class="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
 <div class="overflow-x-auto">
-<table class="w-full text-left border-collapse min-w-[700px]">
-<thead>
-<tr class="bg-surface-container/50 text-[10px] uppercase font-bold text-outline tracking-wider">
-<th class="px-8 py-5 border-b border-surface-variant w-1/3">Schüler/in</th>
-<th class="px-8 py-5 border-b border-surface-variant w-1/4">Fortschritt</th>
-<th class="px-8 py-5 border-b border-surface-variant text-center">Eltern Status</th>
-<th class="px-8 py-5 border-b border-surface-variant text-right w-24">Aktionen</th>
+<table class="w-full text-left">
+<thead class="bg-slate-50 border-b border-slate-200">
+<tr class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+<th class="px-6 py-4">Schüler/in</th>
+<th class="px-6 py-4">Fortschritt</th>
+<th class="px-6 py-4 text-center">Eltern Status</th>
+<th class="px-6 py-4 text-right">Aktion</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-surface-container whitespace-nowrap" id="progress-table-body"></tbody>
+<tbody class="divide-y divide-slate-100" id="progress-table-body"></tbody>
 </table>
 </div>
 </div>
 </div>
 </div>
-<!-- Manage Active Tasks -->
+<!-- Active Tasks -->
 <div class="space-y-6">
 <div class="flex items-center justify-between">
 <h3 class="font-bold text-xl">Aktive Aufgaben</h3>
-<button class="flex items-center gap-2 px-4 py-2 bg-white border border-error text-error hover:bg-error hover:text-on-error transition-all text-[10px] font-bold uppercase rounded-lg shadow-sm" onclick="deleteAllTasks()">
+<button class="flex items-center gap-2 px-4 py-2 text-error hover:bg-error-container/50 transition-all text-[10px] font-bold uppercase rounded-lg" onclick="deleteAllTasks()">
 <span class="material-symbols-outlined text-sm">delete_sweep</span> Alle löschen
                     </button>
 </div>
@@ -388,20 +337,29 @@
 </div>
 </section>
 </main>
-<footer class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-surface-variant pt-4 pb-6 px-6 z-40">
-<div class="max-w-5xl mx-auto space-y-4 text-center">
-<div class="flex flex-wrap justify-center gap-x-6 gap-y-2" id="legend-container"></div>
-<p class="text-[10px] font-bold uppercase text-outline tracking-[0.2em]">© 2024 Döltschi Digital • Bulletproof Master Edition</p>
+<footer class="bg-white border-t border-slate-200 pt-8 pb-12 px-6 no-print">
+<div class="max-w-5xl mx-auto space-y-6">
+<div class="flex flex-wrap justify-center gap-x-6 gap-y-3" id="legend-container"></div>
+<div class="flex flex-col md:flex-row justify-between items-center gap-4 border-t border-slate-100 pt-6">
+<div class="text-center md:text-left">
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© 2024 Döltschi Aufgabenplaner</p>
+<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Cloud Edition • Modern Centered UI</p>
+</div>
+<div class="flex gap-6">
+<a class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Datenschutz</a>
+<a class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Impressum</a>
+<a class="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Hilfe</a>
+</div>
+</div>
 </div>
 </footer>
 <!-- Firebase SDKs -->
 <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { 
-            getFirestore, collection, doc, onSnapshot, setDoc, addDoc, deleteDoc, updateDoc, getDocs, query, orderBy, writeBatch, serverTimestamp, arrayUnion, arrayRemove 
+            getFirestore, collection, doc, onSnapshot, setDoc, addDoc, deleteDoc, updateDoc, getDocs, query, orderBy, writeBatch, serverTimestamp, arrayUnion, arrayRemove, deleteField 
         } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-        // Firebase Config (Using user provided or system default placeholders)
         const firebaseConfig = {
             apiKey: "AIzaSyD7-v7M9q8yK4...", 
             authDomain: "doeltschi-hausaufgaben.firebaseapp.com",
@@ -415,7 +373,8 @@
         const db = getFirestore(app);
 
         // Global State
-        let currentClassName = new URLSearchParams(window.location.search).get('class') || localStorage.getItem('currentClassName') || null;
+        const urlParams = new URLSearchParams(window.location.search);
+        let currentClassName = urlParams.get('class') || localStorage.getItem('currentClassName') || null;
         let currentStudentName = localStorage.getItem('doeltschi_user') || null;
         let classlist = [];
         let tasks = [];
@@ -423,19 +382,18 @@
         let unsubscribeList = [];
 
         const subjects = {
-            'DE': { name: 'Deutsch', color: '#ef4444' },
-            'MA': { name: 'Mathe', color: '#3b82f6' },
-            'E': { name: 'Englisch', color: '#eab308' },
+            'DE': { name: 'Deutsch', color: '#dc2626' },
+            'MA': { name: 'Mathematik', color: '#2563eb' },
+            'E': { name: 'Englisch', color: '#facc15' },
             'F': { name: 'Französisch', color: '#22c55e' },
             'RZG': { name: 'RZG', color: '#f97316' },
             'NT': { name: 'NT', color: '#06b6d4' },
             'MU': { name: 'Musik', color: '#a855f7' },
-            'BS': { name: 'Sport', color: '#d97706' },
+            'BS': { name: 'Sport', color: '#eab308' },
             'MI': { name: 'Medien', color: '#64748b' },
-            'WAH': { name: 'WAH', color: '#f43f5e' }
+            'WAH': { name: 'WAH', color: '#c2410c' }
         };
 
-        // UI Initialization
         window.addEventListener('load', () => {
             renderLegend();
             initSubjectSelect();
@@ -448,38 +406,50 @@
             } else {
                 showView('class-selection');
             }
+            updateDateDisplay();
         });
 
-        // Navigation & Views
+        function updateDateDisplay() {
+            const now = new Date();
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            const weekNum = Math.ceil((((now - startOfYear) / 86400000) + startOfYear.getDay() + 1) / 7);
+            const first = now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1);
+            const firstDay = new Date(new Date().setDate(first));
+            const lastDay = new Date(new Date().setDate(first + 4));
+            
+            const weekEl = document.getElementById('current-week-display');
+            const rangeEl = document.getElementById('current-date-range');
+            if (weekEl) weekEl.innerText = `Woche ${weekNum}`;
+            if (rangeEl) rangeEl.innerText = `${firstDay.toLocaleDateString('de-CH')} – ${lastDay.toLocaleDateString('de-CH')}`;
+        }
+
         window.showView = (viewId) => {
             document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
             const target = document.getElementById('view-' + viewId);
             if (target) target.classList.remove('hidden');
             
-            // Manage Active Nav State
             const navStudent = document.getElementById('nav-student');
             const navAdmin = document.getElementById('nav-admin');
-            navStudent.classList.remove('bg-primary/10', 'text-primary');
-            navAdmin.classList.remove('bg-primary/10', 'text-primary');
+            navStudent.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all";
+            navAdmin.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all";
             
-            if (['start-view', 'planer-view', 'class-selection'].includes(viewId)) navStudent.classList.add('bg-primary/10', 'text-primary');
-            if (['adminLogin', 'adminDashboard'].includes(viewId)) navAdmin.classList.add('bg-primary/10', 'text-primary');
+            if (['start-view', 'planer-view', 'class-selection'].includes(viewId)) {
+                navStudent.classList.add('bg-primary', 'text-white');
+                navAdmin.classList.add('text-slate-500', 'hover:bg-slate-200');
+            }
+            if (['adminLogin', 'adminDashboard'].includes(viewId)) {
+                navAdmin.classList.add('bg-primary', 'text-white');
+                navStudent.classList.add('text-slate-500', 'hover:bg-slate-200');
+            }
             
-            // View Specific Triggers
             if (viewId === 'start-view' || viewId === 'adminDashboard') {
-                setTimeout(generateQRCodes, 50); // Small timeout to ensure DOM is ready
+                setTimeout(generateQRCodes, 50);
             }
-            if (viewId === 'adminDashboard') renderTeacherDashboard();
-            
-            // Header Indicator
-            const ci = document.getElementById('class-indicator');
-            if (currentClassName) {
-                ci.innerText = currentClassName.toUpperCase();
-                ci.classList.remove('hidden');
-            } else {
-                ci.classList.add('hidden');
+            if (viewId === 'adminDashboard') {
+                renderTeacherDashboard();
+                const al = document.getElementById('admin-class-label');
+                if(al) al.innerText = `Klasse: ${currentClassName?.toUpperCase()}`;
             }
-
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
@@ -502,35 +472,30 @@
             if (!input) return alert('Bitte einen Klassennamen eingeben');
             currentClassName = input;
             localStorage.setItem('currentClassName', input);
-            const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?class=' + input;
+            const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?class=' + encodeURIComponent(input);
             window.history.pushState({path:newurl},'',newurl);
             initSync();
             showView('start-view');
         };
 
-        // Realtime Data Sync
         function initSync() {
             unsubscribeList.forEach(unsub => unsub());
             unsubscribeList = [];
             if (!currentClassName) return;
 
-            // Sync Students
             const unsubStudents = onSnapshot(collection(db, "classes", currentClassName, "students"), (snap) => {
                 studentData = {};
-                const names = [];
+                classlist = [];
                 snap.forEach(docSnap => {
                     studentData[docSnap.id] = docSnap.data();
-                    names.push(docSnap.id);
+                    classlist.push(docSnap.id);
                 });
-                classlist = names;
                 updateDropdownsAndTextarea();
                 if (!document.getElementById('view-adminDashboard').classList.contains('hidden')) renderTeacherDashboard();
-                if (currentStudentName && !classlist.includes(currentStudentName)) logoutStudent();
                 if (currentStudentName) refreshStudentUI();
             });
             unsubscribeList.push(unsubStudents);
 
-            // Sync Tasks
             const qTasks = query(collection(db, "classes", currentClassName, "tasks"), orderBy("createdAt", "desc"));
             const unsubTasks = onSnapshot(qTasks, (snap) => {
                 tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -540,12 +505,29 @@
             unsubscribeList.push(unsubTasks);
         }
 
-        // Dashboard Rendering Logic
         window.renderTeacherDashboard = () => {
             renderAdminTasks();
             updateProgressTable();
             const qrNameDisplay = document.getElementById('qr-class-name');
             if (qrNameDisplay) qrNameDisplay.innerText = currentClassName.toUpperCase();
+            
+            // Calc stats
+            let totalPossible = 0, totalDone = 0;
+            tasks.forEach(t => {
+                if (t.who === 'all') { totalPossible += classlist.length; t.done?.forEach(s => totalDone++); }
+                else { totalPossible += 1; if(t.done?.includes(t.who)) totalDone++; }
+            });
+            const percent = totalPossible > 0 ? Math.round((totalDone / totalPossible) * 100) : 0;
+            const progPercent = document.getElementById('total-progress-percent');
+            const progBar = document.getElementById('total-progress-bar');
+            if(progPercent) progPercent.textContent = percent + "%";
+            if(progBar) progBar.style.width = percent + "%";
+
+            const confirmedCount = classlist.filter(s => studentData[s]?.confirmed).length;
+            const confCountEl = document.getElementById('confirmed-count');
+            const confPendEl = document.getElementById('confirmed-pending-text');
+            if(confCountEl) confCountEl.textContent = `${confirmedCount}/${classlist.length}`;
+            if(confPendEl) confPendEl.textContent = `Noch ${classlist.length - confirmedCount} ausstehend`;
         };
 
         function renderAdminTasks() {
@@ -553,23 +535,22 @@
             if (!list) return;
             list.innerHTML = '';
             if (tasks.length === 0) {
-                list.innerHTML = '<div class="text-center p-8 bg-surface-container-low rounded-xl border border-dashed border-outline-variant text-outline italic">Keine Aufgaben erstellt.</div>';
+                list.innerHTML = '<div class="text-center p-12 bg-slate-50 rounded-3xl border border-dashed border-slate-200 text-slate-400 font-bold uppercase text-[10px] tracking-widest">Keine Aufgaben vorhanden</div>';
                 return;
             }
             tasks.forEach(task => {
                 const color = subjects[task.subject]?.color || '#94a3b8';
-                const formatted = formatDate(task.dueDate);
                 const div = document.createElement('div');
-                div.className = "flex items-center justify-between p-4 bg-white border border-surface-variant rounded-xl shadow-sm";
+                div.className = "flex items-center justify-between p-5 bg-white border border-slate-200 rounded-2xl shadow-sm group";
                 div.innerHTML = `
                     <div class="flex items-center gap-4 overflow-hidden">
-                        <span class="w-10 h-10 rounded-lg flex items-center justify-center text-[11px] font-extrabold text-white uppercase shrink-0" style="background-color: ${color}">${task.subject}</span>
+                        <span class="w-10 h-10 rounded-lg flex items-center justify-center text-[10px] font-black text-white shrink-0" style="background-color: ${color}">${task.subject}</span>
                         <div class="overflow-hidden">
-                            <p class="font-bold text-on-surface truncate">${task.desc}</p>
-                            <p class="text-[10px] font-bold text-outline uppercase truncate">👤 ${task.who === 'all' ? 'Alle' : task.who} • 🗓️ ${formatted}</p>
+                            <p class="font-bold text-slate-700 truncate">${task.desc}</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase truncate">👤 ${task.who === 'all' ? 'Alle' : task.who} • 🗓️ ${task.dueDate || '-'}</p>
                         </div>
                     </div>
-                    <button onclick="deleteTask('${task.id}')" class="text-outline-variant hover:text-error transition-colors shrink-0 px-2">
+                    <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-error opacity-0 group-hover:opacity-100 transition-all p-2">
                         <span class="material-symbols-outlined">delete</span>
                     </button>
                 `;
@@ -589,35 +570,27 @@
                 const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
                 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-surface-container/30 transition-colors border-b border-surface-container last:border-0";
+                tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0";
                 tr.innerHTML = `
-                    <td class="px-8 py-5">
+                    <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">${name.charAt(0)}</div>
-                            <div class="overflow-hidden">
-                                <div class="font-bold text-on-surface leading-tight truncate max-w-[150px]">${name}</div>
-                                <div class="text-[10px] text-outline font-bold uppercase mt-0.5 tracking-wider">${total} Aufgaben</div>
-                            </div>
+                            <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">${name.charAt(0)}</div>
+                            <div class="font-bold text-slate-800">${name}</div>
                         </div>
                     </td>
-                    <td class="px-8 py-5">
-                        <div class="space-y-1.5 min-w-[100px]">
-                            <div class="flex justify-between items-center text-[10px] font-bold">
-                                <span class="${percent === 100 ? 'text-emerald-600' : 'text-outline'}">${completed}/${total}</span>
-                                <span class="text-outline-variant">${percent}%</span>
-                            </div>
-                            <div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
-                                <div class="h-full ${percent === 100 ? 'bg-emerald-500' : 'bg-primary'} transition-all duration-500" style="width: ${percent}%"></div>
-                            </div>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-primary" style="width: ${percent}%"></div></div>
+                            <span class="text-[10px] font-bold text-slate-400">${percent}%</span>
                         </div>
                     </td>
-                    <td class="px-8 py-5 text-center">
-                        ${s.confirmed ? `<span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full uppercase tracking-tight">OK • ${s.confDate}</span>` : `<span class="text-[10px] font-bold text-outline bg-surface-container px-3 py-1 rounded-full uppercase tracking-tight">Offen</span>`}
+                    <td class="px-6 py-4 text-center">
+                        ${s.confirmed ? `<span class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full uppercase">OK • ${s.confDate}</span>` : `<span class="text-[10px] font-bold text-slate-400 uppercase">Offen</span>`}
                     </td>
-                    <td class="px-8 py-5 text-right">
+                    <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-1">
-                            <button onclick="resetStudentProgress('${name}')" title="Reset" class="p-2 text-outline-variant hover:text-tertiary rounded-lg transition-all"><span class="material-symbols-outlined text-xl">restart_alt</span></button>
-                            <button onclick="removeStudent('${name}')" title="Löschen" class="p-2 text-outline-variant hover:text-error rounded-lg transition-all"><span class="material-symbols-outlined text-xl">delete</span></button>
+                            <button onclick="resetStudentProgress('${name}')" title="Reset" class="p-2 text-slate-300 hover:text-primary transition-all"><span class="material-symbols-outlined text-xl">undo</span></button>
+                            <button onclick="removeStudent('${name}')" title="Löschen" class="p-2 text-slate-300 hover:text-error transition-all"><span class="material-symbols-outlined text-xl">delete</span></button>
                         </div>
                     </td>
                 `;
@@ -625,10 +598,12 @@
             });
         }
 
-        // Student Actions
         window.toggleTask = async (taskId) => {
             const student = studentData[currentStudentName];
-            if (!student || student.confirmed) return; 
+            if (!student || student.confirmed) {
+                if(student?.confirmed) alert("Identitätsschutz: Diese Aufgaben sind gesperrt, da die Eltern bereits bestätigt haben.");
+                return; 
+            }
             const isCurrentlyDone = (student.done || []).includes(taskId);
             const sRef = doc(db, 'classes', currentClassName, 'students', currentStudentName);
             await updateDoc(sRef, {
@@ -644,11 +619,10 @@
             await updateDoc(sRef, { confirmed: true, parentName: pName, confDate: date });
         };
 
-        // Admin Management Actions
         window.updateClassList = async () => {
             const text = document.getElementById('classlist-textarea').value;
             const newNames = text.split('\n').map(n => n.trim()).filter(n => n !== "");
-            if (confirm(`Liste synchronisieren?`)) {
+            if (confirm(`Möchtest du die Klassenliste in der Cloud aktualisieren?`)) {
                 const batch = writeBatch(db);
                 newNames.forEach(name => {
                     const sRef = doc(db, 'classes', currentClassName, 'students', name);
@@ -663,38 +637,36 @@
                     if (!newNames.includes(oldName)) batch.delete(doc(db, 'classes', currentClassName, 'students', oldName));
                 });
                 await batch.commit();
-                alert("Cloud-Synchronisierung abgeschlossen.");
+                alert("Cloud-Update erfolgreich.");
             }
         };
 
         window.deleteWholeClass = async () => {
-            if (!currentClassName) return;
-            if (confirm(`ACHTUNG: Klasse "${currentClassName}" unwiderruflich löschen?`)) {
+            if (confirm(`ACHTUNG: Klasse "${currentClassName}" und ALLE Daten unwiderruflich löschen?`)) {
                 const taskSnap = await getDocs(collection(db, "classes", currentClassName, "tasks"));
                 const studentSnap = await getDocs(collection(db, "classes", currentClassName, "students"));
                 const batch = writeBatch(db);
                 taskSnap.docs.forEach(d => batch.delete(d.ref));
                 studentSnap.docs.forEach(d => batch.delete(d.ref));
                 await batch.commit();
-                await deleteDoc(doc(db, "classes", currentClassName));
                 clearClass();
             }
         };
 
         window.resetStudentProgress = async (name) => {
-            if(confirm(`Bestätigung für ${name} zurücksetzen?`)) {
+            if(confirm(`Bestätigung für ${name} wirklich aufheben?`)) {
                 await updateDoc(doc(db, 'classes', currentClassName, 'students', name), {
-                    confirmed: false, parentName: '', confDate: '', done: []
+                    confirmed: false, parentName: deleteField(), confDate: deleteField()
                 });
             }
         };
 
         window.handleResetConfirmations = async () => {
-            if(confirm('Alle Elternbestätigungen zurücksetzen?')) {
+            if(confirm('Alle Elternbestätigungen der Klasse zurücksetzen?')) {
                 const batch = writeBatch(db);
                 classlist.forEach(name => {
                     batch.update(doc(db, 'classes', currentClassName, 'students', name), {
-                        confirmed: false, parentName: '', confDate: ''
+                        confirmed: false, parentName: deleteField(), confDate: deleteField()
                     });
                 });
                 await batch.commit();
@@ -706,7 +678,7 @@
         };
 
         window.deleteAllTasks = async () => {
-            if (confirm('ALLE Aufgaben löschen?')) {
+            if (confirm('Sollen wirklich ALLE Aufgaben der Klasse gelöscht werden?')) {
                 const snapshot = await getDocs(collection(db, 'classes', currentClassName, 'tasks'));
                 const batch = writeBatch(db);
                 snapshot.docs.forEach(d => batch.delete(d.ref));
@@ -715,12 +687,11 @@
         };
 
         window.removeStudent = async (name) => {
-            if(confirm(`${name} aus der Liste entfernen?`)) {
+            if(confirm(`${name} wirklich aus der Liste entfernen?`)) {
                 await deleteDoc(doc(db, "classes", currentClassName, "students", name));
             }
         };
 
-        // Helper Functions
         function refreshStudentUI() {
             const student = studentData[currentStudentName];
             if (!student) return;
@@ -731,22 +702,22 @@
             container.innerHTML = '';
             
             if (relevantTasks.length === 0) {
-                container.innerHTML = '<div class="py-16 text-center text-outline italic">Keine anstehenden Aufgaben.</div>';
+                container.innerHTML = '<div class="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs border-2 border-dashed border-slate-200 rounded-[3rem]">Keine anstehenden Aufgaben</div>';
             } else {
                 relevantTasks.forEach(task => {
                     const isDone = (student.done || []).includes(task.id);
                     const locked = student.confirmed;
                     const color = subjects[task.subject]?.color || '#94a3b8';
                     const card = document.createElement('div');
-                    card.className = `p-6 bg-white rounded-2xl border-2 transition-all flex items-center gap-6 ${isDone ? 'border-emerald-100 opacity-60' : 'border-surface-container shadow-sm'}`;
+                    card.className = `p-8 bg-white rounded-[2.5rem] border transition-all flex items-center gap-6 ${isDone ? 'opacity-60 grayscale-[0.5]' : 'shadow-sm border-slate-100 hover:border-primary/20'}`;
                     card.innerHTML = `
                         <div class="subject-tag" style="background-color: ${color}">${task.subject}</div>
-                        <div class="flex-1">
-                            <p class="font-bold text-lg text-on-surface">${task.desc}</p>
-                            <p class="text-[10px] font-extrabold text-outline uppercase mt-1">Bis: ${formatDate(task.dueDate)}</p>
+                        <div class="flex-1 overflow-hidden">
+                            <p class="font-bold text-lg text-slate-700 truncate">${task.desc}</p>
+                            <p class="text-[10px] font-black text-slate-400 uppercase mt-1">Frist: <span class="text-slate-900">${task.dueDate || '-'}</span></p>
                         </div>
-                        <button onclick="toggleTask('${task.id}')" ${locked ? 'disabled' : ''} class="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-emerald-500 border-emerald-500 text-on-primary' : 'border-outline-variant text-transparent hover:border-primary'} ${locked ? 'cursor-not-allowed opacity-50' : ''}">
-                            <span class="material-symbols-outlined text-xl">check</span>
+                        <button onclick="toggleTask('${task.id}')" ${locked ? 'disabled' : ''} class="w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-primary border-primary text-white' : 'border-slate-200 text-transparent hover:border-primary'} ${locked ? 'cursor-not-allowed' : ''}">
+                            <span class="material-symbols-outlined text-2xl">check</span>
                         </button>
                     `;
                     container.appendChild(card);
@@ -755,14 +726,23 @@
             
             const form = document.getElementById('confirmation-form');
             const success = document.getElementById('confirmation-success');
+            const desc = document.getElementById('confirmation-desc');
+            const icon = document.getElementById('confirmation-icon');
+            const block = document.getElementById('parent-confirmation-block');
+
             if (student.confirmed) {
                 form.classList.add('hidden');
+                desc.classList.add('hidden');
                 success.classList.remove('hidden');
-                document.getElementById('conf-date-display').innerText = student.confDate;
-                document.getElementById('conf-parent-display').innerText = student.parentName;
+                icon.innerText = 'verified';
+                block.classList.add('bg-blue-50/20', 'border-primary');
+                document.getElementById('conf-info-display').innerText = `Bestätigt am ${student.confDate} von ${student.parentName}`;
             } else {
                 form.classList.remove('hidden');
+                desc.classList.remove('hidden');
                 success.classList.add('hidden');
+                icon.innerText = 'verified_user';
+                block.classList.remove('bg-blue-50/20', 'border-primary');
             }
         }
 
@@ -770,9 +750,9 @@
             const container = document.getElementById('legend-container');
             if (!container) return;
             container.innerHTML = Object.entries(subjects).map(([code, data]) => `
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full" style="background-color: ${data.color}"></span>
-                    <span class="text-[10px] font-bold uppercase text-outline">${data.name}</span>
+                <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                    <span class="w-2.5 h-2.5 rounded-full shadow-sm" style="background-color: ${data.color}"></span>
+                    <span class="text-[10px] font-bold uppercase text-slate-600 tracking-wide">${data.name}</span>
                 </div>
             `).join('');
         }
@@ -805,55 +785,52 @@
 
             if (prevVal && classlist.includes(prevVal)) dropdown.value = prevVal;
             if (document.activeElement !== textarea) textarea.value = classlist.join('\n');
+            
+            // Session Lock check
+            const lockHint = document.getElementById('identity-lock-hint');
+            if (currentStudentName && classlist.includes(currentStudentName)) {
+                dropdown.disabled = true;
+                lockHint.classList.remove('hidden');
+            } else {
+                dropdown.disabled = false;
+                lockHint.classList.add('hidden');
+            }
         }
 
         function generateQRCodes() {
             if (!currentClassName) return;
             const baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-            const fullUrl = baseUrl + '?class=' + currentClassName;
+            const fullUrl = baseUrl + '?class=' + encodeURIComponent(currentClassName);
 
-            // Start screen QR
             const qrEl = document.getElementById("qrcode");
             if (qrEl) {
                 qrEl.innerHTML = "";
                 new QRCode(qrEl, {
                     text: fullUrl,
-                    width: 180,
-                    height: 180,
-                    colorDark: "#0058bc",
-                    colorLight: "#ffffff",
+                    width: 200, height: 200,
+                    colorDark: "#2563eb", colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.H
                 });
             }
 
-            // Admin Dashboard QR
             const adminQrEl = document.getElementById("admin-qrcode");
             if (adminQrEl) {
                 adminQrEl.innerHTML = "";
                 new QRCode(adminQrEl, {
                     text: fullUrl,
-                    width: 140,
-                    height: 140,
-                    colorDark: "#0058bc",
-                    colorLight: "#ffffff",
+                    width: 140, height: 140,
+                    colorDark: "#2563eb", colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.H
                 });
             }
         }
 
-        function formatDate(dateStr) {
-            if (!dateStr) return 'Kein Datum';
-            try {
-                const d = new Date(dateStr);
-                if (isNaN(d.getTime())) return dateStr;
-                return d.toLocaleDateString('de-CH');
-            } catch (e) { return dateStr; }
-        }
-
         window.logoutStudent = () => {
-            currentStudentName = null;
-            localStorage.removeItem('doeltschi_user');
-            showView('start-view');
+            if(confirm("Möchtest du dich wirklich abmelden? Die Sitzungssperre wird aufgehoben.")) {
+                currentStudentName = null;
+                localStorage.removeItem('doeltschi_user');
+                showView('start-view');
+            }
         };
 
         window.toggleProgressCollapse = () => {
@@ -863,9 +840,9 @@
             chevron.classList.toggle('collapsed-icon'); 
         };
 
-        document.getElementById('btn-enter-student').onclick = () => {
-            const name = document.getElementById('student-dropdown').value;
-            if (!name) return alert("Wähle zuerst deinen Namen aus.");
+        document.getElementById('student-dropdown').onchange = (e) => {
+            const name = e.target.value;
+            if (!name) return;
             currentStudentName = name;
             localStorage.setItem('doeltschi_user', name);
             refreshStudentUI();
@@ -876,10 +853,10 @@
             const subject = document.getElementById('task-subject').value;
             const who = document.getElementById('task-target').value;
             const desc = document.getElementById('task-desc').value.trim();
-            const dueDate = document.getElementById('task-date').value;
-            if (!desc || !dueDate) return alert('Beschreibung und Datum ausfüllen');
+            const dueDate = document.getElementById('task-date').value.trim();
+            if (!desc) return alert('Bitte eine Beschreibung eingeben');
             await addDoc(collection(db, 'classes', currentClassName, 'tasks'), {
-                subject, who, desc, dueDate, createdAt: serverTimestamp()
+                subject, who, desc, dueDate, createdAt: serverTimestamp(), done: []
             });
             document.getElementById('task-desc').value = '';
             document.getElementById('task-date').value = '';
