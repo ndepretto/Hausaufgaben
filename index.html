@@ -165,9 +165,14 @@
 </div>
 <!-- Task Overview -->
 <div class="bg-white p-8 rounded-[2rem] border border-surface-container shadow-xl">
-<h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+<h3 class="text-xl font-bold flex items-center gap-2">
 <span class="material-symbols-outlined text-primary">list_alt</span> Aktuelle Aufgaben
             </h3>
+<button class="flex items-center justify-center gap-2 px-4 py-2 border-2 border-error text-error font-bold rounded-xl hover:bg-error-container transition-all text-sm" onclick="deleteAllTasks()">
+<span class="material-symbols-outlined text-sm">delete_sweep</span> Alle Aufgaben löschen
+            </button>
+</div>
 <div class="grid sm:grid-cols-2 gap-3" id="teacher-tasks"></div>
 </div>
 </div>
@@ -344,6 +349,23 @@
             doneBy: []
         });
         document.getElementById('task-desc').value = '';
+    }
+
+    async function deleteAllTasks() {
+        if (confirm("Möchtest du wirklich ALLE aktuellen Aufgaben löschen? Diese Aktion kann nicht rückgängig gemacht werden.")) {
+            try {
+                const snapshot = await db.collection('tasks').get();
+                const batch = db.batch();
+                snapshot.docs.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                alert("Alle Aufgaben wurden erfolgreich gelöscht.");
+            } catch (error) {
+                console.error("Fehler beim Löschen der Aufgaben: ", error);
+                alert("Ein Fehler ist aufgetreten.");
+            }
+        }
     }
 
     function toggleTask(taskId, isDone) {
