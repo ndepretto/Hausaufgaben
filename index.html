@@ -78,7 +78,6 @@
             text-overflow: ellipsis;
             max-width: 200px;
         }
-        /* Ensure student names are strictly single line everywhere */
         .student-name-cell {
             white-space: nowrap;
             overflow: hidden;
@@ -241,7 +240,7 @@
 <h2 class="text-4xl font-extrabold tracking-tight">Lehrer Dashboard</h2>
 <button class="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-lg transition-colors" onclick="showView('start-view')">Abmelden</button>
 </div>
-<!-- Session & Lock Management -->
+<!-- Session Management -->
 <div class="glass-card p-8 rounded-lg border-2 border-orange-200 shadow-sm space-y-6 bg-orange-50/30">
 <div class="flex items-center justify-between">
 <h3 class="font-bold text-xl flex items-center gap-3">
@@ -250,7 +249,7 @@
                 </h3>
 </div>
 <div class="flex flex-col sm:flex-row items-center gap-4">
-<p class="text-sm text-slate-600 flex-1">Falls ein Schüler sein Gerät gesperrt hat (Sitzungsschutz), kannst du hier die Sperre für dieses Gerät aufheben.</p>
+<p class="text-sm text-slate-600 flex-1">Falls ein Schüler sein Gerät gesperrt hat, kannst du hier die Sperre für dieses Gerät aufheben.</p>
 <button class="whitespace-nowrap px-6 py-3 bg-orange-600 text-white font-bold rounded-xl shadow-md hover:bg-orange-700 transition-all" onclick="resetDeviceLock()">Gerätesperre aufheben</button>
 </div>
 </div>
@@ -270,8 +269,7 @@
 </div>
 <div class="space-y-4">
 <p class="text-sm text-slate-500">Ein Schüler pro Zeile (z. B. "Max Mustermann 4b").</p>
-<textarea class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10 font-mono text-sm" id="classlist-textarea" placeholder="Max Mustermann 4b
-Erika Musterfrau 4b..." rows="6"></textarea>
+<textarea class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10 font-mono text-sm" id="classlist-textarea" placeholder="Max Mustermann 4b..." rows="6"></textarea>
 <div class="flex flex-col sm:flex-row gap-3">
 <button class="flex-1 py-3 bg-primary text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-md" id="btn-save-classlist">Klassenliste speichern</button>
 <button class="px-6 py-3 bg-red-50 text-red-600 border-2 border-red-100 hover:bg-red-100 font-bold rounded-xl transition-all flex items-center justify-center gap-2" onclick="deleteWholeClass()">
@@ -324,7 +322,7 @@ Erika Musterfrau 4b..." rows="6"></textarea>
 </div>
 </div>
 </div>
-<!-- Progress Tracking (Collapsible) -->
+<!-- Progress Tracking -->
 <div class="space-y-6" id="collapsible-progress-section">
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer group" onclick="toggleProgressCollapse()">
 <h3 class="font-bold text-xl flex items-center gap-2">
@@ -373,9 +371,27 @@ Erika Musterfrau 4b..." rows="6"></textarea>
 <p class="text-[10px] font-bold uppercase text-slate-400 tracking-[0.2em]">© 2024 Digitales Aufgabenheft • Bulletproof Master</p>
 </div>
 </footer>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script>
+<!-- Firebase SDKs -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { 
+        getFirestore, 
+        collection, 
+        doc, 
+        onSnapshot, 
+        setDoc, 
+        addDoc, 
+        deleteDoc, 
+        updateDoc, 
+        getDocs, 
+        query, 
+        orderBy, 
+        writeBatch, 
+        serverTimestamp,
+        arrayUnion,
+        arrayRemove
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
     const firebaseConfig = {
         apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
         authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
@@ -386,9 +402,10 @@ Erika Musterfrau 4b..." rows="6"></textarea>
         measurementId: "G-C6GTQJ8C1D"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
+    // Global State
     let currentClassName = new URLSearchParams(window.location.search).get('class') || localStorage.getItem('currentClassName') || null;
     let currentStudentName = localStorage.getItem('currentStudentName') || null;
     let isLocked = localStorage.getItem('doeltschi_locked') === 'true';
@@ -410,7 +427,8 @@ Erika Musterfrau 4b..." rows="6"></textarea>
         'WAH': { name: 'WAH', color: '#f43f5e' }
     };
 
-    window.onload = () => {
+    // Initialize UI
+    window.addEventListener('load', () => {
         renderLegend();
         initSubjectSelect();
         initImportHandlers();
@@ -425,9 +443,10 @@ Erika Musterfrau 4b..." rows="6"></textarea>
         } else {
             showView('class-selection');
         }
-    };
+    });
 
-    function showView(viewId) {
+    // Navigation and Routing
+    window.showView = (viewId) => {
         document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
         const target = document.getElementById('view-' + viewId);
         if (target) target.classList.remove('hidden');
@@ -452,7 +471,7 @@ Erika Musterfrau 4b..." rows="6"></textarea>
         }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    };
 
     document.getElementById('btn-select-class').onclick = () => {
         const input = document.getElementById('class-input').value.trim();
@@ -468,54 +487,54 @@ Erika Musterfrau 4b..." rows="6"></textarea>
         showView('start-view');
     };
 
-    function clearClass() {
+    window.clearClass = () => {
         localStorage.removeItem('currentClassName');
         localStorage.removeItem('currentStudentName');
         localStorage.removeItem('doeltschi_locked');
         window.location.search = "";
-    }
+    };
 
-    async function deleteWholeClass() {
+    window.deleteWholeClass = async () => {
         if (!currentClassName) return;
-        const confirmDelete = confirm(`Bist du sicher, dass du die Klasse "${currentClassName}" UNWIDERRUFLICH löschen möchtest?\n\nAlle Schüler, Aufgaben und Fortschritte werden aus der Cloud und von diesem Gerät gelöscht.`);
+        const confirmDelete = confirm(`Bist du sicher, dass du die Klasse "${currentClassName}" UNWIDERRUFLICH löschen möchtest?`);
         
         if (confirmDelete) {
-            const classRef = db.collection("classes").doc(currentClassName);
-            const taskSnap = await classRef.collection("tasks").get();
-            const taskBatch = db.batch();
-            taskSnap.docs.forEach(doc => taskBatch.delete(doc.ref));
+            const classRef = doc(db, "classes", currentClassName);
+            
+            // Delete tasks subcollection
+            const taskSnap = await getDocs(collection(db, "classes", currentClassName, "tasks"));
+            const taskBatch = writeBatch(db);
+            taskSnap.docs.forEach(d => taskBatch.delete(d.ref));
             await taskBatch.commit();
             
-            const studentSnap = await classRef.collection("students").get();
-            const studentBatch = db.batch();
-            studentSnap.docs.forEach(doc => studentBatch.delete(doc.ref));
+            // Delete students subcollection
+            const studentSnap = await getDocs(collection(db, "classes", currentClassName, "students"));
+            const studentBatch = writeBatch(db);
+            studentSnap.docs.forEach(d => studentBatch.delete(d.ref));
             await studentBatch.commit();
             
-            await classRef.collection("config").doc("classlist").delete();
-            await classRef.delete();
+            // Delete config
+            await deleteDoc(doc(db, "classes", currentClassName, "config", "classlist"));
+            await deleteDoc(classRef);
 
-            localStorage.removeItem('currentClassName');
-            localStorage.removeItem('currentStudentName');
-            localStorage.removeItem('doeltschi_locked');
-            
-            alert(`Klasse "${currentClassName}" wurde erfolgreich gelöscht.`);
+            localStorage.clear();
             window.location.search = "";
         }
-    }
+    };
 
+    // Firebase Sync
     function initSync() {
         unsubscribeList.forEach(unsub => unsub());
         unsubscribeList = [];
 
         if (!currentClassName) return;
 
-        const classRef = db.collection("classes").doc(currentClassName);
-
-        const unsubConfig = classRef.collection("config").doc("classlist").onSnapshot(doc => {
-            if (doc.exists) {
-                classlist = doc.data().names || [];
+        // Sync Classlist
+        const unsubConfig = onSnapshot(doc(db, "classes", currentClassName, "config", "classlist"), (docSnap) => {
+            if (docSnap.exists()) {
+                classlist = docSnap.data().names || [];
                 updateDropdownsAndTextarea();
-                syncStudentProgress();
+                ensureStudentsExistInCloud();
             } else {
                 classlist = [];
                 updateDropdownsAndTextarea();
@@ -523,7 +542,9 @@ Erika Musterfrau 4b..." rows="6"></textarea>
         });
         unsubscribeList.push(unsubConfig);
 
-        const unsubTasks = classRef.collection("tasks").orderBy("createdAt", "desc").onSnapshot(snap => {
+        // Sync Tasks
+        const qTasks = query(collection(db, "classes", currentClassName, "tasks"), orderBy("createdAt", "desc"));
+        const unsubTasks = onSnapshot(qTasks, (snap) => {
             tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
             renderAdminTasks();
             if (currentStudentName) refreshStudentUI();
@@ -531,14 +552,29 @@ Erika Musterfrau 4b..." rows="6"></textarea>
         });
         unsubscribeList.push(unsubTasks);
 
-        const unsubStudents = classRef.collection("students").onSnapshot(snap => {
-            snap.forEach(doc => {
-                studentProgress[doc.id] = doc.data();
+        // Sync Student Progress
+        const unsubStudents = onSnapshot(collection(db, "classes", currentClassName, "students"), (snap) => {
+            snap.forEach(docSnap => {
+                studentProgress[docSnap.id] = docSnap.data();
             });
             updateProgressTable();
             if (currentStudentName) refreshStudentUI();
         });
         unsubscribeList.push(unsubStudents);
+    }
+
+    async function ensureStudentsExistInCloud() {
+        for (const name of classlist) {
+            if (!studentProgress[name]) {
+                const sRef = doc(db, "classes", currentClassName, "students", name);
+                await setDoc(sRef, {
+                    done: [],
+                    confirmed: false,
+                    parentName: '',
+                    confDate: ''
+                }, { merge: true });
+            }
+        }
     }
 
     function generateQRCode() {
@@ -556,6 +592,7 @@ Erika Musterfrau 4b..." rows="6"></textarea>
         });
     }
 
+    // Student Interaction
     document.getElementById('btn-enter-student').onclick = () => {
         const name = document.getElementById('student-dropdown').value;
         if (!name) return;
@@ -570,28 +607,37 @@ Erika Musterfrau 4b..." rows="6"></textarea>
         showView('planer-view');
     };
 
-    async function toggleTask(taskId) {
+    window.toggleTask = async (taskId) => {
         const student = studentProgress[currentStudentName];
         if (!student || student.confirmed) return;
+        
         const done = student.done || [];
-        const newDone = done.includes(taskId) ? done.filter(id => id !== taskId) : [...done, taskId];
-        await db.collection('classes').doc(currentClassName).collection('students').doc(currentStudentName).update({ done: newDone });
-    }
+        const isCurrentlyDone = done.includes(taskId);
+        const sRef = doc(db, 'classes', currentClassName, 'students', currentStudentName);
+        
+        await updateDoc(sRef, {
+            done: isCurrentlyDone ? arrayRemove(taskId) : arrayUnion(taskId)
+        });
+    };
 
     document.getElementById('btn-confirm-parent').onclick = async () => {
         const pName = document.getElementById('parent-name').value.trim();
         if (!pName) return alert('Bitte Name der Eltern eingeben');
         const date = new Date().toLocaleDateString('de-CH');
-        await db.collection('classes').doc(currentClassName).collection('students').doc(currentStudentName).update({
-            confirmed: true, parentName: pName, confDate: date
+        const sRef = doc(db, 'classes', currentClassName, 'students', currentStudentName);
+        await updateDoc(sRef, {
+            confirmed: true, 
+            parentName: pName, 
+            confDate: date
         });
     };
 
+    // Admin Functions
     document.getElementById('btn-save-classlist').onclick = async () => {
         const text = document.getElementById('classlist-textarea').value;
         const names = text.split('\n').map(n => n.trim()).filter(n => n !== "");
-        if (confirm(`Soll die Klassenliste für ${currentClassName} mit ${names.length} Schülern gespeichert werden?`)) {
-            await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names });
+        if (confirm(`Soll die Klassenliste für ${currentClassName} gespeichert werden?`)) {
+            await setDoc(doc(db, "classes", currentClassName, "config", "classlist"), { names });
             alert("Liste aktualisiert.");
         }
     };
@@ -602,8 +648,7 @@ Erika Musterfrau 4b..." rows="6"></textarea>
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (re) => {
-                const text = re.target.result;
-                document.getElementById('classlist-textarea').value = text;
+                document.getElementById('classlist-textarea').value = re.target.result;
             };
             reader.readAsText(file);
         };
@@ -615,43 +660,22 @@ Erika Musterfrau 4b..." rows="6"></textarea>
             reader.onload = async (re) => {
                 const arrayBuffer = re.target.result;
                 try {
-                    // Extracting text with Mammoth
-                    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                    const result = await mammoth.extractRawText({ arrayBuffer });
                     const text = result.value;
-                    
-                    /* 
-                       Optimized Logic: 
-                       Instead of strictly splitting by newlines, we analyze the structure.
-                       Often exports have names and classes on separate lines.
-                       We join non-empty lines that seem to belong together.
-                    */
-                    const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
-                    
+                    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
                     const processedNames = [];
                     let currentEntry = [];
-
                     for (let line of lines) {
-                        // Check if the line looks like a class indicator (e.g., 3b, 4a, R1a)
                         const isClassIndicator = /^[0-9]+[a-z]?$/i.test(line);
-                        
                         currentEntry.push(line);
-                        
-                        // If we have a class indicator or we have accumulated 3 parts (First, Last, Class), 
-                        // we treat it as a finished entry. This is a heuristic.
                         if (isClassIndicator || currentEntry.length >= 3) {
                             processedNames.push(currentEntry.join(' '));
                             currentEntry = [];
                         }
                     }
-                    
-                    // Handle leftover
-                    if (currentEntry.length > 0) {
-                        processedNames.push(currentEntry.join(' '));
-                    }
-
+                    if (currentEntry.length > 0) processedNames.push(currentEntry.join(' '));
                     document.getElementById('classlist-textarea').value = processedNames.join('\n');
                 } catch (err) {
-                    console.error(err);
                     alert('Fehler beim Lesen der .docx Datei.');
                 }
             };
@@ -666,73 +690,63 @@ Erika Musterfrau 4b..." rows="6"></textarea>
         const dueDate = document.getElementById('task-date').value;
         if (!desc || !dueDate) return alert('Bitte Beschreibung und Datum ausfüllen');
         
-        await db.collection('classes').doc(currentClassName).collection('tasks').add({
+        await addDoc(collection(db, 'classes', currentClassName, 'tasks'), {
             subject, who, desc, dueDate, 
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: serverTimestamp()
         });
         
         document.getElementById('task-desc').value = '';
         document.getElementById('task-date').value = '';
     };
 
-    async function deleteTask(id) {
-        if(confirm('Aufgabe wirklich löschen?')) await db.collection('classes').doc(currentClassName).collection('tasks').doc(id).delete();
-    }
+    window.deleteTask = async (id) => {
+        if(confirm('Aufgabe wirklich löschen?')) await deleteDoc(doc(db, 'classes', currentClassName, 'tasks', id));
+    };
 
-    async function deleteAllTasks() {
-        if (confirm('Möchtest du wirklich ALLE Aufgaben für diese Klasse unwiderruflich löschen?')) {
-            const snapshot = await db.collection('classes').doc(currentClassName).collection('tasks').get();
-            const batch = db.batch();
-            snapshot.docs.forEach(doc => batch.delete(doc.ref));
+    window.deleteAllTasks = async () => {
+        if (confirm('Wirklich ALLE Aufgaben löschen?')) {
+            const snapshot = await getDocs(collection(db, 'classes', currentClassName, 'tasks'));
+            const batch = writeBatch(db);
+            snapshot.docs.forEach(d => batch.delete(d.ref));
             await batch.commit();
         }
-    }
+    };
 
-    async function removeStudent(name) {
-        if(confirm(`Möchtest du ${name} wirklich aus der Klassenliste löschen?`)) {
+    window.removeStudent = async (name) => {
+        if(confirm(`Möchtest du ${name} wirklich löschen?`)) {
             const newClasslist = classlist.filter(n => n !== name);
-            await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names: newClasslist });
-            await db.collection("classes").doc(currentClassName).collection("students").doc(name).delete();
+            await setDoc(doc(db, "classes", currentClassName, "config", "classlist"), { names: newClasslist });
+            await deleteDoc(doc(db, "classes", currentClassName, "students", name));
         }
-    }
+    };
 
-    async function resetStudentProgress(name) {
+    window.resetStudentProgress = async (name) => {
         if(confirm(`Status für ${name} wirklich zurücksetzen?`)) {
-            await db.collection('classes').doc(currentClassName).collection('students').doc(name).update({
+            const sRef = doc(db, 'classes', currentClassName, 'students', name);
+            await updateDoc(sRef, {
                 confirmed: false,
                 parentName: '',
-                confDate: ''
+                confDate: '',
+                done: []
             });
         }
-    }
+    };
 
-    async function handleResetConfirmations() {
+    window.handleResetConfirmations = async () => {
         if(confirm('Alle Bestätigungen der Eltern für diese Klasse zurücksetzen?')) {
-            const batch = db.batch();
-            classlist.forEach(name => {
-                batch.update(db.collection('classes').doc(currentClassName).collection('students').doc(name), {
+            const batch = writeBatch(db);
+            for (const name of classlist) {
+                batch.update(doc(db, 'classes', currentClassName, 'students', name), {
                     confirmed: false,
                     parentName: '',
                     confDate: ''
                 });
-            });
+            }
             await batch.commit();
         }
-    }
+    };
 
-    function syncStudentProgress() {
-        classlist.forEach(name => {
-            if (!studentProgress[name]) {
-                db.collection("classes").doc(currentClassName).collection("students").doc(name).set({
-                    done: [],
-                    confirmed: false,
-                    parentName: '',
-                    confDate: ''
-                }, { merge: true });
-            }
-        });
-    }
-
+    // UI Helpers
     function renderLegend() {
         const container = document.getElementById('legend-container');
         if (!container) return;
@@ -752,28 +766,28 @@ Erika Musterfrau 4b..." rows="6"></textarea>
         `).join('');
     }
 
-    function handleLogoClick() {
+    window.handleLogoClick = () => {
         if (!isLocked) {
             if (currentClassName) showView('start-view');
             else showView('class-selection');
         }
-    }
+    };
 
-    function handleStudentNav() {
+    window.handleStudentNav = () => {
         if (currentClassName) {
             if (isLocked && currentStudentName) showView('planer-view');
             else showView(currentStudentName ? 'planer-view' : 'start-view');
         } else {
             showView('class-selection');
         }
-    }
+    };
 
-    function toggleProgressCollapse() {
+    window.toggleProgressCollapse = () => {
         const container = document.getElementById('collapsible-progress-section');
         const content = document.getElementById('progress-collapse-content');
         container.classList.toggle('collapsed');
         content.classList.toggle('collapsed');
-    }
+    };
 
     function updateDropdownsAndTextarea() {
         const dropdown = document.getElementById('student-dropdown');
@@ -787,7 +801,6 @@ Erika Musterfrau 4b..." rows="6"></textarea>
             const opt = document.createElement('option');
             opt.value = name;
             opt.textContent = name;
-            opt.className = "whitespace-nowrap";
             dropdown.appendChild(opt.cloneNode(true));
             targetSelect.appendChild(opt);
         });
@@ -796,15 +809,15 @@ Erika Musterfrau 4b..." rows="6"></textarea>
         }
     }
 
-    function logoutStudent() {
+    window.logoutStudent = () => {
         if (isLocked) {
-            alert("Du kannst dich nicht abmelden, da dieses Gerät gesperrt ist. Bitte wende dich an deine Lehrperson.");
+            alert("Sitzung gesperrt. Bitte Lehrperson fragen.");
             return;
         }
         currentStudentName = null;
         localStorage.removeItem('currentStudentName');
         showView('start-view');
-    }
+    };
 
     function formatDate(dateStr) {
         if (!dateStr) return 'Kein Datum';
@@ -819,6 +832,7 @@ Erika Musterfrau 4b..." rows="6"></textarea>
         const student = studentProgress[currentStudentName];
         if (!student) return;
         document.getElementById('display-student-name').innerText = currentStudentName;
+        
         const logoutBtn = document.getElementById('btn-logout-student');
         if (isLocked) logoutBtn.classList.add('hidden');
         else logoutBtn.classList.remove('hidden');
@@ -832,15 +846,15 @@ Erika Musterfrau 4b..." rows="6"></textarea>
             relevantTasks.forEach(task => {
                 const isDone = (student.done || []).includes(task.id);
                 const locked = student.confirmed;
-                const subjectColor = subjects[task.subject]?.color || '#94a3b8';
-                const formattedDueDate = formatDate(task.dueDate || task.date);
+                const color = subjects[task.subject]?.color || '#94a3b8';
+                const formatted = formatDate(task.dueDate);
                 const card = document.createElement('div');
                 card.className = `p-6 bg-white rounded-2xl border-2 transition-all flex items-center gap-6 ${isDone ? 'border-emerald-100 opacity-60' : 'border-slate-100 shadow-sm'}`;
                 card.innerHTML = `
-                    <div class="subject-tag" style="background-color: ${subjectColor}">${task.subject}</div>
+                    <div class="subject-tag" style="background-color: ${color}">${task.subject}</div>
                     <div class="flex-1">
                         <p class="font-bold text-lg text-slate-800">${task.desc}</p>
-                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-1">Bis wann: ${formattedDueDate}</p>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-1">Bis: ${formatted}</p>
                     </div>
                     <button onclick="toggleTask('${task.id}')" ${locked ? 'disabled' : ''} class="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200 text-transparent hover:border-primary'}">
                         <span class="material-symbols-outlined text-xl">check</span>
@@ -866,38 +880,37 @@ Erika Musterfrau 4b..." rows="6"></textarea>
     document.getElementById('btn-login-admin').onclick = () => {
         if (document.getElementById('admin-pass').value === 'lehrer123') {
             showView('adminDashboard');
-            document.getElementById('admin-error').classList.add('hidden');
         } else {
             document.getElementById('admin-error').classList.remove('hidden');
         }
     };
 
-    function resetDeviceLock() {
-        if (confirm("Möchtest du die Identitätssperre auf diesem Gerät wirklich aufheben?")) {
+    window.resetDeviceLock = () => {
+        if (confirm("Identitätssperre aufheben?")) {
             localStorage.removeItem('doeltschi_locked');
             localStorage.removeItem('currentStudentName');
             location.reload();
         }
-    }
+    };
 
     function renderAdminTasks() {
         const list = document.getElementById('admin-task-list');
         if (!list) return;
         list.innerHTML = '';
         tasks.forEach(task => {
-            const subjectColor = subjects[task.subject]?.color || '#94a3b8';
-            const formattedDueDate = formatDate(task.dueDate || task.date);
+            const color = subjects[task.subject]?.color || '#94a3b8';
+            const formatted = formatDate(task.dueDate);
             const div = document.createElement('div');
             div.className = "flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm";
             div.innerHTML = `
-                <div class="flex items-center gap-4">
-                    <span class="w-10 h-10 rounded-lg flex items-center justify-center text-[11px] font-extrabold text-white uppercase" style="background-color: ${subjectColor}">${task.subject}</span>
+                <div class="flex items-center gap-4 overflow-hidden">
+                    <span class="w-10 h-10 rounded-lg flex items-center justify-center text-[11px] font-extrabold text-white uppercase shrink-0" style="background-color: ${color}">${task.subject}</span>
                     <div class="overflow-hidden">
                         <p class="font-bold text-slate-800 truncate">${task.desc}</p>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase whitespace-nowrap overflow-hidden text-ellipsis">👤 ${task.who === 'all' ? 'Alle' : task.who} • 🗓️ ${formattedDueDate}</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase truncate">👤 ${task.who === 'all' ? 'Alle' : task.who} • 🗓️ ${formatted}</p>
                     </div>
                 </div>
-                <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-red-500 transition-colors shrink-0">
+                <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-red-500 transition-colors shrink-0 px-2">
                     <span class="material-symbols-outlined">delete</span>
                 </button>
             `;
@@ -919,20 +932,18 @@ Erika Musterfrau 4b..." rows="6"></textarea>
             tr.className = "hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0";
             tr.innerHTML = `
                 <td class="px-8 py-5">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
-                            ${name.charAt(0)}
-                        </div>
-                        <div class="overflow-hidden min-w-0">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">${name.charAt(0)}</div>
+                        <div class="overflow-hidden">
                             <div class="font-bold text-slate-800 leading-tight student-name-cell">${name}</div>
-                            <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5 tracking-wider">${total} Aufgaben total</div>
+                            <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5 tracking-wider">${total} Aufgaben</div>
                         </div>
                     </div>
                 </td>
                 <td class="px-8 py-5">
                     <div class="space-y-1.5">
                         <div class="flex justify-between items-center text-[10px] font-bold">
-                            <span class="${percent === 100 ? 'text-emerald-600' : 'text-slate-500'}">${completed}/${total} erledigt</span>
+                            <span class="${percent === 100 ? 'text-emerald-600' : 'text-slate-500'}">${completed}/${total}</span>
                             <span class="text-slate-400">${percent}%</span>
                         </div>
                         <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -941,12 +952,12 @@ Erika Musterfrau 4b..." rows="6"></textarea>
                     </div>
                 </td>
                 <td class="px-8 py-5 text-center">
-                    ${s.confirmed ? `<span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full uppercase tracking-tight whitespace-nowrap">OK • ${s.confDate}</span>` : `<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-tight whitespace-nowrap">Ausstehend</span>`}
+                    ${s.confirmed ? `<span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full uppercase tracking-tight">OK • ${s.confDate}</span>` : `<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-tight">Ausstehend</span>`}
                 </td>
                 <td class="px-8 py-5 text-right">
                     <div class="flex items-center justify-end gap-1">
-                        <button onclick="resetStudentProgress('${name}')" class="p-2 text-slate-300 hover:text-orange-500 rounded-lg transition-all" title="Zurücksetzen"><span class="material-symbols-outlined text-xl">restart_alt</span></button>
-                        <button onclick="removeStudent('${name}')" class="p-2 text-slate-300 hover:text-red-500 rounded-lg transition-all" title="Löschen"><span class="material-symbols-outlined text-xl">delete</span></button>
+                        <button onclick="resetStudentProgress('${name}')" class="p-2 text-slate-300 hover:text-orange-500 rounded-lg transition-all"><span class="material-symbols-outlined text-xl">restart_alt</span></button>
+                        <button onclick="removeStudent('${name}')" class="p-2 text-slate-300 hover:text-red-500 rounded-lg transition-all"><span class="material-symbols-outlined text-xl">delete</span></button>
                     </div>
                 </td>
             `;
