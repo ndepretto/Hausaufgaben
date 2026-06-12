@@ -99,8 +99,17 @@
 <h2 class="text-5xl font-black text-slate-900 tracking-tight">Wer bist du?</h2>
 <p class="text-slate-500 font-medium text-lg">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
 </div>
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 w-full max-w-4xl mb-20" id="student-grid">
-<!-- Dynamically generated buttons -->
+<div class="w-full max-w-md mx-auto mb-20 space-y-6" id="student-selection-container">
+<!-- Centered Styled Dropdown -->
+<div class="relative group">
+<select class="w-full h-16 px-6 bg-white border-2 border-slate-200 rounded-2xl text-xl font-bold text-slate-700 shadow-sm appearance-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all cursor-pointer outline-none" id="student-dropdown" onchange="if(this.value) app.selectStudent(this.value)">
+<option disabled="" selected="" value="">Wähle deinen Namen...</option>
+<!-- Dynamically generated options -->
+</select>
+<div class="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-3xl">expand_more</span>
+</div>
+</div>
 </div>
 <div class="bg-white p-12 rounded-[48px] border-2 border-slate-100 shadow-2xl flex flex-col items-center max-w-sm mx-auto text-center">
 <h3 class="text-2xl font-bold mb-4">QR-Code scannen</h3>
@@ -444,7 +453,7 @@
                 document.getElementById('login-view').classList.remove('hidden');
             } else if (this.currentRole === 'student') {
                 document.getElementById('student-select-view').classList.remove('hidden');
-                this.renderStudentGrid();
+                this.renderStudentDropdown();
                 this.generateHomeQR();
             } else if (this.currentRole === 'student-tasks') {
                 document.getElementById('student-tasks-view').classList.remove('hidden');
@@ -455,16 +464,18 @@
             }
         },
 
-        renderStudentGrid() {
-            const grid = document.getElementById('student-grid');
-            grid.innerHTML = this.students.map(name => `
-                <button onclick="app.selectStudent('${name}')" class="p-10 bg-white border border-slate-200 rounded-2xl hover:border-primary hover:shadow-xl transition-all text-xl font-bold text-slate-700 shadow-sm flex items-center justify-center text-center leading-tight">
-                    ${name}
-                </button>
-            `).join('');
-            if (this.students.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-20 text-center text-slate-300 font-bold border-2 border-dashed border-slate-200 rounded-3xl">Keine Schüler angelegt</div>`;
+        renderStudentDropdown() {
+            const dropdown = document.getElementById('student-dropdown');
+            if (!dropdown) return;
+            
+            let optionsHtml = `<option value="" disabled selected>Wähle deinen Namen...</option>`;
+            if (this.students.length > 0) {
+                optionsHtml += this.students.map(name => `
+                    <option value="${name}">${name}</option>
+                `).join('');
             }
+            dropdown.innerHTML = optionsHtml;
+            dropdown.value = ""; // Reset selection
         },
 
         generateHomeQR() {
