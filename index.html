@@ -3,10 +3,11 @@
 <html class="light" lang="de"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
-<title>Wer – Was – Bis wann - Funktionaler Listen-Import Fix Final v2</title>
+<title>Wer – Was – Bis wann | Digitales Aufgabenheft</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
 <style>
         :root {
             --primary: #0058bc;
@@ -45,31 +46,27 @@
             color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        /* Subject Colors */
+        .bg-de { background-color: #ef4444; }
+        .bg-ma { background-color: #3b82f6; }
+        .bg-e { background-color: #10b981; }
+        .bg-nmg { background-color: #f59e0b; }
+        .bg-bg { background-color: #8b5cf6; }
+        .bg-mu { background-color: #ec4899; }
+        .bg-sp { background-color: #64748b; }
+        .bg-other { background-color: #94a3b8; }
         
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        #qrcode img { margin: 0 auto; }
+        .qrcode-box img { margin: 0 auto; }
         
         select { -webkit-appearance: none; }
 
-        .collapsible-content {
-            max-height: 2000px;
-            transition: max-height 0.3s ease-in-out, opacity 0.2s ease-in-out;
-            overflow: hidden;
-        }
-        .collapsible-content.collapsed {
-            max-height: 0;
-            opacity: 0;
-            pointer-events: none;
-        }
-        .rotate-icon {
-            transition: transform 0.3s ease;
-        }
-        .collapsed .rotate-icon {
-            transform: rotate(-90deg);
+        .name-cell {
+            white-space: nowrap;
         }
     </style>
 <script id="tailwind-config">
@@ -97,16 +94,16 @@
     </script>
 </head>
 <body class="min-h-screen text-slate-900 pb-40">
+<!-- Header -->
 <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
 <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
 <div class="flex items-center gap-3 cursor-pointer" onclick="handleLogoClick()">
 <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
 <span class="material-symbols-outlined text-2xl">assignment</span>
 </div>
-<h1 class="font-bold text-lg tracking-tight hidden sm:block">Döltschi – Wer – Was – Bis wann</h1>
+<h1 class="font-bold text-lg tracking-tight hidden sm:block">Wer – Was – Bis wann</h1>
 </div>
 <div class="flex items-center gap-2 sm:gap-4">
-<div class="hidden text-[10px] font-bold text-slate-400 bg-slate-100 px-3 py-1.5 rounded-full uppercase tracking-wider border border-slate-200" id="class-indicator"></div>
 <div class="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
 <span class="w-2 h-2 bg-emerald-500 rounded-full live-indicator"></span>
 <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Connected Live</span>
@@ -123,24 +120,8 @@
 </div>
 </header>
 <main class="max-w-3xl mx-auto px-6 py-12">
-<!-- View: Class Selection -->
-<section class="hidden space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500" id="view-class-selection">
-<div class="text-center space-y-3">
-<h2 class="text-4xl font-extrabold tracking-tight">Klasse wählen</h2>
-<p class="text-slate-500 text-lg">Gib den Namen deiner Klasse ein, um fortzufahren.</p>
-</div>
-<div class="glass-card p-8 sm:p-10 rounded-lg shadow-xl border border-slate-200">
-<div class="space-y-6">
-<div>
-<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Klassen-Name</label>
-<input class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-lg" id="class-input-field" onkeydown="if(event.key==='Enter') selectClass()" placeholder="z.B. Klasse-3b" type="text"/>
-</div>
-<button class="w-full py-4 bg-primary text-white font-bold text-lg rounded-xl hover:shadow-lg hover:shadow-primary/20 active:scale-[0.98] transition-all" id="btn-select-class" onclick="selectClass()">Klasse öffnen</button>
-</div>
-</div>
-</section>
 <!-- View: Start (Selector) -->
-<section class="hidden space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500" id="view-start-view">
+<section class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500" id="view-start-view">
 <div class="text-center space-y-3">
 <h2 class="text-4xl font-extrabold tracking-tight">Schüler-Ansicht</h2>
 <p class="text-slate-500 text-lg">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
@@ -159,16 +140,14 @@
 </div>
 </div>
 <button class="w-full py-4 bg-primary text-white font-bold text-lg rounded-xl hover:shadow-lg hover:shadow-primary/20 active:scale-[0.98] transition-all" id="btn-enter-student">Anmelden</button>
-<button class="w-full text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-slate-600 transition-colors" onclick="clearClass()">Klasse wechseln</button>
 </div>
 </div>
-<div class="glass-card p-8 rounded-lg border-2 border-primary/10 flex flex-col items-center text-center gap-6 shadow-md" id="qrcode-container">
+<div class="glass-card p-8 rounded-lg border-2 border-primary/10 flex flex-col items-center text-center gap-6 shadow-md">
 <div class="space-y-2">
 <h3 class="font-extrabold text-2xl text-slate-800">Als App nutzen</h3>
 <p class="text-slate-500 text-sm max-w-md mx-auto leading-relaxed">Scanne den Code mit deinem Handy, um das Aufgabenheft direkt auf deinem Home-Bildschirm zu speichern.</p>
 </div>
-<div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-inner flex items-center justify-center min-w-[200px] min-h-[200px]">
-<div id="qrcode"></div>
+<div class="p-6 bg-white border border-slate-100 rounded-2xl shadow-inner flex items-center justify-center min-w-[200px] min-h-[200px] qrcode-box" id="qrcode-student">
 </div>
 </div>
 </section>
@@ -202,7 +181,7 @@
 <div class="hidden flex flex-col items-center justify-center py-10 bg-emerald-50 rounded-xl border-2 border-emerald-100 text-emerald-700" id="confirmation-success">
 <span class="material-symbols-outlined text-5xl mb-4">check_circle</span>
 <p class="font-extrabold text-xl">Erfolgreich bestätigt</p>
-<p class="text-sm opacity-80">Datum: <span class="" id="conf-date-display">--</span></p>
+<p class="text-sm opacity-80">Datum: <span id="conf-date-display">--</span></p>
 <p class="text-xs mt-2 uppercase tracking-widest font-bold" id="conf-parent-display"></p>
 </div>
 </div>
@@ -217,7 +196,7 @@
 <h2 class="text-2xl font-bold">Lehrer-Modus</h2>
 <p class="text-slate-500 text-sm">Bitte gib das Passwort ein.</p>
 </div>
-<input class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl text-center text-lg focus:ring-2 focus:ring-primary/20" id="admin-pass" onkeydown="if(event.key==='Enter') document.getElementById('btn-login-admin').click()" placeholder="Passwort" type="password"/>
+<input class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl text-center text-lg focus:ring-2 focus:ring-primary/20" id="admin-pass" placeholder="Passwort" type="password"/>
 <button class="w-full py-4 bg-primary text-white font-bold rounded-xl hover:opacity-95 shadow-lg shadow-primary/10 transition-all" id="btn-login-admin">Anmelden</button>
 <p class="text-red-500 text-sm font-medium hidden" id="admin-error">Falsches Passwort.</p>
 </div>
@@ -228,13 +207,35 @@
 <h2 class="text-4xl font-extrabold tracking-tight">Lehrer Dashboard</h2>
 <button class="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-lg transition-colors" onclick="showView('start-view')">Abmelden</button>
 </div>
+<!-- Share & QR Code Section (RESTORED) -->
+<div class="glass-card p-8 rounded-lg border border-slate-200 shadow-sm space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="font-bold text-xl flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">qr_code_2</span>
+                        Link &amp; QR-Code teilen
+                    </h3>
+</div>
+<div class="flex flex-col md:flex-row items-center gap-8">
+<div class="flex-1 space-y-4">
+<p class="text-sm text-slate-500">Teile diesen Link mit den Schülern oder lass sie den QR-Code scannen.</p>
+<div class="flex items-center gap-2">
+<input class="flex-1 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono" id="share-link-input" readonly="" type="text" value=""/>
+<button class="p-3 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors" onclick="copyShareLink()">
+<span class="material-symbols-outlined">content_copy</span>
+</button>
+</div>
+</div>
+<div class="p-4 bg-white border border-slate-100 rounded-xl shadow-inner qrcode-box" id="qrcode-admin">
+</div>
+</div>
+</div>
 <!-- Session & Lock Management -->
 <div class="glass-card p-8 rounded-lg border-2 border-orange-200 shadow-sm space-y-6 bg-orange-50/30">
 <div class="flex items-center justify-between">
 <h3 class="font-bold text-xl flex items-center gap-3">
 <span class="material-symbols-outlined text-orange-600">lock_open</span>
-                    Identitätsschutz / Sitzungssperre
-                </h3>
+                        Identitätsschutz / Sitzungssperre
+                    </h3>
 </div>
 <div class="flex flex-col sm:flex-row items-center gap-4">
 <p class="text-sm text-slate-600 flex-1">Falls ein Schüler sein Gerät gesperrt hat (Sitzungsschutz), kannst du hier die Sperre für dieses Gerät aufheben.</p>
@@ -243,763 +244,563 @@
 </div>
 <!-- Classlist Management -->
 <div class="glass-card p-8 rounded-lg border border-slate-200 shadow-sm space-y-6">
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+<div class="flex items-center justify-between">
 <h3 class="font-bold text-xl flex items-center gap-3">
 <span class="material-symbols-outlined text-primary">groups</span>
-                    Klassenliste verwalten
-                </h3>
-<div class="flex flex-wrap gap-2">
-<input accept=".txt" class="hidden" id="import-list" onchange="importClass(event)" type="file"/>
-<button class="text-[10px] font-bold uppercase bg-slate-100 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors border border-slate-200" onclick="document.getElementById('import-list').click()">
-                        Import (.txt)
-                    </button>
-<button class="text-[10px] font-bold uppercase bg-slate-100 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-200 transition-colors border border-slate-200" onclick="exportClassList()">
-                        Export (.txt)
-                    </button>
-<button class="text-[10px] font-bold uppercase bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors border border-red-100" onclick="clearClasslistTextarea()">
-                        Liste leeren
-                    </button>
+                        Klassenliste verwalten
+                    </h3>
+<div class="flex gap-2">
+<input accept=".docx" class="hidden" id="import-word" onchange="handleWordImport(event)" type="file"/>
+<button class="text-[10px] font-bold uppercase bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors" onclick="document.getElementById('import-word').click()">Word-Liste importieren</button>
+<input accept=".txt" class="hidden" id="import-list" type="file"/>
+<button class="text-[10px] font-bold uppercase bg-slate-100 text-slate-600 px-4 py-2 rounded-lg" onclick="document.getElementById('import-list').click()">Import (.txt)</button>
 </div>
 </div>
 <div class="space-y-4">
-<p class="text-sm text-slate-500">Ein Name pro Zeile eingeben. Nach dem Import bitte speichern.</p>
+<p class="text-sm text-slate-500">Ein Name pro Zeile eingeben oder Datei importieren.</p>
 <textarea class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10 font-mono text-sm" id="classlist-textarea" placeholder="Max Mustermann
 Erika Musterfrau..." rows="6"></textarea>
-<button class="w-full py-4 bg-primary text-white font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all shadow-md active:scale-[0.99]" id="btn-save-classlist" onclick="saveClassList()">
-                    Änderungen speichern
-                </button>
+<button class="w-full py-3 bg-primary text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-md" id="btn-save-classlist">Klassenliste speichern</button>
 </div>
 </div>
 <!-- Task Assignment -->
 <div class="glass-card p-8 rounded-lg border border-slate-200 shadow-sm space-y-8">
 <h3 class="font-bold text-xl flex items-center gap-3">
 <span class="material-symbols-outlined text-primary">add_task</span>
-                Neue Aufgabe erstellen
-            </h3>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    Neue Aufgabe erstellen
+                </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 <div>
 <label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Fach</label>
-<div class="relative">
-<select class="w-full p-3.5 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10 appearance-none" id="task-subject">
-<!-- Subjects injected by JS -->
+<select class="w-full p-3.5 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10" id="task-subject">
+<option value="de">Deutsch</option>
+<option value="ma">Mathematik</option>
+<option value="e">Englisch</option>
+<option value="nmg">NMG</option>
+<option value="bg">BG</option>
+<option value="mu">Musik</option>
+<option value="sp">Sport</option>
+<option value="other">Anderes</option>
 </select>
-<div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-<span class="material-symbols-outlined">expand_more</span>
-</div>
-</div>
 </div>
 <div>
 <label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Empfänger</label>
-<div class="relative">
-<select class="w-full p-3.5 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10 appearance-none" id="task-target">
+<select class="w-full p-3.5 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10" id="task-target">
 <option value="all">Alle</option>
 </select>
-<div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-<span class="material-symbols-outlined">expand_more</span>
 </div>
-</div>
+<div class="md:col-span-2">
+<label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Beschreibung</label>
+<input class="w-full p-3.5 bg-slate-50 border-slate-200 rounded-xl" id="task-desc" placeholder="Hausaufgabe..." type="text"/>
 </div>
 <div>
-<label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Frist (Datum)</label>
-<input class="w-full p-3.5 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10" id="task-date" type="date"/>
+<label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Frist (TT.MM.JJJJ)</label>
+<input class="w-full p-3.5 bg-slate-50 border-slate-200 rounded-xl" id="task-date" placeholder="z.B. 24.12.2024" type="text"/>
 </div>
-<div class="md:col-span-2 lg:col-span-3">
-<label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Beschreibung</label>
-<input class="w-full p-3.5 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10" id="task-desc" onkeydown="if(event.key==='Enter') addTask()" placeholder="Hausaufgabe..." type="text"/>
-</div>
-<div class="md:col-span-2 lg:col-span-3">
-<button class="w-full py-4 bg-primary text-white font-bold rounded-xl shadow-md hover:bg-blue-700 transition-all flex items-center justify-center gap-2" id="btn-add-task" onclick="addTask()">
-<span class="material-symbols-outlined">add</span> Aufgabe zuweisen
-                    </button>
+<div class="flex items-end">
+<button class="w-full py-3.5 bg-primary text-white font-bold rounded-xl shadow-md hover:bg-blue-700 transition-all" id="btn-add-task">Aufgabe zuweisen</button>
 </div>
 </div>
 </div>
-<!-- Progress Tracking (Collapsible) -->
-<div class="space-y-6" id="collapsible-progress-section">
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer group" onclick="toggleProgressCollapse()">
-<h3 class="font-bold text-xl flex items-center gap-2">
-<span class="material-symbols-outlined text-primary rotate-icon">expand_more</span>
-                    Lernfortschritt &amp; Bestätigung
-                </h3>
-<div class="flex gap-2">
-<button class="text-[10px] font-bold uppercase bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors border border-red-100" id="btn-reset-confirmations" onclick="event.stopPropagation(); handleResetConfirmations()">Bestätigungen Reset</button>
+<!-- Progress Tracking -->
+<div class="space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="font-bold text-xl">Lernfortschritt &amp; Bestätigung</h3>
+<button class="text-[10px] font-bold uppercase bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition-colors" id="btn-reset-confirmations">Bestätigungen Reset</button>
 </div>
-</div>
-<div class="collapsible-content" id="progress-collapse-content">
-<div class="glass-card rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse min-w-[700px]">
+<div class="glass-card rounded-lg border border-slate-200 overflow-hidden overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[600px]">
 <thead>
-<tr class="bg-slate-50/50 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-<th class="px-8 py-5 border-b border-slate-100">Schüler/in</th>
-<th class="px-8 py-5 border-b border-slate-100 w-48">Erledigte Aufgaben</th>
-<th class="px-8 py-5 border-b border-slate-100 text-center">Status Eltern</th>
-<th class="px-8 py-5 border-b border-slate-100 text-right">Aktionen</th>
+<tr class="bg-slate-50 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+<th class="px-8 py-4">Schüler/in</th>
+<th class="px-8 py-4 text-center">Aufgaben</th>
+<th class="px-8 py-4 text-center">Bestätigung</th>
+<th class="px-8 py-4 text-right">Optionen</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-slate-50" id="progress-table-body">
-<!-- Injected by updateProgressTable() -->
-</tbody>
+<tbody class="divide-y divide-slate-100" id="progress-table-body"></tbody>
 </table>
 </div>
 </div>
-</div>
-</div>
 <div class="space-y-6">
-<div class="flex items-center justify-between">
 <h3 class="font-bold text-xl">Aktive Aufgaben verwalten</h3>
-<button class="flex items-center gap-2 px-4 py-2 bg-white border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all text-[10px] font-bold uppercase rounded-lg shadow-sm" onclick="deleteAllTasks()">
-<span class="material-symbols-outlined text-sm">delete_sweep</span>
-                    Alle Aufgaben löschen
-                </button>
-</div>
 <div class="grid gap-3" id="admin-task-list"></div>
-</div>
-<!-- Danger Zone -->
-<div class="mt-16 pt-8 border-t border-red-100">
-<div class="glass-card p-8 rounded-lg border-2 border-red-200 bg-red-50/30 shadow-sm space-y-6">
-<div class="flex items-center gap-3 text-red-700">
-<span class="material-symbols-outlined">warning</span>
-<h3 class="font-bold text-xl text-red-800">Gefahrenzone</h3>
-</div>
-<div class="flex flex-col sm:flex-row items-center gap-6">
-<div class="flex-1">
-<p class="text-sm text-red-700 font-semibold mb-1">Klasse vollständig löschen</p>
-<p class="text-xs text-slate-500 leading-relaxed">Diese Aktion löscht die gesamte Klasse, alle Schüler-Namen und alle Aufgaben unwiderruflich aus der Datenbank.</p>
-</div>
-<button class="whitespace-nowrap px-8 py-4 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:bg-red-700 transition-all flex items-center gap-2" onclick="deleteClassCompletely()">
-<span class="material-symbols-outlined">delete_forever</span>
-                    Klasse vollständig löschen
-                </button>
-</div>
-</div>
 </div>
 </section>
 </main>
+<!-- Footer -->
 <footer class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-200 pt-4 pb-6 px-6 z-40">
 <div class="max-w-5xl mx-auto space-y-4 text-center">
-<div class="flex flex-wrap justify-center gap-x-6 gap-y-2" id="legend-container">
-<!-- Legend items injected by JS -->
+<div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-de"></span> <span class="text-[10px] font-bold uppercase text-slate-500">Deutsch</span></div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-ma"></span> <span class="text-[10px] font-bold uppercase text-slate-500">Mathe</span></div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-e"></span> <span class="text-[10px] font-bold uppercase text-slate-500">Englisch</span></div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-nmg"></span> <span class="text-[10px] font-bold uppercase text-slate-500">NMG</span></div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-bg"></span> <span class="text-[10px] font-bold uppercase text-slate-500">BG</span></div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-mu"></span> <span class="text-[10px] font-bold uppercase text-slate-500">Musik</span></div>
+<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-sp"></span> <span class="text-[10px] font-bold uppercase text-slate-500">Sport</span></div>
 </div>
 <p class="text-[10px] font-bold uppercase text-slate-400 tracking-[0.2em]">© 2024 Digitales Aufgabenheft • Bulletproof Master</p>
 </div>
 </footer>
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-    // Firebase Config
-    const firebaseConfig = {
-        apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
-        authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
-        projectId: "doeltschi-hausaufgabenplaner",
-        storageBucket: "doeltschi-hausaufgabenplaner.firebasestorage.app",
-        messagingSenderId: "741131007424",
-        appId: "1:741131007424:web:04427f839b7eb86aa9c425",
-        measurementId: "G-C6GTQJ8C1D"
-    };
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
+            authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
+            projectId: "doeltschi-hausaufgabenplaner",
+            storageBucket: "doeltschi-hausaufgabenplaner.firebasestorage.app",
+            messagingSenderId: "741131007424",
+            appId: "1:741131007424:web:04427f839b7eb86aa9c425",
+            measurementId: "G-C6GTQJ8C1D"
+        };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-    // State
-    let currentClassName = new URLSearchParams(window.location.search).get('class') || localStorage.getItem('currentClassName') || null;
-    let currentStudentName = localStorage.getItem('currentStudentName') || null;
-    let isLocked = localStorage.getItem('doeltschi_locked') === 'true';
-    let classlist = [];
-    let tasks = [];
-    let studentProgress = {};
-    let unsubscribeList = [];
+        // App State
+        window.selectedStudent = localStorage.getItem('currentStudentName') || null;
+        let isLocked = localStorage.getItem('doeltschi_locked') === 'true';
+        let classlist = [];
+        let tasks = [];
+        let studentProgress = {};
 
-    const subjects = {
-        'DE': { name: 'Deutsch', color: '#ef4444' },
-        'MA': { name: 'Mathe', color: '#3b82f6' },
-        'E': { name: 'Englisch', color: '#eab308' },
-        'F': { name: 'Französisch', color: '#22c55e' },
-        'RZG': { name: 'RZG', color: '#f97316' },
-        'NT': { name: 'NT', color: '#06b6d4' },
-        'MU': { name: 'Musik', color: '#a855f7' },
-        'BS': { name: 'Sport', color: '#d97706' },
-        'MI': { name: 'Medien', color: '#64748b' },
-        'WAH': { name: 'WAH', color: '#f43f5e' }
-    };
-
-    window.onload = () => {
-        renderLegend();
-        initSubjectSelect();
-        
-        if (currentClassName) {
+        // Initialization
+        window.onload = () => {
             initSync();
-            if (isLocked && currentStudentName) {
+            
+            if (isLocked && window.selectedStudent) {
                 showView('planer-view');
             } else {
-                showView(currentStudentName ? 'planer-view' : 'start-view');
+                showView(window.selectedStudent ? 'planer-view' : 'start-view');
             }
-        } else {
-            showView('class-selection');
+        };
+
+        function showView(viewId) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            const target = document.getElementById('view-' + viewId);
+            if (target) target.classList.remove('hidden');
+            
+            // Update nav styling
+            const navStudent = document.getElementById('nav-student');
+            const navAdmin = document.getElementById('nav-admin');
+            navStudent.classList.remove('bg-primary/10', 'text-primary');
+            navAdmin.classList.remove('bg-primary/10', 'text-primary');
+            
+            if (viewId === 'start-view' || viewId === 'planer-view') navStudent.classList.add('bg-primary/10', 'text-primary');
+            if (viewId === 'adminLogin' || viewId === 'adminDashboard') navAdmin.classList.add('bg-primary/10', 'text-primary');
+            
+            if (viewId === 'start-view') generateQRCodes();
+            if (viewId === 'adminDashboard') {
+                generateQRCodes();
+                const shareInput = document.getElementById('share-link-input');
+                if (shareInput) shareInput.value = window.location.href;
+            }
+            if (window.selectedStudent && viewId === 'planer-view') refreshStudentUI();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        const classlistTextarea = document.getElementById('classlist-textarea');
-        if (classlistTextarea) {
-            classlistTextarea.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.stopPropagation();
+        function handleLogoClick() {
+            if (!isLocked) {
+                showView('start-view');
+            }
+        }
+
+        function handleStudentNav() {
+            if (isLocked && window.selectedStudent) {
+                showView('planer-view');
+            } else {
+                showView(window.selectedStudent ? 'planer-view' : 'start-view');
+            }
+        }
+
+        function generateQRCodes() {
+            // Student View QR
+            const qrStudentEl = document.getElementById("qrcode-student");
+            if (qrStudentEl) {
+                qrStudentEl.innerHTML = "";
+                new QRCode(qrStudentEl, {
+                    text: window.location.href,
+                    width: 180,
+                    height: 180,
+                    colorDark: "#0058bc",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+
+            // Admin Dashboard QR
+            const qrAdminEl = document.getElementById("qrcode-admin");
+            if (qrAdminEl) {
+                qrAdminEl.innerHTML = "";
+                new QRCode(qrAdminEl, {
+                    text: window.location.href,
+                    width: 140,
+                    height: 140,
+                    colorDark: "#0058bc",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+        }
+
+        function copyShareLink() {
+            const input = document.getElementById('share-link-input');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(input.value);
+            alert("Link kopiert!");
+        }
+
+        // Data Sync
+        function initSync() {
+            // Sync Classlist
+            db.collection("config").doc("classlist").onSnapshot(doc => {
+                if (doc.exists) {
+                    classlist = doc.data().names || [];
+                    updateDropdownsAndTextarea();
+                    syncStudentProgress();
+                }
+            });
+
+            // Sync Tasks
+            db.collection("tasks").orderBy("date").onSnapshot(snap => {
+                tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderAdminTasks();
+                if (window.selectedStudent) refreshStudentUI();
+                updateProgressTable();
+            });
+
+            // Sync Student Data
+            db.collection("students").onSnapshot(snap => {
+                snap.forEach(doc => {
+                    studentProgress[doc.id] = doc.data();
+                });
+                updateProgressTable();
+                if (window.selectedStudent) refreshStudentUI();
+            });
+        }
+
+        function updateDropdownsAndTextarea() {
+            const dropdown = document.getElementById('student-dropdown');
+            const targetSelect = document.getElementById('task-target');
+            const textarea = document.getElementById('classlist-textarea');
+            
+            if (!dropdown || !targetSelect) return;
+
+            const currentSelection = dropdown.value;
+            dropdown.innerHTML = '<option disabled selected value="">Wähle deinen Namen...</option>';
+            targetSelect.innerHTML = '<option value="all">Alle</option>';
+            
+            classlist.sort().forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                dropdown.appendChild(opt.cloneNode(true));
+                targetSelect.appendChild(opt);
+            });
+
+            if (currentSelection && classlist.includes(currentSelection)) {
+                dropdown.value = currentSelection;
+            }
+
+            if (document.activeElement !== textarea) {
+                textarea.value = classlist.join('\n');
+            }
+        }
+
+        function syncStudentProgress() {
+            classlist.forEach(name => {
+                if (!studentProgress[name]) {
+                    db.collection("students").doc(name).set({
+                        done: [],
+                        confirmed: false,
+                        parentName: '',
+                        confDate: ''
+                    }, { merge: true });
                 }
             });
         }
-    };
 
-    function showView(viewId) {
-        document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-        const target = document.getElementById('view-' + viewId);
-        if (target) target.classList.remove('hidden');
-        
-        const navStudent = document.getElementById('nav-student');
-        const navAdmin = document.getElementById('nav-admin');
-        navStudent.classList.remove('bg-primary/10', 'text-primary');
-        navAdmin.classList.remove('bg-primary/10', 'text-primary');
-        
-        if (['start-view', 'planer-view', 'class-selection'].includes(viewId)) navStudent.classList.add('bg-primary/10', 'text-primary');
-        if (['adminLogin', 'adminDashboard'].includes(viewId)) navAdmin.classList.add('bg-primary/10', 'text-primary');
-        
-        if (viewId === 'start-view') generateQRCode();
-        if (currentStudentName && viewId === 'planer-view') refreshStudentUI();
-        
-        const ci = document.getElementById('class-indicator');
-        if (currentClassName) {
-            ci.innerText = currentClassName;
-            ci.classList.remove('hidden');
-        } else {
-            ci.classList.add('hidden');
+        // Student Logic
+        document.getElementById('btn-enter-student').onclick = () => {
+            const name = document.getElementById('student-dropdown').value;
+            if (!name) return;
+            
+            window.selectedStudent = name;
+            isLocked = true;
+            
+            localStorage.setItem('currentStudentName', name);
+            localStorage.setItem('doeltschi_locked', 'true');
+            
+            refreshStudentUI();
+            showView('planer-view');
+        };
+
+        function logoutStudent() {
+            if (isLocked) {
+                alert("Sitzung gesperrt. Bitte Lehrperson fragen.");
+                return;
+            }
+            window.selectedStudent = null;
+            localStorage.removeItem('currentStudentName');
+            showView('start-view');
         }
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+        function refreshStudentUI() {
+            const student = studentProgress[window.selectedStudent];
+            if (!student) return;
+            
+            document.getElementById('display-student-name').innerText = window.selectedStudent;
+            
+            const logoutBtn = document.getElementById('btn-logout-student');
+            if (isLocked) {
+                logoutBtn.classList.add('hidden');
+            } else {
+                logoutBtn.classList.remove('hidden');
+            }
+            
+            const container = document.getElementById('task-list-container');
+            const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === window.selectedStudent);
+            container.innerHTML = '';
 
-    // Class Logic
-    function selectClass() {
-        const input = document.getElementById('class-input-field').value.trim();
-        if (!input) return alert('Bitte einen Klassennamen eingeben');
-        
-        currentClassName = input;
-        localStorage.setItem('currentClassName', input);
-        
-        const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?class=' + input;
-        window.history.pushState({path:newurl},'',newurl);
-        
-        initSync();
-        showView('start-view');
-    }
+            if (relevantTasks.length === 0) {
+                container.innerHTML = '<div class="py-16 text-center text-slate-400 italic">Keine anstehenden Aufgaben.</div>';
+            } else {
+                relevantTasks.forEach(task => {
+                    const isDone = (student.done || []).includes(task.id);
+                    const locked = student.confirmed;
+                    const card = document.createElement('div');
+                    card.className = `p-6 bg-white rounded-2xl border-2 transition-all flex items-center gap-6 ${isDone ? 'border-emerald-100 opacity-60' : 'border-slate-100 shadow-sm'}`;
+                    card.innerHTML = `
+                        <div class="subject-tag bg-${task.subject}">${task.subject.toUpperCase()}</div>
+                        <div class="flex-1">
+                            <p class="font-bold text-lg text-slate-800">${task.desc}</p>
+                            <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-1">Frist: ${task.date}</p>
+                        </div>
+                        <button onclick="toggleTask('${task.id}')" ${locked ? 'disabled' : ''} class="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200 text-transparent hover:border-primary'}">
+                            <span class="material-symbols-outlined text-xl">check</span>
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            }
 
-    function clearClass() {
-        localStorage.removeItem('currentClassName');
-        localStorage.removeItem('currentStudentName');
-        localStorage.removeItem('doeltschi_locked');
-        window.location.search = "";
-    }
+            const form = document.getElementById('confirmation-form');
+            const success = document.getElementById('confirmation-success');
+            if (student.confirmed) {
+                form.classList.add('hidden');
+                success.classList.remove('hidden');
+                document.getElementById('conf-date-display').innerText = student.confDate;
+                document.getElementById('conf-parent-display').innerText = student.parentName;
+            } else {
+                form.classList.remove('hidden');
+                success.classList.add('hidden');
+            }
+        }
 
-    function initSync() {
-        try {
-            unsubscribeList.forEach(unsub => unsub());
-            unsubscribeList = [];
-
-            if (!currentClassName) return;
-
-            const classRef = db.collection("classes").doc(currentClassName);
-
-            const unsubConfig = classRef.collection("config").doc("classlist").onSnapshot(doc => {
-                try {
-                    if (doc.exists) {
-                        classlist = doc.data().names || [];
-                        updateDropdownsAndTextarea();
-                        syncStudentProgress();
-                    } else {
-                        classlist = [];
-                        updateDropdownsAndTextarea();
-                    }
-                } catch (e) { console.error(e); }
-            }, (err) => { console.warn('Sync-Fehler oder Klasse gelöscht: ' + err.message); });
-            unsubscribeList.push(unsubConfig);
-
-            const unsubTasks = classRef.collection("tasks").orderBy("createdAt", "desc").onSnapshot(snap => {
-                try {
-                    tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    renderAdminTasks();
-                    if (currentStudentName) refreshStudentUI();
-                    updateProgressTable();
-                } catch (e) { console.error(e); }
-            }, (err) => { console.warn('Aufgaben-Fehler: ' + err.message); });
-            unsubscribeList.push(unsubTasks);
-
-            const unsubStudents = classRef.collection("students").onSnapshot(snap => {
-                try {
-                    snap.forEach(doc => { studentProgress[doc.id] = doc.data(); });
-                    updateProgressTable();
-                    if (currentStudentName) refreshStudentUI();
-                } catch (e) { console.error(e); }
-            }, (err) => { console.warn('Schülerdaten-Fehler: ' + err.message); });
-            unsubscribeList.push(unsubStudents);
-        } catch (error) { console.error('Initialisierungsfehler: ' + error.message); }
-    }
-
-    function generateQRCode() {
-        const qrEl = document.getElementById("qrcode");
-        if (!qrEl) return;
-        qrEl.innerHTML = "";
-        const url = window.location.protocol + "//" + window.location.host + window.location.pathname + '?class=' + currentClassName;
-        new QRCode(qrEl, {
-            text: url,
-            width: 180,
-            height: 180,
-            colorDark: "#0058bc",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
-    }
-
-    // Student UI Logic
-    document.getElementById('btn-enter-student').onclick = () => {
-        const name = document.getElementById('student-dropdown').value;
-        if (!name) return;
-        currentStudentName = name;
-        isLocked = true;
-        localStorage.setItem('currentStudentName', name);
-        localStorage.setItem('doeltschi_locked', 'true');
-        refreshStudentUI();
-        showView('planer-view');
-    };
-
-    async function toggleTask(taskId) {
-        try {
-            const student = studentProgress[currentStudentName];
+        async function toggleTask(taskId) {
+            if (!window.selectedStudent) return;
+            const student = studentProgress[window.selectedStudent];
             if (!student || student.confirmed) return;
             const done = student.done || [];
             const newDone = done.includes(taskId) ? done.filter(id => id !== taskId) : [...done, taskId];
-            await db.collection('classes').doc(currentClassName).collection('students').doc(currentStudentName).update({ done: newDone });
-        } catch (error) { alert('Statusfehler: ' + error.message); }
-    }
+            await db.collection('students').doc(window.selectedStudent).update({ done: newDone });
+        }
 
-    document.getElementById('btn-confirm-parent').onclick = async () => {
-        try {
+        document.getElementById('btn-confirm-parent').onclick = async () => {
+            if (!window.selectedStudent) return;
             const pName = document.getElementById('parent-name').value.trim();
             if (!pName) return alert('Bitte Name der Eltern eingeben');
             const date = new Date().toLocaleDateString('de-CH');
-            await db.collection('classes').doc(currentClassName).collection('students').doc(currentStudentName).update({
+            await db.collection('students').doc(window.selectedStudent).update({
                 confirmed: true, parentName: pName, confDate: date
             });
-        } catch (error) { alert('Speicherfehler: ' + error.message); }
-    };
+        };
 
-    // Class Management
-    function exportClassList() {
-        const text = document.getElementById('classlist-textarea').value;
-        if (!text.trim()) return alert("Keine Liste zum Exportieren vorhanden.");
-        
-        const blob = new Blob([text], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `klassenliste_${currentClassName || 'export'}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }
-
-    function importClass(event) {
-        const input = event.target;
-        if (!input.files || !input.files[0]) return;
-        
-        const file = input.files[0];
-        const reader = new FileReader();
-
-        reader.onload = (e) => {
-            try {
-                const content = e.target.result;
-                const names = content.split(/[\n\r,]+/)
-                                    .map(n => n.trim())
-                                    .filter(n => n !== "");
-
-                if (names.length === 0) {
-                    alert("Keine gültigen Namen in der Datei gefunden.");
-                    return;
-                }
-
-                const textarea = document.getElementById('classlist-textarea');
-                const existingText = textarea.value.trim();
-                const newText = existingText 
-                    ? existingText + '\n' + names.join('\n')
-                    : names.join('\n');
-                
-                textarea.value = newText;
-                alert(`Erfolgreich geladen: ${names.length} Namen wurden zum Textfeld hinzugefügt. Vergessen Sie nicht, die Änderungen zu speichern.`);
-                input.value = '';
-            } catch (err) {
-                console.error("FileReader Error:", err);
-                alert("Fehler beim Lesen der Datei: " + err.message);
+        // Admin Logic
+        document.getElementById('btn-login-admin').onclick = () => {
+            if (document.getElementById('admin-pass').value === 'lehrer123') {
+                showView('adminDashboard');
+                document.getElementById('admin-error').classList.add('hidden');
+            } else {
+                document.getElementById('admin-error').classList.remove('hidden');
             }
         };
 
-        reader.onerror = (err) => {
-            alert("Fehler beim Datei-Import: Der Dateizugriff wurde verweigert oder die Datei ist beschädigt.");
-        };
-
-        reader.readAsText(file);
-    }
-
-    function clearClasslistTextarea() {
-        if (confirm("Möchtest du das Textfeld der Klassenliste wirklich leeren? Die Liste wird erst in der Cloud gelöscht, wenn du danach auf 'Änderungen speichern' klickst.")) {
-            document.getElementById('classlist-textarea').value = '';
+        function resetDeviceLock() {
+            if (confirm("Identitätssperre auf diesem Gerät wirklich aufheben?")) {
+                localStorage.removeItem('doeltschi_locked');
+                localStorage.removeItem('currentStudentName');
+                window.selectedStudent = null;
+                location.reload();
+            }
         }
-    }
 
-    async function saveClassList() {
-        try {
+        document.getElementById('btn-save-classlist').onclick = async () => {
             const text = document.getElementById('classlist-textarea').value;
             const names = text.split('\n').map(n => n.trim()).filter(n => n !== "");
-            
-            if (confirm(`Soll die Klassenliste mit ${names.length} Schülern gespeichert werden?`)) {
-                await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names });
-                alert("Klassenliste erfolgreich gespeichert.");
+            if (confirm(`Klassenliste speichern?`)) {
+                await db.collection("config").doc("classlist").set({ names });
+                alert("Gespeichert.");
             }
-        } catch (error) {
-            console.error("Firebase Fehler:", error);
-            alert('Fehler beim Speichern der Klassenliste: ' + (error.message || 'Unbekannter Fehler'));
-        }
-    }
+        };
 
-    // Task Logic
-    async function addTask() {
-        try {
+        document.getElementById('import-list').onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                document.getElementById('classlist-textarea').value = event.target.result;
+            };
+            reader.readAsText(file);
+        };
+
+        function handleWordImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                mammoth.extractRawText({ arrayBuffer: arrayBuffer }).then(function(result) {
+                    const text = result.value;
+                    const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
+                    const formattedNames = [];
+                    for (let i = 0; i < lines.length; i += 3) {
+                        const vorname = lines[i] || "";
+                        const nachname = lines[i + 1] || "";
+                        const klasse = lines[i + 2] || "";
+                        if (vorname || nachname || klasse) {
+                            formattedNames.push(`${vorname} ${nachname} ${klasse}`.trim());
+                        }
+                    }
+                    document.getElementById('classlist-textarea').value = formattedNames.join('\n');
+                    event.target.value = '';
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        document.getElementById('btn-add-task').onclick = async () => {
             const subject = document.getElementById('task-subject').value;
             const who = document.getElementById('task-target').value;
             const desc = document.getElementById('task-desc').value;
-            const dueDate = document.getElementById('task-date').value;
-            if (!desc || !dueDate) return alert('Bitte Beschreibung und Datum ausfüllen');
+            const date = document.getElementById('task-date').value;
+            if (!desc || !date) return alert('Bitte Felder füllen');
             
-            await db.collection('classes').doc(currentClassName).collection('tasks').add({
-                subject, who, desc, dueDate, 
+            await db.collection('tasks').add({
+                subject, who, desc, date, 
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            
             document.getElementById('task-desc').value = '';
-            document.getElementById('task-date').value = '';
-        } catch (error) { alert('Zuweisungs-Fehler: ' + error.message); }
-    }
+        };
 
-    async function deleteTask(id) {
-        try {
-            if(confirm('Aufgabe wirklich löschen?')) await db.collection('classes').doc(currentClassName).collection('tasks').doc(id).delete();
-        } catch (error) { alert('Lösch-Fehler: ' + error.message); }
-    }
-
-    async function deleteAllTasks() {
-        try {
-            if (confirm('Möchtest du wirklich ALLE Aufgaben für diese Klasse unwiderruflich löschen?')) {
-                const snapshot = await db.collection('classes').doc(currentClassName).collection('tasks').get();
-                const batch = db.batch();
-                snapshot.docs.forEach(doc => batch.delete(doc.ref));
-                await batch.commit();
-            }
-        } catch (error) { alert('Fehler: ' + error.message); }
-    }
-
-    async function deleteClassCompletely() {
-        if (!currentClassName) return;
-        
-        const confirmed = confirm(`Möchten Sie die gesamte Klasse [${currentClassName}] inklusive aller Namen und Aufgaben unwiderruflich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.`);
-        
-        if (confirmed) {
-            try {
-                const classRef = db.collection('classes').doc(currentClassName);
-                
-                // 1. Delete tasks sub-collection
-                const tasksSnap = await classRef.collection('tasks').get();
-                const studentsSnap = await classRef.collection('students').get();
-                const configSnap = await classRef.collection('config').get();
-
-                const batch = db.batch();
-                
-                tasksSnap.forEach(doc => batch.delete(doc.ref));
-                studentsSnap.forEach(doc => batch.delete(doc.ref));
-                configSnap.forEach(doc => batch.delete(doc.ref));
-                
-                // 2. Delete the main document
-                batch.delete(classRef);
-                
-                await batch.commit();
-                
-                // Clean up local state
-                localStorage.removeItem('currentClassName');
-                localStorage.removeItem('currentStudentName');
-                localStorage.removeItem('doeltschi_locked');
-                
-                // Redirect back to start
-                location.href = window.location.href.split('?')[0];
-            } catch (error) {
-                console.error("Löschfehler:", error);
-                alert("Ein Fehler ist beim Löschen aufgetreten: " + error.message);
-            }
+        function renderAdminTasks() {
+            const list = document.getElementById('admin-task-list');
+            if (!list) return;
+            list.innerHTML = '';
+            tasks.forEach(task => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm";
+                div.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <span class="w-10 h-10 bg-${task.subject} rounded-lg flex items-center justify-center text-[11px] font-extrabold text-white uppercase">${task.subject}</span>
+                        <div>
+                            <p class="font-bold text-slate-800">${task.desc}</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">👤 ${task.who === 'all' ? 'Alle' : task.who} • 🗓️ ${task.date}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                `;
+                list.appendChild(div);
+            });
         }
-    }
 
-    // Progress
-    async function resetStudentProgress(name) {
-        try {
-            if(confirm(`Status für ${name} wirklich zurücksetzen?`)) {
-                await db.collection('classes').doc(currentClassName).collection('students').doc(name).update({
+        async function deleteTask(id) {
+            if(confirm('Aufgabe löschen?')) await db.collection('tasks').doc(id).delete();
+        }
+
+        function updateProgressTable() {
+            const tbody = document.getElementById('progress-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            
+            classlist.sort().forEach(name => {
+                const s = studentProgress[name] || { done: [], confirmed: false };
+                const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === name);
+                const total = relevantTasks.length;
+                const completed = (s.done || []).filter(id => tasks.some(t => t.id === id)).length;
+                const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0";
+                tr.innerHTML = `
+                    <td class="px-8 py-5">
+                        <div class="font-bold text-slate-800 name-cell">${name}</div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">${total} Aufgaben</div>
+                    </td>
+                    <td class="px-8 py-5 text-center">
+                        <div class="flex flex-col items-center gap-1.5">
+                            <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 rounded-full">${completed}/${total}</span>
+                            <div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-primary" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-8 py-5 text-center">
+                        ${s.confirmed ? 
+                            `<div class="flex flex-col items-center">
+                                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full ring-1 ring-emerald-100">BESTÄTIGT</span>
+                                <span class="text-[9px] text-slate-400 font-bold mt-1 uppercase">${s.confDate}</span>
+                             </div>` : 
+                            `<span class="text-[10px] font-bold text-slate-300 border border-slate-200 px-3 py-1 rounded-full uppercase">OFFEN</span>`}
+                    </td>
+                    <td class="px-8 py-5 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <button onclick="resetStudentProgress('${name}')" class="text-slate-300 hover:text-orange-500 transition-colors" title="Status zurücksetzen">
+                                <span class="material-symbols-outlined text-xl">restart_alt</span>
+                            </button>
+                            <button onclick="removeStudent('${name}')" class="text-slate-300 hover:text-red-500 transition-colors" title="Aus Liste entfernen">
+                                <span class="material-symbols-outlined text-xl">person_remove</span>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function resetStudentProgress(name) {
+            if(confirm(`Status für ${name} zurücksetzen?`)) {
+                await db.collection('students').doc(name).update({
                     confirmed: false, parentName: '', confDate: ''
                 });
             }
-        } catch (error) { alert('Fehler: ' + error.message); }
-    }
+        }
 
-    async function handleResetConfirmations() {
-        try {
+        async function removeStudent(name) {
+            if(confirm(`${name} wirklich aus der Klassenliste entfernen?`)) {
+                const newList = classlist.filter(n => n !== name);
+                await db.collection("config").doc("classlist").set({ names: newList });
+                await db.collection("students").doc(name).delete();
+            }
+        }
+
+        document.getElementById('btn-reset-confirmations').onclick = async () => {
             if(confirm('Alle Bestätigungen zurücksetzen?')) {
                 const batch = db.batch();
                 classlist.forEach(name => {
-                    batch.update(db.collection('classes').doc(currentClassName).collection('students').doc(name), {
+                    batch.update(db.collection('students').doc(name), {
                         confirmed: false, parentName: '', confDate: ''
                     });
                 });
                 await batch.commit();
             }
-        } catch (error) { alert('Fehler: ' + error.message); }
-    }
-
-    async function removeStudent(name) {
-        try {
-            if(confirm(`${name} wirklich entfernen?`)) {
-                const newClasslist = classlist.filter(n => n !== name);
-                await db.collection("classes").doc(currentClassName).collection("config").doc("classlist").set({ names: newClasslist });
-                await db.collection("classes").doc(currentClassName).collection("students").doc(name).delete();
-            }
-        } catch (error) { alert('Fehler: ' + error.message); }
-    }
-
-    function syncStudentProgress() {
-        classlist.forEach(name => {
-            if (!studentProgress[name]) {
-                db.collection("classes").doc(currentClassName).collection("students").doc(name).set({
-                    done: [], confirmed: false, parentName: '', confDate: ''
-                }, { merge: true });
-            }
-        });
-    }
-
-    // UI Helpers
-    function renderLegend() {
-        const container = document.getElementById('legend-container');
-        if (!container) return;
-        container.innerHTML = Object.entries(subjects).map(([code, data]) => `
-            <div class="flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full" style="background-color: ${data.color}"></span>
-                <span class="text-[10px] font-bold uppercase text-slate-500">${data.name}</span>
-            </div>
-        `).join('');
-    }
-
-    function initSubjectSelect() {
-        const select = document.getElementById('task-subject');
-        if (!select) return;
-        select.innerHTML = Object.entries(subjects).map(([code, data]) => `<option value="${code}">${data.name}</option>`).join('');
-    }
-
-    function handleLogoClick() {
-        if (!isLocked) {
-            if (currentClassName) showView('start-view');
-            else showView('class-selection');
-        }
-    }
-
-    function handleStudentNav() {
-        if (currentClassName) {
-            if (isLocked && currentStudentName) showView('planer-view');
-            else showView(currentStudentName ? 'planer-view' : 'start-view');
-        } else {
-            showView('class-selection');
-        }
-    }
-
-    function toggleProgressCollapse() {
-        const container = document.getElementById('collapsible-progress-section');
-        const content = document.getElementById('progress-collapse-content');
-        container.classList.toggle('collapsed');
-        content.classList.toggle('collapsed');
-    }
-
-    function updateDropdownsAndTextarea() {
-        const dropdown = document.getElementById('student-dropdown');
-        const targetSelect = document.getElementById('task-target');
-        const textarea = document.getElementById('classlist-textarea');
-        if (!dropdown || !targetSelect) return;
-        dropdown.innerHTML = '<option disabled selected value="">Wähle deinen Namen...</option>';
-        targetSelect.innerHTML = '<option value="all">Alle</option>';
-        classlist.sort().forEach(name => {
-            const opt = document.createElement('option');
-            opt.value = name; opt.textContent = name;
-            dropdown.appendChild(opt.cloneNode(true));
-            targetSelect.appendChild(opt);
-        });
-        if (document.activeElement !== textarea) {
-            textarea.value = classlist.join('\n');
-        }
-    }
-
-    function logoutStudent() {
-        if (isLocked) {
-            alert("Sitzung gesperrt. Wende dich an deine Lehrperson.");
-            return;
-        }
-        currentStudentName = null;
-        localStorage.removeItem('currentStudentName');
-        showView('start-view');
-    }
-
-    function formatDate(dateStr) {
-        if (!dateStr) return '--';
-        try {
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return dateStr;
-            return d.toLocaleDateString('de-CH');
-        } catch (e) { return dateStr; }
-    }
-
-    function refreshStudentUI() {
-        const student = studentProgress[currentStudentName];
-        if (!student) return;
-        document.getElementById('display-student-name').innerText = currentStudentName;
-        const logoutBtn = document.getElementById('btn-logout-student');
-        if (isLocked) logoutBtn.classList.add('hidden');
-        else logoutBtn.classList.remove('hidden');
-        const container = document.getElementById('task-list-container');
-        const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === currentStudentName);
-        container.innerHTML = '';
-        if (relevantTasks.length === 0) {
-            container.innerHTML = '<div class="py-16 text-center text-slate-400 italic">Keine anstehenden Aufgaben.</div>';
-        } else {
-            relevantTasks.forEach(task => {
-                const isDone = (student.done || []).includes(task.id);
-                const locked = student.confirmed;
-                const subjectColor = subjects[task.subject]?.color || '#94a3b8';
-                const formattedDueDate = formatDate(task.dueDate || task.date);
-                const card = document.createElement('div');
-                card.className = `p-6 bg-white rounded-2xl border-2 transition-all flex items-center gap-6 ${isDone ? 'border-emerald-100 opacity-60' : 'border-slate-100 shadow-sm'}`;
-                card.innerHTML = `
-                    <div class="subject-tag" style="background-color: ${subjectColor}">${task.subject}</div>
-                    <div class="flex-1">
-                        <p class="font-bold text-lg text-slate-800">${task.desc}</p>
-                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-1">Bis wann: ${formattedDueDate}</p>
-                    </div>
-                    <button onclick="toggleTask('${task.id}')" ${locked ? 'disabled' : ''} class="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200 text-transparent hover:border-primary'}">
-                        <span class="material-symbols-outlined text-xl">check</span>
-                    </button>
-                `;
-                container.appendChild(card);
-            });
-        }
-        const form = document.getElementById('confirmation-form');
-        const success = document.getElementById('confirmation-success');
-        if (student.confirmed) {
-            form.classList.add('hidden');
-            success.classList.remove('hidden');
-            document.getElementById('conf-date-display').innerText = student.confDate;
-            document.getElementById('conf-parent-display').innerText = student.parentName;
-        } else {
-            form.classList.remove('hidden');
-            success.classList.add('hidden');
-        }
-    }
-
-    document.getElementById('btn-login-admin').onclick = () => {
-        if (document.getElementById('admin-pass').value === 'lehrer123') {
-            showView('adminDashboard');
-            document.getElementById('admin-error').classList.add('hidden');
-        } else {
-            document.getElementById('admin-error').classList.remove('hidden');
-        }
-    };
-
-    function resetDeviceLock() {
-        if (confirm("Identitätssperre auf diesem Gerät wirklich aufheben?")) {
-            localStorage.removeItem('doeltschi_locked');
-            localStorage.removeItem('currentStudentName');
-            location.reload();
-        }
-    }
-
-    function renderAdminTasks() {
-        const list = document.getElementById('admin-task-list');
-        if (!list) return;
-        list.innerHTML = '';
-        tasks.forEach(task => {
-            const subjectColor = subjects[task.subject]?.color || '#94a3b8';
-            const formattedDueDate = formatDate(task.dueDate || task.date);
-            const div = document.createElement('div');
-            div.className = "flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm";
-            div.innerHTML = `
-                <div class="flex items-center gap-4">
-                    <span class="w-10 h-10 rounded-lg flex items-center justify-center text-[11px] font-extrabold text-white uppercase" style="background-color: ${subjectColor}">${task.subject}</span>
-                    <div>
-                        <p class="font-bold text-slate-800">${task.desc}</p>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase">👤 ${task.who === 'all' ? 'Alle' : task.who} • 🗓️ ${formattedDueDate}</p>
-                    </div>
-                </div>
-                <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
-                    <span class="material-symbols-outlined">delete</span>
-                </button>
-            `;
-            list.appendChild(div);
-        });
-    }
-
-    function updateProgressTable() {
-        const tbody = document.getElementById('progress-table-body');
-        if(!tbody) return;
-        tbody.innerHTML = '';
-        classlist.sort().forEach(name => {
-            const s = studentProgress[name] || { done: [], confirmed: false };
-            const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === name);
-            const total = relevantTasks.length;
-            const completed = (s.done || []).filter(id => tasks.some(t => t.id === id)).length;
-            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-            const tr = document.createElement('tr');
-            tr.className = "hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0";
-            tr.innerHTML = `
-                <td class="px-8 py-5">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-primary font-bold text-xs">
-                            ${name.charAt(0)}
-                        </div>
-                        <div>
-                            <div class="font-bold text-slate-800 leading-tight">${name}</div>
-                            <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5 tracking-wider">${total} Aufgaben total</div>
-                        </div>
-                    </div>
-                </td>
-                <td class="px-8 py-5">
-                    <div class="space-y-1.5">
-                        <div class="flex justify-between items-center text-[10px] font-bold">
-                            <span class="${percent === 100 ? 'text-emerald-600' : 'text-slate-500'}">${completed}/${total} erledigt</span>
-                            <span class="text-slate-400">${percent}%</span>
-                        </div>
-                        <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                            <div class="h-full ${percent === 100 ? 'bg-emerald-500' : 'bg-primary'} transition-all duration-500" style="width: ${percent}%"></div>
-                        </div>
-                    </div>
-                </td>
-                <td class="px-8 py-5 text-center">
-                    ${s.confirmed ? `<span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full uppercase tracking-tight">OK • ${s.confDate}</span>` : `<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-tight">Ausstehend</span>`}
-                </td>
-                <td class="px-8 py-5 text-right">
-                    <div class="flex items-center justify-end gap-1">
-                        <button onclick="resetStudentProgress('${name}')" class="p-2 text-slate-300 hover:text-orange-500 rounded-lg transition-all"><span class="material-symbols-outlined text-xl">restart_alt</span></button>
-                        <button onclick="removeStudent('${name}')" class="p-2 text-slate-300 hover:text-red-500 rounded-lg transition-all"><span class="material-symbols-outlined text-xl">delete</span></button>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-</script>
+        };
+    </script>
 </body></html>
