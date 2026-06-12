@@ -78,6 +78,12 @@
             text-overflow: ellipsis;
             max-width: 200px;
         }
+        /* Ensure student names are strictly single line everywhere */
+        .student-name-cell {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -263,9 +269,9 @@
 </div>
 </div>
 <div class="space-y-4">
-<p class="text-sm text-slate-500">Ein Name pro Zeile eingeben oder Datei importieren (Format: Vorname Nachname Klasse).</p>
-<textarea class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10 font-mono text-sm" id="classlist-textarea" placeholder="Max Mustermann
-Erika Musterfrau..." rows="6"></textarea>
+<p class="text-sm text-slate-500">Ein Schüler pro Zeile (z. B. "Max Mustermann 4b").</p>
+<textarea class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10 font-mono text-sm" id="classlist-textarea" placeholder="Max Mustermann 4b
+Erika Musterfrau 4b..." rows="6"></textarea>
 <div class="flex flex-col sm:flex-row gap-3">
 <button class="flex-1 py-3 bg-primary text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-md" id="btn-save-classlist">Klassenliste speichern</button>
 <button class="px-6 py-3 bg-red-50 text-red-600 border-2 border-red-100 hover:bg-red-100 font-bold rounded-xl transition-all flex items-center justify-center gap-2" onclick="deleteWholeClass()">
@@ -332,7 +338,17 @@ Erika Musterfrau..." rows="6"></textarea>
 <div class="collapsible-content" id="progress-collapse-content">
 <div class="glass-card rounded-2xl border border-slate-200 overflow-hidden shadow-sm p-2">
 <div class="overflow-x-auto">
-<table class="w-full text-left border-collapse min-w-[700px]"><thead><tr class="bg-slate-50/50 text-[10px] uppercase font-bold text-slate-400 tracking-wider"><th class="px-8 py-5 border-b border-slate-100 w-1/3">Schüler/in</th><th class="px-8 py-5 border-b border-slate-100 w-1/4">Erledigte Aufgaben</th><th class="px-8 py-5 border-b border-slate-100 text-center">Status Eltern</th><th class="px-8 py-5 border-b border-slate-100 text-right w-24">Aktionen</th></tr></thead><tbody class="divide-y divide-slate-50 whitespace-nowrap" id="progress-table-body"></tbody></table>
+<table class="w-full text-left border-collapse min-w-[700px]">
+<thead>
+<tr class="bg-slate-50/50 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+<th class="px-8 py-5 border-b border-slate-100 w-1/3">Schüler/in</th>
+<th class="px-8 py-5 border-b border-slate-100 w-1/4">Erledigte Aufgaben</th>
+<th class="px-8 py-5 border-b border-slate-100 text-center">Status Eltern</th>
+<th class="px-8 py-5 border-b border-slate-100 text-right w-24">Aktionen</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-50 whitespace-nowrap" id="progress-table-body"></tbody>
+</table>
 </div>
 </div>
 </div>
@@ -345,7 +361,7 @@ Erika Musterfrau..." rows="6"></textarea>
                     Alle Aufgaben löschen
                 </button>
 </div>
-<div class="grid gap-3 gap-4" id="admin-task-list"></div>
+<div class="grid gap-4" id="admin-task-list"></div>
 </div>
 </section>
 </main>
@@ -360,7 +376,6 @@ Erika Musterfrau..." rows="6"></textarea>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
         authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
@@ -374,7 +389,6 @@ Erika Musterfrau..." rows="6"></textarea>
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Multi-Class Support
     let currentClassName = new URLSearchParams(window.location.search).get('class') || localStorage.getItem('currentClassName') || null;
     let currentStudentName = localStorage.getItem('currentStudentName') || null;
     let isLocked = localStorage.getItem('doeltschi_locked') === 'true';
@@ -440,7 +454,6 @@ Erika Musterfrau..." rows="6"></textarea>
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Class Logic
     document.getElementById('btn-select-class').onclick = () => {
         const input = document.getElementById('class-input').value.trim();
         if (!input) return alert('Bitte einen Klassennamen eingeben');
@@ -448,7 +461,6 @@ Erika Musterfrau..." rows="6"></textarea>
         currentClassName = input;
         localStorage.setItem('currentClassName', input);
         
-        // Update URL without reload
         const newurl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?class=' + input;
         window.history.pushState({path:newurl},'',newurl);
         
@@ -469,24 +481,19 @@ Erika Musterfrau..." rows="6"></textarea>
         
         if (confirmDelete) {
             const classRef = db.collection("classes").doc(currentClassName);
-            
-            // Delete tasks
             const taskSnap = await classRef.collection("tasks").get();
             const taskBatch = db.batch();
             taskSnap.docs.forEach(doc => taskBatch.delete(doc.ref));
             await taskBatch.commit();
             
-            // Delete students
             const studentSnap = await classRef.collection("students").get();
             const studentBatch = db.batch();
             studentSnap.docs.forEach(doc => studentBatch.delete(doc.ref));
             await studentBatch.commit();
             
-            // Delete config
             await classRef.collection("config").doc("classlist").delete();
             await classRef.delete();
 
-            // Clear local state
             localStorage.removeItem('currentClassName');
             localStorage.removeItem('currentStudentName');
             localStorage.removeItem('doeltschi_locked');
@@ -497,7 +504,6 @@ Erika Musterfrau..." rows="6"></textarea>
     }
 
     function initSync() {
-        // Clear previous subscriptions if any
         unsubscribeList.forEach(unsub => unsub());
         unsubscribeList = [];
 
@@ -550,7 +556,6 @@ Erika Musterfrau..." rows="6"></textarea>
         });
     }
 
-    // Existing Student UI Logic (Refactored for namespaced data)
     document.getElementById('btn-enter-student').onclick = () => {
         const name = document.getElementById('student-dropdown').value;
         if (!name) return;
@@ -582,7 +587,6 @@ Erika Musterfrau..." rows="6"></textarea>
         });
     };
 
-    // Existing Admin Logic (Refactored)
     document.getElementById('btn-save-classlist').onclick = async () => {
         const text = document.getElementById('classlist-textarea').value;
         const names = text.split('\n').map(n => n.trim()).filter(n => n !== "");
@@ -593,7 +597,6 @@ Erika Musterfrau..." rows="6"></textarea>
     };
 
     function initImportHandlers() {
-        // .txt import
         document.getElementById('import-list').onchange = (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -605,7 +608,6 @@ Erika Musterfrau..." rows="6"></textarea>
             reader.readAsText(file);
         };
 
-        // .docx import
         document.getElementById('import-docx').onchange = (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -613,22 +615,44 @@ Erika Musterfrau..." rows="6"></textarea>
             reader.onload = async (re) => {
                 const arrayBuffer = re.target.result;
                 try {
+                    // Extracting text with Mammoth
                     const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
                     const text = result.value;
-                    const lines = text.split('\n').map(line => {
-                        line = line.trim();
-                        if (!line) return null;
-                        const parts = line.split(/\s+/);
-                        if (parts.length >= 2) {
-                            return `${parts[0]} ${parts[1]}`;
-                        }
-                        return line;
-                    }).filter(l => l !== null);
                     
-                    document.getElementById('classlist-textarea').value = lines.join('\n');
+                    /* 
+                       Optimized Logic: 
+                       Instead of strictly splitting by newlines, we analyze the structure.
+                       Often exports have names and classes on separate lines.
+                       We join non-empty lines that seem to belong together.
+                    */
+                    const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
+                    
+                    const processedNames = [];
+                    let currentEntry = [];
+
+                    for (let line of lines) {
+                        // Check if the line looks like a class indicator (e.g., 3b, 4a, R1a)
+                        const isClassIndicator = /^[0-9]+[a-z]?$/i.test(line);
+                        
+                        currentEntry.push(line);
+                        
+                        // If we have a class indicator or we have accumulated 3 parts (First, Last, Class), 
+                        // we treat it as a finished entry. This is a heuristic.
+                        if (isClassIndicator || currentEntry.length >= 3) {
+                            processedNames.push(currentEntry.join(' '));
+                            currentEntry = [];
+                        }
+                    }
+                    
+                    // Handle leftover
+                    if (currentEntry.length > 0) {
+                        processedNames.push(currentEntry.join(' '));
+                    }
+
+                    document.getElementById('classlist-textarea').value = processedNames.join('\n');
                 } catch (err) {
                     console.error(err);
-                    alert('Fehler beim Lesen der .docx Datei. Bitte verwende das Format: Vorname Nachname Klasse');
+                    alert('Fehler beim Lesen der .docx Datei.');
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -709,7 +733,6 @@ Erika Musterfrau..." rows="6"></textarea>
         });
     }
 
-    // Helper functions (same as original but using state variables)
     function renderLegend() {
         const container = document.getElementById('legend-container');
         if (!container) return;
@@ -759,7 +782,8 @@ Erika Musterfrau..." rows="6"></textarea>
         if (!dropdown || !targetSelect) return;
         dropdown.innerHTML = '<option disabled selected value="">Wähle deinen Namen...</option>';
         targetSelect.innerHTML = '<option value="all">Alle</option>';
-        classlist.sort().forEach(name => {
+        
+        [...classlist].sort().forEach(name => {
             const opt = document.createElement('option');
             opt.value = name;
             opt.textContent = name;
@@ -798,6 +822,7 @@ Erika Musterfrau..." rows="6"></textarea>
         const logoutBtn = document.getElementById('btn-logout-student');
         if (isLocked) logoutBtn.classList.add('hidden');
         else logoutBtn.classList.remove('hidden');
+        
         const container = document.getElementById('task-list-container');
         const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === currentStudentName);
         container.innerHTML = '';
@@ -824,6 +849,7 @@ Erika Musterfrau..." rows="6"></textarea>
                 container.appendChild(card);
             });
         }
+        
         const form = document.getElementById('confirmation-form');
         const success = document.getElementById('confirmation-success');
         if (student.confirmed) {
@@ -866,12 +892,12 @@ Erika Musterfrau..." rows="6"></textarea>
             div.innerHTML = `
                 <div class="flex items-center gap-4">
                     <span class="w-10 h-10 rounded-lg flex items-center justify-center text-[11px] font-extrabold text-white uppercase" style="background-color: ${subjectColor}">${task.subject}</span>
-                    <div>
-                        <p class="font-bold text-slate-800">${task.desc}</p>
+                    <div class="overflow-hidden">
+                        <p class="font-bold text-slate-800 truncate">${task.desc}</p>
                         <p class="text-[10px] font-bold text-slate-400 uppercase whitespace-nowrap overflow-hidden text-ellipsis">👤 ${task.who === 'all' ? 'Alle' : task.who} • 🗓️ ${formattedDueDate}</p>
                     </div>
                 </div>
-                <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
+                <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-red-500 transition-colors shrink-0">
                     <span class="material-symbols-outlined">delete</span>
                 </button>
             `;
@@ -883,7 +909,7 @@ Erika Musterfrau..." rows="6"></textarea>
         const tbody = document.getElementById('progress-table-body');
         if(!tbody) return;
         tbody.innerHTML = '';
-        classlist.sort().forEach(name => {
+        [...classlist].sort().forEach(name => {
             const s = studentProgress[name] || { done: [], confirmed: false };
             const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === name);
             const total = relevantTasks.length;
@@ -898,7 +924,7 @@ Erika Musterfrau..." rows="6"></textarea>
                             ${name.charAt(0)}
                         </div>
                         <div class="overflow-hidden min-w-0">
-                            <div class="font-bold text-slate-800 leading-tight whitespace-nowrap overflow-hidden text-ellipsis">${name}</div>
+                            <div class="font-bold text-slate-800 leading-tight student-name-cell">${name}</div>
                             <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5 tracking-wider">${total} Aufgaben total</div>
                         </div>
                     </div>
