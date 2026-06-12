@@ -163,7 +163,7 @@
 <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Dein Name</label>
 <div class="relative">
 <select class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-lg appearance-none cursor-pointer whitespace-nowrap overflow-hidden text-ellipsis" id="student-dropdown">
-<option disabled="" selected="" value="">Lade Klassenliste...</option>
+<option disabled="" selected="" value="">Warte auf Daten...</option>
 </select>
 <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
 <span class="material-symbols-outlined">expand_more</span>
@@ -392,14 +392,14 @@
         arrayRemove
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
+    // UPDATED FIREBASE CONFIG
     const firebaseConfig = {
-        apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
-        authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
-        projectId: "doeltschi-hausaufgabenplaner",
-        storageBucket: "doeltschi-hausaufgabenplaner.firebasestorage.app",
+        apiKey: "AIzaSyD7-v7M9q8yK4...",
+        authDomain: "doeltschi-hausaufgaben.firebaseapp.com",
+        projectId: "doeltschi-hausaufgaben",
+        storageBucket: "doeltschi-hausaufgaben.appspot.com",
         messagingSenderId: "741131007424",
-        appId: "1:741131007424:web:04427f839b7eb86aa9c425",
-        measurementId: "G-C6GTQJ8C1D"
+        appId: "1:741131007424:web:04427f839b7eb86aa9c425"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -407,7 +407,7 @@
 
     // Global State
     let currentClassName = new URLSearchParams(window.location.search).get('class') || localStorage.getItem('currentClassName') || null;
-    let currentStudentName = localStorage.getItem('currentStudentName') || null;
+    let currentStudentName = null; // Remove dependency on localStorage for names
     let isLocked = localStorage.getItem('doeltschi_locked') === 'true';
     let classlist = [];
     let tasks = [];
@@ -435,11 +435,8 @@
         
         if (currentClassName) {
             initSync();
-            if (isLocked && currentStudentName) {
-                showView('planer-view');
-            } else {
-                showView(currentStudentName ? 'planer-view' : 'start-view');
-            }
+            // Start screen by default unless we are explicitly on planer
+            showView('start-view');
         } else {
             showView('class-selection');
         }
@@ -488,9 +485,7 @@
     };
 
     window.clearClass = () => {
-        localStorage.removeItem('currentClassName');
-        localStorage.removeItem('currentStudentName');
-        localStorage.removeItem('doeltschi_locked');
+        localStorage.clear();
         window.location.search = "";
     };
 
@@ -529,18 +524,20 @@
 
         if (!currentClassName) return;
 
-        // Sync Classlist
-        const unsubConfig = onSnapshot(doc(db, "classes", currentClassName, "config", "classlist"), (docSnap) => {
-            if (docSnap.exists()) {
-                classlist = docSnap.data().names || [];
-                updateDropdownsAndTextarea();
-                ensureStudentsExistInCloud();
-            } else {
-                classlist = [];
-                updateDropdownsAndTextarea();
-            }
+        // Sync Classlist and UI
+        const unsubStudents = onSnapshot(collection(db, "classes", currentClassName, "students"), (snap) => {
+            studentProgress = {};
+            const names = [];
+            snap.forEach(docSnap => {
+                studentProgress[docSnap.id] = docSnap.data();
+                names.push(docSnap.id);
+            });
+            classlist = names;
+            updateDropdownsAndTextarea();
+            updateProgressTable();
+            if (currentStudentName) refreshStudentUI();
         });
-        unsubscribeList.push(unsubConfig);
+        unsubscribeList.push(unsubStudents);
 
         // Sync Tasks
         const qTasks = query(collection(db, "classes", currentClassName, "tasks"), orderBy("createdAt", "desc"));
@@ -551,37 +548,14 @@
             updateProgressTable();
         });
         unsubscribeList.push(unsubTasks);
-
-        // Sync Student Progress
-        const unsubStudents = onSnapshot(collection(db, "classes", currentClassName, "students"), (snap) => {
-            snap.forEach(docSnap => {
-                studentProgress[docSnap.id] = docSnap.data();
-            });
-            updateProgressTable();
-            if (currentStudentName) refreshStudentUI();
-        });
-        unsubscribeList.push(unsubStudents);
-    }
-
-    async function ensureStudentsExistInCloud() {
-        for (const name of classlist) {
-            if (!studentProgress[name]) {
-                const sRef = doc(db, "classes", currentClassName, "students", name);
-                await setDoc(sRef, {
-                    done: [],
-                    confirmed: false,
-                    parentName: '',
-                    confDate: ''
-                }, { merge: true });
-            }
-        }
     }
 
     function generateQRCode() {
         const qrEl = document.getElementById("qrcode");
         if (!qrEl) return;
         qrEl.innerHTML = "";
-        const url = window.location.protocol + "//" + window.location.host + window.location.pathname + '?class=' + currentClassName;
+        // Current full link with class parameter
+        const url = window.location.href;
         new QRCode(qrEl, {
             text: url,
             width: 180,
@@ -595,12 +569,10 @@
     // Student Interaction
     document.getElementById('btn-enter-student').onclick = () => {
         const name = document.getElementById('student-dropdown').value;
-        if (!name) return;
+        if (!name) return alert("Wähle zuerst deinen Namen aus.");
         
         currentStudentName = name;
         isLocked = true;
-        
-        localStorage.setItem('currentStudentName', name);
         localStorage.setItem('doeltschi_locked', 'true');
         
         refreshStudentUI();
@@ -636,8 +608,18 @@
     document.getElementById('btn-save-classlist').onclick = async () => {
         const text = document.getElementById('classlist-textarea').value;
         const names = text.split('\n').map(n => n.trim()).filter(n => n !== "");
-        if (confirm(`Soll die Klassenliste für ${currentClassName} gespeichert werden?`)) {
-            await setDoc(doc(db, "classes", currentClassName, "config", "classlist"), { names });
+        if (confirm(`Soll die Klassenliste für ${currentClassName} gespeichert werden? Bestehende Schüler werden aktualisiert.`)) {
+            const batch = writeBatch(db);
+            for (const name of names) {
+                const sRef = doc(db, 'classes', currentClassName, 'students', name);
+                batch.set(sRef, {
+                    done: [],
+                    confirmed: false,
+                    parentName: '',
+                    confDate: ''
+                }, { merge: true });
+            }
+            await batch.commit();
             alert("Liste aktualisiert.");
         }
     };
@@ -714,8 +696,6 @@
 
     window.removeStudent = async (name) => {
         if(confirm(`Möchtest du ${name} wirklich löschen?`)) {
-            const newClasslist = classlist.filter(n => n !== name);
-            await setDoc(doc(db, "classes", currentClassName, "config", "classlist"), { names: newClasslist });
             await deleteDoc(doc(db, "classes", currentClassName, "students", name));
         }
     };
@@ -767,16 +747,14 @@
     }
 
     window.handleLogoClick = () => {
-        if (!isLocked) {
-            if (currentClassName) showView('start-view');
-            else showView('class-selection');
-        }
+        if (currentClassName) showView('start-view');
+        else showView('class-selection');
     };
 
     window.handleStudentNav = () => {
         if (currentClassName) {
-            if (isLocked && currentStudentName) showView('planer-view');
-            else showView(currentStudentName ? 'planer-view' : 'start-view');
+            if (currentStudentName) showView('planer-view');
+            else showView('start-view');
         } else {
             showView('class-selection');
         }
@@ -794,6 +772,9 @@
         const targetSelect = document.getElementById('task-target');
         const textarea = document.getElementById('classlist-textarea');
         if (!dropdown || !targetSelect) return;
+        
+        // Save current selection
+        const prevVal = dropdown.value;
         dropdown.innerHTML = '<option disabled selected value="">Wähle deinen Namen...</option>';
         targetSelect.innerHTML = '<option value="all">Alle</option>';
         
@@ -804,6 +785,12 @@
             dropdown.appendChild(opt.cloneNode(true));
             targetSelect.appendChild(opt);
         });
+
+        // Restore selection if possible
+        if (prevVal && classlist.includes(prevVal)) {
+            dropdown.value = prevVal;
+        }
+
         if (document.activeElement !== textarea) {
             textarea.value = classlist.join('\n');
         }
@@ -815,7 +802,6 @@
             return;
         }
         currentStudentName = null;
-        localStorage.removeItem('currentStudentName');
         showView('start-view');
     };
 
@@ -888,7 +874,6 @@
     window.resetDeviceLock = () => {
         if (confirm("Identitätssperre aufheben?")) {
             localStorage.removeItem('doeltschi_locked');
-            localStorage.removeItem('currentStudentName');
             location.reload();
         }
     };
