@@ -117,11 +117,11 @@
 <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Einmal scannen, immer aktuell.</p>
 </div>
 </div>
-<!-- Student Personal View -->
+<!-- Student Personal View (Planer View) -->
 <div class="hidden space-y-12" id="student-tasks-view">
 <div class="flex flex-col md:flex-row justify-between items-center gap-6 no-print">
 <div class="flex items-center gap-4">
-<button class="flex items-center gap-2 text-primary font-bold hover:underline" onclick="app.setRole('student')">
+<button class="flex items-center gap-2 text-primary font-bold hover:underline" onclick="app.logoutStudent()">
 <span class="material-symbols-outlined">arrow_back</span>
 <span class="text-xl" id="display-student-name">...</span>
 </button>
@@ -153,16 +153,19 @@
 <div class="space-y-4" id="task-list">
 <!-- Tasks populated here -->
 </div>
-<!-- Parents Confirmation Card -->
+<!-- Parents Confirmation Section (Restored from SCREEN_359/223/260) -->
 <div class="hidden mt-12 bg-white border-2 border-dashed border-slate-300 p-10 rounded-[40px] flex flex-col items-center text-center shadow-md transition-all" id="parents-confirmation-card">
 <div class="w-16 h-16 bg-blue-50 text-primary rounded-full flex items-center justify-center mb-6">
 <span class="material-symbols-outlined text-4xl" id="confirmation-icon">verified_user</span>
 </div>
 <h3 class="text-2xl font-black text-slate-900 mb-2">Bestätigung der Eltern</h3>
-<p class="text-slate-500 mb-8 max-w-md mx-auto text-sm font-medium">Ich bestätige hiermit, dass ich die oben aufgeführten Hausaufgaben gesehen habe.</p>
+<p class="text-slate-500 mb-8 max-w-md mx-auto text-sm font-medium" id="confirmation-description">Ich bestätige hiermit, dass ich die oben aufgeführten Hausaufgaben gesehen habe.</p>
 <button class="px-10 py-4 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-black uppercase tracking-widest transition-all" id="confirm-btn" onclick="app.confirmByParent()">
-                Jetzt Bestätigen
+                Gesehen &amp; Bestätigt
             </button>
+<div class="mt-4 hidden" id="confirmation-lock-status">
+<span class="px-4 py-1 bg-red-100 text-red-700 rounded-full text-[10px] font-black uppercase">Status: Gesperrt (Eltern haben bestätigt)</span>
+</div>
 <p class="mt-4 text-[10px] font-bold text-primary uppercase hidden" id="confirmation-timestamp"></p>
 </div>
 </div>
@@ -197,7 +200,7 @@
 </div>
 </div>
 <!-- Add Task Form -->
-<div class="bg-white border border-slate-200 rounded-[40px] p-8 shadow-sm">
+<div class="bg-white border border-slate-200 rounded-[40px] p-8 shadow-sm no-print">
 <div class="flex items-center gap-2 mb-6">
 <span class="material-symbols-outlined text-primary">add_task</span>
 <h3 class="text-lg font-bold text-slate-800">Neue Aufgabe zuteilen</h3>
@@ -263,7 +266,7 @@
 </div>
 </div>
 </div>
-<div class="space-y-4">
+<div class="space-y-4 no-print">
 <div class="flex justify-between items-center">
 <h3 class="text-xl font-bold text-slate-800">Klassenliste</h3>
 </div>
@@ -349,9 +352,17 @@
         qrHome: null,
 
         async init() {
+            // Identity Protection: Check localStorage for existing session
+            const savedUser = localStorage.getItem('doeltschi_user');
+
             onSnapshot(doc(db, "config", "classlist"), (docSnap) => {
                 if (docSnap.exists()) {
                     this.students = docSnap.data().names || [];
+                    
+                    // If we have a saved user and the list is loaded, auto-select them
+                    if (savedUser && this.students.includes(savedUser) && this.currentRole === 'student') {
+                        this.selectStudent(savedUser);
+                    }
                     this.render();
                 }
             });
@@ -371,15 +382,6 @@
 
             this.updateDateDisplay();
             document.getElementById('print-date').textContent = new Date().toLocaleDateString('de-CH');
-            
-            const savedUser = localStorage.getItem('doeltschi_user');
-            if (savedUser) {
-                setTimeout(() => {
-                    if (this.students.includes(savedUser)) {
-                        this.selectStudent(savedUser);
-                    }
-                }, 1000);
-            }
         },
 
         updateDateDisplay() {
@@ -409,6 +411,7 @@
             } else if (role === 'student') {
                 this.currentRole = 'student';
                 this.selectedStudent = null;
+                // Don't clear localStorage here to allow auto-login next reload
             } else if (role === 'teacher') {
                 this.currentRole = 'teacher';
             }
@@ -430,9 +433,18 @@
 
         selectStudent(name) {
             this.selectedStudent = name;
-            localStorage.setItem('doeltschi_user', name);
+            localStorage.setItem('doeltschi_user', name); // Identity Protection
             this.currentRole = 'student-tasks';
             this.render();
+        },
+
+        logoutStudent() {
+            if(confirm("Möchtest du dich abmelden und einen anderen Namen wählen?")) {
+                localStorage.removeItem('doeltschi_user');
+                this.selectedStudent = null;
+                this.currentRole = 'student';
+                this.render();
+            }
         },
 
         render() {
@@ -475,7 +487,7 @@
                 `).join('');
             }
             dropdown.innerHTML = optionsHtml;
-            dropdown.value = ""; // Reset selection
+            dropdown.value = ""; 
         },
 
         generateHomeQR() {
@@ -493,9 +505,10 @@
         },
 
         async setTaskStatus(taskId, statusValue) {
+            // Parental Lock check
             const isConfirmed = this.parentalConfirmations[this.selectedStudent]?.status === 'OK';
             if (isConfirmed) {
-                alert("Bestätigte Aufgaben können nicht mehr geändert werden.");
+                alert("Bestätigte Aufgaben sind gesperrt und können nicht mehr geändert werden.");
                 this.renderStudentTasks();
                 return;
             }
@@ -510,7 +523,7 @@
 
         async confirmByParent() {
             if (this.parentalConfirmations[this.selectedStudent]?.status === 'OK') return;
-            if (confirm("Bestätigen Sie als Elternteil die Erledigung der Hausaufgaben?")) {
+            if (confirm("Bestätigen Sie als Elternteil die Erledigung der Hausaufgaben? Dies sperrt die weitere Bearbeitung.")) {
                 const confRef = doc(db, "config", "confirmations");
                 const data = {
                     [this.selectedStudent]: {
@@ -544,9 +557,9 @@
                             <div class="w-3 shrink-0" style="background-color: ${subject.color}"></div>
                             <div class="flex-1 p-8 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                                 <div>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Empfänger</p>
-                                    <p class="font-bold text-slate-800 text-sm">${t.who === 'all' ? 'Ganze Klasse' : name}</p>
-                                    <span class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" style="background-color: ${subject.color}20; color: ${subject.color}">${subject.name}</span>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Fach</p>
+                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" style="background-color: ${subject.color}20; color: ${subject.color}">${subject.name}</span>
+                                    <p class="mt-1 text-[10px] font-bold text-slate-500 uppercase">Für: ${t.who === 'all' ? 'Alle' : 'Dich'}</p>
                                 </div>
                                 <div class="md:col-span-2">
                                     <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Aufgabe</p>
@@ -554,7 +567,7 @@
                                 </div>
                                 <div class="text-right flex flex-col items-end">
                                     <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Status</p>
-                                    <select onchange="app.setTaskStatus('${t.id}', this.value)" class="bg-slate-50 border border-slate-200 rounded-lg py-1 px-3 text-xs font-bold ${isDone ? 'text-primary' : 'text-slate-500'} focus:ring-1 focus:ring-primary outline-none ${isConfirmed ? 'opacity-50 cursor-not-allowed' : ''}" ${isConfirmed ? 'disabled' : ''}>
+                                    <select onchange="app.setTaskStatus('${t.id}', this.value)" class="bg-slate-50 border border-slate-200 rounded-lg py-1 px-3 text-xs font-bold ${isDone ? 'text-primary' : 'text-slate-500'} focus:ring-1 focus:ring-primary outline-none ${isConfirmed ? 'opacity-50 cursor-not-allowed bg-slate-100' : 'cursor-pointer'}" ${isConfirmed ? 'disabled' : ''}>
                                         <option value="offen" ${!isDone ? 'selected' : ''}>Offen</option>
                                         <option value="erledigt" ${isDone ? 'selected' : ''}>Erledigt</option>
                                     </select>
@@ -572,23 +585,33 @@
             const icon = document.getElementById('confirmation-icon');
             const btn = document.getElementById('confirm-btn');
             const ts = document.getElementById('confirmation-timestamp');
+            const lockStatus = document.getElementById('confirmation-lock-status');
+            const desc = document.getElementById('confirmation-description');
 
             card.classList.remove('hidden');
             if (isConfirmed) {
                 card.classList.replace('border-slate-300', 'border-primary');
+                card.classList.add('bg-blue-50/20');
                 icon.textContent = 'verified';
                 icon.parentElement.classList.add('bg-blue-100');
-                btn.textContent = 'Bestätigt ✓';
+                btn.textContent = 'Bereits Bestätigt ✓';
                 btn.className = "px-10 py-4 bg-primary text-white rounded-xl font-black uppercase tracking-widest cursor-not-allowed opacity-80";
+                btn.disabled = true;
                 ts.textContent = `Erfolgreich bestätigt am ${this.parentalConfirmations[name].date}`;
                 ts.classList.remove('hidden');
+                lockStatus.classList.remove('hidden');
+                desc.classList.add('hidden');
             } else {
                 card.classList.replace('border-primary', 'border-slate-300');
+                card.classList.remove('bg-blue-50/20');
                 icon.textContent = 'verified_user';
                 icon.parentElement.classList.remove('bg-blue-100');
-                btn.textContent = 'Jetzt Bestätigen';
+                btn.textContent = 'Gesehen & Bestätigt';
                 btn.className = "px-10 py-4 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-black uppercase tracking-widest";
+                btn.disabled = false;
                 ts.classList.add('hidden');
+                lockStatus.classList.add('hidden');
+                desc.classList.remove('hidden');
             }
         },
 
@@ -663,7 +686,7 @@
                                     ${isOk ? 'OK' : 'OFFEN'}
                                 </span>
                                 ${isOk ? `
-                                    <button onclick="event.stopPropagation(); app.unlockStudent('${name}')" class="text-slate-400 hover:text-red-500 flex items-center" title="Bestätigung zurücksetzen">
+                                    <button onclick="event.stopPropagation(); app.unlockStudent('${name}')" class="text-slate-400 hover:text-red-500 flex items-center" title="Bestätigung & Sperre zurücksetzen">
                                         <span class="material-symbols-outlined text-[16px]">undo</span>
                                     </button>
                                 ` : ''}
@@ -768,15 +791,27 @@
             if (confirm(`Möchtest du ${name} wirklich aus der Klassenliste entfernen?`)) {
                 const updatedNames = this.students.filter(n => n !== name);
                 await setDoc(doc(db, "config", "classlist"), { names: updatedNames });
+                // Also clear confirmation if student is deleted
+                const confRef = doc(db, "config", "confirmations");
+                await updateDoc(confRef, { [name]: deleteField() });
             }
         },
 
         async unlockStudent(name) {
-            if (confirm(`Bestätigung für ${name} wirklich zurücksetzen? Die Aufgaben werden wieder editierbar.`)) {
+            if (confirm(`Bestätigung für ${name} wirklich zurücksetzen? Die Aufgaben werden wieder editierbar (Eltern-Sperre wird aufgehoben).`)) {
                 const confRef = doc(db, "config", "confirmations");
                 await updateDoc(confRef, {
                     [name]: deleteField()
                 });
+                
+                // Optional: also reset all tasks for this student if specifically requested by user but request says "sowohl Aufgabenfortschritt als auch Eltern-Sperre aufheben"
+                // This would require looping through all tasks and removing the student from 'done' array.
+                const tasksWithStudent = this.tasks.filter(t => t.done && t.done.includes(name));
+                for (const t of tasksWithStudent) {
+                    await updateDoc(doc(db, "tasks", t.id), {
+                        done: arrayRemove(name)
+                    });
+                }
             }
         }
     };
