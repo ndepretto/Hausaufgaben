@@ -7,6 +7,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <style>
         :root {
             --primary: #0058bc;
@@ -250,11 +251,13 @@
                 </h3>
 <div class="flex gap-2">
 <input accept=".txt" class="hidden" id="import-list" type="file"/>
+<input accept=".docx" class="hidden" id="import-docx" type="file"/>
 <button class="text-[10px] font-bold uppercase bg-slate-100 text-slate-600 px-4 py-2 rounded-lg" onclick="document.getElementById('import-list').click()">Import (.txt)</button>
+<button class="text-[10px] font-bold uppercase bg-slate-100 text-slate-600 px-4 py-2 rounded-lg" onclick="document.getElementById('import-docx').click()">Import (.docx)</button>
 </div>
 </div>
 <div class="space-y-4">
-<p class="text-sm text-slate-500">Ein Name pro Zeile eingeben oder Datei importieren.</p>
+<p class="text-sm text-slate-500">Ein Name pro Zeile eingeben oder Datei importieren (Format: Vorname Nachname Klasse).</p>
 <textarea class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10 font-mono text-sm" id="classlist-textarea" placeholder="Max Mustermann
 Erika Musterfrau..." rows="6"></textarea>
 <button class="w-full py-3 bg-primary text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-md" id="btn-save-classlist">Klassenliste speichern</button>
@@ -397,6 +400,7 @@ Erika Musterfrau..." rows="6"></textarea>
     window.onload = () => {
         renderLegend();
         initSubjectSelect();
+        initImportHandlers();
         
         if (currentClassName) {
             initSync();
@@ -555,6 +559,52 @@ Erika Musterfrau..." rows="6"></textarea>
             alert("Liste aktualisiert.");
         }
     };
+
+    function initImportHandlers() {
+        // .txt import
+        document.getElementById('import-list').onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (re) => {
+                const text = re.target.result;
+                document.getElementById('classlist-textarea').value = text;
+            };
+            reader.readAsText(file);
+        };
+
+        // .docx import
+        document.getElementById('import-docx').onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (re) => {
+                const arrayBuffer = re.target.result;
+                try {
+                    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                    const text = result.value;
+                    const lines = text.split('\n').map(line => {
+                        line = line.trim();
+                        if (!line) return null;
+                        // Handle 'FirstName LastName Class' format
+                        const parts = line.split(/\s+/);
+                        if (parts.length >= 3) {
+                            // Combine first and last name, ignore class/code at the end if it's there
+                            // Often lists are "Max Mustermann 3b"
+                            return `${parts[0]} ${parts[1]}`;
+                        }
+                        return line;
+                    }).filter(l => l !== null);
+                    
+                    document.getElementById('classlist-textarea').value = lines.join('\n');
+                } catch (err) {
+                    console.error(err);
+                    alert('Fehler beim Lesen der .docx Datei. Bitte verwende das Format: Vorname Nachname Klasse');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        };
+    }
 
     document.getElementById('btn-add-task').onclick = async () => {
         const subject = document.getElementById('task-subject').value;
