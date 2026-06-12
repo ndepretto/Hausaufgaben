@@ -98,10 +98,14 @@
 <span class="material-symbols-outlined text-primary">group</span> Klassenliste verwalten
                     </h3>
 <textarea class="w-full bg-surface-container-low border-none rounded-xl p-4 min-h-[120px] mb-4 focus:ring-2 focus:ring-primary" id="class-input" placeholder="Namen pro Zeile..."></textarea>
-<div class="flex flex-wrap gap-3">
-<button class="flex-1 min-w-[140px] bg-primary text-on-primary font-bold py-3 rounded-xl hover:shadow-lg transition-all" onclick="updateClassList()">Speichern</button>
+<div class="flex flex-wrap gap-2">
+<button class="flex-1 min-w-[120px] bg-primary text-on-primary font-bold py-3 rounded-xl hover:shadow-lg transition-all" onclick="updateClassList()">Speichern</button>
+<input accept=".txt" class="hidden" id="txt-import" onchange="handleTxtImport(event)" type="file"/>
+<button class="flex-1 min-w-[120px] bg-surface-container-high text-on-surface-variant font-bold py-3 rounded-xl hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2" onclick="document.getElementById('txt-import').click()">
+<span class="material-symbols-outlined text-sm">upload_file</span> .txt Import
+</button>
 <input class="hidden" id="word-import" onchange="handleWordImport(event)" type="file"/>
-<button class="flex-1 min-w-[140px] bg-surface-container-high text-on-surface-variant font-bold py-3 rounded-xl hover:bg-surface-container-highest transition-all" onclick="document.getElementById('word-import').click()">Word Import</button>
+<button class="flex-1 min-w-[120px] bg-surface-container-high text-on-surface-variant font-bold py-3 rounded-xl hover:bg-surface-container-highest transition-all" onclick="document.getElementById('word-import').click()">Word Import</button>
 <button class="bg-error-container text-on-error-container px-4 py-3 rounded-xl hover:opacity-80 transition-all" onclick="deleteEntireClass()" title="Alles löschen">
 <span class="material-symbols-outlined">delete_forever</span>
 </button>
@@ -262,6 +266,7 @@
         function renderStudentOptions() {
             const sel = document.getElementById('student-selector');
             const taskWho = document.getElementById('task-who');
+            if (!sel || !taskWho) return;
             sel.innerHTML = '<option value="">Wähle deinen Namen...</option>';
             taskWho.innerHTML = '<option value="Ganze Klasse">Ganze Klasse</option>';
             students.forEach(s => {
@@ -329,8 +334,6 @@
                 </div>`;
             }).join('');
         }
-
-        // --- NEW/UPDATED LOGIC FOR TEACHER PROGRESS ---
 
         function renderProgress() {
             const container = document.getElementById('progress-list');
@@ -416,8 +419,6 @@
             </div>`).join('');
         }
 
-        // --- OTHER FUNCTIONS ---
-
         function confirmParent() {
             const name = document.getElementById('parent-name').value;
             if (!name) return;
@@ -432,6 +433,7 @@
             const conf = parentConfirms[currentUser];
             const status = document.getElementById('parent-status');
             const form = document.getElementById('parent-form');
+            if (!status || !form) return;
             if (conf) {
                 form.classList.add('hidden');
                 status.classList.remove('hidden');
@@ -444,7 +446,7 @@
 
         function updateClassList() {
             const names = document.getElementById('class-input').value.split('\n').map(n => n.trim()).filter(n => n !== '');
-            if(names.length > 0) {
+            if(names.length >= 0) {
                 db.collection('settings').doc('classData').set({ students: names });
                 alert("Klassenliste gespeichert!");
             }
@@ -453,13 +455,13 @@
         function deleteEntireClass() {
             if(confirm("Bist du sicher? Alle Schüler und Aufgaben werden gelöscht.")) {
                 db.collection('settings').doc('classData').delete();
-                // Optionally clear other collections if needed
                 alert("Klasse gelöscht.");
             }
         }
 
         function generateMainQRCode() {
             const container = document.getElementById('qrcode-container');
+            if (!container) return;
             container.innerHTML = '';
             new QRCode(container, { text: window.location.href, width: 180, height: 180, colorDark: "#1a1c1f" });
         }
@@ -471,13 +473,35 @@
             date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
             const week1 = new Date(date.getFullYear(), 0, 4);
             const w = 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-            document.getElementById('week-display').innerText = `Woche ${w}`;
+            const display = document.getElementById('week-display');
+            if (display) display.innerText = `Woche ${w}`;
+        }
+
+        function handleTxtImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const names = content.split(/\r?\n/).map(n => n.trim()).filter(n => n !== '');
+                if (names.length > 0) {
+                    db.collection('settings').doc('classData').set({ students: names })
+                    .then(() => {
+                        alert(`${names.length} Namen erfolgreich importiert.`);
+                        document.getElementById('class-input').value = names.join('\n');
+                    })
+                    .catch(err => alert("Fehler beim Speichern: " + err.message));
+                } else {
+                    alert("Die Datei scheint leer zu sein oder keine gültigen Namen zu enthalten.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset file input
         }
 
         function handleWordImport(event) {
             const file = event.target.files[0];
             if (!file) return;
-            // Simple logic: Read file as text and split by lines
             const reader = new FileReader();
             reader.onload = function(e) {
                 const content = e.target.result;
