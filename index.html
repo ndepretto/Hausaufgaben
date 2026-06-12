@@ -100,11 +100,9 @@
 <p class="text-slate-500 font-medium text-lg">Wähle deinen Namen aus, um deine Aufgaben zu sehen.</p>
 </div>
 <div class="w-full max-w-md mx-auto mb-20 space-y-6" id="student-selection-container">
-<!-- Centered Styled Dropdown -->
 <div class="relative group">
 <select class="w-full h-16 px-6 bg-white border-2 border-slate-200 rounded-2xl text-xl font-bold text-slate-700 shadow-sm appearance-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all cursor-pointer outline-none" id="student-dropdown" onchange="if(this.value) app.selectStudent(this.value)">
 <option disabled="" selected="" value="">Wähle deinen Namen...</option>
-<!-- Dynamically generated options -->
 </select>
 <div class="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 group-hover:text-primary transition-colors">
 <span class="material-symbols-outlined text-3xl">expand_more</span>
@@ -131,7 +129,6 @@
 <p class="text-slate-500 font-medium" id="current-date-range"></p>
 </div>
 </div>
-<!-- Progress Steps -->
 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 no-print">
 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center step-card" id="step-1">
 <div class="w-8 h-8 rounded-full bg-blue-100 text-primary font-bold flex items-center justify-center mb-2">1</div>
@@ -153,16 +150,19 @@
 <div class="space-y-4" id="task-list">
 <!-- Tasks populated here -->
 </div>
-<!-- Parents Confirmation Section (Restored from SCREEN_359/223/260) -->
+<!-- Parents Confirmation Section -->
 <div class="hidden mt-12 bg-white border-2 border-dashed border-slate-300 p-10 rounded-[40px] flex flex-col items-center text-center shadow-md transition-all" id="parents-confirmation-card">
 <div class="w-16 h-16 bg-blue-50 text-primary rounded-full flex items-center justify-center mb-6">
 <span class="material-symbols-outlined text-4xl" id="confirmation-icon">verified_user</span>
 </div>
 <h3 class="text-2xl font-black text-slate-900 mb-2">Bestätigung der Eltern</h3>
-<p class="text-slate-500 mb-8 max-w-md mx-auto text-sm font-medium" id="confirmation-description">Ich bestätige hiermit, dass ich die oben aufgeführten Hausaufgaben gesehen habe.</p>
-<button class="px-10 py-4 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-black uppercase tracking-widest transition-all" id="confirm-btn" onclick="app.confirmByParent()">
-                Gesehen &amp; Bestätigt
-            </button>
+<p class="text-slate-500 mb-8 max-w-md mx-auto text-sm font-medium" id="confirmation-description">Bitte geben Sie Ihren Namen ein, um die Erledigung der Hausaufgaben zu bestätigen.</p>
+<div class="w-full max-w-sm mb-6 space-y-4" id="confirmation-form">
+<input class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-center focus:ring-2 focus:ring-primary outline-none font-bold" id="parent-name-input" placeholder="Name eines Elternteils" type="text"/>
+<button class="w-full px-10 py-4 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-black uppercase tracking-widest transition-all" id="confirm-btn" onclick="app.confirmByParent()">
+                    Gesehen &amp; Bestätigt
+                </button>
+</div>
 <div class="mt-4 hidden" id="confirmation-lock-status">
 <span class="px-4 py-1 bg-red-100 text-red-700 rounded-full text-[10px] font-black uppercase">Status: Gesperrt (Eltern haben bestätigt)</span>
 </div>
@@ -179,7 +179,6 @@
                 </button>
 </div>
 </div>
-<!-- Stats Overview -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
 <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Erledigungsquote Gesamt</p>
@@ -239,7 +238,6 @@
 </div>
 </form>
 </div>
-<!-- Student List and Management -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 <div class="lg:col-span-2 space-y-4">
 <h3 class="text-xl font-bold text-slate-800">Status &amp; Aufgaben</h3>
@@ -258,11 +256,9 @@
 </tbody>
 </table>
 </div>
-<!-- Detailed Task View for Selected/All Students -->
 <div class="bg-white border border-slate-200 rounded-[40px] p-8 shadow-sm">
 <h3 class="text-lg font-bold mb-6 text-slate-800" id="task-list-header">Aufgabenliste</h3>
 <div class="space-y-2 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar" id="all-tasks-list">
-<!-- Populated by teacher dashboard logic -->
 </div>
 </div>
 </div>
@@ -276,7 +272,6 @@
 <div class="border-t border-slate-100 pt-4">
 <p class="text-[10px] text-slate-400 mb-2 uppercase font-bold">Schüler verwalten</p>
 <div class="space-y-1 max-h-[300px] overflow-y-auto custom-scrollbar" id="class-list-container">
-<!-- Student list with delete icons -->
 </div>
 </div>
 </div>
@@ -352,14 +347,14 @@
         qrHome: null,
 
         async init() {
-            // Identity Protection: Check localStorage for existing session
+            // Identity Protection: Load from localStorage
             const savedUser = localStorage.getItem('doeltschi_user');
 
             onSnapshot(doc(db, "config", "classlist"), (docSnap) => {
                 if (docSnap.exists()) {
                     this.students = docSnap.data().names || [];
                     
-                    // If we have a saved user and the list is loaded, auto-select them
+                    // Auto-login if user was previously selected
                     if (savedUser && this.students.includes(savedUser) && this.currentRole === 'student') {
                         this.selectStudent(savedUser);
                     }
@@ -389,29 +384,22 @@
             const startOfYear = new Date(now.getFullYear(), 0, 1);
             const pastDaysOfYear = (now - startOfYear) / 86400000;
             const weekNum = Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
-            
             const weekDisplay = document.getElementById('current-week-display');
             if (weekDisplay) weekDisplay.textContent = `Woche ${weekNum}`;
-            
-            const curr = new Date();
-            const first = curr.getDate() - curr.getDay() + (curr.getDay() === 0 ? -6 : 1);
-            const last = first + 4;
+            const first = now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1);
             const firstDay = new Date(new Date().setDate(first));
-            const lastDay = new Date(new Date().setDate(last));
-            
+            const lastDay = new Date(new Date().setDate(first + 4));
             const rangeDisplay = document.getElementById('current-date-range');
             if (rangeDisplay) rangeDisplay.textContent = `${firstDay.toLocaleDateString('de-CH')} – ${lastDay.toLocaleDateString('de-CH')}`;
         },
 
         setRole(role) {
-            if (role === 'login' && this.currentRole === 'teacher') {
-                this.currentRole = 'teacher';
-            } else if (role === 'login') {
+            if (role === 'login' && this.currentRole === 'teacher') return;
+            if (role === 'login') {
                 this.currentRole = 'login';
             } else if (role === 'student') {
                 this.currentRole = 'student';
                 this.selectedStudent = null;
-                // Don't clear localStorage here to allow auto-login next reload
             } else if (role === 'teacher') {
                 this.currentRole = 'teacher';
             }
@@ -419,8 +407,7 @@
         },
 
         handleLogin() {
-            const pw = document.getElementById('login-password').value;
-            if (pw === 'lehrer123') {
+            if (document.getElementById('login-password').value === 'lehrer123') {
                 this.setRole('teacher');
             } else {
                 alert('Falsches Passwort!');
@@ -433,7 +420,7 @@
 
         selectStudent(name) {
             this.selectedStudent = name;
-            localStorage.setItem('doeltschi_user', name); // Identity Protection
+            localStorage.setItem('doeltschi_user', name); // Identity Protection Persistence
             this.currentRole = 'student-tasks';
             this.render();
         },
@@ -449,17 +436,16 @@
 
         render() {
             const views = ['login-view', 'student-select-view', 'student-tasks-view', 'teacher-dashboard'];
-            views.forEach(v => {
-                const el = document.getElementById(v);
-                if (el) el.classList.add('hidden');
-            });
+            views.forEach(v => document.getElementById(v)?.classList.add('hidden'));
 
             const navS = document.getElementById('nav-student');
             const navT = document.getElementById('nav-teacher');
-            navS.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all " + 
-                (this.currentRole.startsWith('student') ? "bg-primary text-white" : "text-slate-500 hover:bg-slate-200");
-            navT.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all " + 
-                (this.currentRole === 'teacher' || this.currentRole === 'login' ? "bg-primary text-white" : "text-slate-500 hover:bg-slate-200");
+            if(navS && navT) {
+                navS.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all " + 
+                    (this.currentRole.startsWith('student') ? "bg-primary text-white" : "text-slate-500 hover:bg-slate-200");
+                navT.className = "px-4 py-1.5 rounded-full text-xs font-bold transition-all " + 
+                    (this.currentRole === 'teacher' || this.currentRole === 'login' ? "bg-primary text-white" : "text-slate-500 hover:bg-slate-200");
+            }
 
             if (this.currentRole === 'login') {
                 document.getElementById('login-view').classList.remove('hidden');
@@ -479,13 +465,8 @@
         renderStudentDropdown() {
             const dropdown = document.getElementById('student-dropdown');
             if (!dropdown) return;
-            
             let optionsHtml = `<option value="" disabled selected>Wähle deinen Namen...</option>`;
-            if (this.students.length > 0) {
-                optionsHtml += this.students.map(name => `
-                    <option value="${name}">${name}</option>
-                `).join('');
-            }
+            optionsHtml += this.students.map(name => `<option value="${name}">${name}</option>`).join('');
             dropdown.innerHTML = optionsHtml;
             dropdown.value = ""; 
         },
@@ -496,18 +477,15 @@
             container.innerHTML = "";
             this.qrHome = new QRCode(container, {
                 text: window.location.href,
-                width: 200,
-                height: 200,
-                colorDark : "#0058bc",
-                colorLight : "#ffffff",
+                width: 200, height: 200,
+                colorDark : "#0058bc", colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
             });
         },
 
         async setTaskStatus(taskId, statusValue) {
             // Parental Lock check
-            const isConfirmed = this.parentalConfirmations[this.selectedStudent]?.status === 'OK';
-            if (isConfirmed) {
+            if (this.parentalConfirmations[this.selectedStudent]?.status === 'OK') {
                 alert("Bestätigte Aufgaben sind gesperrt und können nicht mehr geändert werden.");
                 this.renderStudentTasks();
                 return;
@@ -522,12 +500,19 @@
         },
 
         async confirmByParent() {
-            if (this.parentalConfirmations[this.selectedStudent]?.status === 'OK') return;
-            if (confirm("Bestätigen Sie als Elternteil die Erledigung der Hausaufgaben? Dies sperrt die weitere Bearbeitung.")) {
+            const name = this.selectedStudent;
+            const parentName = document.getElementById('parent-name-input').value.trim();
+            if (!parentName) {
+                alert("Bitte geben Sie einen Namen ein.");
+                return;
+            }
+            if (this.parentalConfirmations[name]?.status === 'OK') return;
+            if (confirm(`Bestätigen Sie als ${parentName} die Erledigung der Hausaufgaben? Dies sperrt die weitere Bearbeitung.`)) {
                 const confRef = doc(db, "config", "confirmations");
                 const data = {
-                    [this.selectedStudent]: {
+                    [name]: {
                         status: 'OK',
+                        parent: parentName,
                         date: new Date().toLocaleString('de-CH')
                     }
                 };
@@ -551,7 +536,6 @@
                 taskList.innerHTML = myTasks.map(t => {
                     const isDone = t.done && t.done.includes(name);
                     const subject = SUBJECTS[t.subject] || { name: t.subject, color: '#64748b' };
-                    
                     return `
                         <div class="bg-white border border-slate-200 rounded-[40px] overflow-hidden flex transition-all shadow-sm ${isDone ? 'border-primary/20' : 'hover:border-primary/30'}">
                             <div class="w-3 shrink-0" style="background-color: ${subject.color}"></div>
@@ -559,7 +543,6 @@
                                 <div>
                                     <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Fach</p>
                                     <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" style="background-color: ${subject.color}20; color: ${subject.color}">${subject.name}</span>
-                                    <p class="mt-1 text-[10px] font-bold text-slate-500 uppercase">Für: ${t.who === 'all' ? 'Alle' : 'Dich'}</p>
                                 </div>
                                 <div class="md:col-span-2">
                                     <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Aufgabe</p>
@@ -583,10 +566,10 @@
 
             const card = document.getElementById('parents-confirmation-card');
             const icon = document.getElementById('confirmation-icon');
-            const btn = document.getElementById('confirm-btn');
             const ts = document.getElementById('confirmation-timestamp');
             const lockStatus = document.getElementById('confirmation-lock-status');
             const desc = document.getElementById('confirmation-description');
+            const form = document.getElementById('confirmation-form');
 
             card.classList.remove('hidden');
             if (isConfirmed) {
@@ -594,31 +577,26 @@
                 card.classList.add('bg-blue-50/20');
                 icon.textContent = 'verified';
                 icon.parentElement.classList.add('bg-blue-100');
-                btn.textContent = 'Bereits Bestätigt ✓';
-                btn.className = "px-10 py-4 bg-primary text-white rounded-xl font-black uppercase tracking-widest cursor-not-allowed opacity-80";
-                btn.disabled = true;
-                ts.textContent = `Erfolgreich bestätigt am ${this.parentalConfirmations[name].date}`;
+                ts.textContent = `Bestätigt von ${this.parentalConfirmations[name].parent} am ${this.parentalConfirmations[name].date}`;
                 ts.classList.remove('hidden');
                 lockStatus.classList.remove('hidden');
                 desc.classList.add('hidden');
+                form.classList.add('hidden');
             } else {
                 card.classList.replace('border-primary', 'border-slate-300');
                 card.classList.remove('bg-blue-50/20');
                 icon.textContent = 'verified_user';
                 icon.parentElement.classList.remove('bg-blue-100');
-                btn.textContent = 'Gesehen & Bestätigt';
-                btn.className = "px-10 py-4 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-black uppercase tracking-widest";
-                btn.disabled = false;
                 ts.classList.add('hidden');
                 lockStatus.classList.add('hidden');
                 desc.classList.remove('hidden');
+                form.classList.remove('hidden');
             }
         },
 
         updateSteps(myTasks, isConfirmed) {
             const doneCount = myTasks.filter(t => t.done && t.done.includes(this.selectedStudent)).length;
             const allDone = myTasks.length > 0 && doneCount === myTasks.length;
-
             const update = (id, active) => {
                 const el = document.getElementById(id);
                 if (!el) return;
@@ -626,7 +604,6 @@
                 const circle = el.querySelector('div');
                 circle.className = active ? "w-8 h-8 rounded-full bg-blue-100 text-primary font-bold flex items-center justify-center mb-2" : "w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-2";
             };
-
             update('step-1', true);
             update('step-2', true);
             update('step-3', doneCount > 0);
@@ -637,16 +614,10 @@
             const select = document.getElementById('new-task-student');
             select.innerHTML = `<option value="all">Ganze Klasse</option>` + this.students.map(s => `<option value="${s}">${s}</option>`).join('');
 
-            let totalPossible = 0;
-            let totalDone = 0;
+            let totalPossible = 0, totalDone = 0;
             this.tasks.forEach(t => {
-                if (t.who === 'all') {
-                    totalPossible += this.students.length;
-                    totalDone += (t.done || []).length;
-                } else {
-                    totalPossible += 1;
-                    if ((t.done || []).includes(t.who)) totalDone += 1;
-                }
+                if (t.who === 'all') { totalPossible += this.students.length; totalDone += (t.done || []).length; }
+                else { totalPossible += 1; if ((t.done || []).includes(t.who)) totalDone += 1; }
             });
             const percent = totalPossible > 0 ? Math.round((totalDone / totalPossible) * 100) : 0;
             document.getElementById('total-progress-percent').textContent = percent + "%";
@@ -661,35 +632,20 @@
                 const sTasks = this.tasks.filter(t => t.who === 'all' || t.who === name);
                 const sDone = sTasks.filter(t => t.done && t.done.includes(name)).length;
                 const sPercent = sTasks.length > 0 ? Math.round((sDone / sTasks.length) * 100) : 0;
-                const conf = this.parentalConfirmations[name];
-                const isOk = conf?.status === 'OK';
-
+                const isOk = this.parentalConfirmations[name]?.status === 'OK';
                 return `
                     <tr class="hover:bg-slate-50 transition-colors cursor-pointer ${this.selectedTeacherFilter === name ? 'bg-blue-50/50' : ''}" onclick="app.setTeacherFilter('${name}')">
-                        <td class="px-6 py-4 font-bold text-slate-800">
-                            <div class="flex items-center gap-2">
-                                ${this.selectedTeacherFilter === name ? '<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>' : ''}
-                                ${name}
-                            </div>
-                        </td>
+                        <td class="px-6 py-4 font-bold text-slate-800">${name}</td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2">
-                                <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary" style="width: ${sPercent}%"></div>
-                                </div>
+                                <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-primary" style="width: ${sPercent}%"></div></div>
                                 <span class="text-[10px] font-bold text-slate-400">${sPercent}%</span>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-center">
                              <div class="flex items-center justify-center gap-2">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${isOk ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'} uppercase">
-                                    ${isOk ? 'OK' : 'OFFEN'}
-                                </span>
-                                ${isOk ? `
-                                    <button onclick="event.stopPropagation(); app.unlockStudent('${name}')" class="text-slate-400 hover:text-red-500 flex items-center" title="Bestätigung & Sperre zurücksetzen">
-                                        <span class="material-symbols-outlined text-[16px]">undo</span>
-                                    </button>
-                                ` : ''}
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${isOk ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'} uppercase">${isOk ? 'OK' : 'OFFEN'}</span>
+                                ${isOk ? `<button onclick="event.stopPropagation(); app.unlockStudent('${name}')" class="text-slate-400 hover:text-red-500 flex items-center" title="Entsperren"><span class="material-symbols-outlined text-[16px]">undo</span></button>` : ''}
                              </div>
                         </td>
                         <td class="px-6 py-4 text-right">
@@ -700,48 +656,26 @@
             }).join('');
 
             document.getElementById('task-list-header').textContent = this.selectedTeacherFilter === 'all' ? 'Alle Aufgaben' : `Aufgaben für ${this.selectedTeacherFilter}`;
-            
             const taskContainer = document.getElementById('all-tasks-list');
             const filteredTasks = this.tasks.filter(t => this.selectedTeacherFilter === 'all' || t.who === 'all' || t.who === this.selectedTeacherFilter);
-            
-            if (filteredTasks.length === 0) {
-                taskContainer.innerHTML = `<p class="text-center py-10 text-slate-400 text-xs italic">Keine Aufgaben vorhanden</p>`;
-            } else {
-                taskContainer.innerHTML = filteredTasks.map(t => {
-                    const sub = SUBJECTS[t.subject] || { name: t.subject, color: '#64748b' };
-                    let statusIcon = '';
-                    if (this.selectedTeacherFilter !== 'all') {
-                        const isDone = t.done && t.done.includes(this.selectedTeacherFilter);
-                        statusIcon = isDone ? '<span class="material-symbols-outlined text-green-500 text-sm">check_circle</span>' : '<span class="material-symbols-outlined text-slate-200 text-sm">radio_button_unchecked</span>';
-                    }
-
-                    return `
-                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-primary/20 transition-all group">
-                            <div class="flex items-center gap-3">
-                                <span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full min-w-[35px] text-center" style="background:${sub.color}">${t.subject}</span>
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <p class="text-sm font-bold text-slate-700">${t.task}</p>
-                                        ${statusIcon}
-                                    </div>
-                                    <p class="text-[10px] text-slate-400 font-medium">Wer: ${t.who === 'all' ? 'Alle' : t.who} | Bis: ${t.deadline || '-'}</p>
-                                </div>
-                            </div>
-                            <button onclick="app.deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-2">
-                                <span class="material-symbols-outlined text-lg">delete</span>
-                            </button>
+            taskContainer.innerHTML = filteredTasks.map(t => {
+                const sub = SUBJECTS[t.subject] || { name: t.subject, color: '#64748b' };
+                return `
+                    <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-primary/20 transition-all group">
+                        <div class="flex items-center gap-3">
+                            <span class="text-[9px] font-black text-white px-2 py-0.5 rounded-full min-w-[35px] text-center" style="background:${sub.color}">${t.subject}</span>
+                            <div><p class="text-sm font-bold text-slate-700">${t.task}</p><p class="text-[10px] text-slate-400 font-medium">Wer: ${t.who === 'all' ? 'Alle' : t.who}</p></div>
                         </div>
-                    `;
-                }).join('');
-            }
+                        <button onclick="app.deleteTask('${t.id}')" class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-2"><span class="material-symbols-outlined text-lg">delete</span></button>
+                    </div>
+                `;
+            }).join('');
 
             const classListContainer = document.getElementById('class-list-container');
             classListContainer.innerHTML = this.students.map(name => `
                 <div class="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg transition-all group">
                     <span class="text-sm font-medium text-slate-700">${name}</span>
-                    <button onclick="app.removeStudentFromList('${name}')" class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1">
-                        <span class="material-symbols-outlined text-lg">person_remove</span>
-                    </button>
+                    <button onclick="app.removeStudentFromList('${name}')" class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1"><span class="material-symbols-outlined text-lg">person_remove</span></button>
                 </div>
             `).join('');
         },
@@ -757,61 +691,35 @@
             const subject = document.getElementById('new-task-subject').value;
             const deadline = document.getElementById('new-task-date').value;
             const task = document.getElementById('new-task-desc').value;
-
-            await addDoc(collection(db, "tasks"), {
-                who,
-                subject,
-                task,
-                deadline,
-                done: [],
-                createdAt: Date.now()
-            });
-
+            await addDoc(collection(db, "tasks"), { who, subject, task, deadline, done: [], createdAt: Date.now() });
             document.getElementById('new-task-desc').value = "";
             document.getElementById('new-task-date').value = "";
         },
 
         async deleteTask(id) {
-            if (confirm("Aufgabe wirklich löschen?")) {
-                await deleteDoc(doc(db, "tasks", id));
-            }
+            if (confirm("Aufgabe wirklich löschen?")) await deleteDoc(doc(db, "tasks", id));
         },
 
         async updateClassList() {
             const input = document.getElementById('class-input').value;
             const newNames = input.split('\n').map(n => n.trim()).filter(n => n.length > 0);
             if (newNames.length === 0) return;
-            
             const updatedNames = [...new Set([...this.students, ...newNames])];
             await setDoc(doc(db, "config", "classlist"), { names: updatedNames });
             document.getElementById('class-input').value = "";
         },
 
         async removeStudentFromList(name) {
-            if (confirm(`Möchtest du ${name} wirklich aus der Klassenliste entfernen?`)) {
+            if (confirm(`Möchtest du ${name} wirklich entfernen?`)) {
                 const updatedNames = this.students.filter(n => n !== name);
                 await setDoc(doc(db, "config", "classlist"), { names: updatedNames });
-                // Also clear confirmation if student is deleted
-                const confRef = doc(db, "config", "confirmations");
-                await updateDoc(confRef, { [name]: deleteField() });
+                await updateDoc(doc(db, "config", "confirmations"), { [name]: deleteField() });
             }
         },
 
         async unlockStudent(name) {
-            if (confirm(`Bestätigung für ${name} wirklich zurücksetzen? Die Aufgaben werden wieder editierbar (Eltern-Sperre wird aufgehoben).`)) {
-                const confRef = doc(db, "config", "confirmations");
-                await updateDoc(confRef, {
-                    [name]: deleteField()
-                });
-                
-                // Optional: also reset all tasks for this student if specifically requested by user but request says "sowohl Aufgabenfortschritt als auch Eltern-Sperre aufheben"
-                // This would require looping through all tasks and removing the student from 'done' array.
-                const tasksWithStudent = this.tasks.filter(t => t.done && t.done.includes(name));
-                for (const t of tasksWithStudent) {
-                    await updateDoc(doc(db, "tasks", t.id), {
-                        done: arrayRemove(name)
-                    });
-                }
+            if (confirm(`Sperre für ${name} wirklich aufheben? Aufgaben werden wieder editierbar.`)) {
+                await updateDoc(doc(db, "config", "confirmations"), { [name]: deleteField() });
             }
         }
     };
