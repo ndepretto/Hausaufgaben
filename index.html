@@ -135,14 +135,22 @@
 <!-- Stats Sections Grid -->
 <div class="grid lg:grid-cols-2 gap-8 mb-8">
 <!-- Klassenfortschritt -->
-<div class="bg-white p-8 rounded-[2rem] border border-surface-container shadow-xl">
-<div class="flex justify-between items-center mb-6">
-<h3 class="text-xl font-bold flex items-center gap-2">
+<div class="bg-white p-8 rounded-[2rem] border border-surface-container shadow-xl flex flex-col">
+<h3 class="text-xl font-bold mb-4 flex items-center gap-2">
 <span class="material-symbols-outlined text-primary">analytics</span> Klassenfortschritt
                     </h3>
+<div class="mb-6">
+<label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2" for="progress-selector">Schüler auswählen:</label>
+<select class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary font-semibold" id="progress-selector" onchange="renderProgress()">
+<option value="">Bitte wähle einen Schüler...</option>
+</select>
 </div>
-<div class="space-y-4 max-h-[400px] overflow-y-auto pr-2" id="progress-list">
+<div class="flex-1 flex flex-col justify-center min-h-[160px]" id="progress-detail-view">
 <!-- Rendered via JS -->
+<div class="text-center py-8">
+<span class="material-symbols-outlined text-outline-variant text-4xl mb-2">person_search</span>
+<p class="text-on-surface-variant italic">Bitte wähle einen Schüler aus, um den Fortschritt zu sehen.</p>
+</div>
 </div>
 </div>
 <!-- Elternbestätigungen -->
@@ -239,8 +247,6 @@
         if (mode === 'teacher') {
             currentUser = null;
             isTeacherInspecting = false;
-        } else {
-            // mode student but might be coming from teacher inspection
         }
         updateUI();
     }
@@ -296,13 +302,25 @@
     function renderStudentOptions() {
         const sel = document.getElementById('student-selector');
         const taskWho = document.getElementById('task-who');
-        if (!sel || !taskWho) return;
+        const progressSel = document.getElementById('progress-selector');
+        
+        if (!sel || !taskWho || !progressSel) return;
+        
+        const currentSelVal = sel.value;
+        const currentProgVal = progressSel.value;
+        
         sel.innerHTML = '<option value="">Wähle deinen Namen...</option>';
         taskWho.innerHTML = '<option value="Ganze Klasse">Ganze Klasse</option>';
+        progressSel.innerHTML = '<option value="">Bitte wähle einen Schüler...</option>';
+        
         students.forEach(s => {
             sel.innerHTML += `<option value="${s}">${s}</option>`;
             taskWho.innerHTML += `<option value="${s}">${s}</option>`;
+            progressSel.innerHTML += `<option value="${s}">${s}</option>`;
         });
+        
+        sel.value = currentSelVal;
+        progressSel.value = currentProgVal;
     }
 
     function renderSubjectOptions() {
@@ -368,35 +386,53 @@
     }
 
     function renderProgress() {
-        const container = document.getElementById('progress-list');
-        if (!container) return;
-        if (students.length === 0) {
-            container.innerHTML = '<p class="text-on-surface-variant italic py-4">Keine Schüler vorhanden.</p>';
+        const selector = document.getElementById('progress-selector');
+        const detailView = document.getElementById('progress-detail-view');
+        if (!selector || !detailView) return;
+        
+        const s = selector.value;
+        if (!s) {
+            detailView.innerHTML = `
+                <div class="text-center py-8">
+                    <span class="material-symbols-outlined text-outline-variant text-4xl mb-2">person_search</span>
+                    <p class="text-on-surface-variant italic">Bitte wähle einen Schüler aus, um den Fortschritt zu sehen.</p>
+                </div>`;
             return;
         }
 
-        container.innerHTML = students.map(s => {
-            const myTasks = tasks.filter(t => t.who === 'Ganze Klasse' || t.who === s);
-            const total = myTasks.length;
-            const done = myTasks.filter(t => t.doneBy?.includes(s)).length;
-            const percent = total === 0 ? 0 : Math.round((done / total) * 100);
-            const isConfirmed = parentConfirms[s];
+        const myTasks = tasks.filter(t => t.who === 'Ganze Klasse' || t.who === s);
+        const total = myTasks.length;
+        const done = myTasks.filter(t => t.doneBy?.includes(s)).length;
+        const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+        const conf = parentConfirms[s];
 
-            return `
-            <div class="p-4 bg-surface-container-low rounded-2xl border border-surface-container transition-all hover:bg-surface-container group">
-                <div class="flex justify-between items-center mb-2">
-                    <button onclick="inspectStudent('${s}')" class="flex items-center gap-2 text-left hover:text-primary transition-colors cursor-pointer focus:outline-none">
-                        <span class="font-bold text-on-surface group-hover:text-primary transition-colors">${s}</span>
-                        ${isConfirmed ? '<span class="material-symbols-outlined text-primary text-sm" title="Elternbestätigt">verified</span>' : ''}
-                        <span class="material-symbols-outlined opacity-0 group-hover:opacity-100 text-primary text-sm transition-opacity">visibility</span>
+        detailView.innerHTML = `
+            <div class="p-6 bg-surface-container-low rounded-2xl border border-surface-container transition-all hover:shadow-inner group">
+                <div class="flex justify-between items-center mb-4">
+                    <button onclick="inspectStudent('${s}')" class="flex items-center gap-3 text-left hover:text-primary transition-colors cursor-pointer focus:outline-none">
+                        <span class="text-2xl font-black text-on-surface group-hover:text-primary transition-colors">${s}</span>
+                        <span class="material-symbols-outlined opacity-0 group-hover:opacity-100 text-primary text-xl transition-opacity">visibility</span>
                     </button>
-                    <span class="text-xs font-bold text-on-surface-variant">${done} / ${total} erledigt</span>
+                    <div class="text-right">
+                        <span class="text-xs font-bold text-on-surface-variant block uppercase tracking-tighter">Status</span>
+                        <span class="text-lg font-bold text-primary">${done} / ${total} erledigt</span>
+                    </div>
                 </div>
-                <div class="w-full bg-surface-container-highest rounded-full h-2.5">
-                    <div class="bg-primary h-2.5 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                
+                <div class="w-full bg-surface-container-highest rounded-full h-4 mb-6 overflow-hidden">
+                    <div class="bg-primary h-full rounded-full transition-all duration-700 ease-out" style="width: ${percent}%"></div>
+                </div>
+
+                <div class="flex items-center justify-between pt-4 border-t border-surface-container">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined ${conf ? 'text-primary' : 'text-outline-variant'}">verified</span>
+                        <span class="text-sm font-semibold ${conf ? 'text-on-surface' : 'text-on-surface-variant italic'}">
+                            ${conf ? `OK (${conf.date})` : 'Bestätigung ausstehend'}
+                        </span>
+                    </div>
+                    <div class="text-3xl font-black text-primary/20">${percent}%</div>
                 </div>
             </div>`;
-        }).join('');
     }
 
     function renderParentConfirmsList() {
