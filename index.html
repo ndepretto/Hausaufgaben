@@ -19,6 +19,12 @@
         .view-section { display: none; }
         .view-section.active { display: block; }
         input:disabled, button:disabled { cursor: not-allowed; opacity: 0.6; }
+        
+        /* Custom scrollbar for clean look */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e2e2e7; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c1c6d7; }
     </style>
 </head>
 <body class="dot-pattern min-h-screen text-on-surface pb-20">
@@ -33,10 +39,10 @@
 </div>
 <div class="flex bg-surface-container p-1 rounded-xl">
 <button class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-primary text-on-primary shadow-sm" id="btn-student" onclick="setMode('student')">
-<span class="material-symbols-outlined text-sm">person</span> Schüler-Ansicht
+<span class="material-symbols-outlined text-[18px]">person</span> Schüler-Ansicht
             </button>
 <button class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 text-on-surface-variant hover:bg-surface-container-high" id="btn-teacher" onclick="setMode('teacher')">
-<span class="material-symbols-outlined text-sm">lock</span> Lehrer-Bereich
+<span class="material-symbols-outlined text-[18px]">lock</span> Lehrer-Bereich
             </button>
 </div>
 </div>
@@ -116,8 +122,6 @@
 <button class="flex-1 min-w-[120px] bg-surface-container-high text-on-surface-variant font-bold py-3 rounded-xl hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2" onclick="document.getElementById('txt-import').click()">
 <span class="material-symbols-outlined text-sm">upload_file</span> .txt Import
                     </button>
-<input class="hidden" id="word-import" onchange="handleWordImport(event)" type="file"/>
-<button class="flex-1 min-w-[120px] bg-surface-container-high text-on-surface-variant font-bold py-3 rounded-xl hover:bg-surface-container-highest transition-all" onclick="document.getElementById('word-import').click()">Word Import</button>
 <button class="bg-error-container text-on-error-container px-4 py-3 rounded-xl hover:opacity-80 transition-all" onclick="deleteEntireClass()" title="Alles löschen">
 <span class="material-symbols-outlined">delete_forever</span>
 </button>
@@ -139,34 +143,29 @@
 </div>
 </div>
 </div>
-<!-- Stats Sections Grid -->
-<div class="grid lg:grid-cols-2 gap-8 mb-8">
-<!-- Klassenfortschritt -->
-<div class="bg-white p-8 rounded-[2rem] border border-surface-container shadow-xl flex flex-col">
-<h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+<!-- Klassenfortschritt (Collapsible Table) -->
+<div class="bg-white rounded-[2rem] border border-surface-container shadow-xl mb-8 overflow-hidden">
+<button class="w-full p-8 flex items-center justify-between hover:bg-surface-container-low transition-colors group" onclick="toggleSection('progress-section')">
+<h3 class="text-xl font-bold flex items-center gap-2">
 <span class="material-symbols-outlined text-primary">analytics</span> Klassenfortschritt
                 </h3>
-<div class="mb-6">
-<label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2" for="progress-selector">Schüler auswählen:</label>
-<select class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary font-semibold" id="progress-selector" onchange="renderProgress()">
-<option value="">Bitte wähle einen Schüler...</option>
-</select>
-</div>
-<div class="flex-1 flex flex-col justify-center min-h-[160px]" id="progress-detail-view">
+<span class="material-symbols-outlined text-outline-variant transition-transform duration-300" id="progress-chevron">expand_less</span>
+</button>
+<div class="px-8 pb-8" id="progress-section">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="text-xs font-bold text-outline-variant uppercase tracking-wider border-b border-surface-container">
+<th class="py-4 px-2">Schüler</th>
+<th class="py-4 px-2">Fortschritt</th>
+<th class="py-4 px-2 text-center">Status</th>
+<th class="py-4 px-2 text-right">Aktion</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container" id="progress-table-body">
 <!-- Rendered via JS -->
-<div class="text-center py-8">
-<span class="material-symbols-outlined text-outline-variant text-4xl mb-2">person_search</span>
-<p class="text-on-surface-variant italic">Bitte wähle einen Schüler aus, um den Fortschritt zu sehen.</p>
-</div>
-</div>
-</div>
-<!-- Elternbestätigungen -->
-<div class="bg-white p-8 rounded-[2rem] border border-surface-container shadow-xl">
-<h3 class="text-xl font-bold mb-6 flex items-center gap-2">
-<span class="material-symbols-outlined text-primary">family_history</span> Elternbestätigungen
-                </h3>
-<div class="space-y-3 max-h-[400px] overflow-y-auto pr-2" id="parent-confirms-list">
-<!-- Rendered via JS -->
+</tbody>
+</table>
 </div>
 </div>
 </div>
@@ -225,7 +224,7 @@
                 students = doc.data().students || [];
                 document.getElementById('class-input').value = students.join('\n');
                 renderStudentOptions();
-                renderProgress();
+                renderProgressTable();
             }
         });
 
@@ -233,23 +232,34 @@
             tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderTasks();
             renderTeacherTasks();
-            renderProgress();
+            renderProgressTable();
         });
 
         db.collection('confirms').onSnapshot(snapshot => {
             parentConfirms = {};
             snapshot.docs.forEach(doc => parentConfirms[doc.id] = doc.data());
-            renderProgress();
-            renderParentConfirmsList();
+            renderProgressTable();
             if (currentUser) {
                 checkParentStatus();
-                renderTasks(); // Re-render tasks to update disabled state
+                renderTasks(); 
             }
         });
 
         renderSubjectOptions();
         updateWeekDisplay();
         generateMainQRCode();
+    }
+
+    function toggleSection(id) {
+        const el = document.getElementById(id);
+        const chevron = document.getElementById('progress-chevron');
+        if (el.classList.contains('hidden')) {
+            el.classList.remove('hidden');
+            chevron.style.transform = 'rotate(0deg)';
+        } else {
+            el.classList.add('hidden');
+            chevron.style.transform = 'rotate(180deg)';
+        }
     }
 
     function setMode(mode) {
@@ -319,25 +329,19 @@
     function renderStudentOptions() {
         const sel = document.getElementById('student-selector');
         const taskWho = document.getElementById('task-who');
-        const progressSel = document.getElementById('progress-selector');
         
-        if (!sel || !taskWho || !progressSel) return;
+        if (!sel || !taskWho) return;
         
         const currentSelVal = sel.value;
-        const currentProgVal = progressSel.value;
-        
         sel.innerHTML = '<option value="">Wähle deinen Namen...</option>';
         taskWho.innerHTML = '<option value="Ganze Klasse">Ganze Klasse</option>';
-        progressSel.innerHTML = '<option value="">Bitte wähle einen Schüler...</option>';
         
         students.forEach(s => {
             sel.innerHTML += `<option value="${s}">${s}</option>`;
             taskWho.innerHTML += `<option value="${s}">${s}</option>`;
-            progressSel.innerHTML += `<option value="${s}">${s}</option>`;
         });
         
         sel.value = currentSelVal;
-        progressSel.value = currentProgVal;
     }
 
     function renderSubjectOptions() {
@@ -364,25 +368,18 @@
     }
 
     async function deleteAllTasks() {
-        if (confirm("Möchtest du wirklich ALLE aktuellen Aufgaben löschen? Diese Aktion kann nicht rückgängig gemacht werden.")) {
+        if (confirm("Möchtest du wirklich ALLE aktuellen Aufgaben löschen?")) {
             try {
                 const snapshot = await db.collection('tasks').get();
                 const batch = db.batch();
-                snapshot.docs.forEach((doc) => {
-                    batch.delete(doc.ref);
-                });
+                snapshot.docs.forEach((doc) => { batch.delete(doc.ref); });
                 await batch.commit();
-                alert("Alle Aufgaben wurden erfolgreich gelöscht.");
-            } catch (error) {
-                console.error("Fehler beim Löschen der Aufgaben: ", error);
-                alert("Ein Fehler ist aufgetreten.");
-            }
+            } catch (error) { console.error(error); }
         }
     }
 
     function toggleTask(taskId, isDone) {
-        if (parentConfirms[currentUser]) return; // Extra check to prevent modification if locked
-        
+        if (parentConfirms[currentUser]) return;
         const task = tasks.find(t => t.id === taskId);
         let newList = [...(task.doneBy || [])];
         if (isDone) {
@@ -425,79 +422,50 @@
         }).join('');
     }
 
-    function renderProgress() {
-        const selector = document.getElementById('progress-selector');
-        const detailView = document.getElementById('progress-detail-view');
-        if (!selector || !detailView) return;
-        
-        const s = selector.value;
-        if (!s) {
-            detailView.innerHTML = `
-                <div class="text-center py-8">
-                    <span class="material-symbols-outlined text-outline-variant text-4xl mb-2">person_search</span>
-                    <p class="text-on-surface-variant italic">Bitte wähle einen Schüler aus, um den Fortschritt zu sehen.</p>
-                </div>`;
+    function renderProgressTable() {
+        const tbody = document.getElementById('progress-table-body');
+        if (!tbody) return;
+
+        if (students.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="py-10 text-center text-on-surface-variant italic">Keine Schüler in der Liste.</td></tr>';
             return;
         }
 
-        const myTasks = tasks.filter(t => t.who === 'Ganze Klasse' || t.who === s);
-        const total = myTasks.length;
-        const done = myTasks.filter(t => t.doneBy?.includes(s)).length;
-        const percent = total === 0 ? 0 : Math.round((done / total) * 100);
-        const conf = parentConfirms[s];
-
-        detailView.innerHTML = `
-            <div class="p-6 bg-surface-container-low rounded-2xl border border-surface-container transition-all hover:shadow-inner group">
-                <div class="flex justify-between items-center mb-4">
-                    <button onclick="inspectStudent('${s}')" class="flex items-center gap-3 text-left hover:text-primary transition-colors cursor-pointer focus:outline-none">
-                        <span class="text-2xl font-black text-on-surface group-hover:text-primary transition-colors">${s}</span>
-                        <span class="material-symbols-outlined opacity-0 group-hover:opacity-100 text-primary text-xl transition-opacity">visibility</span>
-                    </button>
-                    <div class="text-right">
-                        <span class="text-xs font-bold text-on-surface-variant block uppercase tracking-tighter">Status</span>
-                        <span class="text-lg font-bold text-primary">${done} / ${total} erledigt</span>
-                    </div>
-                </div>
-                
-                <div class="w-full bg-surface-container-highest rounded-full h-4 mb-6 overflow-hidden">
-                    <div class="bg-primary h-full rounded-full transition-all duration-700 ease-out" style="width: ${percent}%"></div>
-                </div>
-
-                <div class="flex items-center justify-between pt-4 border-t border-surface-container">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined ${conf ? 'text-primary' : 'text-outline-variant'}">${conf ? 'lock' : 'verified'}</span>
-                        <span class="text-sm font-semibold ${conf ? 'text-on-surface' : 'text-on-surface-variant italic'}">
-                            ${conf ? `Bestätigt (${conf.date})` : 'Bestätigung ausstehend'}
-                        </span>
-                    </div>
-                    <div class="text-3xl font-black text-primary/20">${percent}%</div>
-                </div>
-            </div>`;
-    }
-
-    function renderParentConfirmsList() {
-        const container = document.getElementById('parent-confirms-list');
-        if (!container) return;
-        
-        const confirmedStudents = students.filter(s => parentConfirms[s]);
-        
-        if (confirmedStudents.length === 0) {
-            container.innerHTML = '<p class="text-on-surface-variant italic py-4">Keine Bestätigungen vorhanden.</p>';
-            return;
-        }
-
-        container.innerHTML = confirmedStudents.map(s => {
+        tbody.innerHTML = students.map(s => {
+            const myTasks = tasks.filter(t => t.who === 'Ganze Klasse' || t.who === s);
+            const total = myTasks.length;
+            const done = myTasks.filter(t => t.doneBy?.includes(s)).length;
+            const percent = total === 0 ? 0 : Math.round((done / total) * 100);
             const conf = parentConfirms[s];
+
             return `
-            <div class="p-4 bg-surface-container-low rounded-xl flex justify-between items-center border border-surface-container">
-                <div>
-                    <p class="font-bold text-on-surface">${s}</p>
-                    <p class="text-[11px] text-on-surface-variant">Bestätigt von: <span class="font-semibold">${conf.name}</span> am ${conf.date}</p>
-                </div>
-                <button onclick="resetParentConfirm('${s}')" class="text-error hover:bg-error-container p-2 rounded-lg transition-all" title="Bestätigung zurücksetzen / Plan entsperren">
-                    <span class="material-symbols-outlined text-[20px]">lock_open</span>
-                </button>
-            </div>`;
+            <tr class="group hover:bg-surface-container-lowest transition-colors">
+                <td class="py-4 px-2">
+                    <button onclick="inspectStudent('${s}')" class="flex items-center gap-2 text-left font-bold text-on-surface hover:text-primary transition-colors">
+                        ${s}
+                        <span class="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 transition-opacity">visibility</span>
+                    </button>
+                </td>
+                <td class="py-4 px-2 min-w-[150px]">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1 bg-surface-container-highest rounded-full h-2 overflow-hidden">
+                            <div class="bg-primary h-full rounded-full transition-all duration-700" style="width: ${percent}%"></div>
+                        </div>
+                        <span class="text-xs font-black text-primary w-8">${percent}%</span>
+                    </div>
+                </td>
+                <td class="py-4 px-2 text-center">
+                    ${conf ? 
+                        `<span class="material-symbols-outlined text-primary" title="Bestätigt von ${conf.name}">check_circle</span>` : 
+                        `<span class="material-symbols-outlined text-outline-variant" title="Ausstehend">schedule</span>`
+                    }
+                </td>
+                <td class="py-4 px-2 text-right">
+                    <button onclick="resetParentConfirm('${s}')" class="text-on-surface-variant hover:text-error transition-all p-2 rounded-lg hover:bg-error-container/20" title="Sperre aufheben">
+                        <span class="material-symbols-outlined text-[20px]">${conf ? 'lock_open' : 'do_not_disturb_on'}</span>
+                    </button>
+                </td>
+            </tr>`;
         }).join('');
     }
 
@@ -536,7 +504,7 @@
             name,
             date: new Date().toLocaleDateString('de-CH'),
             timestamp: Date.now(),
-            parentalConfirmation: true // Set explicitly for the lock mechanism
+            parentalConfirmation: true
         });
     }
 
@@ -555,8 +523,6 @@
             status.classList.remove('hidden');
             status.innerHTML = `<span class="flex items-center justify-center gap-2"><span class="material-symbols-outlined">check_circle</span> Bestätigt von ${conf.name} am ${conf.date}</span>`;
             lockIndicator.classList.remove('hidden');
-            if(parentNameInput) parentNameInput.disabled = true;
-            if(parentConfirmBtn) parentConfirmBtn.disabled = true;
         } else {
             form.classList.remove('hidden');
             status.classList.add('hidden');
@@ -565,7 +531,6 @@
                 parentNameInput.disabled = false;
                 parentNameInput.value = '';
             }
-            if(parentConfirmBtn) parentConfirmBtn.disabled = false;
         }
     }
 
@@ -580,7 +545,6 @@
     function deleteEntireClass() {
         if(confirm("Bist du sicher? Alle Schüler und Aufgaben werden gelöscht.")) {
             db.collection('settings').doc('classData').delete();
-            alert("Klasse gelöscht.");
         }
     }
 
@@ -607,32 +571,14 @@
         if (!file) return;
         const reader = new FileReader();
         reader.onload = function(e) {
-            const content = e.target.result;
-            const names = content.split(/\r?\n/).map(n => n.trim()).filter(n => n !== '');
+            const names = e.target.result.split(/\r?\n/).map(n => n.trim()).filter(n => n !== '');
             if (names.length > 0) {
                 db.collection('settings').doc('classData').set({ students: names })
-                .then(() => {
-                    alert(`${names.length} Namen erfolgreich importiert.`);
-                    document.getElementById('class-input').value = names.join('\n');
-                })
-                .catch(err => alert("Fehler beim Speichern: " + err.message));
-            } else {
-                alert("Die Datei scheint leer zu sein oder keine gültigen Namen zu enthalten.");
+                .then(() => document.getElementById('class-input').value = names.join('\n'));
             }
         };
         reader.readAsText(file);
-        event.target.value = ''; // Reset file input
-    }
-
-    function handleWordImport(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const content = e.target.result;
-            document.getElementById('class-input').value = content;
-        };
-        reader.readAsText(file);
+        event.target.value = ''; 
     }
 
     window.onload = init;
