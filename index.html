@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+<html class="light" lang="de"><head></head><body class="min-h-screen text-on-surface flex flex-col font-sans">```html
 
-<html class="light" lang="de"><head>
+
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
 <title>Döltschi | Digitaler Aufgabenplaner</title>
@@ -94,13 +94,11 @@
             body { background: white !important; background-image: none !important; }
         }
     </style>
-</head>
-<body class="min-h-screen text-on-surface flex flex-col font-sans">
 <header class="bg-white/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50 no-print">
 <div class="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
 <div class="flex items-center gap-2 cursor-pointer" onclick="handleLogoClick()">
 <span class="text-2xl font-black tracking-tighter text-primary">Döltschi</span>
-<div class="hidden md:flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full text-[10px] font-bold uppercase text-primary border border-blue-100">
+<div class="hidden md:flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full text-[10px] font-bold uppercase text-primary border border-blue-100" id="sync-indicator">
 <span class="material-symbols-outlined text-[14px]">cloud_done</span>
 <span>Cloud Aktiv</span>
 </div>
@@ -227,9 +225,9 @@
 </div>
 <div class="bg-white border border-slate-200 p-6 rounded-3xl shadow-sm flex flex-col items-center justify-center">
 <div class="flex items-center gap-2 text-primary font-bold text-xs uppercase">
-<span class="material-symbols-outlined text-sm">cloud_sync</span> Cloud Sync Aktiv
+<span class="material-symbols-outlined text-sm">cloud_sync</span> Connected Live
                     </div>
-<p class="text-[10px] text-slate-400 font-bold mt-1" id="admin-class-label">Klasse: --</p>
+<p class="text-[10px] text-slate-400 font-bold mt-1" id="admin-class-label">Klassen-Code: --</p>
 </div>
 </div>
 <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-8">
@@ -354,7 +352,7 @@
             getFirestore, collection, doc, onSnapshot, setDoc, addDoc, deleteDoc, updateDoc, getDocs, query, orderBy, writeBatch, serverTimestamp, arrayUnion, arrayRemove, deleteField 
         } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-        // Firebase Configuration (Example)
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyD7-v7M9q8yK4...", 
             authDomain: "doeltschi-hausaufgaben.firebaseapp.com",
@@ -389,7 +387,7 @@
             'WAH': { name: 'WAH', color: '#c2410c' }
         };
 
-        // Path Generators (Fixed to handle the Class-Specific structure)
+        // Path Generators
         const getClassDoc = () => doc(db, "classes", currentClassName);
         const getStudentColl = () => collection(db, "classes", currentClassName, "students");
         const getTaskColl = () => collection(db, "classes", currentClassName, "tasks");
@@ -399,9 +397,15 @@
             initSubjectSelect();
             initImportHandlers();
             
-            // Check if class is present in URL or Storage
+            // Critical: If classId is in URL but not storage, sync it.
+            const urlClass = urlParams.get('class');
+            if (urlClass) {
+                currentClassName = urlClass.toLowerCase();
+                localStorage.setItem('currentClassName', currentClassName);
+            }
+
             if (currentClassName) {
-                initSync(); // Start loading data for this specific class
+                initSync();
                 if (currentStudentName) showView('planer-view');
                 else showView('start-view');
             } else {
@@ -444,12 +448,12 @@
             }
             
             if (viewId === 'start-view' || viewId === 'adminDashboard') {
-                setTimeout(generateQRCodes, 50);
+                setTimeout(generateQRCodes, 100);
             }
             if (viewId === 'adminDashboard') {
                 renderTeacherDashboard();
                 const al = document.getElementById('admin-class-label');
-                if(al) al.innerText = `Klasse: ${currentClassName?.toUpperCase()}`;
+                if(al) al.innerText = `Klassen-Code: ${currentClassName?.toUpperCase()}`;
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
@@ -479,13 +483,15 @@
             showView('start-view');
         };
 
-        // Real-time synchronization within the scope of currentClassName
         function initSync() {
             unsubscribeList.forEach(unsub => unsub());
             unsubscribeList = [];
             if (!currentClassName) return;
 
-            // 1. Sync Students
+            const syncInd = document.getElementById('sync-indicator');
+            if (syncInd) syncInd.classList.remove('hidden');
+
+            // 1. Sync Students (Absolute isolation by currentClassName)
             const unsubStudents = onSnapshot(getStudentColl(), (snap) => {
                 studentData = {};
                 classlist = [];
@@ -604,7 +610,7 @@
         window.toggleTask = async (taskId) => {
             const student = studentData[currentStudentName];
             if (!student || student.confirmed) {
-                if(student?.confirmed) alert("Identitätsschutz: Diese Aufgaben sind gesperrt, da die Eltern bereits bestätigt haben.");
+                if(student?.confirmed) alert("Identitätsschutz: Aufgaben gesperrt (Elternbestätigung aktiv).");
                 return; 
             }
             const isCurrentlyDone = (student.done || []).includes(taskId);
@@ -625,7 +631,7 @@
         window.updateClassList = async () => {
             const text = document.getElementById('classlist-textarea').value;
             const newNames = text.split('\n').map(n => n.trim()).filter(n => n !== "");
-            if (confirm(`Möchtest du die Klassenliste in der Cloud aktualisieren?`)) {
+            if (confirm(`Möchtest du die Klassenliste für "${currentClassName}" aktualisieren?`)) {
                 const batch = writeBatch(db);
                 newNames.forEach(name => {
                     const sRef = doc(db, 'classes', currentClassName, 'students', name);
@@ -640,12 +646,12 @@
                     if (!newNames.includes(oldName)) batch.delete(doc(db, 'classes', currentClassName, 'students', oldName));
                 });
                 await batch.commit();
-                alert("Cloud-Update erfolgreich.");
+                alert("Namen gespeichert.");
             }
         };
 
         window.deleteWholeClass = async () => {
-            if (confirm(`ACHTUNG: Klasse "${currentClassName}" und ALLE Daten unwiderruflich löschen?`)) {
+            if (confirm(`ACHTUNG: Klasse "${currentClassName}" und ALLE zugehörigen Daten unwiderruflich löschen?`)) {
                 const taskSnap = await getDocs(getTaskColl());
                 const studentSnap = await getDocs(getStudentColl());
                 const batch = writeBatch(db);
@@ -681,7 +687,7 @@
         };
 
         window.deleteAllTasks = async () => {
-            if (confirm('Sollen wirklich ALLE Aufgaben der Klasse gelöscht werden?')) {
+            if (confirm('Sollen wirklich ALLE Aufgaben gelöscht werden?')) {
                 const snapshot = await getDocs(getTaskColl());
                 const batch = writeBatch(db);
                 snapshot.docs.forEach(d => batch.delete(d.ref));
@@ -690,7 +696,7 @@
         };
 
         window.removeStudent = async (name) => {
-            if(confirm(`${name} wirklich aus der Liste entfernen?`)) {
+            if(confirm(`${name} wirklich entfernen?`)) {
                 await deleteDoc(doc(db, "classes", currentClassName, "students", name));
             }
         };
@@ -801,7 +807,8 @@
 
         function generateQRCodes() {
             if (!currentClassName) return;
-            const baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            // Generate absolute URL with class param
+            const baseUrl = window.location.origin + window.location.pathname;
             const fullUrl = baseUrl + '?class=' + encodeURIComponent(currentClassName);
 
             const qrEl = document.getElementById("qrcode");
@@ -828,7 +835,7 @@
         }
 
         window.logoutStudent = () => {
-            if(confirm("Möchtest du dich wirklich abmelden? Die Sitzungssperre wird aufgehoben.")) {
+            if(confirm("Möchtest du dich wirklich abmelden?")) {
                 currentStudentName = null;
                 localStorage.removeItem('doeltschi_user');
                 showView('start-view');
@@ -875,32 +882,38 @@
         };
 
         function initImportHandlers() {
-            document.getElementById('import-list').onchange = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (re) => { document.getElementById('classlist-textarea').value = re.target.result; };
-                reader.readAsText(file);
-            };
-            document.getElementById('import-docx').onchange = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = async (re) => {
-                    try {
-                        const result = await mammoth.extractRawText({ arrayBuffer: re.target.result });
-                        const lines = result.value.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-                        document.getElementById('classlist-textarea').value = lines.join('\n');
-                    } catch (err) { alert('Fehler beim Lesen der .docx Datei.'); }
+            const listImp = document.getElementById('import-list');
+            const docxImp = document.getElementById('import-docx');
+            if (listImp) {
+                listImp.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (re) => { document.getElementById('classlist-textarea').value = re.target.result; };
+                    reader.readAsText(file);
                 };
-                reader.readAsArrayBuffer(file);
-            };
+            }
+            if (docxImp) {
+                docxImp.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = async (re) => {
+                        try {
+                            const result = await mammoth.extractRawText({ arrayBuffer: re.target.result });
+                            const lines = result.value.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+                            document.getElementById('classlist-textarea').value = lines.join('\n');
+                        } catch (err) { alert('Fehler beim Lesen der .docx Datei.'); }
+                    };
+                    reader.readAsArrayBuffer(file);
+                };
+            }
         }
 
         window.clearClass = () => {
             localStorage.clear();
-            const baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            const baseUrl = window.location.origin + window.location.pathname;
             window.location.href = baseUrl;
         };
     </script>
-</body></html>
+```</body></html>
