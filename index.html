@@ -213,8 +213,8 @@
 <div class="flex items-center justify-between">
 <h3 class="font-bold text-xl flex items-center gap-3">
 <span class="material-symbols-outlined text-orange-600">lock_open</span>
-                    Identitätsschutz / Sitzungssperre
-                </h3>
+                        Identitätsschutz / Sitzungssperre
+                    </h3>
 </div>
 <div class="flex flex-col sm:flex-row items-center gap-4">
 <p class="text-sm text-slate-600 flex-1">Falls ein Schüler sein Gerät gesperrt hat (Sitzungsschutz), kannst du hier die Sperre für dieses Gerät aufheben.</p>
@@ -226,8 +226,8 @@
 <div class="flex items-center justify-between">
 <h3 class="font-bold text-xl flex items-center gap-3">
 <span class="material-symbols-outlined text-primary">groups</span>
-                    Klassenliste verwalten
-                </h3>
+                        Klassenliste verwalten
+                    </h3>
 <div class="flex gap-2">
 <input accept=".docx" class="hidden" id="import-word" onchange="handleWordImport(event)" type="file"/>
 <button class="text-[10px] font-bold uppercase bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors" onclick="document.getElementById('import-word').click()">Word-Liste importieren</button>
@@ -246,8 +246,8 @@ Erika Musterfrau..." rows="6"></textarea>
 <div class="glass-card p-8 rounded-lg border border-slate-200 shadow-sm space-y-8">
 <h3 class="font-bold text-xl flex items-center gap-3">
 <span class="material-symbols-outlined text-primary">add_task</span>
-                Neue Aufgabe erstellen
-            </h3>
+                    Neue Aufgabe erstellen
+                </h3>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 <div>
 <label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Fach</label>
@@ -326,422 +326,435 @@ Erika Musterfrau..." rows="6"></textarea>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-    // Firebase Config
-    const firebaseConfig = {
-        apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
-        authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
-        projectId: "doeltschi-hausaufgabenplaner",
-        storageBucket: "doeltschi-hausaufgabenplaner.firebasestorage.app",
-        messagingSenderId: "741131007424",
-        appId: "1:741131007424:web:04427f839b7eb86aa9c425",
-        measurementId: "G-C6GTQJ8C1D"
-    };
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
+            authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
+            projectId: "doeltschi-hausaufgabenplaner",
+            storageBucket: "doeltschi-hausaufgabenplaner.firebasestorage.app",
+            messagingSenderId: "741131007424",
+            appId: "1:741131007424:web:04427f839b7eb86aa9c425",
+            measurementId: "G-C6GTQJ8C1D"
+        };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-    // App State
-    let currentStudentName = localStorage.getItem('currentStudentName') || null;
-    let isLocked = localStorage.getItem('doeltschi_locked') === 'true';
-    let classlist = [];
-    let tasks = [];
-    let studentProgress = {};
+        // App State - ensuring globals are accessible
+        window.selectedStudent = localStorage.getItem('currentStudentName') || null;
+        let isLocked = localStorage.getItem('doeltschi_locked') === 'true';
+        let classlist = [];
+        let tasks = [];
+        let studentProgress = {};
 
-    // Initialization
-    window.onload = () => {
-        initSync();
-        
-        if (isLocked && currentStudentName) {
-            showView('planer-view');
-        } else {
-            showView(currentStudentName ? 'planer-view' : 'start-view');
+        // Initialization
+        window.onload = () => {
+            initSync();
+            
+            if (isLocked && window.selectedStudent) {
+                showView('planer-view');
+            } else {
+                showView(window.selectedStudent ? 'planer-view' : 'start-view');
+            }
+        };
+
+        function showView(viewId) {
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            const target = document.getElementById('view-' + viewId);
+            if (target) target.classList.remove('hidden');
+            
+            // Update nav styling
+            const navStudent = document.getElementById('nav-student');
+            const navAdmin = document.getElementById('nav-admin');
+            navStudent.classList.remove('bg-primary/10', 'text-primary');
+            navAdmin.classList.remove('bg-primary/10', 'text-primary');
+            
+            if (viewId === 'start-view' || viewId === 'planer-view') navStudent.classList.add('bg-primary/10', 'text-primary');
+            if (viewId === 'adminLogin' || viewId === 'adminDashboard') navAdmin.classList.add('bg-primary/10', 'text-primary');
+            
+            if (viewId === 'start-view') generateQRCode();
+            if (window.selectedStudent && viewId === 'planer-view') refreshStudentUI();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    };
 
-    function showView(viewId) {
-        document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-        const target = document.getElementById('view-' + viewId);
-        if (target) target.classList.remove('hidden');
-        
-        // Update nav styling
-        const navStudent = document.getElementById('nav-student');
-        const navAdmin = document.getElementById('nav-admin');
-        navStudent.classList.remove('bg-primary/10', 'text-primary');
-        navAdmin.classList.remove('bg-primary/10', 'text-primary');
-        
-        if (viewId === 'start-view' || viewId === 'planer-view') navStudent.classList.add('bg-primary/10', 'text-primary');
-        if (viewId === 'adminLogin' || viewId === 'adminDashboard') navAdmin.classList.add('bg-primary/10', 'text-primary');
-        
-        if (viewId === 'start-view') generateQRCode();
-        if (currentStudentName && viewId === 'planer-view') refreshStudentUI();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+        function handleLogoClick() {
+            if (!isLocked) {
+                showView('start-view');
+            }
+        }
 
-    function handleLogoClick() {
-        if (!isLocked) {
+        function handleStudentNav() {
+            if (isLocked && window.selectedStudent) {
+                showView('planer-view');
+            } else {
+                showView(window.selectedStudent ? 'planer-view' : 'start-view');
+            }
+        }
+
+        function generateQRCode() {
+            const qrEl = document.getElementById("qrcode");
+            if (!qrEl) return;
+            qrEl.innerHTML = "";
+            new QRCode(qrEl, {
+                text: window.location.href,
+                width: 180,
+                height: 180,
+                colorDark: "#0058bc",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        // Data Sync
+        function initSync() {
+            // Sync Classlist
+            db.collection("config").doc("classlist").onSnapshot(doc => {
+                if (doc.exists) {
+                    classlist = doc.data().names || [];
+                    updateDropdownsAndTextarea();
+                    syncStudentProgress();
+                }
+            });
+
+            // Sync Tasks
+            db.collection("tasks").orderBy("date").onSnapshot(snap => {
+                tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                // Ensure UI updates whenever tasks change
+                renderAdminTasks();
+                if (window.selectedStudent) refreshStudentUI();
+                updateProgressTable();
+            });
+
+            // Sync Student Data (Checkmarks and Confirmations)
+            db.collection("students").onSnapshot(snap => {
+                snap.forEach(doc => {
+                    studentProgress[doc.id] = doc.data();
+                });
+                updateProgressTable();
+                if (window.selectedStudent) refreshStudentUI();
+            });
+        }
+
+        function updateDropdownsAndTextarea() {
+            const dropdown = document.getElementById('student-dropdown');
+            const targetSelect = document.getElementById('task-target');
+            const textarea = document.getElementById('classlist-textarea');
+            
+            if (!dropdown || !targetSelect) return;
+
+            const currentSelection = dropdown.value;
+            dropdown.innerHTML = '<option disabled selected value="">Wähle deinen Namen...</option>';
+            targetSelect.innerHTML = '<option value="all">Alle</option>';
+            
+            classlist.sort().forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                dropdown.appendChild(opt.cloneNode(true));
+                targetSelect.appendChild(opt);
+            });
+
+            if (currentSelection && classlist.includes(currentSelection)) {
+                dropdown.value = currentSelection;
+            }
+
+            if (document.activeElement !== textarea) {
+                textarea.value = classlist.join('\n');
+            }
+        }
+
+        function syncStudentProgress() {
+            classlist.forEach(name => {
+                if (!studentProgress[name]) {
+                    db.collection("students").doc(name).set({
+                        done: [],
+                        confirmed: false,
+                        parentName: '',
+                        confDate: ''
+                    }, { merge: true });
+                }
+            });
+        }
+
+        // Student Logic
+        document.getElementById('btn-enter-student').onclick = () => {
+            const name = document.getElementById('student-dropdown').value;
+            if (!name) return;
+            
+            window.selectedStudent = name;
+            isLocked = true;
+            
+            localStorage.setItem('currentStudentName', name);
+            localStorage.setItem('doeltschi_locked', 'true');
+            
+            refreshStudentUI();
+            showView('planer-view');
+        };
+
+        function logoutStudent() {
+            if (isLocked) {
+                alert("Du kannst dich nicht abmelden, da dieses Gerät gesperrt ist. Bitte wende dich an deine Lehrperson.");
+                return;
+            }
+            window.selectedStudent = null;
+            localStorage.removeItem('currentStudentName');
             showView('start-view');
         }
-    }
 
-    function handleStudentNav() {
-        if (isLocked && currentStudentName) {
-            showView('planer-view');
-        } else {
-            showView(currentStudentName ? 'planer-view' : 'start-view');
-        }
-    }
-
-    function generateQRCode() {
-        const qrEl = document.getElementById("qrcode");
-        if (!qrEl) return;
-        qrEl.innerHTML = "";
-        new QRCode(qrEl, {
-            text: window.location.href,
-            width: 180,
-            height: 180,
-            colorDark: "#0058bc",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
-    }
-
-    // Data Sync
-    function initSync() {
-        db.collection("config").doc("classlist").onSnapshot(doc => {
-            if (doc.exists) {
-                classlist = doc.data().names || [];
-                updateDropdownsAndTextarea();
-                syncStudentProgress();
-            }
-        });
-
-        db.collection("tasks").orderBy("date").onSnapshot(snap => {
-            tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            renderAdminTasks();
-            if (currentStudentName) refreshStudentUI();
-            updateProgressTable();
-        });
-
-        db.collection("students").onSnapshot(snap => {
-            snap.forEach(doc => {
-                studentProgress[doc.id] = doc.data();
-            });
-            updateProgressTable();
-            if (currentStudentName) refreshStudentUI();
-        });
-    }
-
-    function updateDropdownsAndTextarea() {
-        const dropdown = document.getElementById('student-dropdown');
-        const targetSelect = document.getElementById('task-target');
-        const textarea = document.getElementById('classlist-textarea');
-        
-        if (!dropdown || !targetSelect) return;
-
-        dropdown.innerHTML = '<option disabled selected value="">Wähle deinen Namen...</option>';
-        targetSelect.innerHTML = '<option value="all">Alle</option>';
-        
-        classlist.sort().forEach(name => {
-            const opt = document.createElement('option');
-            opt.value = name;
-            opt.textContent = name;
-            dropdown.appendChild(opt.cloneNode(true));
-            targetSelect.appendChild(opt);
-        });
-
-        if (document.activeElement !== textarea) {
-            textarea.value = classlist.join('\n');
-        }
-    }
-
-    function syncStudentProgress() {
-        classlist.forEach(name => {
-            if (!studentProgress[name]) {
-                db.collection("students").doc(name).set({
-                    done: [],
-                    confirmed: false,
-                    parentName: '',
-                    confDate: ''
-                }, { merge: true });
-            }
-        });
-    }
-
-    // Student Logic
-    document.getElementById('btn-enter-student').onclick = () => {
-        const name = document.getElementById('student-dropdown').value;
-        if (!name) return;
-        
-        currentStudentName = name;
-        isLocked = true;
-        
-        localStorage.setItem('currentStudentName', name);
-        localStorage.setItem('doeltschi_locked', 'true');
-        
-        refreshStudentUI();
-        showView('planer-view');
-    };
-
-    function logoutStudent() {
-        if (isLocked) {
-            alert("Du kannst dich nicht abmelden, da dieses Gerät gesperrt ist. Bitte wende dich an deine Lehrperson.");
-            return;
-        }
-        currentStudentName = null;
-        localStorage.removeItem('currentStudentName');
-        showView('start-view');
-    }
-
-    function refreshStudentUI() {
-        const student = studentProgress[currentStudentName];
-        if (!student) return;
-        
-        document.getElementById('display-student-name').innerText = currentStudentName;
-        
-        // Hide logout button if locked
-        const logoutBtn = document.getElementById('btn-logout-student');
-        if (isLocked) {
-            logoutBtn.classList.add('hidden');
-        } else {
-            logoutBtn.classList.remove('hidden');
-        }
-        
-        const container = document.getElementById('task-list-container');
-        const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === currentStudentName);
-        container.innerHTML = '';
-
-        if (relevantTasks.length === 0) {
-            container.innerHTML = '<div class="py-16 text-center text-slate-400 italic">Keine anstehenden Aufgaben.</div>';
-        } else {
-            relevantTasks.forEach(task => {
-                const isDone = (student.done || []).includes(task.id);
-                const locked = student.confirmed;
-                const card = document.createElement('div');
-                card.className = `p-6 bg-white rounded-2xl border-2 transition-all flex items-center gap-6 ${isDone ? 'border-emerald-100 opacity-60' : 'border-slate-100 shadow-sm'}`;
-                card.innerHTML = `
-                    <div class="subject-tag bg-${task.subject}">${task.subject.toUpperCase()}</div>
-                    <div class="flex-1">
-                        <p class="font-bold text-lg text-slate-800">${task.desc}</p>
-                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-1">Frist: ${task.date}</p>
-                    </div>
-                    <button onclick="toggleTask('${task.id}')" ${locked ? 'disabled' : ''} class="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200 text-transparent hover:border-primary'}">
-                        <span class="material-symbols-outlined text-xl">check</span>
-                    </button>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        const form = document.getElementById('confirmation-form');
-        const success = document.getElementById('confirmation-success');
-        if (student.confirmed) {
-            form.classList.add('hidden');
-            success.classList.remove('hidden');
-            document.getElementById('conf-date-display').innerText = student.confDate;
-            document.getElementById('conf-parent-display').innerText = student.parentName;
-        } else {
-            form.classList.remove('hidden');
-            success.classList.add('hidden');
-        }
-    }
-
-    async function toggleTask(taskId) {
-        const student = studentProgress[currentStudentName];
-        if (!student || student.confirmed) return;
-        const done = student.done || [];
-        const newDone = done.includes(taskId) ? done.filter(id => id !== taskId) : [...done, taskId];
-        await db.collection('students').doc(currentStudentName).update({ done: newDone });
-    }
-
-    document.getElementById('btn-confirm-parent').onclick = async () => {
-        const pName = document.getElementById('parent-name').value.trim();
-        if (!pName) return alert('Bitte Name der Eltern eingeben');
-        const date = new Date().toLocaleDateString('de-CH');
-        await db.collection('students').doc(currentStudentName).update({
-            confirmed: true, parentName: pName, confDate: date
-        });
-    };
-
-    // Admin Logic
-    document.getElementById('btn-login-admin').onclick = () => {
-        if (document.getElementById('admin-pass').value === 'lehrer123') {
-            showView('adminDashboard');
-            document.getElementById('admin-error').classList.add('hidden');
-        } else {
-            document.getElementById('admin-error').classList.remove('hidden');
-        }
-    };
-
-    function resetDeviceLock() {
-        if (confirm("Möchtest du die Identitätssperre auf diesem Gerät wirklich aufheben?")) {
-            localStorage.removeItem('doeltschi_locked');
-            localStorage.removeItem('currentStudentName');
-            location.reload();
-        }
-    }
-
-    document.getElementById('btn-save-classlist').onclick = async () => {
-        const text = document.getElementById('classlist-textarea').value;
-        const names = text.split('\n').map(n => n.trim()).filter(n => n !== "");
-        if (confirm(`Soll die Klassenliste mit ${names.length} Schülern gespeichert werden?`)) {
-            await db.collection("config").doc("classlist").set({ names });
-            alert("Liste aktualisiert.");
-        }
-    };
-
-    document.getElementById('import-list').onchange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            document.getElementById('classlist-textarea').value = event.target.result;
-        };
-        reader.readAsText(file);
-    };
-
-    function handleWordImport(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const arrayBuffer = e.target.result;
-            mammoth.extractRawText({ arrayBuffer: arrayBuffer })
-                .then(function(result) {
-                    const text = result.value;
-                    const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
-                    
-                    const formattedNames = [];
-                    for (let i = 0; i < lines.length; i += 3) {
-                        const vorname = lines[i] || "";
-                        const nachname = lines[i + 1] || "";
-                        const klasse = lines[i + 2] || "";
-                        if (vorname || nachname || klasse) {
-                            formattedNames.push(`${vorname} ${nachname} ${klasse}`.trim());
-                        }
-                    }
-                    
-                    const textarea = document.getElementById('classlist-textarea');
-                    textarea.value = formattedNames.join('\n');
-                    event.target.value = ''; // Reset file input
-                })
-                .catch(function(err) {
-                    console.error("Error extracting text from Word document:", err);
-                    alert("Fehler beim Importieren der Word-Datei.");
-                });
-        };
-        reader.readAsArrayBuffer(file);
-    }
-
-    document.getElementById('btn-add-task').onclick = async () => {
-        const subject = document.getElementById('task-subject').value;
-        const who = document.getElementById('task-target').value;
-        const desc = document.getElementById('task-desc').value;
-        const date = document.getElementById('task-date').value;
-        if (!desc || !date) return alert('Bitte alle Felder füllen');
-        
-        await db.collection('tasks').add({
-            subject, who, desc, date, 
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        document.getElementById('task-desc').value = '';
-    };
-
-    function renderAdminTasks() {
-        const list = document.getElementById('admin-task-list');
-        if (!list) return;
-        list.innerHTML = '';
-        tasks.forEach(task => {
-            const div = document.createElement('div');
-            div.className = "flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm";
-            div.innerHTML = `
-                <div class="flex items-center gap-4">
-                    <span class="w-10 h-10 bg-${task.subject} rounded-lg flex items-center justify-center text-[11px] font-extrabold text-white uppercase">${task.subject}</span>
-                    <div>
-                        <p class="font-bold text-slate-800">${task.desc}</p>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase">👤 ${task.who === 'all' ? 'Alle' : task.who} • 🗓️ ${task.date}</p>
-                    </div>
-                </div>
-                <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
-                    <span class="material-symbols-outlined">delete</span>
-                </button>
-            `;
-            list.appendChild(div);
-        });
-    }
-
-    async function deleteTask(id) {
-        if(confirm('Aufgabe wirklich löschen?')) await db.collection('tasks').doc(id).delete();
-    }
-
-    function updateProgressTable() {
-        const tbody = document.getElementById('progress-table-body');
-        if(!tbody) return;
-        tbody.innerHTML = '';
-        
-        classlist.sort().forEach(name => {
-            const s = studentProgress[name] || { done: [], confirmed: false };
-            const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === name);
-            const total = relevantTasks.length;
-            const completed = (s.done || []).filter(id => tasks.some(t => t.id === id)).length;
-            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+        function refreshStudentUI() {
+            const student = studentProgress[window.selectedStudent];
+            if (!student) return;
             
-            const tr = document.createElement('tr');
-            tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0";
-            tr.innerHTML = `
-                <td class="px-8 py-5">
-                    <div class="font-bold text-slate-800 name-cell">${name}</div>
-                    <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">${total} Aufgaben</div>
-                </td>
-                <td class="px-8 py-5 text-center">
-                    <div class="flex flex-col items-center gap-1.5">
-                        <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 rounded-full">${completed}/${total}</span>
-                        <div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-primary" style="width: ${percent}%"></div>
+            document.getElementById('display-student-name').innerText = window.selectedStudent;
+            
+            // Hide logout button if locked
+            const logoutBtn = document.getElementById('btn-logout-student');
+            if (isLocked) {
+                logoutBtn.classList.add('hidden');
+            } else {
+                logoutBtn.classList.remove('hidden');
+            }
+            
+            const container = document.getElementById('task-list-container');
+            // Ensure exact matching for 'who' field
+            const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === window.selectedStudent);
+            container.innerHTML = '';
+
+            if (relevantTasks.length === 0) {
+                container.innerHTML = '<div class="py-16 text-center text-slate-400 italic">Keine anstehenden Aufgaben.</div>';
+            } else {
+                relevantTasks.forEach(task => {
+                    const isDone = (student.done || []).includes(task.id);
+                    const locked = student.confirmed;
+                    const card = document.createElement('div');
+                    card.className = `p-6 bg-white rounded-2xl border-2 transition-all flex items-center gap-6 ${isDone ? 'border-emerald-100 opacity-60' : 'border-slate-100 shadow-sm'}`;
+                    card.innerHTML = `
+                        <div class="subject-tag bg-${task.subject}">${task.subject.toUpperCase()}</div>
+                        <div class="flex-1">
+                            <p class="font-bold text-lg text-slate-800">${task.desc}</p>
+                            <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mt-1">Frist: ${task.date}</p>
+                        </div>
+                        <button onclick="toggleTask('${task.id}')" ${locked ? 'disabled' : ''} class="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${isDone ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-200 text-transparent hover:border-primary'}">
+                            <span class="material-symbols-outlined text-xl">check</span>
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            const form = document.getElementById('confirmation-form');
+            const success = document.getElementById('confirmation-success');
+            if (student.confirmed) {
+                form.classList.add('hidden');
+                success.classList.remove('hidden');
+                document.getElementById('conf-date-display').innerText = student.confDate;
+                document.getElementById('conf-parent-display').innerText = student.parentName;
+            } else {
+                form.classList.remove('hidden');
+                success.classList.add('hidden');
+            }
+        }
+
+        async function toggleTask(taskId) {
+            if (!window.selectedStudent) return;
+            const student = studentProgress[window.selectedStudent];
+            if (!student || student.confirmed) return;
+            const done = student.done || [];
+            const newDone = done.includes(taskId) ? done.filter(id => id !== taskId) : [...done, taskId];
+            await db.collection('students').doc(window.selectedStudent).update({ done: newDone });
+        }
+
+        document.getElementById('btn-confirm-parent').onclick = async () => {
+            if (!window.selectedStudent) return;
+            const pName = document.getElementById('parent-name').value.trim();
+            if (!pName) return alert('Bitte Name der Eltern eingeben');
+            const date = new Date().toLocaleDateString('de-CH');
+            await db.collection('students').doc(window.selectedStudent).update({
+                confirmed: true, parentName: pName, confDate: date
+            });
+        };
+
+        // Admin Logic
+        document.getElementById('btn-login-admin').onclick = () => {
+            if (document.getElementById('admin-pass').value === 'lehrer123') {
+                showView('adminDashboard');
+                document.getElementById('admin-error').classList.add('hidden');
+            } else {
+                document.getElementById('admin-error').classList.remove('hidden');
+            }
+        };
+
+        function resetDeviceLock() {
+            if (confirm("Möchtest du die Identitätssperre auf diesem Gerät wirklich aufheben?")) {
+                localStorage.removeItem('doeltschi_locked');
+                localStorage.removeItem('currentStudentName');
+                window.selectedStudent = null;
+                location.reload();
+            }
+        }
+
+        document.getElementById('btn-save-classlist').onclick = async () => {
+            const text = document.getElementById('classlist-textarea').value;
+            const names = text.split('\n').map(n => n.trim()).filter(n => n !== "");
+            if (confirm(`Soll die Klassenliste mit ${names.length} Schülern gespeichert werden?`)) {
+                await db.collection("config").doc("classlist").set({ names });
+                alert("Liste aktualisiert.");
+            }
+        };
+
+        document.getElementById('import-list').onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                document.getElementById('classlist-textarea').value = event.target.result;
+            };
+            reader.readAsText(file);
+        };
+
+        function handleWordImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+                    .then(function(result) {
+                        const text = result.value;
+                        const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
+                        
+                        const formattedNames = [];
+                        for (let i = 0; i < lines.length; i += 3) {
+                            const vorname = lines[i] || "";
+                            const nachname = lines[i + 1] || "";
+                            const klasse = lines[i + 2] || "";
+                            if (vorname || nachname || klasse) {
+                                formattedNames.push(`${vorname} ${nachname} ${klasse}`.trim());
+                            }
+                        }
+                        
+                        const textarea = document.getElementById('classlist-textarea');
+                        textarea.value = formattedNames.join('\n');
+                        event.target.value = ''; // Reset file input
+                    })
+                    .catch(function(err) {
+                        console.error("Error extracting text from Word document:", err);
+                        alert("Fehler beim Importieren der Word-Datei.");
+                    });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        document.getElementById('btn-add-task').onclick = async () => {
+            const subject = document.getElementById('task-subject').value;
+            const who = document.getElementById('task-target').value;
+            const desc = document.getElementById('task-desc').value;
+            const date = document.getElementById('task-date').value;
+            if (!desc || !date) return alert('Bitte alle Felder füllen');
+            
+            await db.collection('tasks').add({
+                subject, who, desc, date, 
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            document.getElementById('task-desc').value = '';
+        };
+
+        function renderAdminTasks() {
+            const list = document.getElementById('admin-task-list');
+            if (!list) return;
+            list.innerHTML = '';
+            tasks.forEach(task => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm";
+                div.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <span class="w-10 h-10 bg-${task.subject} rounded-lg flex items-center justify-center text-[11px] font-extrabold text-white uppercase">${task.subject}</span>
+                        <div>
+                            <p class="font-bold text-slate-800">${task.desc}</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">👤 ${task.who === 'all' ? 'Alle' : task.who} • 🗓️ ${task.date}</p>
                         </div>
                     </div>
-                </td>
-                <td class="px-8 py-5 text-center">
-                    ${s.confirmed ? 
-                        `<div class="flex flex-col items-center">
-                            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full ring-1 ring-emerald-100">BESTÄTIGT</span>
-                            <span class="text-[9px] text-slate-400 font-bold mt-1 uppercase">${s.confDate}</span>
-                         </div>` : 
-                        `<span class="text-[10px] font-bold text-slate-300 border border-slate-200 px-3 py-1 rounded-full uppercase">OFFEN</span>`}
-                </td>
-                <td class="px-8 py-5 text-right">
-                    <button onclick="resetStudentProgress('${name}')" class="text-slate-300 hover:text-orange-500 transition-colors">
-                        <span class="material-symbols-outlined text-xl">restart_alt</span>
+                    <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <span class="material-symbols-outlined">delete</span>
                     </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    async function resetStudentProgress(name) {
-        if(confirm(`Status für ${name} wirklich zurücksetzen?`)) {
-            await db.collection('students').doc(name).update({
-                confirmed: false,
-                parentName: '',
-                confDate: ''
+                `;
+                list.appendChild(div);
             });
         }
-    }
 
-    document.getElementById('btn-reset-confirmations').onclick = async () => {
-        if(confirm('Alle Bestätigungen der Eltern für die gesamte Klasse zurücksetzen? (Aufgaben-Häkchen bleiben erhalten)')) {
-            const batch = db.batch();
-            classlist.forEach(name => {
-                batch.update(db.collection('students').doc(name), {
+        async function deleteTask(id) {
+            if(confirm('Aufgabe wirklich löschen?')) await db.collection('tasks').doc(id).delete();
+        }
+
+        function updateProgressTable() {
+            const tbody = document.getElementById('progress-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            
+            classlist.sort().forEach(name => {
+                const s = studentProgress[name] || { done: [], confirmed: false };
+                const relevantTasks = tasks.filter(t => t.who === 'all' || t.who === name);
+                const total = relevantTasks.length;
+                const completed = (s.done || []).filter(id => tasks.some(t => t.id === id)).length;
+                const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0";
+                tr.innerHTML = `
+                    <td class="px-8 py-5">
+                        <div class="font-bold text-slate-800 name-cell">${name}</div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">${total} Aufgaben</div>
+                    </td>
+                    <td class="px-8 py-5 text-center">
+                        <div class="flex flex-col items-center gap-1.5">
+                            <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 rounded-full">${completed}/${total}</span>
+                            <div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-primary" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-8 py-5 text-center">
+                        ${s.confirmed ? 
+                            `<div class="flex flex-col items-center">
+                                <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full ring-1 ring-emerald-100">BESTÄTIGT</span>
+                                <span class="text-[9px] text-slate-400 font-bold mt-1 uppercase">${s.confDate}</span>
+                             </div>` : 
+                            `<span class="text-[10px] font-bold text-slate-300 border border-slate-200 px-3 py-1 rounded-full uppercase">OFFEN</span>`}
+                    </td>
+                    <td class="px-8 py-5 text-right">
+                        <button onclick="resetStudentProgress('${name}')" class="text-slate-300 hover:text-orange-500 transition-colors">
+                            <span class="material-symbols-outlined text-xl">restart_alt</span>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function resetStudentProgress(name) {
+            if(confirm(`Status für ${name} wirklich zurücksetzen?`)) {
+                await db.collection('students').doc(name).update({
                     confirmed: false,
                     parentName: '',
                     confDate: ''
                 });
-            });
-            await batch.commit();
+            }
         }
-    };
-</script>
+
+        document.getElementById('btn-reset-confirmations').onclick = async () => {
+            if(confirm('Alle Bestätigungen der Eltern für die gesamte Klasse zurücksetzen? (Aufgaben-Häkchen bleiben erhalten)')) {
+                const batch = db.batch();
+                classlist.forEach(name => {
+                    batch.update(db.collection('students').doc(name), {
+                        confirmed: false,
+                        parentName: '',
+                        confDate: ''
+                    });
+                });
+                await batch.commit();
+            }
+        };
+    </script>
 </body></html>
