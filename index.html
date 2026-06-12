@@ -7,6 +7,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
 <style>
         :root {
             --primary: #0058bc;
@@ -63,6 +64,10 @@
         #qrcode img { margin: 0 auto; }
         
         select { -webkit-appearance: none; }
+
+        .name-cell {
+            white-space: nowrap;
+        }
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -224,6 +229,8 @@
                     Klassenliste verwalten
                 </h3>
 <div class="flex gap-2">
+<input accept=".docx" class="hidden" id="import-word" onchange="handleWordImport(event)" type="file"/>
+<button class="text-[10px] font-bold uppercase bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors" onclick="document.getElementById('import-word').click()">Word-Liste importieren</button>
 <input accept=".txt" class="hidden" id="import-list" type="file"/>
 <button class="text-[10px] font-bold uppercase bg-slate-100 text-slate-600 px-4 py-2 rounded-lg" onclick="document.getElementById('import-list').click()">Import (.txt)</button>
 </div>
@@ -592,6 +599,40 @@ Erika Musterfrau..." rows="6"></textarea>
         reader.readAsText(file);
     };
 
+    function handleWordImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const arrayBuffer = e.target.result;
+            mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+                .then(function(result) {
+                    const text = result.value;
+                    const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
+                    
+                    const formattedNames = [];
+                    for (let i = 0; i < lines.length; i += 3) {
+                        const vorname = lines[i] || "";
+                        const nachname = lines[i + 1] || "";
+                        const klasse = lines[i + 2] || "";
+                        if (vorname || nachname || klasse) {
+                            formattedNames.push(`${vorname} ${nachname} ${klasse}`.trim());
+                        }
+                    }
+                    
+                    const textarea = document.getElementById('classlist-textarea');
+                    textarea.value = formattedNames.join('\n');
+                    event.target.value = ''; // Reset file input
+                })
+                .catch(function(err) {
+                    console.error("Error extracting text from Word document:", err);
+                    alert("Fehler beim Importieren der Word-Datei.");
+                });
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
     document.getElementById('btn-add-task').onclick = async () => {
         const subject = document.getElementById('task-subject').value;
         const who = document.getElementById('task-target').value;
@@ -650,7 +691,7 @@ Erika Musterfrau..." rows="6"></textarea>
             tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0";
             tr.innerHTML = `
                 <td class="px-8 py-5">
-                    <div class="font-bold text-slate-800">${name}</div>
+                    <div class="font-bold text-slate-800 name-cell">${name}</div>
                     <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">${total} Aufgaben</div>
                 </td>
                 <td class="px-8 py-5 text-center">
