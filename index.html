@@ -139,7 +139,7 @@
 </div>
 <div class="w-full max-w-md mx-auto mb-16 relative">
 <select class="w-full h-16 px-6 bg-white border-2 border-slate-200 rounded-2xl text-xl font-bold text-slate-700 shadow-sm appearance-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all cursor-pointer outline-none" id="student-dropdown">
-<option disabled="" selected="" value="">Warte auf Daten...</option>
+<option disabled="" selected="" value="">Lade Schülerliste...</option>
 </select>
 <div class="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
 <span class="material-symbols-outlined text-3xl">expand_more</span>
@@ -354,7 +354,7 @@
             getFirestore, collection, doc, onSnapshot, setDoc, addDoc, deleteDoc, updateDoc, getDocs, query, orderBy, writeBatch, serverTimestamp, arrayUnion, arrayRemove, deleteField 
         } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-        // Global Firebase Configuration
+        // Firebase Configuration (Example)
         const firebaseConfig = {
             apiKey: "AIzaSyD7-v7M9q8yK4...", 
             authDomain: "doeltschi-hausaufgaben.firebaseapp.com",
@@ -389,7 +389,7 @@
             'WAH': { name: 'WAH', color: '#c2410c' }
         };
 
-        // Strict Class-Scoping Path Generator
+        // Path Generators (Fixed to handle the Class-Specific structure)
         const getClassDoc = () => doc(db, "classes", currentClassName);
         const getStudentColl = () => collection(db, "classes", currentClassName, "students");
         const getTaskColl = () => collection(db, "classes", currentClassName, "tasks");
@@ -399,9 +399,9 @@
             initSubjectSelect();
             initImportHandlers();
             
-            // Step 2: Init function checks for class parameter and sets global class variable
+            // Check if class is present in URL or Storage
             if (currentClassName) {
-                initSync();
+                initSync(); // Start loading data for this specific class
                 if (currentStudentName) showView('planer-view');
                 else showView('start-view');
             } else {
@@ -479,13 +479,13 @@
             showView('start-view');
         };
 
-        // Step 1: strictly enforce class-scoping
+        // Real-time synchronization within the scope of currentClassName
         function initSync() {
             unsubscribeList.forEach(unsub => unsub());
             unsubscribeList = [];
             if (!currentClassName) return;
 
-            // Sync student list for this specific class
+            // 1. Sync Students
             const unsubStudents = onSnapshot(getStudentColl(), (snap) => {
                 studentData = {};
                 classlist = [];
@@ -493,14 +493,13 @@
                     studentData[docSnap.id] = docSnap.data();
                     classlist.push(docSnap.id);
                 });
-                // Step 5: Population happens only after data is loaded
                 updateDropdownsAndTextarea();
                 if (!document.getElementById('view-adminDashboard').classList.contains('hidden')) renderTeacherDashboard();
                 if (currentStudentName) refreshStudentUI();
             });
             unsubscribeList.push(unsubStudents);
 
-            // Sync tasks for this specific class
+            // 2. Sync Tasks
             const qTasks = query(getTaskColl(), orderBy("createdAt", "desc"));
             const unsubTasks = onSnapshot(qTasks, (snap) => {
                 tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -623,7 +622,6 @@
             await updateDoc(sRef, { confirmed: true, parentName: pName, confDate: date });
         };
 
-        // Step 4: Save to class-specific path
         window.updateClassList = async () => {
             const text = document.getElementById('classlist-textarea').value;
             const newNames = text.split('\n').map(n => n.trim()).filter(n => n !== "");
@@ -803,7 +801,6 @@
 
         function generateQRCodes() {
             if (!currentClassName) return;
-            // Step 6: encodeURIComponent handled in URL building
             const baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
             const fullUrl = baseUrl + '?class=' + encodeURIComponent(currentClassName);
 
