@@ -3,7 +3,7 @@
 <html class="light" lang="de"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>doeltschi | Digitaler Aufgabenplaner Cloud</title>
+<title>Döltschi | Digitaler Aufgabenplaner Cloud</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -22,6 +22,9 @@
             body { background: white !important; }
             .worksheet-pattern { background-image: none !important; }
         }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -62,7 +65,7 @@
 <header class="bg-surface/80 backdrop-blur-md border-b border-outline-variant sticky top-0 z-50 no-print">
 <div class="flex justify-between items-center w-full px-gutter max-w-[1000px] mx-auto h-16">
 <div class="flex items-center gap-4">
-<h1 class="text-2xl font-black tracking-tight text-primary cursor-pointer" onclick="app.resetToHome()">doeltschi</h1>
+<h1 class="text-3xl font-black tracking-tighter text-primary cursor-pointer" onclick="app.resetToHome()">Döltschi</h1>
 <div class="hidden md:flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full text-[10px] font-bold uppercase text-primary">
 <span class="material-symbols-outlined text-[14px]">cloud_done</span>
 <span>Cloud aktiv</span>
@@ -90,7 +93,7 @@
 <button class="w-full py-3 bg-primary text-white rounded-xl font-bold uppercase tracking-wider hover:bg-blue-700 transition-all" onclick="app.handleLogin()">Anmelden</button>
 </div>
 </div>
-<!-- Student Select View (Classic Centered Layout) -->
+<!-- Student Select View -->
 <div class="hidden flex flex-col items-center py-12" id="student-select-view">
 <div class="text-center space-y-4 mb-12">
 <h2 class="text-5xl font-black text-slate-900 tracking-tight">Wer bist du?</h2>
@@ -256,9 +259,14 @@
 <h3 class="text-xl font-bold text-slate-800">Klassenliste</h3>
 </div>
 <div class="bg-white border border-slate-200 rounded-[40px] p-6 shadow-sm space-y-4">
-<textarea class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm outline-none focus:ring-1 focus:ring-primary min-h-[200px]" id="class-input" placeholder="Namen trennen mit Komma oder neuer Zeile..."></textarea>
-<button class="w-full py-3 bg-slate-800 text-white rounded-xl font-bold text-sm uppercase hover:bg-slate-900 transition-all" onclick="app.updateClassList()">Liste aktualisieren</button>
-<p class="text-[10px] text-slate-400 text-center uppercase font-bold">Bearbeite Namen direkt hier</p>
+<textarea class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm outline-none focus:ring-1 focus:ring-primary min-h-[150px]" id="class-input" placeholder="Neuer Name pro Zeile..."></textarea>
+<button class="w-full py-3 bg-slate-800 text-white rounded-xl font-bold text-sm uppercase hover:bg-slate-900 transition-all" onclick="app.updateClassList()">Hinzufügen</button>
+<div class="border-t border-slate-100 pt-4">
+<p class="text-[10px] text-slate-400 mb-2 uppercase font-bold">Schüler verwalten</p>
+<div class="space-y-1 max-h-[300px] overflow-y-auto custom-scrollbar" id="class-list-container">
+<!-- Student list with delete icons -->
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -267,8 +275,8 @@
 <footer class="bg-white border-t border-slate-200 no-print py-10 mt-auto">
 <div class="max-w-[1000px] mx-auto px-gutter flex flex-col md:flex-row justify-between items-center gap-6">
 <div class="text-center md:text-left">
-<p class="text-xs font-bold text-slate-400 uppercase tracking-widest">© 2024 doeltschi Aufgabenplaner</p>
-<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Version 15.0 • Bulletproof Final Release • Stand: 08:00 Uhr</p>
+<p class="text-xs font-bold text-slate-400 uppercase tracking-widest">© 2024 Döltschi Aufgabenplaner</p>
+<p class="text-[9px] text-slate-300 font-mono mt-1 uppercase">Version 15.1 • Expert Edition • Stand: 08:30 Uhr</p>
 </div>
 <div class="flex gap-8">
 <a class="text-xs font-bold text-slate-400 hover:text-primary transition-colors uppercase tracking-widest" href="#">Datenschutz</a>
@@ -281,7 +289,7 @@
 <div class="hidden print-only bg-white p-10 min-h-screen text-black">
 <div class="flex justify-between items-end border-b-2 border-black pb-4 mb-8">
 <div>
-<h1 class="text-3xl font-bold">doeltschi Hausaufgaben</h1>
+<h1 class="text-3xl font-bold">Döltschi Hausaufgaben</h1>
 <p class="text-lg" id="print-header-info">Hausaufgabenplaner</p>
 </div>
 <p class="text-sm italic">Gedruckt am: <span id="print-date"></span></p>
@@ -297,7 +305,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, collection, addDoc, query, orderBy, deleteDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // --- FIREBASE KONFIGURATION ---
     const firebaseConfig = {
         apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
         authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
@@ -333,7 +340,6 @@
         qrHome: null,
 
         async init() {
-            // Live Sync: Students
             onSnapshot(doc(db, "config", "classlist"), (docSnap) => {
                 if (docSnap.exists()) {
                     this.students = docSnap.data().names || [];
@@ -341,7 +347,6 @@
                 }
             });
 
-            // Live Sync: Confirmations
             onSnapshot(doc(db, "config", "confirmations"), (docSnap) => {
                 if (docSnap.exists()) {
                     this.parentalConfirmations = docSnap.data() || {};
@@ -349,7 +354,6 @@
                 }
             });
 
-            // Live Sync: Tasks
             const tasksQuery = query(collection(db, "tasks"), orderBy("createdAt", "desc"));
             onSnapshot(tasksQuery, (snapshot) => {
                 this.tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -359,10 +363,8 @@
             this.updateDateDisplay();
             document.getElementById('print-date').textContent = new Date().toLocaleDateString('de-CH');
             
-            // Check for saved user session
             const savedUser = localStorage.getItem('doeltschi_user');
             if (savedUser) {
-                // We'll wait for the snapshot to verify if the user still exists before auto-selecting
                 setTimeout(() => {
                     if (this.students.includes(savedUser)) {
                         this.selectStudent(savedUser);
@@ -381,7 +383,7 @@
             if (weekDisplay) weekDisplay.textContent = `Woche ${weekNum}`;
             
             const curr = new Date();
-            const first = curr.getDate() - curr.getDay() + 1;
+            const first = curr.getDate() - curr.getDay() + (curr.getDay() === 0 ? -6 : 1);
             const last = first + 4;
             const firstDay = new Date(new Date().setDate(first));
             const lastDay = new Date(new Date().setDate(last));
@@ -426,7 +428,10 @@
 
         render() {
             const views = ['login-view', 'student-select-view', 'student-tasks-view', 'teacher-dashboard'];
-            views.forEach(v => document.getElementById(v).classList.add('hidden'));
+            views.forEach(v => {
+                const el = document.getElementById(v);
+                if (el) el.classList.add('hidden');
+            });
 
             const navS = document.getElementById('nav-student');
             const navT = document.getElementById('nav-teacher');
@@ -476,18 +481,19 @@
             });
         },
 
-        async toggleTask(taskId, isDone) {
+        async setTaskStatus(taskId, statusValue) {
             const isConfirmed = this.parentalConfirmations[this.selectedStudent]?.status === 'OK';
             if (isConfirmed) {
                 alert("Bestätigte Aufgaben können nicht mehr geändert werden.");
+                this.renderStudentTasks();
                 return;
             }
 
             const taskRef = doc(db, "tasks", taskId);
-            if (isDone) {
-                await updateDoc(taskRef, { done: arrayRemove(this.selectedStudent) });
-            } else {
+            if (statusValue === 'erledigt') {
                 await updateDoc(taskRef, { done: arrayUnion(this.selectedStudent) });
+            } else {
+                await updateDoc(taskRef, { done: arrayRemove(this.selectedStudent) });
             }
         },
 
@@ -498,7 +504,7 @@
                 const data = {
                     [this.selectedStudent]: {
                         status: 'OK',
-                        date: new Date().toLocaleString('de-DE')
+                        date: new Date().toLocaleString('de-CH')
                     }
                 };
                 await updateDoc(confRef, data).catch(async () => {
@@ -523,7 +529,7 @@
                     const subject = SUBJECTS[t.subject] || { name: t.subject, color: '#64748b' };
                     
                     return `
-                        <div class="bg-white border border-slate-200 rounded-[40px] overflow-hidden flex transition-all shadow-sm ${isDone ? 'opacity-50 grayscale' : 'hover:border-primary/30'}">
+                        <div class="bg-white border border-slate-200 rounded-[40px] overflow-hidden flex transition-all shadow-sm ${isDone ? 'border-primary/20' : 'hover:border-primary/30'}">
                             <div class="w-3 shrink-0" style="background-color: ${subject.color}"></div>
                             <div class="flex-1 p-8 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
                                 <div>
@@ -536,12 +542,12 @@
                                     <p class="text-sm font-medium text-slate-700">${t.task}</p>
                                 </div>
                                 <div class="text-right flex flex-col items-end">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Frist</p>
-                                    <p class="text-sm font-black text-slate-900">${t.deadline || '-'}</p>
-                                    <button onclick="app.toggleTask('${t.id}', ${isDone})" class="mt-4 flex items-center justify-end gap-2 group ${isConfirmed ? 'cursor-not-allowed opacity-50' : ''}">
-                                        <span class="material-symbols-outlined ${isDone ? 'checkmark-active' : 'text-slate-200'}">${isDone ? 'check_circle' : 'radio_button_unchecked'}</span>
-                                        <span class="text-[10px] font-bold uppercase ${isDone ? 'text-primary' : 'text-slate-400'}">${isDone ? 'Erledigt' : 'Offen'}</span>
-                                    </button>
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Status</p>
+                                    <select onchange="app.setTaskStatus('${t.id}', this.value)" class="bg-slate-50 border border-slate-200 rounded-lg py-1 px-3 text-xs font-bold ${isDone ? 'text-primary' : 'text-slate-500'} focus:ring-1 focus:ring-primary outline-none ${isConfirmed ? 'opacity-50 cursor-not-allowed' : ''}" ${isConfirmed ? 'disabled' : ''}>
+                                        <option value="offen" ${!isDone ? 'selected' : ''}>Offen</option>
+                                        <option value="erledigt" ${isDone ? 'selected' : ''}>Erledigt</option>
+                                    </select>
+                                    <p class="mt-4 text-[10px] font-bold text-slate-400 uppercase">Bis: <span class="text-slate-900">${t.deadline || '-'}</span></p>
                                 </div>
                             </div>
                         </div>
@@ -581,6 +587,7 @@
 
             const update = (id, active) => {
                 const el = document.getElementById(id);
+                if (!el) return;
                 el.classList.toggle('opacity-50', !active);
                 const circle = el.querySelector('div');
                 circle.className = active ? "w-8 h-8 rounded-full bg-blue-100 text-primary font-bold flex items-center justify-center mb-2" : "w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center mb-2";
@@ -593,11 +600,9 @@
         },
 
         renderTeacherDashboard() {
-            // Update add task select
             const select = document.getElementById('new-task-student');
             select.innerHTML = `<option value="all">Ganze Klasse</option>` + this.students.map(s => `<option value="${s}">${s}</option>`).join('');
 
-            // Global stats
             let totalPossible = 0;
             let totalDone = 0;
             this.tasks.forEach(t => {
@@ -617,7 +622,6 @@
             document.getElementById('confirmed-count').textContent = `${confirmedCount}/${this.students.length}`;
             document.getElementById('confirmed-pending-text').textContent = `Noch ${this.students.length - confirmedCount} ausstehend`;
 
-            // Student Status Table
             const tbody = document.getElementById('teacher-student-table');
             tbody.innerHTML = this.students.map(name => {
                 const sTasks = this.tasks.filter(t => t.who === 'all' || t.who === name);
@@ -643,27 +647,24 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 text-center">
-                             <div class="flex items-center justify-center">
+                             <div class="flex items-center justify-center gap-2">
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${isOk ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'} uppercase">
                                     ${isOk ? 'OK' : 'OFFEN'}
                                 </span>
+                                ${isOk ? `
+                                    <button onclick="event.stopPropagation(); app.unlockStudent('${name}')" class="text-slate-400 hover:text-red-500 flex items-center" title="Bestätigung zurücksetzen">
+                                        <span class="material-symbols-outlined text-[16px]">undo</span>
+                                    </button>
+                                ` : ''}
                              </div>
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <div class="flex items-center justify-end gap-2">
-                                ${isOk ? `
-                                    <button onclick="event.stopPropagation(); app.unlockStudent('${name}')" class="text-slate-400 hover:text-red-500 flex items-center gap-1" title="Entsperren">
-                                        <span class="material-symbols-outlined text-lg">lock_open</span>
-                                    </button>
-                                ` : ''}
-                                <button onclick="event.stopPropagation(); app.selectStudent('${name}')" class="text-primary font-bold uppercase text-[10px] hover:underline">Ansicht</button>
-                            </div>
+                            <button onclick="event.stopPropagation(); app.selectStudent('${name}')" class="text-primary font-bold uppercase text-[10px] hover:underline">Ansicht</button>
                         </td>
                     </tr>
                 `;
             }).join('');
 
-            // Filter Header and All Tasks List
             document.getElementById('task-list-header').textContent = this.selectedTeacherFilter === 'all' ? 'Alle Aufgaben' : `Aufgaben für ${this.selectedTeacherFilter}`;
             
             const taskContainer = document.getElementById('all-tasks-list');
@@ -700,7 +701,15 @@
                 }).join('');
             }
 
-            document.getElementById('class-input').value = this.students.join('\n');
+            const classListContainer = document.getElementById('class-list-container');
+            classListContainer.innerHTML = this.students.map(name => `
+                <div class="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg transition-all group">
+                    <span class="text-sm font-medium text-slate-700">${name}</span>
+                    <button onclick="app.removeStudentFromList('${name}')" class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1">
+                        <span class="material-symbols-outlined text-lg">person_remove</span>
+                    </button>
+                </div>
+            `).join('');
         },
 
         setTeacherFilter(name) {
@@ -736,9 +745,19 @@
 
         async updateClassList() {
             const input = document.getElementById('class-input').value;
-            const names = input.split(/[,\n]/).map(n => n.trim()).filter(n => n.length > 0);
-            await setDoc(doc(db, "config", "classlist"), { names });
-            alert("Klassenliste in Cloud gespeichert!");
+            const newNames = input.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+            if (newNames.length === 0) return;
+            
+            const updatedNames = [...new Set([...this.students, ...newNames])];
+            await setDoc(doc(db, "config", "classlist"), { names: updatedNames });
+            document.getElementById('class-input').value = "";
+        },
+
+        async removeStudentFromList(name) {
+            if (confirm(`Möchtest du ${name} wirklich aus der Klassenliste entfernen?`)) {
+                const updatedNames = this.students.filter(n => n !== name);
+                await setDoc(doc(db, "config", "classlist"), { names: updatedNames });
+            }
         },
 
         async unlockStudent(name) {
