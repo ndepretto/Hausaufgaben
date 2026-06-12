@@ -355,6 +355,25 @@ Erika Musterfrau..." rows="6"></textarea>
 </div>
 <div class="grid gap-3" id="admin-task-list"></div>
 </div>
+<!-- Danger Zone -->
+<div class="mt-16 pt-8 border-t border-red-100">
+<div class="glass-card p-8 rounded-lg border-2 border-red-200 bg-red-50/30 shadow-sm space-y-6">
+<div class="flex items-center gap-3 text-red-700">
+<span class="material-symbols-outlined">warning</span>
+<h3 class="font-bold text-xl text-red-800">Gefahrenzone</h3>
+</div>
+<div class="flex flex-col sm:flex-row items-center gap-6">
+<div class="flex-1">
+<p class="text-sm text-red-700 font-semibold mb-1">Klasse vollständig löschen</p>
+<p class="text-xs text-slate-500 leading-relaxed">Diese Aktion löscht die gesamte Klasse, alle Schüler-Namen und alle Aufgaben unwiderruflich aus der Datenbank.</p>
+</div>
+<button class="whitespace-nowrap px-8 py-4 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-200 hover:bg-red-700 transition-all flex items-center gap-2" onclick="deleteClassCompletely()">
+<span class="material-symbols-outlined">delete_forever</span>
+                    Klasse vollständig löschen
+                </button>
+</div>
+</div>
+</div>
 </section>
 </main>
 <footer class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-200 pt-4 pb-6 px-6 z-40">
@@ -498,7 +517,7 @@ Erika Musterfrau..." rows="6"></textarea>
                         updateDropdownsAndTextarea();
                     }
                 } catch (e) { console.error(e); }
-            }, (err) => { alert('Sync-Fehler: ' + err.message); });
+            }, (err) => { console.warn('Sync-Fehler oder Klasse gelöscht: ' + err.message); });
             unsubscribeList.push(unsubConfig);
 
             const unsubTasks = classRef.collection("tasks").orderBy("createdAt", "desc").onSnapshot(snap => {
@@ -508,7 +527,7 @@ Erika Musterfrau..." rows="6"></textarea>
                     if (currentStudentName) refreshStudentUI();
                     updateProgressTable();
                 } catch (e) { console.error(e); }
-            }, (err) => { alert('Aufgaben-Fehler: ' + err.message); });
+            }, (err) => { console.warn('Aufgaben-Fehler: ' + err.message); });
             unsubscribeList.push(unsubTasks);
 
             const unsubStudents = classRef.collection("students").onSnapshot(snap => {
@@ -517,9 +536,9 @@ Erika Musterfrau..." rows="6"></textarea>
                     updateProgressTable();
                     if (currentStudentName) refreshStudentUI();
                 } catch (e) { console.error(e); }
-            }, (err) => { alert('Schülerdaten-Fehler: ' + err.message); });
+            }, (err) => { console.warn('Schülerdaten-Fehler: ' + err.message); });
             unsubscribeList.push(unsubStudents);
-        } catch (error) { alert('Initialisierungsfehler: ' + error.message); }
+        } catch (error) { console.error('Initialisierungsfehler: ' + error.message); }
     }
 
     function generateQRCode() {
@@ -682,6 +701,45 @@ Erika Musterfrau..." rows="6"></textarea>
                 await batch.commit();
             }
         } catch (error) { alert('Fehler: ' + error.message); }
+    }
+
+    async function deleteClassCompletely() {
+        if (!currentClassName) return;
+        
+        const confirmed = confirm(`Möchten Sie die gesamte Klasse [${currentClassName}] inklusive aller Namen und Aufgaben unwiderruflich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.`);
+        
+        if (confirmed) {
+            try {
+                const classRef = db.collection('classes').doc(currentClassName);
+                
+                // 1. Delete tasks sub-collection
+                const tasksSnap = await classRef.collection('tasks').get();
+                const studentsSnap = await classRef.collection('students').get();
+                const configSnap = await classRef.collection('config').get();
+
+                const batch = db.batch();
+                
+                tasksSnap.forEach(doc => batch.delete(doc.ref));
+                studentsSnap.forEach(doc => batch.delete(doc.ref));
+                configSnap.forEach(doc => batch.delete(doc.ref));
+                
+                // 2. Delete the main document
+                batch.delete(classRef);
+                
+                await batch.commit();
+                
+                // Clean up local state
+                localStorage.removeItem('currentClassName');
+                localStorage.removeItem('currentStudentName');
+                localStorage.removeItem('doeltschi_locked');
+                
+                // Redirect back to start
+                location.href = window.location.href.split('?')[0];
+            } catch (error) {
+                console.error("Löschfehler:", error);
+                alert("Ein Fehler ist beim Löschen aufgetreten: " + error.message);
+            }
+        }
     }
 
     // Progress
