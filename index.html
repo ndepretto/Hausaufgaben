@@ -379,7 +379,7 @@
 
         // Global State
         let currentClassName = new URLSearchParams(window.location.search).get('class') || localStorage.getItem('currentClassName') || null;
-        let currentStudentName = null;
+        let currentStudentName = localStorage.getItem('doeltschi_user') || null;
         let classlist = [];
         let tasks = [];
         let studentData = {};
@@ -406,7 +406,12 @@
             
             if (currentClassName) {
                 initSync();
-                showView('start-view');
+                // Check if user is already logged in
+                if (currentStudentName) {
+                    showView('planer-view');
+                } else {
+                    showView('start-view');
+                }
             } else {
                 showView('class-selection');
             }
@@ -441,7 +446,10 @@
         };
 
         window.handleLogoClick = () => {
-            if (currentClassName) showView('start-view');
+            if (currentClassName) {
+                if (currentStudentName) showView('planer-view');
+                else showView('start-view');
+            }
             else showView('class-selection');
         };
 
@@ -455,7 +463,7 @@
         };
 
         document.getElementById('btn-select-class').onclick = () => {
-            const input = document.getElementById('class-input').value.trim();
+            const input = document.getElementById('class-input').value.trim().toLowerCase();
             if (!input) return alert('Bitte einen Klassennamen eingeben');
             currentClassName = input;
             localStorage.setItem('currentClassName', input);
@@ -471,6 +479,7 @@
             unsubscribeList = [];
             if (!currentClassName) return;
 
+            // SCOPED: Classes -> {currentClassName} -> students
             const unsubStudents = onSnapshot(collection(db, "classes", currentClassName, "students"), (snap) => {
                 studentData = {};
                 const names = [];
@@ -481,10 +490,17 @@
                 classlist = names;
                 updateDropdownsAndTextarea();
                 if (!document.getElementById('view-adminDashboard').classList.contains('hidden')) renderTeacherDashboard();
+                
+                // Persistence check: If the stored student is no longer in this class's list, log them out
+                if (currentStudentName && !classlist.includes(currentStudentName)) {
+                    logoutStudent();
+                }
+
                 if (currentStudentName) refreshStudentUI();
             });
             unsubscribeList.push(unsubStudents);
 
+            // SCOPED: Classes -> {currentClassName} -> tasks
             const qTasks = query(collection(db, "classes", currentClassName, "tasks"), orderBy("createdAt", "desc"));
             const unsubTasks = onSnapshot(qTasks, (snap) => {
                 tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -627,8 +643,7 @@
                     await deleteDoc(doc(db, "classes", currentClassName));
                     
                     alert("Klasse erfolgreich gelöscht.");
-                    localStorage.clear();
-                    window.location.href = window.location.pathname;
+                    clearClass();
                 } catch (e) {
                     console.error(e);
                     alert("Fehler beim Löschen der Klasse.");
@@ -708,7 +723,11 @@
 
         function refreshStudentUI() {
             const student = studentData[currentStudentName];
-            if (!student) return;
+            if (!student) {
+                // If student doesn't exist in class list anymore, log out
+                if (currentStudentName) logoutStudent();
+                return;
+            }
             document.getElementById('display-student-name').innerText = currentStudentName;
             
             const container = document.getElementById('task-list-container');
@@ -779,7 +798,7 @@
             const textarea = document.getElementById('classlist-textarea');
             if (!dropdown || !targetSelect) return;
             
-            const prevVal = dropdown.value;
+            const prevVal = dropdown.value || currentStudentName;
             dropdown.innerHTML = '<option disabled selected value="">Wähle deinen Namen...</option>';
             targetSelect.innerHTML = '<option value="all">Alle</option>';
             
@@ -799,8 +818,13 @@
             const qrEl = document.getElementById("qrcode");
             if (!qrEl) return;
             qrEl.innerHTML = "";
+            
+            // Build absolute URL with the current class parameter
+            const baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            const fullUrl = baseUrl + '?class=' + currentClassName;
+
             new QRCode(qrEl, {
-                text: window.location.href,
+                text: fullUrl,
                 width: 180,
                 height: 180,
                 colorDark: "#0058bc",
@@ -820,6 +844,7 @@
 
         window.logoutStudent = () => {
             currentStudentName = null;
+            localStorage.removeItem('doeltschi_user');
             showView('start-view');
         };
 
@@ -834,6 +859,7 @@
             const name = document.getElementById('student-dropdown').value;
             if (!name) return alert("Wähle zuerst deinen Namen aus.");
             currentStudentName = name;
+            localStorage.setItem('doeltschi_user', name);
             refreshStudentUI();
             showView('planer-view');
         };
@@ -852,7 +878,6 @@
         };
 
         document.getElementById('btn-login-admin').onclick = () => {
-            // Lehrer-Code multi-teacher functionality logic would check specific passwords for class access here
             if (document.getElementById('admin-pass').value === 'lehrer123') {
                 showView('adminDashboard');
             } else {
@@ -885,7 +910,8 @@
 
         window.clearClass = () => {
             localStorage.clear();
-            window.location.search = "";
+            const baseUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.location.href = baseUrl;
         };
     </script>
 </body></html>
