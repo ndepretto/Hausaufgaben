@@ -72,6 +72,12 @@
         .collapsed .rotate-icon {
             transform: rotate(-90deg);
         }
+        .truncate-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -151,7 +157,7 @@
 <div>
 <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Dein Name</label>
 <div class="relative">
-<select class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-lg appearance-none cursor-pointer" id="student-dropdown">
+<select class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-lg appearance-none cursor-pointer whitespace-nowrap overflow-hidden text-ellipsis" id="student-dropdown">
 <option disabled="" selected="" value="">Lade Klassenliste...</option>
 </select>
 <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
@@ -177,7 +183,7 @@
 <section class="hidden space-y-8 animate-in fade-in duration-300" id="view-planer-view">
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-8">
 <div>
-<h2 class="text-3xl font-extrabold" id="display-student-name">...</h2>
+<h2 class="text-3xl font-extrabold truncate-name" id="display-student-name">...</h2>
 <p class="text-slate-500">Deine Aufgaben &amp; Klassenaufgaben</p>
 </div>
 <button class="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-lg transition-colors" id="btn-logout-student" onclick="logoutStudent()">Abmelden</button>
@@ -204,7 +210,7 @@
 <span class="material-symbols-outlined text-5xl mb-4">check_circle</span>
 <p class="font-extrabold text-xl">Erfolgreich bestätigt</p>
 <p class="text-sm opacity-80">Datum: <span id="conf-date-display">--</span></p>
-<p class="text-xs mt-2 uppercase tracking-widest font-bold" id="conf-parent-display"></p>
+<p class="text-xs mt-2 uppercase tracking-widest font-bold whitespace-nowrap" id="conf-parent-display"></p>
 </div>
 </div>
 </section>
@@ -260,7 +266,12 @@
 <p class="text-sm text-slate-500">Ein Name pro Zeile eingeben oder Datei importieren (Format: Vorname Nachname Klasse).</p>
 <textarea class="w-full p-4 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10 font-mono text-sm" id="classlist-textarea" placeholder="Max Mustermann
 Erika Musterfrau..." rows="6"></textarea>
-<button class="w-full py-3 bg-primary text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-md" id="btn-save-classlist">Klassenliste speichern</button>
+<div class="flex flex-col sm:flex-row gap-3">
+<button class="flex-1 py-3 bg-primary text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-md" id="btn-save-classlist">Klassenliste speichern</button>
+<button class="px-6 py-3 bg-red-50 text-red-600 border-2 border-red-100 hover:bg-red-100 font-bold rounded-xl transition-all flex items-center justify-center gap-2" onclick="deleteWholeClass()">
+<span class="material-symbols-outlined text-xl">delete_forever</span> Ganze Klasse löschen
+                    </button>
+</div>
 </div>
 </div>
 <!-- Task Assignment -->
@@ -284,7 +295,7 @@ Erika Musterfrau..." rows="6"></textarea>
 <div>
 <label class="block text-[10px] font-bold uppercase text-slate-400 mb-2">Empfänger</label>
 <div class="relative">
-<select class="w-full p-3.5 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10 appearance-none" id="task-target">
+<select class="w-full p-3.5 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/10 appearance-none whitespace-nowrap overflow-hidden text-ellipsis" id="task-target">
 <option value="all">Alle</option>
 </select>
 <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
@@ -464,6 +475,39 @@ Erika Musterfrau..." rows="6"></textarea>
         window.location.search = "";
     }
 
+    async function deleteWholeClass() {
+        if (!currentClassName) return;
+        const confirmDelete = confirm(`Bist du sicher, dass du die Klasse "${currentClassName}" UNWIDERRUFLICH löschen möchtest?\n\nAlle Schüler, Aufgaben und Fortschritte werden aus der Cloud und von diesem Gerät gelöscht.`);
+        
+        if (confirmDelete) {
+            const classRef = db.collection("classes").doc(currentClassName);
+            
+            // Delete tasks
+            const taskSnap = await classRef.collection("tasks").get();
+            const taskBatch = db.batch();
+            taskSnap.docs.forEach(doc => taskBatch.delete(doc.ref));
+            await taskBatch.commit();
+            
+            // Delete students
+            const studentSnap = await classRef.collection("students").get();
+            const studentBatch = db.batch();
+            studentSnap.docs.forEach(doc => studentBatch.delete(doc.ref));
+            await studentBatch.commit();
+            
+            // Delete config
+            await classRef.collection("config").doc("classlist").delete();
+            await classRef.delete();
+
+            // Clear local state
+            localStorage.removeItem('currentClassName');
+            localStorage.removeItem('currentStudentName');
+            localStorage.removeItem('doeltschi_locked');
+            
+            alert(`Klasse "${currentClassName}" wurde erfolgreich gelöscht.`);
+            window.location.search = "";
+        }
+    }
+
     function initSync() {
         // Clear previous subscriptions if any
         unsubscribeList.forEach(unsub => unsub());
@@ -586,11 +630,8 @@ Erika Musterfrau..." rows="6"></textarea>
                     const lines = text.split('\n').map(line => {
                         line = line.trim();
                         if (!line) return null;
-                        // Handle 'FirstName LastName Class' format
                         const parts = line.split(/\s+/);
-                        if (parts.length >= 3) {
-                            // Combine first and last name, ignore class/code at the end if it's there
-                            // Often lists are "Max Mustermann 3b"
+                        if (parts.length >= 2) {
                             return `${parts[0]} ${parts[1]}`;
                         }
                         return line;
@@ -734,6 +775,7 @@ Erika Musterfrau..." rows="6"></textarea>
             const opt = document.createElement('option');
             opt.value = name;
             opt.textContent = name;
+            opt.className = "whitespace-nowrap";
             dropdown.appendChild(opt.cloneNode(true));
             targetSelect.appendChild(opt);
         });
@@ -838,7 +880,7 @@ Erika Musterfrau..." rows="6"></textarea>
                     <span class="w-10 h-10 rounded-lg flex items-center justify-center text-[11px] font-extrabold text-white uppercase" style="background-color: ${subjectColor}">${task.subject}</span>
                     <div>
                         <p class="font-bold text-slate-800">${task.desc}</p>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase">👤 ${task.who === 'all' ? 'Alle' : task.who} • 🗓️ ${formattedDueDate}</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase whitespace-nowrap overflow-hidden text-ellipsis">👤 ${task.who === 'all' ? 'Alle' : task.who} • 🗓️ ${formattedDueDate}</p>
                     </div>
                 </div>
                 <button onclick="deleteTask('${task.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
@@ -864,11 +906,11 @@ Erika Musterfrau..." rows="6"></textarea>
             tr.innerHTML = `
                 <td class="px-8 py-5">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-primary font-bold text-xs">
+                        <div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-primary font-bold text-xs shrink-0">
                             ${name.charAt(0)}
                         </div>
-                        <div>
-                            <div class="font-bold text-slate-800 leading-tight">${name}</div>
+                        <div class="overflow-hidden">
+                            <div class="font-bold text-slate-800 leading-tight whitespace-nowrap overflow-hidden text-ellipsis">${name}</div>
                             <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5 tracking-wider">${total} Aufgaben total</div>
                         </div>
                     </div>
@@ -885,7 +927,7 @@ Erika Musterfrau..." rows="6"></textarea>
                     </div>
                 </td>
                 <td class="px-8 py-5 text-center">
-                    ${s.confirmed ? `<span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full uppercase tracking-tight">OK • ${s.confDate}</span>` : `<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-tight">Ausstehend</span>`}
+                    ${s.confirmed ? `<span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full uppercase tracking-tight whitespace-nowrap">OK • ${s.confDate}</span>` : `<span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-tight whitespace-nowrap">Ausstehend</span>`}
                 </td>
                 <td class="px-8 py-5 text-right">
                     <div class="flex items-center justify-end gap-1">
