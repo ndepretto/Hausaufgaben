@@ -7,6 +7,8 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- Mammoth .docx Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
 <!-- Firebase Compat SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
@@ -78,7 +80,7 @@
       }
     </script>
 <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f9f9fe; }
         .dot-pattern { background-image: radial-gradient(#d9dade 1px, transparent 1px); background-size: 20px 20px; }
         .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
@@ -249,11 +251,15 @@
 <span class="material-symbols-outlined text-primary text-3xl">group</span> Klassenliste
                 </h3>
 <textarea class="w-full bg-surface-container-low border-2 border-surface-container-high rounded-lg p-6 min-h-[160px] mb-6 focus:ring-4 focus:ring-primary-fixed focus:border-primary transition-all font-medium" id="class-input" placeholder="Namen pro Zeile..."></textarea>
-<div class="flex flex-wrap gap-3">
-<button class="flex-1 bg-primary text-on-primary font-black py-4 rounded-full hover:shadow-xl transition-all" onclick="updateClassList()">Speichern</button>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+<button class="bg-primary text-on-primary font-black py-4 rounded-full hover:shadow-xl transition-all" onclick="updateClassList()">Speichern</button>
 <input accept=".txt" class="hidden" id="txt-import" onchange="handleTxtImport(event)" type="file"/>
-<button class="flex-1 bg-surface-container-high text-on-surface-variant font-black py-4 rounded-full hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2" onclick="document.getElementById('txt-import').click()">
+<button class="bg-surface-container-high text-on-surface-variant font-black py-4 rounded-full hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2" onclick="document.getElementById('txt-import').click()">
 <span class="material-symbols-outlined text-lg">upload_file</span> .txt Import
+                    </button>
+<input accept=".docx" class="hidden" id="docx-import" onchange="handleDocxImport(event)" type="file"/>
+<button class="bg-surface-container-high text-on-surface-variant font-black py-4 rounded-full hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2" onclick="document.getElementById('docx-import').click()">
+<span class="material-symbols-outlined text-lg">description</span> .docx Import
                     </button>
 </div>
 </div>
@@ -505,7 +511,6 @@
             confirmsSnapshot.docs.forEach(doc => batch.delete(doc.ref));
             await batch.commit();
             alert("Alle Bestätigungen wurden erfolgreich zurückgesetzt.");
-            // Display will refresh via real-time listener unsubConfirms
         } catch (error) {
             console.error("Error deleting confirmations: ", error);
             alert("Fehler beim Löschen der Bestätigungen.");
@@ -859,14 +864,51 @@
         if (!file) return;
         const reader = new FileReader();
         reader.onload = function(e) {
-            const names = e.target.result.split(/\r?\n/).map(n => n.trim()).filter(n => n !== '');
-            if (names.length > 0) {
-                db.collection('classes').doc(currentClass).set({ students: names }, { merge: true })
-                .then(() => document.getElementById('class-input').value = names.join('\n'));
-            }
+            const content = e.target.result;
+            processRawImports(content);
         };
         reader.readAsText(file);
         event.target.value = ''; 
+    }
+
+    function handleDocxImport(event) {
+        if(!currentClass) return;
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const arrayBuffer = e.target.result;
+            mammoth.extractRawText({arrayBuffer: arrayBuffer})
+                .then(function(result) {
+                    const text = result.value;
+                    processRawImports(text);
+                })
+                .catch(function(err) {
+                    console.error("Error extracting docx text: ", err);
+                    alert("Fehler beim Importieren der Word-Datei.");
+                });
+        };
+        reader.readAsArrayBuffer(file);
+        event.target.value = '';
+    }
+
+    function processRawImports(rawText) {
+        // Split by lines, trim, filter empty, and try to handle common delimiters if any
+        let names = rawText.split(/\r?\n/).map(n => n.trim()).filter(n => n !== '');
+        
+        // Sometimes names are comma separated in one line
+        if (names.length === 1 && names[0].includes(',')) {
+            names = names[0].split(',').map(n => n.trim()).filter(n => n !== '');
+        }
+
+        if (names.length > 0) {
+            const inputField = document.getElementById('class-input');
+            const currentNames = inputField.value.split('\n').map(n => n.trim()).filter(n => n !== '');
+            const combined = [...new Set([...currentNames, ...names])]; // Merge and unique
+            inputField.value = combined.join('\n');
+            alert(`${names.length} Namen wurden zur Liste hinzugefügt.`);
+        }
     }
 
     function toggleSection(id) {
