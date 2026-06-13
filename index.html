@@ -285,12 +285,12 @@
 <button class="flex items-center gap-4 tracking-tight group" onclick="toggleSection('progress-section')">
 <h3 class="text-2xl font-black flex items-center gap-4">
 <span class="material-symbols-outlined text-primary text-3xl">analytics</span> Klassenfortschritt
-                </h3>
+                    </h3>
 <span class="material-symbols-outlined text-outline-variant transition-transform duration-500 scale-150" id="progress-chevron">expand_less</span>
 </button>
 <button class="border-2 border-error text-error px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest hover:bg-error-container/20 transition-all flex items-center gap-2" onclick="deleteAllConfirmations()">
 <span class="material-symbols-outlined text-[16px]">lock_reset</span> Alle Bestätigungen löschen
-            </button>
+                </button>
 </div>
 <div class="px-10 pb-10" id="progress-section">
 <div class="overflow-x-auto">
@@ -299,7 +299,7 @@
 <tr class="text-[10px] font-black text-outline-variant uppercase tracking-[0.2em] border-b border-surface-container">
 <th class="py-6 px-4">Schüler</th>
 <th class="py-6 px-4">Erledigt</th>
-<th class="py-6 px-4 text-center">Check</th>
+<th class="py-6 px-4 text-center">Eltern Bestätigung</th>
 <th class="py-6 px-4 text-right">Aktion</th>
 </tr>
 </thead>
@@ -505,6 +505,7 @@
             confirmsSnapshot.docs.forEach(doc => batch.delete(doc.ref));
             await batch.commit();
             alert("Alle Bestätigungen wurden erfolgreich zurückgesetzt.");
+            // Display will refresh via real-time listener unsubConfirms
         } catch (error) {
             console.error("Error deleting confirmations: ", error);
             alert("Fehler beim Löschen der Bestätigungen.");
@@ -739,8 +740,11 @@
                 <td class="py-6 px-4 text-center">
                     ${conf ? 
                         `<div class="flex flex-col items-center gap-1">
-                            <span class="material-symbols-outlined text-primary scale-125" title="Bestätigt von ${conf.name}">verified</span>
-                            <span class="text-[9px] font-black text-primary uppercase">${conf.date}</span>
+                            <div class="flex items-center gap-2 bg-primary/5 px-3 py-1 rounded-full border border-primary/10">
+                                <span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+                                <span class="text-[11px] font-bold text-primary">Gesehen: ${conf.name}</span>
+                            </div>
+                            <span class="text-[9px] font-black text-outline-variant uppercase mt-1">am ${conf.date}</span>
                         </div>` : 
                         `<span class="material-symbols-outlined text-outline-variant opacity-40" title="Ausstehend">pending</span>`
                     }
