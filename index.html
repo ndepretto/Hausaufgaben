@@ -281,12 +281,17 @@
 </div>
 <!-- Klassenfortschritt -->
 <div class="bg-white rounded-lg border border-surface-container shadow-xl mb-10 overflow-hidden">
-<button class="w-full p-10 flex items-center justify-between hover:bg-surface-container-low transition-colors group" onclick="toggleSection('progress-section')">
-<h3 class="text-2xl font-black flex items-center gap-4 tracking-tight">
+<div class="p-10 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-surface-container">
+<button class="flex items-center gap-4 tracking-tight group" onclick="toggleSection('progress-section')">
+<h3 class="text-2xl font-black flex items-center gap-4">
 <span class="material-symbols-outlined text-primary text-3xl">analytics</span> Klassenfortschritt
                 </h3>
 <span class="material-symbols-outlined text-outline-variant transition-transform duration-500 scale-150" id="progress-chevron">expand_less</span>
 </button>
+<button class="border-2 border-error text-error px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest hover:bg-error-container/20 transition-all flex items-center gap-2" onclick="deleteAllConfirmations()">
+<span class="material-symbols-outlined text-[16px]">lock_reset</span> Alle Bestätigungen löschen
+            </button>
+</div>
 <div class="px-10 pb-10" id="progress-section">
 <div class="overflow-x-auto">
 <table class="w-full text-left border-collapse">
@@ -487,6 +492,22 @@
         } catch (error) {
             console.error("Error deleting class: ", error);
             alert("Fehler beim Löschen der Klasse. Bitte erneut versuchen.");
+        }
+    }
+
+    async function deleteAllConfirmations() {
+        if (!currentClass) return;
+        if (!confirm('Wirklich ALLE Elternbestätigungen für diese Klasse zurücksetzen? Alle Pläne werden für die Schüler wieder entsperrt.')) return;
+        
+        try {
+            const confirmsSnapshot = await db.collection('classes').doc(currentClass).collection('confirms').get();
+            const batch = db.batch();
+            confirmsSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+            alert("Alle Bestätigungen wurden erfolgreich zurückgesetzt.");
+        } catch (error) {
+            console.error("Error deleting confirmations: ", error);
+            alert("Fehler beim Löschen der Bestätigungen.");
         }
     }
 
@@ -717,7 +738,10 @@
                 </td>
                 <td class="py-6 px-4 text-center">
                     ${conf ? 
-                        `<span class="material-symbols-outlined text-primary scale-125" title="Bestätigt von ${conf.name}">verified</span>` : 
+                        `<div class="flex flex-col items-center gap-1">
+                            <span class="material-symbols-outlined text-primary scale-125" title="Bestätigt von ${conf.name}">verified</span>
+                            <span class="text-[9px] font-black text-primary uppercase">${conf.date}</span>
+                        </div>` : 
                         `<span class="material-symbols-outlined text-outline-variant opacity-40" title="Ausstehend">pending</span>`
                     }
                 </td>
