@@ -893,21 +893,82 @@
         event.target.value = '';
     }
 
+    /**
+     * Intelligent student record processing.
+     * Merges first name, last name, and class designation into single lines.
+     * Handles potential messy line breaks or table-like layouts exported to raw text.
+     */
     function processRawImports(rawText) {
-        // Split by lines, trim, filter empty, and try to handle common delimiters if any
-        let names = rawText.split(/\r?\n/).map(n => n.trim()).filter(n => n !== '');
+        if (!rawText) return;
+
+        // 1. Initial cleanup: Replace tabs with spaces and split by line breaks
+        let lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
         
-        // Sometimes names are comma separated in one line
-        if (names.length === 1 && names[0].includes(',')) {
-            names = names[0].split(',').map(n => n.trim()).filter(n => n !== '');
+        let cleanedNames = [];
+
+        // 2. Intelligent Merging Strategy
+        // We look for patterns like "Lastname Firstname Class" or "Firstname Lastname Class"
+        // often spread across 2-3 lines or separated by spaces/commas.
+        
+        // If the text looks like one giant list with many line breaks:
+        // Attempt to regroup chunks that belong together.
+        // Usually, a student record is [Name, Surname, (Optional Class)].
+        
+        // Basic heuristic: Join lines until we see a "class" indicator (like B4B, 3a, etc) 
+        // OR simply join pairs/triplets if the line count is high and lines are short.
+        
+        // For standard Word exports of tables, mammoth often yields one cell per line.
+        // Let's look at the average length. If lines are very short (e.g., < 15 chars), 
+        // they are likely single names/parts of a record.
+        
+        const isLikelyCellPerLine = lines.length > 5 && lines.every(l => l.length < 20);
+
+        if (isLikelyCellPerLine) {
+            // Regroup by checking for common class patterns or simple fixed chunks
+            // Let's try to detect if it's 2 or 3 lines per student.
+            // Search for a line that looks like a class (e.g., digit+letter or letter+digit)
+            const classRegex = /^[A-Z]?\d+[A-Z]?$/i;
+            let tempGroup = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                tempGroup.push(lines[i]);
+                // If this line looks like a class designation, it's likely the end of a record
+                if (classRegex.test(lines[i]) || tempGroup.length >= 3) {
+                    cleanedNames.push(tempGroup.join(' '));
+                    tempGroup = [];
+                }
+            }
+            // Add remaining
+            if (tempGroup.length > 0) cleanedNames.push(tempGroup.join(' '));
+        } else {
+            // Standard processing: split by commas if only one line, else take lines as they are
+            if (lines.length === 1 && lines[0].includes(',')) {
+                cleanedNames = lines[0].split(',').map(n => n.trim()).filter(n => n !== '');
+            } else {
+                // Filter out common header words if they exist
+                const headers = ['vorname', 'nachname', 'klasse', 'name', 'surname', 'class'];
+                cleanedNames = lines.filter(l => !headers.includes(l.toLowerCase()));
+            }
         }
 
-        if (names.length > 0) {
+        // Final Polish: Remove duplicates and clean up extra internal spaces
+        cleanedNames = cleanedNames.map(n => n.replace(/\s+/g, ' ').trim()).filter(n => n.length > 2);
+        const uniqueNames = [...new Set(cleanedNames)];
+
+        if (uniqueNames.length > 0) {
             const inputField = document.getElementById('class-input');
             const currentNames = inputField.value.split('\n').map(n => n.trim()).filter(n => n !== '');
-            const combined = [...new Set([...currentNames, ...names])]; // Merge and unique
-            inputField.value = combined.join('\n');
-            alert(`${names.length} Namen wurden zur Liste hinzugefügt.`);
+            
+            // Merge with existing but keep order
+            const finalCombined = [...currentNames];
+            uniqueNames.forEach(un => {
+                if (!finalCombined.includes(un)) finalCombined.push(un);
+            });
+            
+            inputField.value = finalCombined.join('\n');
+            alert(`${uniqueNames.length} Schüler wurden erfolgreich importiert und zusammengeführt.`);
+        } else {
+            alert("Es konnten keine Schülernamen im Dokument gefunden werden.");
         }
     }
 
