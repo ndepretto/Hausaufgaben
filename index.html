@@ -1,927 +1,218 @@
-<html lang="de"><head>
+<!DOCTYPE html>
+
+<html class="light" lang="de"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>doeltschi | Digitaler Aufgabenplaner</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<!-- Mammoth .docx Library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
-<!-- Firebase Compat SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "colors": {
-                    "on-tertiary-fixed-variant": "#7c2e00",
-                    "on-primary-fixed-variant": "#004493",
-                    "secondary": "#4c4aca",
-                    "on-secondary-fixed": "#0c006a",
-                    "surface-dim": "#d9dade",
-                    "tertiary-fixed-dim": "#ffb595",
-                    "primary-fixed": "#d8e2ff",
-                    "background": "#f9f9fe",
-                    "secondary-fixed-dim": "#c2c1ff",
-                    "on-background": "#1a1c1f",
-                    "on-secondary": "#ffffff",
-                    "on-tertiary-fixed": "#351000",
-                    "outline-variant": "#c1c6d7",
-                    "primary-fixed-dim": "#adc6ff",
-                    "surface-variant": "#e2e2e7",
-                    "on-primary-container": "#fefcff",
-                    "surface-container-highest": "#e2e2e7",
-                    "surface-container": "#ededf2",
-                    "surface-bright": "#f9f9fe",
-                    "primary": "#0058bc",
-                    "inverse-primary": "#adc6ff",
-                    "primary-container": "#0070eb",
-                    "inverse-on-surface": "#f0f0f5",
-                    "surface": "#f9f9fe",
-                    "surface-container-high": "#e8e8ed",
-                    "outline": "#717786",
-                    "on-surface-variant": "#414755",
-                    "on-error": "#ffffff",
-                    "surface-container-low": "#f3f3f8",
-                    "secondary-container": "#6664e4",
-                    "on-error-container": "#93000a",
-                    "tertiary": "#9e3d00",
-                    "surface-container-lowest": "#ffffff",
-                    "inverse-surface": "#2e3034",
-                    "error-container": "#ffdad6",
-                    "surface-tint": "#005bc1",
-                    "tertiary-fixed": "#ffdbcc",
-                    "on-tertiary": "#ffffff",
-                    "on-surface": "#1a1c1f",
-                    "on-tertiary-container": "#fffbff",
-                    "secondary-fixed": "#e2dfff",
-                    "on-secondary-container": "#fffbff",
-                    "on-primary-fixed": "#001a41",
-                    "on-primary": "#ffffff",
-                    "tertiary-container": "#c64f00",
-                    "on-secondary-fixed-variant": "#3631b4",
-                    "error": "#ba1a1a"
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-primary": "#adc6ff",
+                        "tertiary-container": "#c64f00",
+                        "on-background": "#1a1c1f",
+                        "surface-container-low": "#f3f3f8",
+                        "on-primary-fixed": "#001a41",
+                        "outline-variant": "#c1c6d7",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#9e3d00",
+                        "surface-bright": "#f9f9fe",
+                        "secondary-container": "#6664e4",
+                        "inverse-surface": "#2e3034",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#ededf2",
+                        "on-surface": "#1a1c1f",
+                        "on-secondary-fixed": "#0c006a",
+                        "surface-container-highest": "#e2e2e7",
+                        "on-surface-variant": "#414755",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#e8e8ed",
+                        "on-primary-fixed-variant": "#004493",
+                        "background": "#f9f9fe",
+                        "on-secondary-fixed-variant": "#3631b4",
+                        "inverse-on-surface": "#f0f0f5",
+                        "error": "#ba1a1a",
+                        "on-tertiary-container": "#fffbff",
+                        "primary-fixed-dim": "#adc6ff",
+                        "tertiary-fixed": "#ffdbcc",
+                        "on-primary-container": "#fefcff",
+                        "on-tertiary-fixed-variant": "#7c2e00",
+                        "secondary-fixed": "#e2dfff",
+                        "outline": "#717786",
+                        "primary-container": "#0070eb",
+                        "surface-variant": "#e2e2e7",
+                        "secondary-fixed-dim": "#c2c1ff",
+                        "on-secondary-container": "#fffbff",
+                        "tertiary-fixed-dim": "#ffb595",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "primary": "#0058bc",
+                        "on-tertiary-fixed": "#351000",
+                        "surface-tint": "#005bc1",
+                        "surface-dim": "#d9dade",
+                        "on-primary": "#ffffff",
+                        "secondary": "#4c4aca",
+                        "on-tertiary": "#ffffff",
+                        "surface": "#f9f9fe",
+                        "primary-fixed": "#d8e2ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "input-padding": "1rem",
+                        "gutter": "1.5rem",
+                        "stack-padding": "1.25rem",
+                        "container-margin": "2rem"
+                    },
+                    "fontFamily": {
+                        "h1": ["Inter"],
+                        "h2": ["Inter"],
+                        "h1-mobile": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "subject-tag": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "h1-mobile": ["26px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "subject-tag": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
             },
-            "borderRadius": {
-                    "DEFAULT": "1rem",
-                    "lg": "2rem",
-                    "xl": "3rem",
-                    "full": "9999px"
-            },
-            "fontFamily": {
-                    "sans": ["Inter", "sans-serif"],
-            }
-          },
-        },
-      }
+        }
     </script>
 <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f9f9fe; }
-        .dot-pattern { background-image: radial-gradient(#d9dade 1px, transparent 1px); background-size: 20px 20px; }
-        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
-        .header-gradient { background: linear-gradient(135deg, #0058bc 0%, #0070eb 100%); }
-        @media print { .no-print { display: none !important; } }
-        .view-section { display: none; }
-        .view-section.active { display: block; }
-        input:disabled, button:disabled { cursor: not-allowed; opacity: 0.6; }
-        
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d8e2ff; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #adc6ff; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
-        .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @media print {
+            body { background: white !important; }
+            .no-print { display: none !important; }
+            .print-container { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .a4-page { 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                border: none !important;
+                page-break-after: always;
+            }
+        }
+        .a4-page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm;
+            margin: 2rem auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .student-card {
+            border: 1px solid #717786; /* outline */
+            break-inside: avoid;
+        }
     </style>
 </head>
-<body class="dot-pattern min-h-screen text-on-surface pb-20">
-<!-- Teacher Login Modal -->
-<div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm hidden animate-fade-in" id="teacher-modal">
-<div class="bg-white w-full max-w-md rounded-lg shadow-2xl overflow-hidden animate-slide-up relative">
-<button class="absolute top-4 right-4 text-outline hover:text-on-surface transition-colors" onclick="closeTeacherModal()">
-<span class="material-symbols-outlined">close</span>
-</button>
-<div class="p-8 text-center">
-<div class="w-16 h-16 bg-primary-fixed rounded-full flex items-center justify-center mx-auto mb-6">
-<span class="material-symbols-outlined text-3xl text-primary">lock_person</span>
-</div>
-<h3 class="text-2xl font-black tracking-tight mb-2">Lehrer-Login</h3>
-<p class="text-on-surface-variant text-sm mb-8">Bitte gib das Passwort ein, um zum Lehrerbereich zu gelangen.</p>
-<div class="space-y-4">
-<div class="relative">
-<input class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-6 py-4 text-center font-bold text-lg outline-none focus:border-primary focus:ring-4 focus:ring-primary-fixed transition-all" id="teacher-password-input" placeholder="Passwort" type="password"/>
-</div>
-<div class="text-error text-xs font-bold hidden" id="password-error">Passwort nicht korrekt.</div>
-<button class="w-full bg-primary text-on-primary font-black py-4 rounded-full hover:shadow-lg active:scale-95 transition-all text-lg" onclick="validateTeacherPassword()">
-                    Anmelden
-                </button>
-</div>
-</div>
-</div>
-</div>
-<!-- QR Modal -->
-<div class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md hidden animate-fade-in" id="qr-modal">
-<div class="bg-white w-full max-w-sm rounded-lg shadow-2xl overflow-hidden animate-slide-up relative">
-<button class="absolute top-4 right-4 text-outline hover:text-on-surface transition-colors" onclick="closeQRModal()">
-<span class="material-symbols-outlined">close</span>
-</button>
-<div class="p-8 text-center">
-<h3 class="text-xl font-black tracking-tight mb-2" id="qr-modal-title">QR Code</h3>
-<p class="text-on-surface-variant text-xs mb-6" id="qr-modal-subtitle">Für Schüler oder Eltern</p>
-<div class="bg-white p-4 rounded-lg border-2 border-surface-container shadow-inner mb-6 flex justify-center" id="modal-qrcode-container"></div>
-<p class="text-[10px] font-bold text-outline uppercase tracking-widest break-all" id="qr-modal-url"></p>
-</div>
-</div>
-</div>
-<!-- Header -->
-<header class="header-gradient sticky top-0 z-50 shadow-lg no-print">
-<div class="max-w-6xl mx-auto px-6 h-18 flex items-center justify-between py-3">
+<body class="bg-surface-container text-on-surface font-body-md">
+<!-- Top Bar (No Print) -->
+<header class="no-print bg-surface border-b border-outline-variant w-full h-16 flex items-center justify-between px-gutter sticky top-0 z-50">
 <div class="flex items-center gap-4">
-<span class="text-3xl font-extrabold tracking-tighter text-white">doeltschi</span>
-<div class="bg-white/20 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 border border-white/30">
-<span class="material-symbols-outlined text-[16px]">cloud_done</span>
-<span id="connection-status">Live</span>
+<span class="material-symbols-outlined text-primary">print</span>
+<h1 class="font-h2 text-h2">Druckansicht: Eltern-QR-Codes</h1>
 </div>
-<button class="hidden md:flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/90 hover:bg-white/20 transition-all px-4 py-1.5 rounded-full border border-white/20" id="btn-change-class" onclick="leaveClass()">
-<span class="material-symbols-outlined text-[16px]">swap_horiz</span> Klasse wechseln
-            </button>
-</div>
-<div class="flex bg-black/10 backdrop-blur-md p-1.5 rounded-full border border-white/10" id="nav-mode-selector">
-<button class="flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold transition-all duration-300" id="btn-student-nav" onclick="setMode('student')">
-<span class="material-symbols-outlined text-[18px]">person</span> Schüler
-            </button>
-<button class="flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold transition-all duration-300" id="btn-teacher-nav" onclick="openTeacherModal()">
-<span class="material-symbols-outlined text-[18px]">lock</span> Lehrer
-            </button>
-</div>
-</div>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-full font-bold flex items-center gap-2 hover:bg-primary-container transition-all active:scale-95" onclick="window.print()">
+<span class="material-symbols-outlined">local_printshop</span>
+            Jetzt drucken
+        </button>
 </header>
-<main class="max-w-6xl mx-auto px-6 mt-12">
-<!-- 0. Welcome/Class Selection View -->
-<div class="view-section active" id="class-selection-view">
-<div class="max-w-xl mx-auto">
-<div class="bg-white p-12 rounded-lg shadow-2xl border border-surface-container relative overflow-hidden group">
-<div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-secondary to-tertiary"></div>
-<div class="text-center mb-10">
-<div class="inline-flex items-center justify-center w-20 h-20 bg-primary-fixed rounded-full mb-6">
-<span class="material-symbols-outlined text-4xl text-primary">school</span>
-</div>
-<h1 class="text-5xl font-black text-on-surface mb-3 tracking-tight">Willkommen</h1>
-<p class="text-on-surface-variant text-lg">Gib deine Klasse ein, um zu starten.</p>
-</div>
-<div class="relative mb-8">
-<input class="w-full bg-surface-container-low border-2 border-surface-container-high rounded-full px-8 py-5 text-2xl font-bold text-on-surface shadow-inner focus:border-primary focus:ring-4 focus:ring-primary-fixed transition-all outline-none uppercase text-center placeholder:text-outline-variant" id="class-name-input" onkeydown="if(event.key === 'Enter') selectClass()" placeholder="Z.B. B4B" type="text"/>
-</div>
-<button class="w-full bg-primary text-on-primary font-black text-xl py-5 rounded-full hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3" onclick="selectClass()">
-                    Klasse beitreten <span class="material-symbols-outlined font-bold">arrow_forward</span>
-</button>
-<p class="mt-8 text-center text-sm font-medium text-on-surface-variant flex items-center justify-center gap-2">
-<span class="material-symbols-outlined text-sm">help_outline</span>
-                    Frage deine Lehrperson nach dem Namen.
-                </p>
-</div>
-</div>
-</div>
-<!-- 1. Start-View (Student Name Selection) -->
-<div class="view-section" id="start-view">
-<div class="text-center mb-12">
-<div class="mb-4 inline-block px-6 py-2 bg-secondary-fixed text-on-secondary-fixed rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-sm" id="display-class-name">Klasse: --</div>
-<h1 class="text-6xl font-black text-on-surface mb-4 tracking-tighter">Wer bist du?</h1>
-<p class="text-on-surface-variant text-xl">Wähle deinen Namen aus.</p>
-</div>
-<div class="max-w-xl mx-auto mb-16">
-<div class="relative">
-<select class="w-full bg-white border-2 border-primary/20 rounded-full px-10 py-5 text-2xl font-bold text-on-surface shadow-xl focus:border-primary focus:ring-4 focus:ring-primary-fixed transition-all outline-none appearance-none cursor-pointer" id="student-selector" onchange="selectStudent(this.value)">
-<option value="">Wähle deinen Namen...</option>
-</select>
-<div class="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
-<span class="material-symbols-outlined font-black">expand_more</span>
-</div>
-</div>
-</div>
-<div class="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
-<div class="bg-white p-12 rounded-lg border border-surface-container shadow-xl flex flex-col items-center hover:shadow-2xl transition-shadow">
-<h3 class="text-2xl font-black mb-2 tracking-tight text-primary">Direkter Zugang</h3>
-<p class="text-on-surface-variant text-sm mb-8">Einfach scannen und loslegen.</p>
-<div class="bg-white p-6 rounded-lg border-2 border-surface-container shadow-inner mb-8 transform hover:scale-105 transition-transform" id="qrcode-container"></div>
-<p class="text-xs font-bold text-on-surface-variant text-center uppercase tracking-wider">Klasse: <span class="class-label-inline text-primary"></span></p>
-</div>
-<div class="bg-white p-12 rounded-lg border border-surface-container shadow-xl text-left hover:shadow-2xl transition-shadow">
-<h3 class="text-2xl font-black mb-8 tracking-tight text-secondary">Als App nutzen</h3>
-<div class="space-y-6">
-<div class="flex items-start gap-4">
-<span class="w-8 h-8 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-black text-sm">1</span>
-<p class="text-sm font-bold text-on-surface-variant pt-1.5">Link im Browser öffnen.</p>
-</div>
-<div class="flex items-start gap-4">
-<span class="w-8 h-8 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-black text-sm">2</span>
-<p class="text-sm font-bold text-on-surface-variant pt-1.5">Auf „Teilen“ (iOS) oder die Punkte (Android) tippen.</p>
-</div>
-<div class="flex items-start gap-4">
-<span class="w-8 h-8 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-black text-sm">3</span>
-<p class="text-sm font-bold text-on-surface-variant pt-1.5">„Zum Home-Bildschirm hinzufügen“ wählen.</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- 2. Planer-View -->
-<div class="view-section" id="planer-view">
-<div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+<main class="print-container">
+<!-- A4 Page Container -->
+<div class="a4-page">
+<!-- Teacher/Class Info -->
+<div class="mb-8 flex justify-between items-end border-b-2 border-primary pb-4">
 <div>
-<button class="hidden items-center gap-2 text-primary font-black mb-4 hover:bg-primary-fixed px-4 py-2 rounded-full transition-all" id="back-to-dashboard" onclick="setMode('teacher')">
-<span class="material-symbols-outlined font-black">arrow_back</span> Dashboard
-                </button>
-<div class="flex flex-wrap items-center gap-5">
-<h2 class="text-5xl font-black text-on-surface tracking-tighter" id="current-user-display">Schüler</h2>
-<div class="hidden flex items-center gap-2 bg-error-container text-on-error-container px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest shadow-sm animate-pulse border border-error/20" id="lock-indicator">
-<span class="material-symbols-outlined text-sm">lock</span>
-                        Plan gesperrt
-                    </div>
-<div class="hidden flex items-center gap-2 bg-primary-fixed text-on-primary-fixed-variant px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest shadow-sm border border-primary/20" id="parent-mode-indicator">
-<span class="material-symbols-outlined text-sm">family_restroom</span>
-                        Eltern-Freigabe aktiv
-                    </div>
+<p class="font-label-caps text-label-caps text-primary uppercase">Wer – Was – Bis wann</p>
+<h2 class="font-h1 text-h1 text-on-surface">Klasse 4b — Elternzugänge</h2>
+</div>
+<div class="text-right">
+<p class="font-body-md text-on-surface-variant">Datum: 24. Mai 2024</p>
+<p class="font-body-md text-on-surface-variant">Lehrperson: Hr. Schmidt</p>
 </div>
 </div>
-<div class="md:text-right">
-<div class="text-sm font-black text-primary/60 uppercase tracking-[0.3em]" id="week-display">Woche --</div>
+<!-- Grid of Cards -->
+<div class="grid grid-cols-2 gap-6">
+<!-- Student Card Template (Loop-simulated) -->
+<script>
+                    const students = [
+                        "Lena Meier", "Jonas Weber", "Sophie Keller", "Lukas Fischer",
+                        "Mia Schneider", "Noah Wagner", "Emma Becker", "Leon Hoffmann",
+                        "Mila Schäfer", "Ben Koch", "Ella Richter", "Paul Wolf"
+                    ];
+
+                    const renderCard = (name) => `
+                        <div class="student-card p-6 rounded-lg bg-white relative flex flex-col justify-between h-[130mm]">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-lg"></div>
+                            
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="font-label-caps text-label-caps text-primary">DÖLTSCHI HAUSAUFGABEN</div>
+                                    <span class="material-symbols-outlined text-outline">verified</span>
+                                </div>
+                                
+                                <h3 class="font-h2 text-h2 mb-1">Eltern-Zugang: Digitaler Planer</h3>
+                                <p class="font-body-lg font-bold text-on-surface mb-6">${name}</p>
+                            </div>
+
+                            <div class="flex flex-col items-center gap-4 py-4">
+                                <div class="border-2 border-dashed border-outline-variant p-2 rounded-xl">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://wer-was-biswann.ch/parent/demo" 
+                                         alt="QR Code für Elternzugang" 
+                                         class="w-32 h-32"
+                                         data-alt="A clean, high-contrast QR code centered on a white background. The QR code has rounded modules and a subtle blue accent in the center. It is surrounded by a minimal, light-gray dashed border to guide the user's eye. The overall aesthetic is professional, clear, and optimized for high-quality black and white printing with a modern corporate feel.">
+                                </div>
+                                <p class="text-center font-label-caps text-label-caps px-4 text-on-surface-variant">
+                                    SCANNEN FÜR AKTUELLE HAUSAUFGABEN
+                                </p>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-outline-variant">
+                                <p class="text-[11px] leading-tight text-on-surface-variant">
+                                    Scannen Sie diesen Code, um die Hausaufgaben Ihres Kindes zu sehen und zu bestätigen. Einmal scannen, immer aktuell. Keine App-Installation nötig.
+                                </p>
+                            </div>
+                        </div>
+                    `;
+
+                    document.write(students.map(name => renderCard(name)).join(''));
+                </script>
 </div>
-</div>
-<div class="space-y-4" id="task-container"></div>
-<!-- Elternbestätigung -->
-<div class="mt-16 p-10 bg-white rounded-lg border-2 border-primary border-dashed shadow-xl" id="parent-section">
-<div class="flex flex-col md:flex-row items-center justify-between gap-8">
-<div class="text-center md:text-left">
-<h3 class="text-2xl font-black text-primary mb-2 flex items-center justify-center md:justify-start gap-3">
-<span class="material-symbols-outlined text-3xl">verified_user</span> Bestätigung der Eltern
-                    </h3>
-<p class="text-on-surface-variant font-medium" id="parent-instruction">Haben deine Eltern die Hausaufgaben gesehen?</p>
-</div>
-<div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto" id="parent-form">
-<input class="bg-surface-container-low border-2 border-surface-container rounded-full px-6 py-4 outline-none focus:border-primary transition-all font-bold placeholder:text-outline-variant min-w-[240px] disabled:bg-surface-container disabled:text-outline-variant" id="parent-name" placeholder="Vorname Nachname" type="text"/>
-<button class="bg-primary text-on-primary font-black py-4 px-8 rounded-full hover:shadow-lg active:scale-95 transition-all disabled:bg-surface-variant disabled:text-outline disabled:cursor-not-allowed" id="parent-confirm-btn" onclick="confirmParent()">Bestätigen</button>
-</div>
-</div>
-<div class="hidden text-primary font-black bg-primary-fixed/30 p-6 rounded-lg text-center border border-primary/20 mt-6" id="parent-status"></div>
-</div>
-<!-- Color Legend Student View -->
-<div class="mt-16 p-8 bg-white rounded-lg border border-surface-container shadow-sm no-print">
-<h4 class="text-xs font-black text-outline-variant uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-<span class="material-symbols-outlined text-sm">palette</span> Fächer-Farben
-            </h4>
-<div class="flex flex-wrap gap-4" id="color-legend-student"></div>
-</div>
-</div>
-<!-- 3. Teacher-View -->
-<div class="view-section" id="teacher-view">
-<div class="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
-<h2 class="text-5xl font-black tracking-tighter">Lehrer-Bereich</h2>
-<div class="flex items-center gap-4">
-<div class="bg-primary-fixed text-on-primary-fixed-variant px-8 py-3 rounded-full font-black uppercase tracking-[0.1em] shadow-sm border border-primary/10" id="teacher-class-label">Klasse: --</div>
-<button class="bg-error text-on-error font-black px-6 py-3 rounded-full hover:bg-error-container hover:text-on-error-container transition-all flex items-center gap-2 text-sm shadow-sm" onclick="deleteEntireClass()">
-<span class="material-symbols-outlined text-[18px]">delete_forever</span> Ganze Klasse löschen
-                </button>
-</div>
-</div>
-<div class="grid lg:grid-cols-2 gap-10 mb-10">
-<!-- Klassenliste -->
-<div class="bg-white p-10 rounded-lg border border-surface-container shadow-xl">
-<h3 class="text-2xl font-black mb-6 flex items-center gap-3 tracking-tight">
-<span class="material-symbols-outlined text-primary text-3xl">group</span> Klassenliste
-                </h3>
-<textarea class="w-full bg-surface-container-low border-2 border-surface-container-high rounded-lg p-6 min-h-[160px] mb-6 focus:ring-4 focus:ring-primary-fixed focus:border-primary transition-all font-medium" id="class-input" placeholder="Namen pro Zeile..."></textarea>
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-<button class="bg-primary text-on-primary font-black py-4 rounded-full hover:shadow-xl transition-all" onclick="updateClassList()">Speichern</button>
-<input accept=".txt" class="hidden" id="txt-import" onchange="handleTxtImport(event)" type="file"/>
-<button class="bg-surface-container-high text-on-surface-variant font-black py-4 rounded-full hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2" onclick="document.getElementById('txt-import').click()">
-<span class="material-symbols-outlined text-lg">upload_file</span> .txt Import
-                    </button>
-<input accept=".docx" class="hidden" id="docx-import" onchange="handleDocxImport(event)" type="file"/>
-<button class="bg-surface-container-high text-on-surface-variant font-black py-4 rounded-full hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2" onclick="document.getElementById('docx-import').click()">
-<span class="material-symbols-outlined text-lg">description</span> .docx Import
-                    </button>
-</div>
-</div>
-<!-- Aufgabe zuteilen -->
-<div class="bg-white p-10 rounded-lg border border-surface-container shadow-xl">
-<h3 class="text-2xl font-black mb-6 flex items-center gap-3 tracking-tight">
-<span class="material-symbols-outlined text-secondary text-3xl">add_task</span> Aufgabe zuteilen
-                </h3>
-<div class="space-y-4">
-<div class="grid grid-cols-2 gap-4">
-<div class="relative">
-<select class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-6 py-4 font-bold focus:ring-4 focus:ring-secondary-fixed focus:border-secondary transition-all appearance-none" id="task-who"></select>
-<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
-</div>
-<div class="relative">
-<select class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-6 py-4 font-bold focus:ring-4 focus:ring-secondary-fixed focus:border-secondary transition-all appearance-none" id="task-subject"></select>
-<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
-</div>
-</div>
-<input class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-8 py-4 font-bold focus:ring-4 focus:ring-secondary-fixed focus:border-secondary transition-all" id="task-desc" placeholder="Was ist zu tun?" type="text"/>
-<input class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-8 py-4 font-bold focus:ring-4 focus:ring-secondary-fixed focus:border-secondary transition-all" id="task-date" type="date"/>
-<button class="w-full bg-secondary text-on-secondary font-black py-4 rounded-full hover:shadow-xl active:scale-95 transition-all text-lg" onclick="addTask()">Zuweisen</button>
-</div>
-</div>
-</div>
-<!-- Klassenfortschritt -->
-<div class="bg-white rounded-lg border border-surface-container shadow-xl mb-10 overflow-hidden">
-<div class="p-10 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-surface-container">
-<button class="flex items-center gap-4 tracking-tight group" onclick="toggleProgressSection()">
-<h3 class="text-2xl font-black flex items-center gap-4">
-<span class="material-symbols-outlined text-primary text-3xl">analytics</span> Klassenfortschritt
-                    </h3>
-<span class="material-symbols-outlined text-outline-variant transition-transform duration-500 scale-150" id="progress-chevron">expand_less</span>
-</button>
-<button class="border-2 border-error text-error px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest hover:bg-error-container/20 transition-all flex items-center gap-2" onclick="deleteAllConfirmations()">
-<span class="material-symbols-outlined text-[16px]">lock_reset</span> Alle Bestätigungen löschen
-                </button>
-</div>
-<div class="px-10 pb-10" id="progress-section">
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse">
-<thead>
-<tr class="text-[10px] font-black text-outline-variant uppercase tracking-[0.2em] border-b border-surface-container">
-<th class="py-6 px-4">Schüler</th>
-<th class="py-6 px-4">Erledigt</th>
-<th class="py-6 px-4 text-center">QR-Links</th>
-<th class="py-6 px-4 text-center">Eltern Bestätigung</th>
-<th class="py-6 px-4 text-right">Aktion</th>
-</tr>
-</thead>
-<tbody class="divide-y divide-surface-container" id="progress-table-body">
-</tbody>
-</table>
-</div>
-</div>
-</div>
-<!-- Task Overview -->
-<div class="bg-white p-10 rounded-lg border border-surface-container shadow-xl mb-10">
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
-<h3 class="text-2xl font-black flex items-center gap-4 tracking-tight">
-<span class="material-symbols-outlined text-tertiary text-3xl">list_alt</span> Aktuelle Aufgaben
-                </h3>
-<button class="flex items-center justify-center gap-3 px-6 py-3 border-2 border-error text-error font-black rounded-full hover:bg-error-container transition-all text-sm uppercase tracking-widest" onclick="deleteAllTasks()">
-<span class="material-symbols-outlined text-lg">delete_sweep</span> Alle löschen
-                </button>
-</div>
-<div class="grid sm:grid-cols-2 gap-4" id="teacher-tasks"></div>
-</div>
-<!-- Color Legend Teacher View -->
-<div class="p-8 bg-white rounded-lg border border-surface-container shadow-sm no-print">
-<h4 class="text-xs font-black text-outline-variant uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-<span class="material-symbols-outlined text-sm">palette</span> Fächer-Farben
-            </h4>
-<div class="flex flex-wrap gap-4" id="color-legend-teacher"></div>
+<!-- Footer for the page -->
+<div class="mt-12 text-center border-t border-outline-variant pt-4">
+<p class="font-label-caps text-label-caps text-outline">© 2024 Wer – Was – Bis wann — Support: hilfe@werwasbiswann.ch</p>
 </div>
 </div>
 </main>
+<!-- Micro-interaction for Print Preview -->
 <script>
-    // --- FIREBASE CONFIGURATION ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
-        authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
-        projectId: "doeltschi-hausaufgabenplaner",
-        storageBucket: "doeltschi-hausaufgabenplaner.firebasestorage.app",
-        messagingSenderId: "741131007424",
-        appId: "1:741131007424:web:04427f839b7eb86aa9c425",
-        measurementId: "G-C6GTQJ8C1D"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    let currentClass = null;
-    let currentMode = 'student'; // 'student' or 'teacher'
-    let currentUser = null;
-    let isParentMode = false;
-    let students = [];
-    let tasks = [];
-    let parentConfirms = {};
-    let isTeacherInspecting = false;
-    let unsubSettings, unsubTasks, unsubConfirms;
-
-    const subjects = {
-        'DE': { name: 'Deutsch', color: '#ef4444' },
-        'MA': { name: 'Mathematik', color: '#3b82f6' },
-        'E': { name: 'Englisch', color: '#eab308' },
-        'F': { name: 'Französisch', color: '#22c55e' },
-        'RZG': { name: 'RZG', color: '#f97316' },
-        'NT': { name: 'NT', color: '#06b6d4' },
-        'MU': { name: 'Musik', color: '#a855f7' },
-        'BS': { name: 'Sport', color: '#d97706' },
-        'MI': { name: 'Medien', color: '#64748b' },
-        'WAH': { name: 'WAH', color: '#f43f5e' }
-    };
-
-    function init() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const classFromUrl = urlParams.get('class');
-        const roleFromUrl = urlParams.get('role');
-        const userFromUrl = urlParams.get('user');
-        
-        isParentMode = (roleFromUrl === 'parent');
-
-        if (classFromUrl) {
-            setupClass(classFromUrl.toUpperCase());
-            if (userFromUrl) {
-                currentUser = userFromUrl;
-                currentMode = 'student';
-            }
-        } else {
-            updateUI();
-        }
-        
-        renderSubjectOptions();
-        renderColorLegends();
-        updateWeekDisplay();
-
-        // Listeners for modals
-        document.getElementById('teacher-password-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') validateTeacherPassword();
+        // Smooth hover effect for cards in digital view
+        document.querySelectorAll('.student-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-2px)';
+                card.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1)';
+                card.style.transition = 'all 0.3s ease';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+                card.style.boxShadow = 'none';
+            });
         });
-    }
-
-    // Modal Control
-    function openTeacherModal() {
-        if (isTeacherInspecting || currentMode === 'teacher') {
-            setMode('teacher');
-            return;
-        }
-        const modal = document.getElementById('teacher-modal');
-        modal.classList.remove('hidden');
-        document.getElementById('teacher-password-input').focus();
-    }
-
-    function closeTeacherModal() {
-        document.getElementById('teacher-modal').classList.add('hidden');
-    }
-
-    function validateTeacherPassword() {
-        const input = document.getElementById('teacher-password-input');
-        const error = document.getElementById('password-error');
-        if (input.value === 'lehrer123') {
-            error.classList.add('hidden');
-            input.value = '';
-            closeTeacherModal();
-            setMode('teacher');
-        } else {
-            error.classList.remove('hidden');
-            input.classList.add('border-error');
-            setTimeout(() => input.classList.remove('border-error'), 500);
-        }
-    }
-
-    // App State Management
-    function selectClass() {
-        const input = document.getElementById('class-name-input');
-        const val = input.value.trim().toUpperCase();
-        if (!val) return;
-        setupClass(val);
-        // Persist via URL without reload
-        const newUrl = new URL(window.location);
-        newUrl.searchParams.set('class', val);
-        window.history.pushState({}, '', newUrl);
-        input.value = '';
-    }
-
-    function setupClass(className) {
-        currentClass = className;
-        
-        // Cleanup old subs
-        if (unsubSettings) unsubSettings();
-        if (unsubTasks) unsubTasks();
-        if (unsubConfirms) unsubConfirms();
-
-        const classDocRef = db.collection('classes').doc(currentClass);
-
-        // Sub to Students
-        unsubSettings = classDocRef.onSnapshot(doc => {
-            if (doc.exists) {
-                students = doc.data().students || [];
-                document.getElementById('class-input').value = students.join('\n');
-            } else {
-                students = [];
-            }
-            renderStudentOptions();
-            renderProgressTable();
-            updateUI();
-        });
-
-        // Sub to Tasks
-        unsubTasks = classDocRef.collection('tasks').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-            tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderTasks();
-            renderTeacherTasks();
-            renderProgressTable();
-        });
-
-        // Sub to Confirms
-        unsubConfirms = classDocRef.collection('confirms').onSnapshot(snapshot => {
-            parentConfirms = {};
-            snapshot.docs.forEach(doc => parentConfirms[doc.id] = doc.data());
-            checkParentStatus();
-            renderProgressTable();
-            renderTasks();
-        });
-
-        document.querySelectorAll('.class-label-inline').forEach(el => el.innerText = currentClass);
-        document.getElementById('display-class-name').innerText = `Klasse: ${currentClass}`;
-        document.getElementById('teacher-class-label').innerText = `Klasse: ${currentClass}`;
-        
-        generateClassQRCode();
-        updateUI();
-    }
-
-    function setMode(mode) {
-        currentMode = mode;
-        if (mode === 'teacher') {
-            currentUser = null;
-            isTeacherInspecting = false;
-        }
-        updateUI();
-    }
-
-    function selectStudent(name) {
-        if (!name) return;
-        currentUser = name;
-        isTeacherInspecting = false;
-        
-        // Update URL
-        const newUrl = new URL(window.location);
-        newUrl.searchParams.set('user', name);
-        newUrl.searchParams.delete('role');
-        window.history.pushState({}, '', newUrl);
-
-        updateUI();
-        checkParentStatus();
-        renderTasks();
-    }
-
-    function leaveClass() {
-        if (confirm("Klasse wirklich verlassen?")) {
-            currentClass = null;
-            currentUser = null;
-            students = [];
-            tasks = [];
-            window.history.pushState({}, '', window.location.pathname);
-            updateUI();
-        }
-    }
-
-    // UI Orchestrator
-    function updateUI() {
-        const views = {
-            selection: document.getElementById('class-selection-view'),
-            start: document.getElementById('start-view'),
-            planer: document.getElementById('planer-view'),
-            teacher: document.getElementById('teacher-view')
-        };
-
-        const btns = {
-            student: document.getElementById('btn-student-nav'),
-            teacher: document.getElementById('btn-teacher-nav'),
-            change: document.getElementById('btn-change-class')
-        };
-
-        // Hide all
-        Object.values(views).forEach(v => v.classList.remove('active'));
-        
-        if (!currentClass) {
-            views.selection.classList.add('active');
-            btns.student.style.display = 'none';
-            btns.teacher.style.display = 'none';
-            btns.change.classList.add('hidden');
-            return;
-        }
-
-        btns.student.style.display = 'flex';
-        btns.teacher.style.display = 'flex';
-        btns.change.classList.remove('hidden');
-
-        // Nav Active States
-        if (currentMode === 'teacher') {
-            views.teacher.classList.add('active');
-            btns.teacher.className = "flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold bg-white text-primary shadow-lg";
-            btns.student.className = "flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold text-white/80 hover:text-white transition-all";
-        } else {
-            btns.student.className = "flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold bg-white text-primary shadow-lg";
-            btns.teacher.className = "flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold text-white/80 hover:text-white transition-all";
-            
-            if (currentUser) {
-                views.planer.classList.add('active');
-                document.getElementById('current-user-display').innerText = currentUser;
-                document.getElementById('back-to-dashboard').style.display = isTeacherInspecting ? 'flex' : 'none';
-            } else {
-                views.start.classList.add('active');
-            }
-        }
-    }
-
-    function renderStudentOptions() {
-        const sel = document.getElementById('student-selector');
-        const taskWho = document.getElementById('task-who');
-        if (!sel || !taskWho) return;
-        
-        const prevVal = sel.value;
-        sel.innerHTML = '<option value="">Wähle deinen Namen...</option>';
-        taskWho.innerHTML = '<option value="Ganze Klasse">Ganze Klasse</option>';
-        
-        students.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s;
-            opt.textContent = s;
-            sel.appendChild(opt);
-            
-            const taskOpt = document.createElement('option');
-            taskOpt.value = s;
-            taskOpt.textContent = s;
-            taskWho.appendChild(taskOpt);
-        });
-        
-        if (currentUser && students.includes(currentUser)) {
-            sel.value = currentUser;
-        }
-    }
-
-    function renderTasks() {
-        const container = document.getElementById('task-container');
-        if (!container || !currentUser) return;
-
-        const isLocked = !!parentConfirms[currentUser];
-        const myTasks = tasks.filter(t => t.who === 'Ganze Klasse' || t.who === currentUser);
-
-        if (myTasks.length === 0) {
-            container.innerHTML = '<div class="text-center py-24 bg-white rounded-lg border-2 border-surface-container border-dashed"><p class="text-on-surface-variant font-black italic opacity-50 uppercase tracking-widest">Keine Aufgaben vorhanden.</p></div>';
-            return;
-        }
-
-        container.innerHTML = myTasks.map(t => {
-            const isDone = t.doneBy?.includes(currentUser);
-            const sub = subjects[t.subject] || { name: t.subject, color: '#ccc' };
-            return `
-            <div class="bg-white p-8 rounded-lg border border-surface-container flex items-center justify-between shadow-md transition-all ${isLocked ? 'opacity-80' : 'hover:shadow-xl'}">
-                <div class="flex items-center gap-6">
-                    <label class="flex items-center cursor-pointer">
-                        <input type="checkbox" ${isDone ? 'checked' : ''} ${isLocked ? 'disabled' : ''} onchange="toggleTask('${t.id}', this.checked)" class="w-8 h-8 rounded-lg border-2 border-primary/30 text-primary focus:ring-4 focus:ring-primary-fixed transition-all disabled:opacity-50">
-                    </label>
-                    <div>
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="w-3 h-3 rounded-full shadow-sm" style="background-color: ${sub.color}"></span>
-                            <span class="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em]">${sub.name}</span>
-                            ${t.who === 'Ganze Klasse' ? '<span class="bg-primary-fixed text-on-primary-fixed-variant px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ml-2">Alle</span>' : ''}
-                        </div>
-                        <p class="text-xl font-black text-on-surface ${isDone ? 'line-through text-outline-variant opacity-50' : ''}">${t.desc}</p>
-                    </div>
-                </div>
-                <div class="text-right text-[10px] font-black text-on-surface-variant uppercase bg-surface-container-low px-4 py-2 rounded-full border border-surface-container shadow-sm">
-                    ${new Date(t.date).toLocaleDateString('de-CH')}
-                </div>
-            </div>`;
-        }).join('');
-    }
-
-    function toggleTask(taskId, isDone) {
-        if (parentConfirms[currentUser]) return;
-        const task = tasks.find(t => t.id === taskId);
-        let doneBy = [...(task.doneBy || [])];
-        if (isDone) {
-            if (!doneBy.includes(currentUser)) doneBy.push(currentUser);
-        } else {
-            doneBy = doneBy.filter(u => u !== currentUser);
-        }
-        db.collection('classes').doc(currentClass).collection('tasks').doc(taskId).update({ doneBy });
-    }
-
-    function checkParentStatus() {
-        const conf = parentConfirms[currentUser];
-        const status = document.getElementById('parent-status');
-        const form = document.getElementById('parent-form');
-        const lockInd = document.getElementById('lock-indicator');
-        const instr = document.getElementById('parent-instruction');
-        const nameInput = document.getElementById('parent-name');
-        const btn = document.getElementById('parent-confirm-btn');
-
-        if (!status || !form) return;
-
-        if (conf) {
-            form.classList.add('hidden');
-            status.classList.remove('hidden');
-            status.innerHTML = `<div class="flex items-center justify-center gap-4"><span class="material-symbols-outlined text-3xl">verified</span> <div><div class="text-sm uppercase tracking-widest opacity-60">Bestätigt durch</div><div class="text-xl">${conf.name} am ${conf.date}</div></div></div>`;
-            lockInd.classList.remove('hidden');
-        } else {
-            form.classList.remove('hidden');
-            status.classList.add('hidden');
-            lockInd.classList.add('hidden');
-            if (isParentMode || isTeacherInspecting) {
-                nameInput.disabled = false;
-                btn.disabled = false;
-                instr.innerText = "Haben Sie die Hausaufgaben Ihres Kindes gesehen?";
-                instr.classList.remove('opacity-50');
-            } else {
-                nameInput.disabled = true;
-                btn.disabled = true;
-                instr.innerText = "Bitte Eltern-QR scannen, um zu bestätigen.";
-                instr.classList.add('opacity-50');
-            }
-        }
-    }
-
-    function confirmParent() {
-        if (!currentClass || !currentUser) return;
-        const name = document.getElementById('parent-name').value.trim();
-        if (!name) return;
-        db.collection('classes').doc(currentClass).collection('confirms').doc(currentUser).set({
-            name,
-            date: new Date().toLocaleDateString('de-CH'),
-            timestamp: Date.now(),
-            parentalConfirmation: true
-        });
-    }
-
-    // Teacher Logic
-    function updateClassList() {
-        const names = document.getElementById('class-input').value.split('\n').map(n => n.trim()).filter(n => n);
-        db.collection('classes').doc(currentClass).set({ students: names }, { merge: true });
-        alert("Liste aktualisiert!");
-    }
-
-    function addTask() {
-        const who = document.getElementById('task-who').value;
-        const subject = document.getElementById('task-subject').value;
-        const desc = document.getElementById('task-desc').value.trim();
-        const date = document.getElementById('task-date').value;
-        if (!desc || !date) return;
-
-        db.collection('classes').doc(currentClass).collection('tasks').add({
-            who, subject, desc, date,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            doneBy: []
-        });
-        document.getElementById('task-desc').value = '';
-    }
-
-    function renderTeacherTasks() {
-        const container = document.getElementById('teacher-tasks');
-        if (!container) return;
-        if (tasks.length === 0) {
-            container.innerHTML = '<div class="col-span-full py-10 bg-surface-container-low rounded-lg text-center"><p class="text-on-surface-variant font-black italic uppercase tracking-widest opacity-40">Keine Aufgaben.</p></div>';
-            return;
-        }
-        container.innerHTML = tasks.map(t => {
-            const sub = subjects[t.subject] || { name: t.subject, color: '#ccc' };
-            return `
-            <div class="p-6 bg-surface-container-low rounded-lg flex justify-between items-center border border-surface-container group">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${sub.color}"></span>
-                        <span class="text-[9px] font-black text-outline-variant uppercase">${sub.name}</span>
-                        <span class="text-[8px] bg-white px-2 py-0.5 rounded-full font-black border">${t.who}</span>
-                    </div>
-                    <p class="font-black text-sm text-on-surface">${t.desc}</p>
-                </div>
-                <button onclick="db.collection('classes').doc('${currentClass}').collection('tasks').doc('${t.id}').delete()" class="text-on-surface-variant hover:text-error p-2 rounded-full hover:bg-error/10">
-                    <span class="material-symbols-outlined text-[20px]">delete</span>
-                </button>
-            </div>`;
-        }).join('');
-    }
-
-    function renderProgressTable() {
-        const tbody = document.getElementById('progress-table-body');
-        if (!tbody) return;
-        tbody.innerHTML = students.map(s => {
-            const myTasks = tasks.filter(t => t.who === 'Ganze Klasse' || t.who === s);
-            const done = myTasks.filter(t => t.doneBy?.includes(s)).length;
-            const perc = myTasks.length ? Math.round((done / myTasks.length) * 100) : 0;
-            const conf = parentConfirms[s];
-            return `
-            <tr class="group hover:bg-surface-container-low/50 transition-colors">
-                <td class="py-6 px-4">
-                    <button onclick="inspectStudent('${s}')" class="flex items-center gap-3 font-black text-on-surface hover:text-primary transition-all">
-                        <div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-[10px] uppercase font-black">${s.charAt(0)}</div>
-                        ${s}
-                    </button>
-                </td>
-                <td class="py-6 px-4 min-w-[150px]">
-                    <div class="flex items-center gap-4">
-                        <div class="flex-1 bg-surface-container rounded-full h-3 overflow-hidden border">
-                            <div class="bg-primary h-full transition-all duration-700" style="width: ${perc}%"></div>
-                        </div>
-                        <span class="text-xs font-black text-primary">${perc}%</span>
-                    </div>
-                </td>
-                <td class="py-6 px-4 text-center">
-                    <div class="flex justify-center gap-2">
-                        <button onclick="showSpecificQR('${s}', 'student')" class="p-2 rounded-full bg-surface-container-high hover:bg-primary/10 transition-all">
-                            <span class="material-symbols-outlined text-[18px]">person</span>
-                        </button>
-                        <button onclick="showSpecificQR('${s}', 'parent')" class="p-2 rounded-full bg-surface-container-high hover:bg-secondary/10 transition-all">
-                            <span class="material-symbols-outlined text-[18px]">family_restroom</span>
-                        </button>
-                    </div>
-                </td>
-                <td class="py-6 px-4 text-center">
-                    ${conf ? `<span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-bold">Bestätigt</span>` : `<span class="opacity-30 material-symbols-outlined">pending</span>`}
-                </td>
-                <td class="py-6 px-4 text-right">
-                    <button onclick="resetParentConfirm('${s}')" class="text-outline-variant hover:text-error transition-all p-2 rounded-full">
-                        <span class="material-symbols-outlined">${conf ? 'lock_open' : 'block'}</span>
-                    </button>
-                </td>
-            </tr>`;
-        }).join('');
-    }
-
-    function inspectStudent(name) {
-        isTeacherInspecting = true;
-        currentUser = name;
-        currentMode = 'student';
-        updateUI();
-        checkParentStatus();
-        renderTasks();
-    }
-
-    function resetParentConfirm(name) {
-        if (confirm(`Sperre für ${name} aufheben?`)) {
-            db.collection('classes').doc(currentClass).collection('confirms').doc(name).delete();
-        }
-    }
-
-    // Helpers
-    function renderSubjectOptions() {
-        const sel = document.getElementById('task-subject');
-        if (!sel) return;
-        sel.innerHTML = Object.entries(subjects).map(([id, data]) => `<option value="${id}">${data.name}</option>`).join('');
-    }
-
-    function renderColorLegends() {
-        const c1 = document.getElementById('color-legend-student');
-        const c2 = document.getElementById('color-legend-teacher');
-        const html = Object.values(subjects).map(s => `
-            <div class="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full text-[10px] font-black uppercase">
-                <span class="w-3 h-3 rounded-full" style="background-color: ${s.color}"></span>
-                ${s.name}
-            </div>
-        `).join('');
-        if (c1) c1.innerHTML = html;
-        if (c2) c2.innerHTML = html;
-    }
-
-    function generateClassQRCode() {
-        const container = document.getElementById('qrcode-container');
-        if (!container || !currentClass) return;
-        container.innerHTML = '';
-        const url = window.location.protocol + "//" + window.location.host + window.location.pathname + "?class=" + currentClass;
-        new QRCode(container, { text: url, width: 220, height: 220, colorDark: "#1a1c1f", correctLevel: QRCode.CorrectLevel.H });
-    }
-
-    function showSpecificQR(student, type) {
-        const modal = document.getElementById('qr-modal');
-        const container = document.getElementById('modal-qrcode-container');
-        const title = document.getElementById('qr-modal-title');
-        const urlEl = document.getElementById('qr-modal-url');
-        
-        let url = window.location.protocol + "//" + window.location.host + window.location.pathname + "?class=" + currentClass + "&user=" + encodeURIComponent(student);
-        if (type === 'parent') {
-            url += "&role=parent";
-            title.innerText = "Eltern-QR: " + student;
-        } else {
-            title.innerText = "Schüler-QR: " + student;
-        }
-
-        container.innerHTML = '';
-        urlEl.innerText = url;
-        new QRCode(container, { text: url, width: 200, height: 200 });
-        modal.classList.remove('hidden');
-    }
-
-    function closeQRModal() {
-        document.getElementById('qr-modal').classList.add('hidden');
-    }
-
-    function toggleProgressSection() {
-        const s = document.getElementById('progress-section');
-        const c = document.getElementById('progress-chevron');
-        s.classList.toggle('hidden');
-        c.style.transform = s.classList.contains('hidden') ? 'rotate(180deg)' : 'rotate(0deg)';
-    }
-
-    function updateWeekDisplay() {
-        const now = new Date();
-        const start = new Date(now.getFullYear(), 0, 1);
-        const diff = now - start;
-        const oneWeek = 1000 * 60 * 60 * 24 * 7;
-        const weekNum = Math.ceil(diff / oneWeek);
-        document.getElementById('week-display').innerText = `Woche ${weekNum}`;
-    }
-
-    init();
-</script>
+    </script>
 </body></html>
