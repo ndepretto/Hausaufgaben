@@ -18,53 +18,53 @@
         theme: {
           extend: {
             "colors": {
-                    "secondary-container": "#6664e4",
-                    "inverse-primary": "#adc6ff",
-                    "surface-container": "#ededf2",
-                    "primary-fixed-dim": "#adc6ff",
-                    "tertiary-fixed-dim": "#ffb595",
-                    "on-secondary-fixed-variant": "#3631b4",
-                    "surface-container-highest": "#e2e2e7",
-                    "on-error": "#ffffff",
-                    "on-tertiary-container": "#fffbff",
-                    "on-background": "#1a1c1f",
-                    "inverse-surface": "#2e3034",
-                    "surface-container-low": "#f3f3f8",
-                    "on-secondary-fixed": "#0c006a",
-                    "tertiary": "#9e3d00",
-                    "error-container": "#ffdad6",
-                    "background": "#f9f9fe",
-                    "surface-variant": "#e2e2e7",
-                    "secondary": "#4c4aca",
-                    "on-tertiary": "#ffffff",
-                    "inverse-on-surface": "#f0f0f5",
-                    "surface-dim": "#d9dade",
-                    "primary": "#0058bc",
-                    "on-primary": "#ffffff",
                     "on-tertiary-fixed-variant": "#7c2e00",
-                    "secondary-fixed-dim": "#c2c1ff",
-                    "on-secondary-container": "#fffbff",
+                    "on-primary-fixed-variant": "#004493",
+                    "secondary": "#4c4aca",
+                    "on-secondary-fixed": "#0c006a",
+                    "surface-dim": "#d9dade",
+                    "tertiary-fixed-dim": "#ffb595",
                     "primary-fixed": "#d8e2ff",
-                    "tertiary-container": "#c64f00",
-                    "on-surface-variant": "#414755",
-                    "on-surface": "#1a1c1f",
-                    "on-primary-fixed": "#001a41",
-                    "outline-variant": "#c1c6d7",
-                    "surface-container-high": "#e8e8ed",
+                    "background": "#f9f9fe",
+                    "secondary-fixed-dim": "#c2c1ff",
+                    "on-background": "#1a1c1f",
                     "on-secondary": "#ffffff",
-                    "secondary-fixed": "#e2dfff",
                     "on-tertiary-fixed": "#351000",
+                    "outline-variant": "#c1c6d7",
+                    "primary-fixed-dim": "#adc6ff",
+                    "surface-variant": "#e2e2e7",
                     "on-primary-container": "#fefcff",
+                    "surface-container-highest": "#e2e2e7",
+                    "surface-container": "#ededf2",
                     "surface-bright": "#f9f9fe",
+                    "primary": "#0058bc",
+                    "inverse-primary": "#adc6ff",
+                    "primary-container": "#0070eb",
+                    "inverse-on-surface": "#f0f0f5",
+                    "surface": "#f9f9fe",
+                    "surface-container-high": "#e8e8ed",
+                    "outline": "#717786",
+                    "on-surface-variant": "#414755",
+                    "on-error": "#ffffff",
+                    "surface-container-low": "#f3f3f8",
+                    "secondary-container": "#6664e4",
                     "on-error-container": "#93000a",
-                    "error": "#ba1a1a",
+                    "tertiary": "#9e3d00",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-surface": "#2e3034",
+                    "error-container": "#ffdad6",
                     "surface-tint": "#005bc1",
                     "tertiary-fixed": "#ffdbcc",
-                    "surface": "#f9f9fe",
-                    "outline": "#717786",
-                    "on-primary-fixed-variant": "#004493",
-                    "primary-container": "#0070eb",
-                    "surface-container-lowest": "#ffffff"
+                    "on-tertiary": "#ffffff",
+                    "on-surface": "#1a1c1f",
+                    "on-tertiary-container": "#fffbff",
+                    "secondary-fixed": "#e2dfff",
+                    "on-secondary-container": "#fffbff",
+                    "on-primary-fixed": "#001a41",
+                    "on-primary": "#ffffff",
+                    "tertiary-container": "#c64f00",
+                    "on-secondary-fixed-variant": "#3631b4",
+                    "error": "#ba1a1a"
             },
             "borderRadius": {
                     "DEFAULT": "1rem",
@@ -94,9 +94,39 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #d8e2ff; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #adc6ff; }
+
+        /* Modal specific animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
+        .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     </style>
 </head>
 <body class="dot-pattern min-h-screen text-on-surface pb-20">
+<!-- Teacher Login Modal -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm hidden animate-fade-in" id="teacher-modal">
+<div class="bg-white w-full max-w-md rounded-lg shadow-2xl overflow-hidden animate-slide-up relative">
+<button class="absolute top-4 right-4 text-outline hover:text-on-surface transition-colors" onclick="closeTeacherModal()">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="p-8 text-center">
+<div class="w-16 h-16 bg-primary-fixed rounded-full flex items-center justify-center mx-auto mb-6">
+<span class="material-symbols-outlined text-3xl text-primary">lock_person</span>
+</div>
+<h3 class="text-2xl font-black tracking-tight mb-2">Lehrer-Login</h3>
+<p class="text-on-surface-variant text-sm mb-8">Bitte gib das Passwort ein, um zum Lehrerbereich zu gelangen.</p>
+<div class="space-y-4">
+<div class="relative">
+<input class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-6 py-4 text-center font-bold text-lg outline-none focus:border-primary focus:ring-4 focus:ring-primary-fixed transition-all" id="teacher-password-input" placeholder="Passwort" type="password"/>
+</div>
+<div class="text-error text-xs font-bold hidden" id="password-error">Passwort nicht korrekt.</div>
+<button class="w-full bg-primary text-on-primary font-black py-4 rounded-full hover:shadow-lg active:scale-95 transition-all text-lg" onclick="validateTeacherPassword()">
+                    Anmelden
+                </button>
+</div>
+</div>
+</div>
+</div>
 <!-- Header -->
 <header class="header-gradient sticky top-0 z-50 shadow-lg no-print">
 <div class="max-w-6xl mx-auto px-6 h-18 flex items-center justify-between py-3">
@@ -114,7 +144,7 @@
 <button class="flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 bg-white text-primary shadow-lg" id="btn-student" onclick="setMode('student')">
 <span class="material-symbols-outlined text-[18px]">person</span> Schüler
             </button>
-<button class="flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 text-white/80 hover:text-white" id="btn-teacher" onclick="setMode('teacher')">
+<button class="flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 text-white/80 hover:text-white" id="btn-teacher" onclick="openTeacherModal()">
 <span class="material-symbols-outlined text-[18px]">lock</span> Lehrer
             </button>
 </div>
@@ -386,6 +416,45 @@
         renderSubjectOptions();
         renderColorLegends();
         updateWeekDisplay();
+
+        // Allow 'Enter' key on password field
+        document.getElementById('teacher-password-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                validateTeacherPassword();
+            }
+        });
+    }
+
+    function openTeacherModal() {
+        if (isTeacherInspecting) {
+            setMode('teacher');
+            return;
+        }
+        const modal = document.getElementById('teacher-modal');
+        const input = document.getElementById('teacher-password-input');
+        const error = document.getElementById('password-error');
+        modal.classList.remove('hidden');
+        input.value = '';
+        input.focus();
+        error.classList.add('hidden');
+    }
+
+    function closeTeacherModal() {
+        document.getElementById('teacher-modal').classList.add('hidden');
+    }
+
+    function validateTeacherPassword() {
+        const input = document.getElementById('teacher-password-input');
+        const error = document.getElementById('password-error');
+        if (input.value === 'lehrer123') {
+            closeTeacherModal();
+            setMode('teacher');
+        } else {
+            error.classList.remove('hidden');
+            input.classList.add('border-error');
+            setTimeout(() => input.classList.remove('border-error'), 1000);
+            input.focus();
+        }
     }
 
     function selectClass() {
@@ -518,11 +587,6 @@
     }
 
     function setMode(mode) {
-        if (mode === 'teacher' && !isTeacherInspecting) {
-            const pw = prompt("Passwort:");
-            if (pw !== 'lehrer123') return;
-        }
-        
         currentMode = mode;
         if (mode === 'teacher') {
             currentUser = null;
@@ -893,78 +957,42 @@
         event.target.value = '';
     }
 
-    /**
-     * Intelligent student record processing.
-     * Merges first name, last name, and class designation into single lines.
-     * Handles potential messy line breaks or table-like layouts exported to raw text.
-     */
     function processRawImports(rawText) {
         if (!rawText) return;
-
-        // 1. Initial cleanup: Replace tabs with spaces and split by line breaks
         let lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
-        
         let cleanedNames = [];
-
-        // 2. Intelligent Merging Strategy
-        // We look for patterns like "Lastname Firstname Class" or "Firstname Lastname Class"
-        // often spread across 2-3 lines or separated by spaces/commas.
-        
-        // If the text looks like one giant list with many line breaks:
-        // Attempt to regroup chunks that belong together.
-        // Usually, a student record is [Name, Surname, (Optional Class)].
-        
-        // Basic heuristic: Join lines until we see a "class" indicator (like B4B, 3a, etc) 
-        // OR simply join pairs/triplets if the line count is high and lines are short.
-        
-        // For standard Word exports of tables, mammoth often yields one cell per line.
-        // Let's look at the average length. If lines are very short (e.g., < 15 chars), 
-        // they are likely single names/parts of a record.
-        
         const isLikelyCellPerLine = lines.length > 5 && lines.every(l => l.length < 20);
 
         if (isLikelyCellPerLine) {
-            // Regroup by checking for common class patterns or simple fixed chunks
-            // Let's try to detect if it's 2 or 3 lines per student.
-            // Search for a line that looks like a class (e.g., digit+letter or letter+digit)
             const classRegex = /^[A-Z]?\d+[A-Z]?$/i;
             let tempGroup = [];
-            
             for (let i = 0; i < lines.length; i++) {
                 tempGroup.push(lines[i]);
-                // If this line looks like a class designation, it's likely the end of a record
                 if (classRegex.test(lines[i]) || tempGroup.length >= 3) {
                     cleanedNames.push(tempGroup.join(' '));
                     tempGroup = [];
                 }
             }
-            // Add remaining
             if (tempGroup.length > 0) cleanedNames.push(tempGroup.join(' '));
         } else {
-            // Standard processing: split by commas if only one line, else take lines as they are
             if (lines.length === 1 && lines[0].includes(',')) {
                 cleanedNames = lines[0].split(',').map(n => n.trim()).filter(n => n !== '');
             } else {
-                // Filter out common header words if they exist
                 const headers = ['vorname', 'nachname', 'klasse', 'name', 'surname', 'class'];
                 cleanedNames = lines.filter(l => !headers.includes(l.toLowerCase()));
             }
         }
 
-        // Final Polish: Remove duplicates and clean up extra internal spaces
         cleanedNames = cleanedNames.map(n => n.replace(/\s+/g, ' ').trim()).filter(n => n.length > 2);
         const uniqueNames = [...new Set(cleanedNames)];
 
         if (uniqueNames.length > 0) {
             const inputField = document.getElementById('class-input');
             const currentNames = inputField.value.split('\n').map(n => n.trim()).filter(n => n !== '');
-            
-            // Merge with existing but keep order
             const finalCombined = [...currentNames];
             uniqueNames.forEach(un => {
                 if (!finalCombined.includes(un)) finalCombined.push(un);
             });
-            
             inputField.value = finalCombined.join('\n');
             alert(`${uniqueNames.length} Schüler wurden erfolgreich importiert und zusammengeführt.`);
         } else {
