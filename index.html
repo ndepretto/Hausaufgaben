@@ -1,12 +1,10 @@
-<!DOCTYPE html>
-
-<html class="light" lang="de"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<!DOCTYPE html><html class="light" lang="de"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -123,8 +121,11 @@
 </head>
 <body class="bg-surface-container text-on-surface font-body-md">
 <!-- Top Bar (No Print) -->
-<header class="no-print bg-surface border-b border-outline-variant w-full h-16 flex items-center justify-between px-gutter sticky top-0 z-50">
-<div class="flex items-center gap-4">
+<header class="no-print bg-surface border-b border-outline-variant w-full h-16 flex items-center justify-between px-gutter sticky top-0 z-50"><a href="#" class="flex items-center gap-2 px-4 py-2 rounded-full text-primary hover:bg-surface-container transition-all active:scale-95 border border-primary">
+    <span class="material-symbols-outlined">arrow_back</span>
+    <span class="font-bold">Zurück zum Dashboard</span>
+</a>
+<div class="flex items-center gap-4 ml-4">
 <span class="material-symbols-outlined text-primary">print</span>
 <h1 class="font-h2 text-h2">Druckansicht: Eltern-QR-Codes</h1>
 </div>
@@ -193,6 +194,354 @@
 
                     document.write(students.map(name => renderCard(name)).join(''));
                 </script>
+                        <div class="student-card p-6 rounded-lg bg-white relative flex flex-col justify-between h-[130mm]">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-lg"></div>
+                            
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="font-label-caps text-label-caps text-primary">DÖLTSCHI HAUSAUFGABEN</div>
+                                    <span class="material-symbols-outlined text-outline">verified</span>
+                                </div>
+                                
+                                <h3 class="font-h2 text-h2 mb-1">Eltern-Zugang: Digitaler Planer</h3>
+                                <p class="font-body-lg font-bold text-on-surface mb-6">Lena Meier</p>
+                            </div>
+
+                            <div class="flex flex-col items-center gap-4 py-4">
+                                <div class="border-2 border-dashed border-outline-variant p-2 rounded-xl">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=https://wer-was-biswann.ch/parent/demo" alt="QR Code für Elternzugang" class="w-32 h-32" data-alt="A clean, high-contrast QR code centered on a white background. The QR code has rounded modules and a subtle blue accent in the center. It is surrounded by a minimal, light-gray dashed border to guide the user's eye. The overall aesthetic is professional, clear, and optimized for high-quality black and white printing with a modern corporate feel.">
+                                </div>
+                                <p class="text-center font-label-caps text-label-caps px-4 text-on-surface-variant">
+                                    SCANNEN FÜR AKTUELLE HAUSAUFGABEN
+                                </p>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-outline-variant">
+                                <p class="text-[11px] leading-tight text-on-surface-variant">
+                                    Scannen Sie diesen Code, um die Hausaufgaben Ihres Kindes zu sehen und zu bestätigen. Einmal scannen, immer aktuell. Keine App-Installation nötig.
+                                </p>
+                            </div>
+                        </div>
+                    
+                        <div class="student-card p-6 rounded-lg bg-white relative flex flex-col justify-between h-[130mm]">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-lg"></div>
+                            
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="font-label-caps text-label-caps text-primary">DÖLTSCHI HAUSAUFGABEN</div>
+                                    <span class="material-symbols-outlined text-outline">verified</span>
+                                </div>
+                                
+                                <h3 class="font-h2 text-h2 mb-1">Eltern-Zugang: Digitaler Planer</h3>
+                                <p class="font-body-lg font-bold text-on-surface mb-6">Jonas Weber</p>
+                            </div>
+
+                            <div class="flex flex-col items-center gap-4 py-4">
+                                <div class="border-2 border-dashed border-outline-variant p-2 rounded-xl">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=https://wer-was-biswann.ch/parent/demo" alt="QR Code für Elternzugang" class="w-32 h-32" data-alt="A clean, high-contrast QR code centered on a white background. The QR code has rounded modules and a subtle blue accent in the center. It is surrounded by a minimal, light-gray dashed border to guide the user's eye. The overall aesthetic is professional, clear, and optimized for high-quality black and white printing with a modern corporate feel.">
+                                </div>
+                                <p class="text-center font-label-caps text-label-caps px-4 text-on-surface-variant">
+                                    SCANNEN FÜR AKTUELLE HAUSAUFGABEN
+                                </p>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-outline-variant">
+                                <p class="text-[11px] leading-tight text-on-surface-variant">
+                                    Scannen Sie diesen Code, um die Hausaufgaben Ihres Kindes zu sehen und zu bestätigen. Einmal scannen, immer aktuell. Keine App-Installation nötig.
+                                </p>
+                            </div>
+                        </div>
+                    
+                        <div class="student-card p-6 rounded-lg bg-white relative flex flex-col justify-between h-[130mm]">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-lg"></div>
+                            
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="font-label-caps text-label-caps text-primary">DÖLTSCHI HAUSAUFGABEN</div>
+                                    <span class="material-symbols-outlined text-outline">verified</span>
+                                </div>
+                                
+                                <h3 class="font-h2 text-h2 mb-1">Eltern-Zugang: Digitaler Planer</h3>
+                                <p class="font-body-lg font-bold text-on-surface mb-6">Sophie Keller</p>
+                            </div>
+
+                            <div class="flex flex-col items-center gap-4 py-4">
+                                <div class="border-2 border-dashed border-outline-variant p-2 rounded-xl">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=https://wer-was-biswann.ch/parent/demo" alt="QR Code für Elternzugang" class="w-32 h-32" data-alt="A clean, high-contrast QR code centered on a white background. The QR code has rounded modules and a subtle blue accent in the center. It is surrounded by a minimal, light-gray dashed border to guide the user's eye. The overall aesthetic is professional, clear, and optimized for high-quality black and white printing with a modern corporate feel.">
+                                </div>
+                                <p class="text-center font-label-caps text-label-caps px-4 text-on-surface-variant">
+                                    SCANNEN FÜR AKTUELLE HAUSAUFGABEN
+                                </p>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-outline-variant">
+                                <p class="text-[11px] leading-tight text-on-surface-variant">
+                                    Scannen Sie diesen Code, um die Hausaufgaben Ihres Kindes zu sehen und zu bestätigen. Einmal scannen, immer aktuell. Keine App-Installation nötig.
+                                </p>
+                            </div>
+                        </div>
+                    
+                        <div class="student-card p-6 rounded-lg bg-white relative flex flex-col justify-between h-[130mm]">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-lg"></div>
+                            
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="font-label-caps text-label-caps text-primary">DÖLTSCHI HAUSAUFGABEN</div>
+                                    <span class="material-symbols-outlined text-outline">verified</span>
+                                </div>
+                                
+                                <h3 class="font-h2 text-h2 mb-1">Eltern-Zugang: Digitaler Planer</h3>
+                                <p class="font-body-lg font-bold text-on-surface mb-6">Lukas Fischer</p>
+                            </div>
+
+                            <div class="flex flex-col items-center gap-4 py-4">
+                                <div class="border-2 border-dashed border-outline-variant p-2 rounded-xl">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=https://wer-was-biswann.ch/parent/demo" alt="QR Code für Elternzugang" class="w-32 h-32" data-alt="A clean, high-contrast QR code centered on a white background. The QR code has rounded modules and a subtle blue accent in the center. It is surrounded by a minimal, light-gray dashed border to guide the user's eye. The overall aesthetic is professional, clear, and optimized for high-quality black and white printing with a modern corporate feel.">
+                                </div>
+                                <p class="text-center font-label-caps text-label-caps px-4 text-on-surface-variant">
+                                    SCANNEN FÜR AKTUELLE HAUSAUFGABEN
+                                </p>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-outline-variant">
+                                <p class="text-[11px] leading-tight text-on-surface-variant">
+                                    Scannen Sie diesen Code, um die Hausaufgaben Ihres Kindes zu sehen und zu bestätigen. Einmal scannen, immer aktuell. Keine App-Installation nötig.
+                                </p>
+                            </div>
+                        </div>
+                    
+                        <div class="student-card p-6 rounded-lg bg-white relative flex flex-col justify-between h-[130mm]">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-lg"></div>
+                            
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="font-label-caps text-label-caps text-primary">DÖLTSCHI HAUSAUFGABEN</div>
+                                    <span class="material-symbols-outlined text-outline">verified</span>
+                                </div>
+                                
+                                <h3 class="font-h2 text-h2 mb-1">Eltern-Zugang: Digitaler Planer</h3>
+                                <p class="font-body-lg font-bold text-on-surface mb-6">Mia Schneider</p>
+                            </div>
+
+                            <div class="flex flex-col items-center gap-4 py-4">
+                                <div class="border-2 border-dashed border-outline-variant p-2 rounded-xl">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=https://wer-was-biswann.ch/parent/demo" alt="QR Code für Elternzugang" class="w-32 h-32" data-alt="A clean, high-contrast QR code centered on a white background. The QR code has rounded modules and a subtle blue accent in the center. It is surrounded by a minimal, light-gray dashed border to guide the user's eye. The overall aesthetic is professional, clear, and optimized for high-quality black and white printing with a modern corporate feel.">
+                                </div>
+                                <p class="text-center font-label-caps text-label-caps px-4 text-on-surface-variant">
+                                    SCANNEN FÜR AKTUELLE HAUSAUFGABEN
+                                </p>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-outline-variant">
+                                <p class="text-[11px] leading-tight text-on-surface-variant">
+                                    Scannen Sie diesen Code, um die Hausaufgaben Ihres Kindes zu sehen und zu bestätigen. Einmal scannen, immer aktuell. Keine App-Installation nötig.
+                                </p>
+                            </div>
+                        </div>
+                    
+                        <div class="student-card p-6 rounded-lg bg-white relative flex flex-col justify-between h-[130mm]">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-lg"></div>
+                            
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="font-label-caps text-label-caps text-primary">DÖLTSCHI HAUSAUFGABEN</div>
+                                    <span class="material-symbols-outlined text-outline">verified</span>
+                                </div>
+                                
+                                <h3 class="font-h2 text-h2 mb-1">Eltern-Zugang: Digitaler Planer</h3>
+                                <p class="font-body-lg font-bold text-on-surface mb-6">Noah Wagner</p>
+                            </div>
+
+                            <div class="flex flex-col items-center gap-4 py-4">
+                                <div class="border-2 border-dashed border-outline-variant p-2 rounded-xl">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=https://wer-was-biswann.ch/parent/demo" alt="QR Code für Elternzugang" class="w-32 h-32" data-alt="A clean, high-contrast QR code centered on a white background. The QR code has rounded modules and a subtle blue accent in the center. It is surrounded by a minimal, light-gray dashed border to guide the user's eye. The overall aesthetic is professional, clear, and optimized for high-quality black and white printing with a modern corporate feel.">
+                                </div>
+                                <p class="text-center font-label-caps text-label-caps px-4 text-on-surface-variant">
+                                    SCANNEN FÜR AKTUELLE HAUSAUFGABEN
+                                </p>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-outline-variant">
+                                <p class="text-[11px] leading-tight text-on-surface-variant">
+                                    Scannen Sie diesen Code, um die Hausaufgaben Ihres Kindes zu sehen und zu bestätigen. Einmal scannen, immer aktuell. Keine App-Installation nötig.
+                                </p>
+                            </div>
+                        </div>
+                    
+                        <div class="student-card p-6 rounded-lg bg-white relative flex flex-col justify-between h-[130mm]">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-lg"></div>
+                            
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="font-label-caps text-label-caps text-primary">DÖLTSCHI HAUSAUFGABEN</div>
+                                    <span class="material-symbols-outlined text-outline">verified</span>
+                                </div>
+                                
+                                <h3 class="font-h2 text-h2 mb-1">Eltern-Zugang: Digitaler Planer</h3>
+                                <p class="font-body-lg font-bold text-on-surface mb-6">Emma Becker</p>
+                            </div>
+
+                            <div class="flex flex-col items-center gap-4 py-4">
+                                <div class="border-2 border-dashed border-outline-variant p-2 rounded-xl">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=https://wer-was-biswann.ch/parent/demo" alt="QR Code für Elternzugang" class="w-32 h-32" data-alt="A clean, high-contrast QR code centered on a white background. The QR code has rounded modules and a subtle blue accent in the center. It is surrounded by a minimal, light-gray dashed border to guide the user's eye. The overall aesthetic is professional, clear, and optimized for high-quality black and white printing with a modern corporate feel.">
+                                </div>
+                                <p class="text-center font-label-caps text-label-caps px-4 text-on-surface-variant">
+                                    SCANNEN FÜR AKTUELLE HAUSAUFGABEN
+                                </p>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-outline-variant">
+                                <p class="text-[11px] leading-tight text-on-surface-variant">
+                                    Scannen Sie diesen Code, um die Hausaufgaben Ihres Kindes zu sehen und zu bestätigen. Einmal scannen, immer aktuell. Keine App-Installation nötig.
+                                </p>
+                            </div>
+                        </div>
+                    
+                        <div class="student-card p-6 rounded-lg bg-white relative flex flex-col justify-between h-[130mm]">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-lg"></div>
+                            
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="font-label-caps text-label-caps text-primary">DÖLTSCHI HAUSAUFGABEN</div>
+                                    <span class="material-symbols-outlined text-outline">verified</span>
+                                </div>
+                                
+                                <h3 class="font-h2 text-h2 mb-1">Eltern-Zugang: Digitaler Planer</h3>
+                                <p class="font-body-lg font-bold text-on-surface mb-6">Leon Hoffmann</p>
+                            </div>
+
+                            <div class="flex flex-col items-center gap-4 py-4">
+                                <div class="border-2 border-dashed border-outline-variant p-2 rounded-xl">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=https://wer-was-biswann.ch/parent/demo" alt="QR Code für Elternzugang" class="w-32 h-32" data-alt="A clean, high-contrast QR code centered on a white background. The QR code has rounded modules and a subtle blue accent in the center. It is surrounded by a minimal, light-gray dashed border to guide the user's eye. The overall aesthetic is professional, clear, and optimized for high-quality black and white printing with a modern corporate feel.">
+                                </div>
+                                <p class="text-center font-label-caps text-label-caps px-4 text-on-surface-variant">
+                                    SCANNEN FÜR AKTUELLE HAUSAUFGABEN
+                                </p>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-outline-variant">
+                                <p class="text-[11px] leading-tight text-on-surface-variant">
+                                    Scannen Sie diesen Code, um die Hausaufgaben Ihres Kindes zu sehen und zu bestätigen. Einmal scannen, immer aktuell. Keine App-Installation nötig.
+                                </p>
+                            </div>
+                        </div>
+                    
+                        <div class="student-card p-6 rounded-lg bg-white relative flex flex-col justify-between h-[130mm]">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-lg"></div>
+                            
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="font-label-caps text-label-caps text-primary">DÖLTSCHI HAUSAUFGABEN</div>
+                                    <span class="material-symbols-outlined text-outline">verified</span>
+                                </div>
+                                
+                                <h3 class="font-h2 text-h2 mb-1">Eltern-Zugang: Digitaler Planer</h3>
+                                <p class="font-body-lg font-bold text-on-surface mb-6">Mila Schäfer</p>
+                            </div>
+
+                            <div class="flex flex-col items-center gap-4 py-4">
+                                <div class="border-2 border-dashed border-outline-variant p-2 rounded-xl">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=https://wer-was-biswann.ch/parent/demo" alt="QR Code für Elternzugang" class="w-32 h-32" data-alt="A clean, high-contrast QR code centered on a white background. The QR code has rounded modules and a subtle blue accent in the center. It is surrounded by a minimal, light-gray dashed border to guide the user's eye. The overall aesthetic is professional, clear, and optimized for high-quality black and white printing with a modern corporate feel.">
+                                </div>
+                                <p class="text-center font-label-caps text-label-caps px-4 text-on-surface-variant">
+                                    SCANNEN FÜR AKTUELLE HAUSAUFGABEN
+                                </p>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-outline-variant">
+                                <p class="text-[11px] leading-tight text-on-surface-variant">
+                                    Scannen Sie diesen Code, um die Hausaufgaben Ihres Kindes zu sehen und zu bestätigen. Einmal scannen, immer aktuell. Keine App-Installation nötig.
+                                </p>
+                            </div>
+                        </div>
+                    
+                        <div class="student-card p-6 rounded-lg bg-white relative flex flex-col justify-between h-[130mm]">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-lg"></div>
+                            
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="font-label-caps text-label-caps text-primary">DÖLTSCHI HAUSAUFGABEN</div>
+                                    <span class="material-symbols-outlined text-outline">verified</span>
+                                </div>
+                                
+                                <h3 class="font-h2 text-h2 mb-1">Eltern-Zugang: Digitaler Planer</h3>
+                                <p class="font-body-lg font-bold text-on-surface mb-6">Ben Koch</p>
+                            </div>
+
+                            <div class="flex flex-col items-center gap-4 py-4">
+                                <div class="border-2 border-dashed border-outline-variant p-2 rounded-xl">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=https://wer-was-biswann.ch/parent/demo" alt="QR Code für Elternzugang" class="w-32 h-32" data-alt="A clean, high-contrast QR code centered on a white background. The QR code has rounded modules and a subtle blue accent in the center. It is surrounded by a minimal, light-gray dashed border to guide the user's eye. The overall aesthetic is professional, clear, and optimized for high-quality black and white printing with a modern corporate feel.">
+                                </div>
+                                <p class="text-center font-label-caps text-label-caps px-4 text-on-surface-variant">
+                                    SCANNEN FÜR AKTUELLE HAUSAUFGABEN
+                                </p>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-outline-variant">
+                                <p class="text-[11px] leading-tight text-on-surface-variant">
+                                    Scannen Sie diesen Code, um die Hausaufgaben Ihres Kindes zu sehen und zu bestätigen. Einmal scannen, immer aktuell. Keine App-Installation nötig.
+                                </p>
+                            </div>
+                        </div>
+                    
+                        <div class="student-card p-6 rounded-lg bg-white relative flex flex-col justify-between h-[130mm]">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-lg"></div>
+                            
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="font-label-caps text-label-caps text-primary">DÖLTSCHI HAUSAUFGABEN</div>
+                                    <span class="material-symbols-outlined text-outline">verified</span>
+                                </div>
+                                
+                                <h3 class="font-h2 text-h2 mb-1">Eltern-Zugang: Digitaler Planer</h3>
+                                <p class="font-body-lg font-bold text-on-surface mb-6">Ella Richter</p>
+                            </div>
+
+                            <div class="flex flex-col items-center gap-4 py-4">
+                                <div class="border-2 border-dashed border-outline-variant p-2 rounded-xl">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=https://wer-was-biswann.ch/parent/demo" alt="QR Code für Elternzugang" class="w-32 h-32" data-alt="A clean, high-contrast QR code centered on a white background. The QR code has rounded modules and a subtle blue accent in the center. It is surrounded by a minimal, light-gray dashed border to guide the user's eye. The overall aesthetic is professional, clear, and optimized for high-quality black and white printing with a modern corporate feel.">
+                                </div>
+                                <p class="text-center font-label-caps text-label-caps px-4 text-on-surface-variant">
+                                    SCANNEN FÜR AKTUELLE HAUSAUFGABEN
+                                </p>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-outline-variant">
+                                <p class="text-[11px] leading-tight text-on-surface-variant">
+                                    Scannen Sie diesen Code, um die Hausaufgaben Ihres Kindes zu sehen und zu bestätigen. Einmal scannen, immer aktuell. Keine App-Installation nötig.
+                                </p>
+                            </div>
+                        </div>
+                    
+                        <div class="student-card p-6 rounded-lg bg-white relative flex flex-col justify-between h-[130mm]">
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary rounded-l-lg"></div>
+                            
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="font-label-caps text-label-caps text-primary">DÖLTSCHI HAUSAUFGABEN</div>
+                                    <span class="material-symbols-outlined text-outline">verified</span>
+                                </div>
+                                
+                                <h3 class="font-h2 text-h2 mb-1">Eltern-Zugang: Digitaler Planer</h3>
+                                <p class="font-body-lg font-bold text-on-surface mb-6">Paul Wolf</p>
+                            </div>
+
+                            <div class="flex flex-col items-center gap-4 py-4">
+                                <div class="border-2 border-dashed border-outline-variant p-2 rounded-xl">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=https://wer-was-biswann.ch/parent/demo" alt="QR Code für Elternzugang" class="w-32 h-32" data-alt="A clean, high-contrast QR code centered on a white background. The QR code has rounded modules and a subtle blue accent in the center. It is surrounded by a minimal, light-gray dashed border to guide the user's eye. The overall aesthetic is professional, clear, and optimized for high-quality black and white printing with a modern corporate feel.">
+                                </div>
+                                <p class="text-center font-label-caps text-label-caps px-4 text-on-surface-variant">
+                                    SCANNEN FÜR AKTUELLE HAUSAUFGABEN
+                                </p>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-outline-variant">
+                                <p class="text-[11px] leading-tight text-on-surface-variant">
+                                    Scannen Sie diesen Code, um die Hausaufgaben Ihres Kindes zu sehen und zu bestätigen. Einmal scannen, immer aktuell. Keine App-Installation nötig.
+                                </p>
+                            </div>
+                        </div>
+                    
 </div>
 <!-- Footer for the page -->
 <div class="mt-12 text-center border-t border-outline-variant pt-4">
@@ -215,4 +564,6 @@
             });
         });
     </script>
+
+
 </body></html>
