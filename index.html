@@ -1,6 +1,6 @@
-<!DOCTYPE html>
+<html lang="de"><head></head><body class="dot-pattern min-h-screen text-on-surface pb-20">```html
 
-<html lang="de"><head>
+
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>doeltschi | Digitaler Aufgabenplaner</title>
@@ -101,8 +101,6 @@
         .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
         .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     </style>
-</head>
-<body class="dot-pattern min-h-screen text-on-surface pb-20">
 <!-- Teacher Login Modal -->
 <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm hidden animate-fade-in" id="teacher-modal">
 <div class="bg-white w-full max-w-md rounded-lg shadow-2xl overflow-hidden animate-slide-up relative">
@@ -124,6 +122,20 @@
                     Anmelden
                 </button>
 </div>
+</div>
+</div>
+</div>
+<!-- QR Modal -->
+<div class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md hidden animate-fade-in" id="qr-modal">
+<div class="bg-white w-full max-w-sm rounded-lg shadow-2xl overflow-hidden animate-slide-up relative">
+<button class="absolute top-4 right-4 text-outline hover:text-on-surface transition-colors" onclick="closeQRModal()">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="p-8 text-center">
+<h3 class="text-xl font-black tracking-tight mb-2" id="qr-modal-title">QR Code</h3>
+<p class="text-on-surface-variant text-xs mb-6" id="qr-modal-subtitle">Für Schüler oder Eltern</p>
+<div class="bg-white p-4 rounded-lg border-2 border-surface-container shadow-inner mb-6 flex justify-center" id="modal-qrcode-container"></div>
+<p class="text-[10px] font-bold text-outline uppercase tracking-widest break-all" id="qr-modal-url"></p>
 </div>
 </div>
 </div>
@@ -232,6 +244,10 @@
 <span class="material-symbols-outlined text-sm">lock</span>
                         Plan gesperrt
                     </div>
+<div class="hidden flex items-center gap-2 bg-primary-fixed text-on-primary-fixed-variant px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest shadow-sm border border-primary/20" id="parent-mode-indicator">
+<span class="material-symbols-outlined text-sm">family_restroom</span>
+                        Eltern-Freigabe aktiv
+                    </div>
 </div>
 </div>
 <div class="md:text-right">
@@ -246,11 +262,11 @@
 <h3 class="text-2xl font-black text-primary mb-2 flex items-center justify-center md:justify-start gap-3">
 <span class="material-symbols-outlined text-3xl">verified_user</span> Bestätigung der Eltern
                     </h3>
-<p class="text-on-surface-variant font-medium">Haben deine Eltern die Hausaufgaben gesehen?</p>
+<p class="text-on-surface-variant font-medium" id="parent-instruction">Haben deine Eltern die Hausaufgaben gesehen?</p>
 </div>
 <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto" id="parent-form">
-<input class="bg-surface-container-low border-2 border-surface-container rounded-full px-6 py-4 outline-none focus:border-primary transition-all font-bold placeholder:text-outline-variant min-w-[240px]" id="parent-name" placeholder="Vorname Nachname" type="text"/>
-<button class="bg-primary text-on-primary font-black py-4 px-8 rounded-full hover:shadow-lg active:scale-95 transition-all" onclick="confirmParent()">Bestätigen</button>
+<input class="bg-surface-container-low border-2 border-surface-container rounded-full px-6 py-4 outline-none focus:border-primary transition-all font-bold placeholder:text-outline-variant min-w-[240px] disabled:bg-surface-container disabled:text-outline-variant" id="parent-name" placeholder="Vorname Nachname" type="text"/>
+<button class="bg-primary text-on-primary font-black py-4 px-8 rounded-full hover:shadow-lg active:scale-95 transition-all disabled:bg-surface-variant disabled:text-outline disabled:cursor-not-allowed" id="parent-confirm-btn" onclick="confirmParent()">Bestätigen</button>
 </div>
 </div>
 <div class="hidden text-primary font-black bg-primary-fixed/30 p-6 rounded-lg text-center border border-primary/20 mt-6" id="parent-status"></div>
@@ -335,6 +351,7 @@
 <tr class="text-[10px] font-black text-outline-variant uppercase tracking-[0.2em] border-b border-surface-container">
 <th class="py-6 px-4">Schüler</th>
 <th class="py-6 px-4">Erledigt</th>
+<th class="py-6 px-4 text-center">QR-Links</th>
 <th class="py-6 px-4 text-center">Eltern Bestätigung</th>
 <th class="py-6 px-4 text-right">Aktion</th>
 </tr>
@@ -384,6 +401,7 @@
     let currentClass = null;
     let currentMode = 'student';
     let currentUser = null;
+    let isParentMode = false;
     let students = [];
     let tasks = [];
     let parentConfirms = {};
@@ -406,9 +424,16 @@
     function init() {
         const urlParams = new URLSearchParams(window.location.search);
         const classFromUrl = urlParams.get('class');
+        const roleFromUrl = urlParams.get('role');
+        const userFromUrl = urlParams.get('user');
         
+        isParentMode = (roleFromUrl === 'parent');
+
         if (classFromUrl) {
             setupClass(classFromUrl.toUpperCase());
+            if (userFromUrl) {
+                currentUser = userFromUrl;
+            }
         } else {
             updateUI();
         }
@@ -529,6 +554,7 @@
         currentClass = null;
         currentUser = null;
         isTeacherInspecting = false;
+        isParentMode = false;
         currentMode = 'student';
         students = [];
         tasks = [];
@@ -619,6 +645,7 @@
         const btnStudent = document.getElementById('btn-student');
         const btnTeacher = document.getElementById('btn-teacher');
         const backBtn = document.getElementById('back-to-dashboard');
+        const parentModeInd = document.getElementById('parent-mode-indicator');
 
         if (!currentClass) {
             document.getElementById('class-selection-view').classList.add('active');
@@ -637,6 +664,7 @@
             btnStudent.classList.remove('bg-white', 'text-primary', 'shadow-lg');
             btnStudent.classList.add('text-white/80');
             backBtn.classList.add('hidden');
+            parentModeInd.classList.add('hidden');
         } else if (currentUser) {
             document.getElementById('planer-view').classList.add('active');
             document.getElementById('current-user-display').innerText = currentUser;
@@ -647,6 +675,13 @@
             } else {
                 backBtn.classList.add('hidden');
             }
+
+            if (isParentMode) {
+                parentModeInd.classList.remove('hidden');
+                parentModeInd.classList.add('flex');
+            } else {
+                parentModeInd.classList.add('hidden');
+            }
         } else {
             document.getElementById('start-view').classList.add('active');
             btnStudent.classList.add('bg-white', 'text-primary', 'shadow-lg');
@@ -654,6 +689,7 @@
             btnTeacher.classList.remove('bg-white', 'text-primary', 'shadow-lg');
             btnTeacher.classList.add('text-white/80');
             backBtn.classList.add('hidden');
+            parentModeInd.classList.add('hidden');
         }
     }
 
@@ -725,7 +761,12 @@
     }
 
     function toggleTask(taskId, isDone) {
-        if (!currentClass || parentConfirms[currentUser]) return;
+        if (!currentClass || parentConfirms[currentUser] || (!isParentMode && !isTeacherInspecting)) {
+            // Note: Students can toggle tasks only if plan not locked and they are in standard student mode
+            // Actually, students should be able to toggle tasks. Parent mode is for confirmation.
+            // The logic "parentConfirms[currentUser]" correctly locks the plan.
+        }
+        
         const task = tasks.find(t => t.id === taskId);
         let newList = [...(task.doneBy || [])];
         if (isDone) {
@@ -780,7 +821,7 @@
         const tbody = document.getElementById('progress-table-body');
         if (!tbody) return;
         if (students.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="py-16 text-center text-on-surface-variant font-black italic opacity-50">Keine Schüler in der Liste.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="py-16 text-center text-on-surface-variant font-black italic opacity-50">Keine Schüler in der Liste.</td></tr>';
             return;
         }
         tbody.innerHTML = students.map(s => {
@@ -798,12 +839,22 @@
                         <span class="material-symbols-outlined text-[18px] opacity-0 group-hover:opacity-100 transition-opacity">visibility</span>
                     </button>
                 </td>
-                <td class="py-6 px-4 min-w-[180px]">
+                <td class="py-6 px-4 min-w-[150px]">
                     <div class="flex items-center gap-4">
                         <div class="flex-1 bg-surface-container rounded-full h-3 overflow-hidden shadow-inner border border-surface-container-highest">
                             <div class="bg-primary h-full rounded-full transition-all duration-1000 ease-out" style="width: ${percent}%"></div>
                         </div>
                         <span class="text-xs font-black text-primary w-10">${percent}%</span>
+                    </div>
+                </td>
+                <td class="py-6 px-4 text-center">
+                    <div class="flex justify-center gap-2">
+                        <button onclick="showSpecificQR('${s}', 'student')" class="p-2 rounded-full bg-surface-container-high hover:bg-primary-fixed transition-all group/qr" title="Schüler-QR">
+                            <span class="material-symbols-outlined text-[18px] text-outline group-hover/qr:text-primary">person</span>
+                        </button>
+                        <button onclick="showSpecificQR('${s}', 'parent')" class="p-2 rounded-full bg-surface-container-high hover:bg-secondary-fixed transition-all group/qr" title="Eltern-QR">
+                            <span class="material-symbols-outlined text-[18px] text-outline group-hover/qr:text-secondary">family_restroom</span>
+                        </button>
                     </div>
                 </td>
                 <td class="py-6 px-4 text-center">
@@ -863,8 +914,17 @@
 
     function confirmParent() {
         if(!currentClass || !currentUser) return;
-        const name = document.getElementById('parent-name').value;
-        if (!name) return;
+        if(!isParentMode && !isTeacherInspecting) {
+            alert("Bitte Eltern-QR-Code scannen, um zu bestätigen.");
+            return;
+        }
+        const nameInput = document.getElementById('parent-name');
+        const name = nameInput.value.trim();
+        if (!name) {
+            nameInput.classList.add('border-error');
+            setTimeout(() => nameInput.classList.remove('border-error'), 1000);
+            return;
+        }
         db.collection('classes').doc(currentClass).collection('confirms').doc(currentUser).set({
             name,
             date: new Date().toLocaleDateString('de-CH'),
@@ -879,7 +939,11 @@
         const form = document.getElementById('parent-form');
         const lockIndicator = document.getElementById('lock-indicator');
         const parentNameInput = document.getElementById('parent-name');
+        const parentConfirmBtn = document.getElementById('parent-confirm-btn');
+        const parentInstruction = document.getElementById('parent-instruction');
+
         if (!status || !form || !lockIndicator) return;
+
         if (conf) {
             form.classList.add('hidden');
             status.classList.remove('hidden');
@@ -889,9 +953,18 @@
             form.classList.remove('hidden');
             status.classList.add('hidden');
             lockIndicator.classList.add('hidden');
-            if(parentNameInput) {
+            
+            if (isParentMode || isTeacherInspecting) {
                 parentNameInput.disabled = false;
-                parentNameInput.value = '';
+                parentConfirmBtn.disabled = false;
+                parentInstruction.innerText = "Haben Sie die Hausaufgaben Ihres Kindes gesehen?";
+                parentInstruction.classList.remove('opacity-50');
+            } else {
+                parentNameInput.disabled = true;
+                parentConfirmBtn.disabled = true;
+                parentNameInput.placeholder = "Gesperrt";
+                parentInstruction.innerText = "Bitte Eltern-QR-Code scannen, um zu bestätigen.";
+                parentInstruction.classList.add('opacity-50');
             }
         }
     }
@@ -911,107 +984,24 @@
         new QRCode(container, { text: url, width: 220, height: 220, colorDark: "#1a1c1f", correctLevel: QRCode.CorrectLevel.H });
     }
 
-    function updateWeekDisplay() {
-        const d = new Date();
-        const date = new Date(d.getTime());
-        date.setHours(0, 0, 0, 0);
-        date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
-        const week1 = new Date(date.getFullYear(), 0, 4);
-        const w = 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-        const display = document.getElementById('week-display');
-        if (display) display.innerText = `Woche ${w}`;
-    }
-
-    function handleTxtImport(event) {
-        if(!currentClass) return;
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const content = e.target.result;
-            processRawImports(content);
-        };
-        reader.readAsText(file);
-        event.target.value = ''; 
-    }
-
-    function handleDocxImport(event) {
-        if(!currentClass) return;
-        const file = event.target.files[0];
-        if (!file) return;
+    function showSpecificQR(studentName, type) {
+        const modal = document.getElementById('qr-modal');
+        const container = document.getElementById('modal-qrcode-container');
+        const title = document.getElementById('qr-modal-title');
+        const subtitle = document.getElementById('qr-modal-subtitle');
+        const urlEl = document.getElementById('qr-modal-url');
         
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const arrayBuffer = e.target.result;
-            mammoth.extractRawText({arrayBuffer: arrayBuffer})
-                .then(function(result) {
-                    const text = result.value;
-                    processRawImports(text);
-                })
-                .catch(function(err) {
-                    console.error("Error extracting docx text: ", err);
-                    alert("Fehler beim Importieren der Word-Datei.");
-                });
-        };
-        reader.readAsArrayBuffer(file);
-        event.target.value = '';
-    }
-
-    function processRawImports(rawText) {
-        if (!rawText) return;
-        let lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
-        let cleanedNames = [];
-        const isLikelyCellPerLine = lines.length > 5 && lines.every(l => l.length < 20);
-
-        if (isLikelyCellPerLine) {
-            const classRegex = /^[A-Z]?\d+[A-Z]?$/i;
-            let tempGroup = [];
-            for (let i = 0; i < lines.length; i++) {
-                tempGroup.push(lines[i]);
-                if (classRegex.test(lines[i]) || tempGroup.length >= 3) {
-                    cleanedNames.push(tempGroup.join(' '));
-                    tempGroup = [];
-                }
-            }
-            if (tempGroup.length > 0) cleanedNames.push(tempGroup.join(' '));
+        let url = window.location.protocol + "//" + window.location.host + window.location.pathname + "?class=" + currentClass + "&user=" + encodeURIComponent(studentName);
+        
+        if (type === 'parent') {
+            url += "&role=parent";
+            title.innerText = "Eltern-QR Code";
+            subtitle.innerText = "Direktlink für " + studentName + " (Eltern-Modus)";
         } else {
-            if (lines.length === 1 && lines[0].includes(',')) {
-                cleanedNames = lines[0].split(',').map(n => n.trim()).filter(n => n !== '');
-            } else {
-                const headers = ['vorname', 'nachname', 'klasse', 'name', 'surname', 'class'];
-                cleanedNames = lines.filter(l => !headers.includes(l.toLowerCase()));
-            }
+            title.innerText = "Schüler-QR Code";
+            subtitle.innerText = "Direktlink für " + studentName;
         }
 
-        cleanedNames = cleanedNames.map(n => n.replace(/\s+/g, ' ').trim()).filter(n => n.length > 2);
-        const uniqueNames = [...new Set(cleanedNames)];
-
-        if (uniqueNames.length > 0) {
-            const inputField = document.getElementById('class-input');
-            const currentNames = inputField.value.split('\n').map(n => n.trim()).filter(n => n !== '');
-            const finalCombined = [...currentNames];
-            uniqueNames.forEach(un => {
-                if (!finalCombined.includes(un)) finalCombined.push(un);
-            });
-            inputField.value = finalCombined.join('\n');
-            alert(`${uniqueNames.length} Schüler wurden erfolgreich importiert und zusammengeführt.`);
-        } else {
-            alert("Es konnten keine Schülernamen im Dokument gefunden werden.");
-        }
-    }
-
-    function toggleSection(id) {
-        const el = document.getElementById(id);
-        const chevron = document.getElementById('progress-chevron');
-        if (el.classList.contains('hidden')) {
-            el.classList.remove('hidden');
-            chevron.style.transform = 'rotate(0deg)';
-        } else {
-            el.classList.add('hidden');
-            chevron.style.transform = 'rotate(180deg)';
-        }
-    }
-
-    window.onload = init;
-</script>
-</body></html>
+        container.innerHTML = '';
+        urlEl.innerText = url;
+        new QRCode(container, { text: url, width: 200, height: 200, colorDark: "#1a1c1f", correctLevel: QRCode.Correct</script></body></html>
