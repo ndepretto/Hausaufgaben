@@ -1,6 +1,4 @@
-<html lang="de"><head></head><body class="dot-pattern min-h-screen text-on-surface pb-20">```html
-
-
+<html lang="de"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>doeltschi | Digitaler Aufgabenplaner</title>
@@ -95,12 +93,13 @@
         ::-webkit-scrollbar-thumb { background: #d8e2ff; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #adc6ff; }
 
-        /* Modal specific animations */
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
         .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     </style>
+</head>
+<body class="dot-pattern min-h-screen text-on-surface pb-20">
 <!-- Teacher Login Modal -->
 <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm hidden animate-fade-in" id="teacher-modal">
 <div class="bg-white w-full max-w-md rounded-lg shadow-2xl overflow-hidden animate-slide-up relative">
@@ -153,10 +152,10 @@
             </button>
 </div>
 <div class="flex bg-black/10 backdrop-blur-md p-1.5 rounded-full border border-white/10" id="nav-mode-selector">
-<button class="flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 bg-white text-primary shadow-lg" id="btn-student" onclick="setMode('student')">
+<button class="flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold transition-all duration-300" id="btn-student-nav" onclick="setMode('student')">
 <span class="material-symbols-outlined text-[18px]">person</span> Schüler
             </button>
-<button class="flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 text-white/80 hover:text-white" id="btn-teacher" onclick="openTeacherModal()">
+<button class="flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold transition-all duration-300" id="btn-teacher-nav" onclick="openTeacherModal()">
 <span class="material-symbols-outlined text-[18px]">lock</span> Lehrer
             </button>
 </div>
@@ -176,7 +175,7 @@
 <p class="text-on-surface-variant text-lg">Gib deine Klasse ein, um zu starten.</p>
 </div>
 <div class="relative mb-8">
-<input class="w-full bg-surface-container-low border-2 border-surface-container-high rounded-full px-8 py-5 text-2xl font-bold text-on-surface shadow-inner focus:border-primary focus:ring-4 focus:ring-primary-fixed transition-all outline-none uppercase text-center placeholder:text-outline-variant" id="class-name-input" placeholder="Z.B. B4B" type="text"/>
+<input class="w-full bg-surface-container-low border-2 border-surface-container-high rounded-full px-8 py-5 text-2xl font-bold text-on-surface shadow-inner focus:border-primary focus:ring-4 focus:ring-primary-fixed transition-all outline-none uppercase text-center placeholder:text-outline-variant" id="class-name-input" onkeydown="if(event.key === 'Enter') selectClass()" placeholder="Z.B. B4B" type="text"/>
 </div>
 <button class="w-full bg-primary text-on-primary font-black text-xl py-5 rounded-full hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3" onclick="selectClass()">
                     Klasse beitreten <span class="material-symbols-outlined font-bold">arrow_forward</span>
@@ -334,7 +333,7 @@
 <!-- Klassenfortschritt -->
 <div class="bg-white rounded-lg border border-surface-container shadow-xl mb-10 overflow-hidden">
 <div class="p-10 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-surface-container">
-<button class="flex items-center gap-4 tracking-tight group" onclick="toggleSection('progress-section')">
+<button class="flex items-center gap-4 tracking-tight group" onclick="toggleProgressSection()">
 <h3 class="text-2xl font-black flex items-center gap-4">
 <span class="material-symbols-outlined text-primary text-3xl">analytics</span> Klassenfortschritt
                     </h3>
@@ -384,7 +383,7 @@
 </div>
 </main>
 <script>
-    // --- FIREBASE KONFIGURATION ---
+    // --- FIREBASE CONFIGURATION ---
     const firebaseConfig = {
         apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
         authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
@@ -399,7 +398,7 @@
     const db = firebase.firestore();
 
     let currentClass = null;
-    let currentMode = 'student';
+    let currentMode = 'student'; // 'student' or 'teacher'
     let currentUser = null;
     let isParentMode = false;
     let students = [];
@@ -433,6 +432,7 @@
             setupClass(classFromUrl.toUpperCase());
             if (userFromUrl) {
                 currentUser = userFromUrl;
+                currentMode = 'student';
             }
         } else {
             updateUI();
@@ -442,26 +442,21 @@
         renderColorLegends();
         updateWeekDisplay();
 
-        // Allow 'Enter' key on password field
-        document.getElementById('teacher-password-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                validateTeacherPassword();
-            }
+        // Listeners for modals
+        document.getElementById('teacher-password-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') validateTeacherPassword();
         });
     }
 
+    // Modal Control
     function openTeacherModal() {
-        if (isTeacherInspecting) {
+        if (isTeacherInspecting || currentMode === 'teacher') {
             setMode('teacher');
             return;
         }
         const modal = document.getElementById('teacher-modal');
-        const input = document.getElementById('teacher-password-input');
-        const error = document.getElementById('password-error');
         modal.classList.remove('hidden');
-        input.value = '';
-        input.focus();
-        error.classList.add('hidden');
+        document.getElementById('teacher-password-input').focus();
     }
 
     function closeTeacherModal() {
@@ -472,49 +467,54 @@
         const input = document.getElementById('teacher-password-input');
         const error = document.getElementById('password-error');
         if (input.value === 'lehrer123') {
+            error.classList.add('hidden');
+            input.value = '';
             closeTeacherModal();
             setMode('teacher');
         } else {
             error.classList.remove('hidden');
             input.classList.add('border-error');
-            setTimeout(() => input.classList.remove('border-error'), 1000);
-            input.focus();
+            setTimeout(() => input.classList.remove('border-error'), 500);
         }
     }
 
+    // App State Management
     function selectClass() {
-        const nameInput = document.getElementById('class-name-input');
-        const name = nameInput.value.trim().toUpperCase();
-        if (!name) return;
-        setupClass(name);
-        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?class=' + name;
-        window.history.pushState({path:newUrl},'',newUrl);
-        nameInput.value = '';
+        const input = document.getElementById('class-name-input');
+        const val = input.value.trim().toUpperCase();
+        if (!val) return;
+        setupClass(val);
+        // Persist via URL without reload
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('class', val);
+        window.history.pushState({}, '', newUrl);
+        input.value = '';
     }
 
     function setupClass(className) {
         currentClass = className;
         
+        // Cleanup old subs
         if (unsubSettings) unsubSettings();
         if (unsubTasks) unsubTasks();
         if (unsubConfirms) unsubConfirms();
 
         const classDocRef = db.collection('classes').doc(currentClass);
 
+        // Sub to Students
         unsubSettings = classDocRef.onSnapshot(doc => {
             if (doc.exists) {
                 students = doc.data().students || [];
                 document.getElementById('class-input').value = students.join('\n');
-                renderStudentOptions();
-                renderProgressTable();
             } else {
                 students = [];
-                document.getElementById('class-input').value = '';
-                renderStudentOptions();
-                renderProgressTable();
             }
+            renderStudentOptions();
+            renderProgressTable();
+            updateUI();
         });
 
+        // Sub to Tasks
         unsubTasks = classDocRef.collection('tasks').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
             tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderTasks();
@@ -522,14 +522,13 @@
             renderProgressTable();
         });
 
+        // Sub to Confirms
         unsubConfirms = classDocRef.collection('confirms').onSnapshot(snapshot => {
             parentConfirms = {};
             snapshot.docs.forEach(doc => parentConfirms[doc.id] = doc.data());
+            checkParentStatus();
             renderProgressTable();
-            if (currentUser) {
-                checkParentStatus();
-                renderTasks(); 
-            }
+            renderTasks();
         });
 
         document.querySelectorAll('.class-label-inline').forEach(el => el.innerText = currentClass);
@@ -538,78 +537,6 @@
         
         generateClassQRCode();
         updateUI();
-    }
-
-    function leaveClass() {
-        if (confirm("Klasse wirklich verlassen?")) {
-            resetAppState();
-        }
-    }
-
-    function resetAppState() {
-        if (unsubSettings) unsubSettings();
-        if (unsubTasks) unsubTasks();
-        if (unsubConfirms) unsubConfirms();
-        
-        currentClass = null;
-        currentUser = null;
-        isTeacherInspecting = false;
-        isParentMode = false;
-        currentMode = 'student';
-        students = [];
-        tasks = [];
-        parentConfirms = {};
-        
-        window.history.pushState({}, '', window.location.pathname);
-        updateUI();
-    }
-
-    async function deleteEntireClass() {
-        if (!currentClass) return;
-        
-        const confirmed = confirm(`Möchtest du die gesamte Klasse [${currentClass}] unwiderruflich löschen? Alle Schüler und Aufgaben gehen verloren.`);
-        if (!confirmed) return;
-
-        try {
-            const classDocRef = db.collection('classes').doc(currentClass);
-            
-            // Delete all tasks
-            const tasksSnapshot = await classDocRef.collection('tasks').get();
-            const tasksBatch = db.batch();
-            tasksSnapshot.docs.forEach(doc => tasksBatch.delete(doc.ref));
-            await tasksBatch.commit();
-
-            // Delete all confirmations
-            const confirmsSnapshot = await classDocRef.collection('confirms').get();
-            const confirmsBatch = db.batch();
-            confirmsSnapshot.docs.forEach(doc => confirmsBatch.delete(doc.ref));
-            await confirmsBatch.commit();
-
-            // Delete the class document itself
-            await classDocRef.delete();
-
-            alert(`Klasse ${currentClass} wurde erfolgreich gelöscht.`);
-            resetAppState();
-        } catch (error) {
-            console.error("Error deleting class: ", error);
-            alert("Fehler beim Löschen der Klasse. Bitte erneut versuchen.");
-        }
-    }
-
-    async function deleteAllConfirmations() {
-        if (!currentClass) return;
-        if (!confirm('Wirklich ALLE Elternbestätigungen für diese Klasse zurücksetzen? Alle Pläne werden für die Schüler wieder entsperrt.')) return;
-        
-        try {
-            const confirmsSnapshot = await db.collection('classes').doc(currentClass).collection('confirms').get();
-            const batch = db.batch();
-            confirmsSnapshot.docs.forEach(doc => batch.delete(doc.ref));
-            await batch.commit();
-            alert("Alle Bestätigungen wurden erfolgreich zurückgesetzt.");
-        } catch (error) {
-            console.error("Error deleting confirmations: ", error);
-            alert("Fehler beim Löschen der Bestätigungen.");
-        }
     }
 
     function setMode(mode) {
@@ -624,9 +551,292 @@
     function selectStudent(name) {
         if (!name) return;
         currentUser = name;
+        isTeacherInspecting = false;
+        
+        // Update URL
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('user', name);
+        newUrl.searchParams.delete('role');
+        window.history.pushState({}, '', newUrl);
+
         updateUI();
         checkParentStatus();
         renderTasks();
+    }
+
+    function leaveClass() {
+        if (confirm("Klasse wirklich verlassen?")) {
+            currentClass = null;
+            currentUser = null;
+            students = [];
+            tasks = [];
+            window.history.pushState({}, '', window.location.pathname);
+            updateUI();
+        }
+    }
+
+    // UI Orchestrator
+    function updateUI() {
+        const views = {
+            selection: document.getElementById('class-selection-view'),
+            start: document.getElementById('start-view'),
+            planer: document.getElementById('planer-view'),
+            teacher: document.getElementById('teacher-view')
+        };
+
+        const btns = {
+            student: document.getElementById('btn-student-nav'),
+            teacher: document.getElementById('btn-teacher-nav'),
+            change: document.getElementById('btn-change-class')
+        };
+
+        // Hide all
+        Object.values(views).forEach(v => v.classList.remove('active'));
+        
+        if (!currentClass) {
+            views.selection.classList.add('active');
+            btns.student.style.display = 'none';
+            btns.teacher.style.display = 'none';
+            btns.change.classList.add('hidden');
+            return;
+        }
+
+        btns.student.style.display = 'flex';
+        btns.teacher.style.display = 'flex';
+        btns.change.classList.remove('hidden');
+
+        // Nav Active States
+        if (currentMode === 'teacher') {
+            views.teacher.classList.add('active');
+            btns.teacher.className = "flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold bg-white text-primary shadow-lg";
+            btns.student.className = "flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold text-white/80 hover:text-white transition-all";
+        } else {
+            btns.student.className = "flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold bg-white text-primary shadow-lg";
+            btns.teacher.className = "flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold text-white/80 hover:text-white transition-all";
+            
+            if (currentUser) {
+                views.planer.classList.add('active');
+                document.getElementById('current-user-display').innerText = currentUser;
+                document.getElementById('back-to-dashboard').style.display = isTeacherInspecting ? 'flex' : 'none';
+            } else {
+                views.start.classList.add('active');
+            }
+        }
+    }
+
+    function renderStudentOptions() {
+        const sel = document.getElementById('student-selector');
+        const taskWho = document.getElementById('task-who');
+        if (!sel || !taskWho) return;
+        
+        const prevVal = sel.value;
+        sel.innerHTML = '<option value="">Wähle deinen Namen...</option>';
+        taskWho.innerHTML = '<option value="Ganze Klasse">Ganze Klasse</option>';
+        
+        students.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s;
+            sel.appendChild(opt);
+            
+            const taskOpt = document.createElement('option');
+            taskOpt.value = s;
+            taskOpt.textContent = s;
+            taskWho.appendChild(taskOpt);
+        });
+        
+        if (currentUser && students.includes(currentUser)) {
+            sel.value = currentUser;
+        }
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('task-container');
+        if (!container || !currentUser) return;
+
+        const isLocked = !!parentConfirms[currentUser];
+        const myTasks = tasks.filter(t => t.who === 'Ganze Klasse' || t.who === currentUser);
+
+        if (myTasks.length === 0) {
+            container.innerHTML = '<div class="text-center py-24 bg-white rounded-lg border-2 border-surface-container border-dashed"><p class="text-on-surface-variant font-black italic opacity-50 uppercase tracking-widest">Keine Aufgaben vorhanden.</p></div>';
+            return;
+        }
+
+        container.innerHTML = myTasks.map(t => {
+            const isDone = t.doneBy?.includes(currentUser);
+            const sub = subjects[t.subject] || { name: t.subject, color: '#ccc' };
+            return `
+            <div class="bg-white p-8 rounded-lg border border-surface-container flex items-center justify-between shadow-md transition-all ${isLocked ? 'opacity-80' : 'hover:shadow-xl'}">
+                <div class="flex items-center gap-6">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" ${isDone ? 'checked' : ''} ${isLocked ? 'disabled' : ''} onchange="toggleTask('${t.id}', this.checked)" class="w-8 h-8 rounded-lg border-2 border-primary/30 text-primary focus:ring-4 focus:ring-primary-fixed transition-all disabled:opacity-50">
+                    </label>
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="w-3 h-3 rounded-full shadow-sm" style="background-color: ${sub.color}"></span>
+                            <span class="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em]">${sub.name}</span>
+                            ${t.who === 'Ganze Klasse' ? '<span class="bg-primary-fixed text-on-primary-fixed-variant px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ml-2">Alle</span>' : ''}
+                        </div>
+                        <p class="text-xl font-black text-on-surface ${isDone ? 'line-through text-outline-variant opacity-50' : ''}">${t.desc}</p>
+                    </div>
+                </div>
+                <div class="text-right text-[10px] font-black text-on-surface-variant uppercase bg-surface-container-low px-4 py-2 rounded-full border border-surface-container shadow-sm">
+                    ${new Date(t.date).toLocaleDateString('de-CH')}
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function toggleTask(taskId, isDone) {
+        if (parentConfirms[currentUser]) return;
+        const task = tasks.find(t => t.id === taskId);
+        let doneBy = [...(task.doneBy || [])];
+        if (isDone) {
+            if (!doneBy.includes(currentUser)) doneBy.push(currentUser);
+        } else {
+            doneBy = doneBy.filter(u => u !== currentUser);
+        }
+        db.collection('classes').doc(currentClass).collection('tasks').doc(taskId).update({ doneBy });
+    }
+
+    function checkParentStatus() {
+        const conf = parentConfirms[currentUser];
+        const status = document.getElementById('parent-status');
+        const form = document.getElementById('parent-form');
+        const lockInd = document.getElementById('lock-indicator');
+        const instr = document.getElementById('parent-instruction');
+        const nameInput = document.getElementById('parent-name');
+        const btn = document.getElementById('parent-confirm-btn');
+
+        if (!status || !form) return;
+
+        if (conf) {
+            form.classList.add('hidden');
+            status.classList.remove('hidden');
+            status.innerHTML = `<div class="flex items-center justify-center gap-4"><span class="material-symbols-outlined text-3xl">verified</span> <div><div class="text-sm uppercase tracking-widest opacity-60">Bestätigt durch</div><div class="text-xl">${conf.name} am ${conf.date}</div></div></div>`;
+            lockInd.classList.remove('hidden');
+        } else {
+            form.classList.remove('hidden');
+            status.classList.add('hidden');
+            lockInd.classList.add('hidden');
+            if (isParentMode || isTeacherInspecting) {
+                nameInput.disabled = false;
+                btn.disabled = false;
+                instr.innerText = "Haben Sie die Hausaufgaben Ihres Kindes gesehen?";
+                instr.classList.remove('opacity-50');
+            } else {
+                nameInput.disabled = true;
+                btn.disabled = true;
+                instr.innerText = "Bitte Eltern-QR scannen, um zu bestätigen.";
+                instr.classList.add('opacity-50');
+            }
+        }
+    }
+
+    function confirmParent() {
+        if (!currentClass || !currentUser) return;
+        const name = document.getElementById('parent-name').value.trim();
+        if (!name) return;
+        db.collection('classes').doc(currentClass).collection('confirms').doc(currentUser).set({
+            name,
+            date: new Date().toLocaleDateString('de-CH'),
+            timestamp: Date.now(),
+            parentalConfirmation: true
+        });
+    }
+
+    // Teacher Logic
+    function updateClassList() {
+        const names = document.getElementById('class-input').value.split('\n').map(n => n.trim()).filter(n => n);
+        db.collection('classes').doc(currentClass).set({ students: names }, { merge: true });
+        alert("Liste aktualisiert!");
+    }
+
+    function addTask() {
+        const who = document.getElementById('task-who').value;
+        const subject = document.getElementById('task-subject').value;
+        const desc = document.getElementById('task-desc').value.trim();
+        const date = document.getElementById('task-date').value;
+        if (!desc || !date) return;
+
+        db.collection('classes').doc(currentClass).collection('tasks').add({
+            who, subject, desc, date,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            doneBy: []
+        });
+        document.getElementById('task-desc').value = '';
+    }
+
+    function renderTeacherTasks() {
+        const container = document.getElementById('teacher-tasks');
+        if (!container) return;
+        if (tasks.length === 0) {
+            container.innerHTML = '<div class="col-span-full py-10 bg-surface-container-low rounded-lg text-center"><p class="text-on-surface-variant font-black italic uppercase tracking-widest opacity-40">Keine Aufgaben.</p></div>';
+            return;
+        }
+        container.innerHTML = tasks.map(t => {
+            const sub = subjects[t.subject] || { name: t.subject, color: '#ccc' };
+            return `
+            <div class="p-6 bg-surface-container-low rounded-lg flex justify-between items-center border border-surface-container group">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${sub.color}"></span>
+                        <span class="text-[9px] font-black text-outline-variant uppercase">${sub.name}</span>
+                        <span class="text-[8px] bg-white px-2 py-0.5 rounded-full font-black border">${t.who}</span>
+                    </div>
+                    <p class="font-black text-sm text-on-surface">${t.desc}</p>
+                </div>
+                <button onclick="db.collection('classes').doc('${currentClass}').collection('tasks').doc('${t.id}').delete()" class="text-on-surface-variant hover:text-error p-2 rounded-full hover:bg-error/10">
+                    <span class="material-symbols-outlined text-[20px]">delete</span>
+                </button>
+            </div>`;
+        }).join('');
+    }
+
+    function renderProgressTable() {
+        const tbody = document.getElementById('progress-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = students.map(s => {
+            const myTasks = tasks.filter(t => t.who === 'Ganze Klasse' || t.who === s);
+            const done = myTasks.filter(t => t.doneBy?.includes(s)).length;
+            const perc = myTasks.length ? Math.round((done / myTasks.length) * 100) : 0;
+            const conf = parentConfirms[s];
+            return `
+            <tr class="group hover:bg-surface-container-low/50 transition-colors">
+                <td class="py-6 px-4">
+                    <button onclick="inspectStudent('${s}')" class="flex items-center gap-3 font-black text-on-surface hover:text-primary transition-all">
+                        <div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-[10px] uppercase font-black">${s.charAt(0)}</div>
+                        ${s}
+                    </button>
+                </td>
+                <td class="py-6 px-4 min-w-[150px]">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1 bg-surface-container rounded-full h-3 overflow-hidden border">
+                            <div class="bg-primary h-full transition-all duration-700" style="width: ${perc}%"></div>
+                        </div>
+                        <span class="text-xs font-black text-primary">${perc}%</span>
+                    </div>
+                </td>
+                <td class="py-6 px-4 text-center">
+                    <div class="flex justify-center gap-2">
+                        <button onclick="showSpecificQR('${s}', 'student')" class="p-2 rounded-full bg-surface-container-high hover:bg-primary/10 transition-all">
+                            <span class="material-symbols-outlined text-[18px]">person</span>
+                        </button>
+                        <button onclick="showSpecificQR('${s}', 'parent')" class="p-2 rounded-full bg-surface-container-high hover:bg-secondary/10 transition-all">
+                            <span class="material-symbols-outlined text-[18px]">family_restroom</span>
+                        </button>
+                    </div>
+                </td>
+                <td class="py-6 px-4 text-center">
+                    ${conf ? `<span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-bold">Bestätigt</span>` : `<span class="opacity-30 material-symbols-outlined">pending</span>`}
+                </td>
+                <td class="py-6 px-4 text-right">
+                    <button onclick="resetParentConfirm('${s}')" class="text-outline-variant hover:text-error transition-all p-2 rounded-full">
+                        <span class="material-symbols-outlined">${conf ? 'lock_open' : 'block'}</span>
+                    </button>
+                </td>
+            </tr>`;
+        }).join('');
     }
 
     function inspectStudent(name) {
@@ -638,342 +848,30 @@
         renderTasks();
     }
 
-    function updateUI() {
-        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-        const nav = document.getElementById('nav-mode-selector');
-        const btnChangeClass = document.getElementById('btn-change-class');
-        const btnStudent = document.getElementById('btn-student');
-        const btnTeacher = document.getElementById('btn-teacher');
-        const backBtn = document.getElementById('back-to-dashboard');
-        const parentModeInd = document.getElementById('parent-mode-indicator');
-
-        if (!currentClass) {
-            document.getElementById('class-selection-view').classList.add('active');
-            nav.classList.add('hidden');
-            btnChangeClass.classList.add('hidden');
-            return;
-        }
-
-        nav.classList.remove('hidden');
-        btnChangeClass.classList.remove('hidden');
-
-        if (currentMode === 'teacher') {
-            document.getElementById('teacher-view').classList.add('active');
-            btnTeacher.classList.add('bg-white', 'text-primary', 'shadow-lg');
-            btnTeacher.classList.remove('text-white/80');
-            btnStudent.classList.remove('bg-white', 'text-primary', 'shadow-lg');
-            btnStudent.classList.add('text-white/80');
-            backBtn.classList.add('hidden');
-            parentModeInd.classList.add('hidden');
-        } else if (currentUser) {
-            document.getElementById('planer-view').classList.add('active');
-            document.getElementById('current-user-display').innerText = currentUser;
-            
-            if (isTeacherInspecting) {
-                backBtn.classList.remove('hidden');
-                backBtn.classList.add('flex');
-            } else {
-                backBtn.classList.add('hidden');
-            }
-
-            if (isParentMode) {
-                parentModeInd.classList.remove('hidden');
-                parentModeInd.classList.add('flex');
-            } else {
-                parentModeInd.classList.add('hidden');
-            }
-        } else {
-            document.getElementById('start-view').classList.add('active');
-            btnStudent.classList.add('bg-white', 'text-primary', 'shadow-lg');
-            btnStudent.classList.remove('text-white/80');
-            btnTeacher.classList.remove('bg-white', 'text-primary', 'shadow-lg');
-            btnTeacher.classList.add('text-white/80');
-            backBtn.classList.add('hidden');
-            parentModeInd.classList.add('hidden');
+    function resetParentConfirm(name) {
+        if (confirm(`Sperre für ${name} aufheben?`)) {
+            db.collection('classes').doc(currentClass).collection('confirms').doc(name).delete();
         }
     }
 
-    function renderStudentOptions() {
-        const sel = document.getElementById('student-selector');
-        const taskWho = document.getElementById('task-who');
-        if (!sel || !taskWho) return;
-        const currentSelVal = sel.value;
-        sel.innerHTML = '<option value="">Wähle deinen Namen...</option>';
-        taskWho.innerHTML = '<option value="Ganze Klasse">Ganze Klasse</option>';
-        students.forEach(s => {
-            sel.innerHTML += `<option value="${s}">${s}</option>`;
-            taskWho.innerHTML += `<option value="${s}">${s}</option>`;
-        });
-        sel.value = currentSelVal;
-    }
-
+    // Helpers
     function renderSubjectOptions() {
         const sel = document.getElementById('task-subject');
-        if(!sel) return;
-        sel.innerHTML = '';
-        Object.entries(subjects).forEach(([id, data]) => {
-            sel.innerHTML += `<option value="${id}">${data.name}</option>`;
-        });
+        if (!sel) return;
+        sel.innerHTML = Object.entries(subjects).map(([id, data]) => `<option value="${id}">${data.name}</option>`).join('');
     }
 
     function renderColorLegends() {
-        const containers = [
-            document.getElementById('color-legend-student'),
-            document.getElementById('color-legend-teacher')
-        ];
-        
-        containers.forEach(container => {
-            if (!container) return;
-            container.innerHTML = Object.entries(subjects).map(([id, data]) => `
-                <div class="flex items-center gap-3 px-4 py-2 bg-surface-container rounded-full border border-surface-container-high transition-transform hover:scale-105 cursor-default">
-                    <span class="w-4 h-4 rounded-full shadow-sm border border-white/50" style="background-color: ${data.color}"></span>
-                    <span class="text-[11px] font-black text-on-surface-variant uppercase tracking-wider">${data.name}</span>
-                </div>
-            `).join('');
-        });
-    }
-
-    function addTask() {
-        if (!currentClass) return;
-        const who = document.getElementById('task-who').value;
-        const sub = document.getElementById('task-subject').value;
-        const desc = document.getElementById('task-desc').value;
-        const date = document.getElementById('task-date').value;
-        if (!desc || !date) return;
-        db.collection('classes').doc(currentClass).collection('tasks').add({
-            who, subject: sub, desc, date,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            doneBy: []
-        });
-        document.getElementById('task-desc').value = '';
-    }
-
-    async function deleteAllTasks() {
-        if (!currentClass) return;
-        if (confirm("Möchtest du wirklich ALLE aktuellen Aufgaben löschen?")) {
-            try {
-                const snapshot = await db.collection('classes').doc(currentClass).collection('tasks').get();
-                const batch = db.batch();
-                snapshot.docs.forEach((doc) => { batch.delete(doc.ref); });
-                await batch.commit();
-            } catch (error) { console.error(error); }
-        }
-    }
-
-    function toggleTask(taskId, isDone) {
-        if (!currentClass || parentConfirms[currentUser] || (!isParentMode && !isTeacherInspecting)) {
-            // Note: Students can toggle tasks only if plan not locked and they are in standard student mode
-            // Actually, students should be able to toggle tasks. Parent mode is for confirmation.
-            // The logic "parentConfirms[currentUser]" correctly locks the plan.
-        }
-        
-        const task = tasks.find(t => t.id === taskId);
-        let newList = [...(task.doneBy || [])];
-        if (isDone) {
-            if (!newList.includes(currentUser)) newList.push(currentUser);
-        } else {
-            newList = newList.filter(u => u !== currentUser);
-        }
-        db.collection('classes').doc(currentClass).collection('tasks').doc(taskId).update({ doneBy: newList });
-    }
-
-    function renderTasks() {
-        const container = document.getElementById('task-container');
-        if(!container) return;
-        const isLocked = parentConfirms[currentUser] ? true : false;
-        const myTasks = tasks.filter(t => t.who === 'Ganze Klasse' || t.who === currentUser);
-        if (myTasks.length === 0) {
-            container.innerHTML = '<div class="text-center py-24 bg-white rounded-lg border-2 border-surface-container border-dashed"><p class="text-on-surface-variant font-black italic opacity-50 uppercase tracking-widest">Keine Aufgaben vorhanden.</p></div>';
-            return;
-        }
-        container.innerHTML = myTasks.map(t => {
-            const isDone = t.doneBy && t.doneBy.includes(currentUser);
-            const subData = subjects[t.subject] || { name: t.subject, color: '#ccc' };
-            const isGlobal = t.who === 'Ganze Klasse';
-            return `
-            <div class="bg-white p-8 rounded-lg border border-surface-container flex items-center justify-between shadow-md hover:shadow-xl transition-all ${isLocked ? 'opacity-80' : ''}">
-                <div class="flex items-center gap-6">
-                    <label class="flex items-center cursor-pointer group">
-                        <input type="checkbox" ${isDone ? 'checked' : ''} ${isLocked ? 'disabled' : ''} onchange="toggleTask('${t.id}', this.checked)" class="w-8 h-8 rounded-lg border-2 border-primary/30 text-primary focus:ring-4 focus:ring-primary-fixed transition-all disabled:opacity-50">
-                    </label>
-                    <div>
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="w-3 h-3 rounded-full shadow-sm" style="background-color: ${subData.color}"></span>
-                            <span class="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em]">${subData.name}</span>
-                            ${isGlobal ? 
-                                `<span class="bg-primary-fixed text-on-primary-fixed-variant px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ml-2 border border-primary/10">Alle</span>` : 
-                                `<span class="bg-secondary-fixed text-on-secondary-fixed-variant px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ml-2 border border-secondary/10">Nur Du</span>`
-                            }
-                        </div>
-                        <p class="text-xl font-black text-on-surface leading-tight ${isDone ? 'line-through text-outline-variant opacity-50' : ''}">${t.desc}</p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <div class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest bg-surface-container-low px-4 py-2 rounded-full border border-surface-container shadow-sm">
-                        ${new Date(t.date).toLocaleDateString('de-CH')}
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-    }
-
-    function renderProgressTable() {
-        const tbody = document.getElementById('progress-table-body');
-        if (!tbody) return;
-        if (students.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="py-16 text-center text-on-surface-variant font-black italic opacity-50">Keine Schüler in der Liste.</td></tr>';
-            return;
-        }
-        tbody.innerHTML = students.map(s => {
-            const myTasks = tasks.filter(t => t.who === 'Ganze Klasse' || t.who === s);
-            const total = myTasks.length;
-            const done = myTasks.filter(t => t.doneBy?.includes(s)).length;
-            const percent = total === 0 ? 0 : Math.round((done / total) * 100);
-            const conf = parentConfirms[s];
-            return `
-            <tr class="group hover:bg-surface-container-low/50 transition-colors">
-                <td class="py-6 px-4">
-                    <button onclick="inspectStudent('${s}')" class="flex items-center gap-3 text-left font-black text-on-surface hover:text-primary transition-all">
-                        <div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-[10px] uppercase font-black text-outline-variant group-hover:bg-primary-fixed group-hover:text-on-primary-fixed-variant transition-colors">${s.charAt(0)}</div>
-                        ${s}
-                        <span class="material-symbols-outlined text-[18px] opacity-0 group-hover:opacity-100 transition-opacity">visibility</span>
-                    </button>
-                </td>
-                <td class="py-6 px-4 min-w-[150px]">
-                    <div class="flex items-center gap-4">
-                        <div class="flex-1 bg-surface-container rounded-full h-3 overflow-hidden shadow-inner border border-surface-container-highest">
-                            <div class="bg-primary h-full rounded-full transition-all duration-1000 ease-out" style="width: ${percent}%"></div>
-                        </div>
-                        <span class="text-xs font-black text-primary w-10">${percent}%</span>
-                    </div>
-                </td>
-                <td class="py-6 px-4 text-center">
-                    <div class="flex justify-center gap-2">
-                        <button onclick="showSpecificQR('${s}', 'student')" class="p-2 rounded-full bg-surface-container-high hover:bg-primary-fixed transition-all group/qr" title="Schüler-QR">
-                            <span class="material-symbols-outlined text-[18px] text-outline group-hover/qr:text-primary">person</span>
-                        </button>
-                        <button onclick="showSpecificQR('${s}', 'parent')" class="p-2 rounded-full bg-surface-container-high hover:bg-secondary-fixed transition-all group/qr" title="Eltern-QR">
-                            <span class="material-symbols-outlined text-[18px] text-outline group-hover/qr:text-secondary">family_restroom</span>
-                        </button>
-                    </div>
-                </td>
-                <td class="py-6 px-4 text-center">
-                    ${conf ? 
-                        `<div class="flex flex-col items-center gap-1">
-                            <div class="flex items-center gap-2 bg-primary/5 px-3 py-1 rounded-full border border-primary/10">
-                                <span class="material-symbols-outlined text-primary text-[18px]">verified</span>
-                                <span class="text-[11px] font-bold text-primary">Gesehen: ${conf.name}</span>
-                            </div>
-                            <span class="text-[9px] font-black text-outline-variant uppercase mt-1">am ${conf.date}</span>
-                        </div>` : 
-                        `<span class="material-symbols-outlined text-outline-variant opacity-40" title="Ausstehend">pending</span>`
-                    }
-                </td>
-                <td class="py-6 px-4 text-right">
-                    <button onclick="resetParentConfirm('${s}')" class="text-on-surface-variant hover:text-error transition-all p-3 rounded-full hover:bg-error-container/20 group/btn" title="Sperre aufheben">
-                        <span class="material-symbols-outlined text-[22px] group-active/btn:scale-90">${conf ? 'lock_open' : 'do_not_disturb_on'}</span>
-                    </button>
-                </td>
-            </tr>`;
-        }).join('');
-    }
-
-    function resetParentConfirm(studentName) {
-        if(!currentClass) return;
-        if(confirm(`Bestätigung für ${studentName} wirklich zurücksetzen? Der Plan wird für den Schüler wieder entsperrt.`)) {
-            db.collection('classes').doc(currentClass).collection('confirms').doc(studentName).delete();
-        }
-    }
-
-    function renderTeacherTasks() {
-        const container = document.getElementById('teacher-tasks');
-        if(!container) return;
-        if (tasks.length === 0) {
-            container.innerHTML = '<div class="col-span-full py-10 bg-surface-container-low rounded-lg text-center"><p class="text-on-surface-variant font-black italic uppercase tracking-widest opacity-40">Keine Aufgaben erstellt.</p></div>';
-            return;
-        }
-        container.innerHTML = tasks.map(t => {
-            const subData = subjects[t.subject] || { name: t.subject, color: '#ccc' };
-            const isGlobal = t.who === 'Ganze Klasse';
-            return `
-            <div class="p-6 bg-surface-container-low rounded-lg flex justify-between items-center border border-surface-container hover:border-primary/30 transition-colors shadow-sm group">
-                <div class="min-w-0 pr-4">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${subData.color}"></span>
-                        <span class="text-[9px] font-black text-outline-variant uppercase tracking-widest">${subData.name}</span>
-                        <span class="text-[8px] ${isGlobal ? 'bg-primary-fixed text-primary' : 'bg-tertiary-fixed text-tertiary'} px-2 py-0.5 rounded-full font-black uppercase tracking-widest border border-white/50">${t.who}</span>
-                    </div>
-                    <p class="font-black text-sm truncate text-on-surface">${t.desc}</p>
-                </div>
-                <button onclick="db.collection('classes').doc('${currentClass}').collection('tasks').doc('${t.id}').delete()" class="text-on-surface-variant hover:text-error hover:bg-error-container/20 p-3 rounded-full transition-all flex items-center justify-center">
-                    <span class="material-symbols-outlined text-[20px]">delete</span>
-                </button>
-            </div>`;
-        }).join('');
-    }
-
-    function confirmParent() {
-        if(!currentClass || !currentUser) return;
-        if(!isParentMode && !isTeacherInspecting) {
-            alert("Bitte Eltern-QR-Code scannen, um zu bestätigen.");
-            return;
-        }
-        const nameInput = document.getElementById('parent-name');
-        const name = nameInput.value.trim();
-        if (!name) {
-            nameInput.classList.add('border-error');
-            setTimeout(() => nameInput.classList.remove('border-error'), 1000);
-            return;
-        }
-        db.collection('classes').doc(currentClass).collection('confirms').doc(currentUser).set({
-            name,
-            date: new Date().toLocaleDateString('de-CH'),
-            timestamp: Date.now(),
-            parentalConfirmation: true
-        });
-    }
-
-    function checkParentStatus() {
-        const conf = parentConfirms[currentUser];
-        const status = document.getElementById('parent-status');
-        const form = document.getElementById('parent-form');
-        const lockIndicator = document.getElementById('lock-indicator');
-        const parentNameInput = document.getElementById('parent-name');
-        const parentConfirmBtn = document.getElementById('parent-confirm-btn');
-        const parentInstruction = document.getElementById('parent-instruction');
-
-        if (!status || !form || !lockIndicator) return;
-
-        if (conf) {
-            form.classList.add('hidden');
-            status.classList.remove('hidden');
-            status.innerHTML = `<div class="flex items-center justify-center gap-4"><span class="material-symbols-outlined text-3xl">verified</span> <div><div class="text-sm uppercase tracking-widest opacity-60">Bestätigt durch</div><div class="text-xl">${conf.name} am ${conf.date}</div></div></div>`;
-            lockIndicator.classList.remove('hidden');
-        } else {
-            form.classList.remove('hidden');
-            status.classList.add('hidden');
-            lockIndicator.classList.add('hidden');
-            
-            if (isParentMode || isTeacherInspecting) {
-                parentNameInput.disabled = false;
-                parentConfirmBtn.disabled = false;
-                parentInstruction.innerText = "Haben Sie die Hausaufgaben Ihres Kindes gesehen?";
-                parentInstruction.classList.remove('opacity-50');
-            } else {
-                parentNameInput.disabled = true;
-                parentConfirmBtn.disabled = true;
-                parentNameInput.placeholder = "Gesperrt";
-                parentInstruction.innerText = "Bitte Eltern-QR-Code scannen, um zu bestätigen.";
-                parentInstruction.classList.add('opacity-50');
-            }
-        }
-    }
-
-    function updateClassList() {
-        if(!currentClass) return;
-        const names = document.getElementById('class-input').value.split('\n').map(n => n.trim()).filter(n => n !== '');
-        db.collection('classes').doc(currentClass).set({ students: names }, { merge: true });
-        alert("Klassenliste gespeichert!");
+        const c1 = document.getElementById('color-legend-student');
+        const c2 = document.getElementById('color-legend-teacher');
+        const html = Object.values(subjects).map(s => `
+            <div class="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full text-[10px] font-black uppercase">
+                <span class="w-3 h-3 rounded-full" style="background-color: ${s.color}"></span>
+                ${s.name}
+            </div>
+        `).join('');
+        if (c1) c1.innerHTML = html;
+        if (c2) c2.innerHTML = html;
     }
 
     function generateClassQRCode() {
@@ -984,24 +882,46 @@
         new QRCode(container, { text: url, width: 220, height: 220, colorDark: "#1a1c1f", correctLevel: QRCode.CorrectLevel.H });
     }
 
-    function showSpecificQR(studentName, type) {
+    function showSpecificQR(student, type) {
         const modal = document.getElementById('qr-modal');
         const container = document.getElementById('modal-qrcode-container');
         const title = document.getElementById('qr-modal-title');
-        const subtitle = document.getElementById('qr-modal-subtitle');
         const urlEl = document.getElementById('qr-modal-url');
         
-        let url = window.location.protocol + "//" + window.location.host + window.location.pathname + "?class=" + currentClass + "&user=" + encodeURIComponent(studentName);
-        
+        let url = window.location.protocol + "//" + window.location.host + window.location.pathname + "?class=" + currentClass + "&user=" + encodeURIComponent(student);
         if (type === 'parent') {
             url += "&role=parent";
-            title.innerText = "Eltern-QR Code";
-            subtitle.innerText = "Direktlink für " + studentName + " (Eltern-Modus)";
+            title.innerText = "Eltern-QR: " + student;
         } else {
-            title.innerText = "Schüler-QR Code";
-            subtitle.innerText = "Direktlink für " + studentName;
+            title.innerText = "Schüler-QR: " + student;
         }
 
         container.innerHTML = '';
         urlEl.innerText = url;
-        new QRCode(container, { text: url, width: 200, height: 200, colorDark: "#1a1c1f", correctLevel: QRCode.Correct</script></body></html>
+        new QRCode(container, { text: url, width: 200, height: 200 });
+        modal.classList.remove('hidden');
+    }
+
+    function closeQRModal() {
+        document.getElementById('qr-modal').classList.add('hidden');
+    }
+
+    function toggleProgressSection() {
+        const s = document.getElementById('progress-section');
+        const c = document.getElementById('progress-chevron');
+        s.classList.toggle('hidden');
+        c.style.transform = s.classList.contains('hidden') ? 'rotate(180deg)' : 'rotate(0deg)';
+    }
+
+    function updateWeekDisplay() {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 1);
+        const diff = now - start;
+        const oneWeek = 1000 * 60 * 60 * 24 * 7;
+        const weekNum = Math.ceil(diff / oneWeek);
+        document.getElementById('week-display').innerText = `Woche ${weekNum}`;
+    }
+
+    init();
+</script>
+</body></html>
