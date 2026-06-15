@@ -343,7 +343,7 @@
 <div class="bg-white p-10 rounded-lg border border-surface-container shadow-xl mb-10">
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
 <h3 class="text-2xl font-black flex items-center gap-4 tracking-tight">
-<span class="material-symbols-outlined text-tertiary text-3xl">list_alt</span> Aktuelle Aufgaben
+<span class="material-symbols-outlined text-tertiary text-3xl">list_alt</span> Aktuelle Aufgaben (Sortiert nach Datum)
                 </h3>
 <button class="flex items-center justify-center gap-3 px-6 py-3 border-2 border-error text-error font-black rounded-full hover:bg-error-container transition-all text-sm uppercase tracking-widest" onclick="deleteAllTasks()">
 <span class="material-symbols-outlined text-lg">delete_sweep</span> Alle löschen
@@ -441,8 +441,11 @@
             renderProgressTable();
         });
 
-        unsubTasks = classDocRef.collection('tasks').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
+        unsubTasks = classDocRef.collection('tasks').onSnapshot(snapshot => {
             tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Client-side sorting by date (ascending)
+            tasks.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
             renderTasks();
             renderTeacherTasks();
             renderProgressTable();
@@ -583,6 +586,15 @@
         }
     }
 
+    function formatDateSwiss(dateStr) {
+        if (!dateStr) return '--.--.----';
+        const date = new Date(dateStr);
+        const d = String(date.getDate()).padStart(2, '0');
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const y = date.getFullYear();
+        return `${d}.${m}.${y}`;
+    }
+
     function renderTasks() {
         const container = document.getElementById('task-container');
         if (!container) return;
@@ -609,8 +621,10 @@
                         <p class="text-xl font-black text-on-surface ${isDone ? 'line-through text-outline-variant opacity-50' : ''}">${t.desc}</p>
                     </div>
                 </div>
-                <div class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest bg-surface-container-low px-4 py-2 rounded-full border border-surface-container shadow-sm">
-                    ${new Date(t.date).toLocaleDateString('de-CH')}
+                <div class="flex flex-col items-end">
+                    <div class="text-[11px] font-black text-primary uppercase tracking-widest bg-primary-fixed px-4 py-2 rounded-full border border-primary/20 shadow-sm mb-1">
+                        Bis ${formatDateSwiss(t.date)}
+                    </div>
                 </div>
             </div>`;
         }).join('');
@@ -685,14 +699,17 @@
         if (!container) return;
         container.innerHTML = tasks.map(t => `
             <div class="p-6 bg-surface-container-low rounded-lg flex justify-between items-center border border-surface-container">
-                <div>
+                <div class="flex-1">
                     <div class="flex items-center gap-2 text-[9px] font-black text-outline-variant uppercase mb-1">
                         <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${subjects[t.subject]?.color || '#ccc'}"></span>
                         ${subjects[t.subject]?.name} • ${t.who}
                     </div>
-                    <p class="font-black text-on-surface">${t.desc}</p>
+                    <p class="font-black text-on-surface mb-2">${t.desc}</p>
+                    <div class="inline-block bg-white px-3 py-1 rounded-full border border-surface-container text-[10px] font-bold text-primary">
+                        Bis ${formatDateSwiss(t.date)}
+                    </div>
                 </div>
-                <button onclick="db.collection('classes').doc('${currentClass}').collection('tasks').doc('${t.id}').delete()" class="text-on-surface-variant hover:text-error p-2 rounded-full hover:bg-error-container/20">
+                <button onclick="db.collection('classes').doc('${currentClass}').collection('tasks').doc('${t.id}').delete()" class="text-on-surface-variant hover:text-error p-2 rounded-full hover:bg-error-container/20 ml-4">
                     <span class="material-symbols-outlined">delete</span>
                 </button>
             </div>`).join('');
