@@ -1,1017 +1,1064 @@
 <!DOCTYPE html>
 
-<html lang="de"><head>
+<html class="light" lang="de"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>doeltschi | Digitaler Aufgabenplaner</title>
+<title>Döltschi | Digitaler Aufgabenplaner</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<!-- Mammoth .docx Library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
-<!-- Firebase Compat SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 <script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "colors": {
-                    "on-tertiary-fixed-variant": "#7c2e00",
-                    "on-primary-fixed-variant": "#004493",
-                    "secondary": "#4c4aca",
-                    "on-secondary-fixed": "#0c006a",
-                    "surface-dim": "#d9dade",
-                    "tertiary-fixed-dim": "#ffb595",
-                    "primary-fixed": "#d8e2ff",
-                    "background": "#f9f9fe",
-                    "secondary-fixed-dim": "#c2c1ff",
-                    "on-background": "#1a1c1f",
-                    "on-secondary": "#ffffff",
-                    "on-tertiary-fixed": "#351000",
-                    "outline-variant": "#c1c6d7",
-                    "primary-fixed-dim": "#adc6ff",
-                    "surface-variant": "#e2e2e7",
-                    "on-primary-container": "#fefcff",
-                    "surface-container-highest": "#e2e2e7",
-                    "surface-container": "#ededf2",
-                    "surface-bright": "#f9f9fe",
-                    "primary": "#0058bc",
-                    "inverse-primary": "#adc6ff",
-                    "primary-container": "#0070eb",
-                    "inverse-on-surface": "#f0f0f5",
-                    "surface": "#f9f9fe",
-                    "surface-container-high": "#e8e8ed",
-                    "outline": "#717786",
-                    "on-surface-variant": "#414755",
-                    "on-error": "#ffffff",
-                    "surface-container-low": "#f3f3f8",
-                    "secondary-container": "#6664e4",
-                    "on-error-container": "#93000a",
-                    "tertiary": "#9e3d00",
-                    "surface-container-lowest": "#ffffff",
-                    "inverse-surface": "#2e3034",
-                    "error-container": "#ffdad6",
-                    "surface-tint": "#005bc1",
-                    "tertiary-fixed": "#ffdbcc",
-                    "on-tertiary": "#ffffff",
-                    "on-surface": "#1a1c1f",
-                    "on-tertiary-container": "#fffbff",
-                    "secondary-fixed": "#e2dfff",
-                    "on-secondary-container": "#fffbff",
-                    "on-primary-fixed": "#001a41",
-                    "on-primary": "#ffffff",
-                    "tertiary-container": "#c64f00",
-                    "on-secondary-fixed-variant": "#3631b4",
-                    "error": "#ba1a1a"
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#0058bc",
+                        "primary-container": "#0070eb",
+                        "on-primary": "#ffffff",
+                        "background": "#f9f9fe",
+                        "surface": "#ffffff",
+                        "on-surface": "#1a1c1f",
+                        "outline": "#717786",
+                        "outline-variant": "#c1c6d7",
+                        "surface-container": "#ededf2",
+                        "surface-container-low": "#f3f3f8",
+                        "surface-container-high": "#e8e8ed",
+                        "surface-container-highest": "#e2e2e7",
+                        "on-surface-variant": "#414755",
+                        "secondary": "#4c4aca",
+                        "secondary-fixed": "#e2dfff",
+                        "on-secondary-fixed": "#0c006a",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "sans": ["Inter", "sans-serif"],
+                    }
+                },
             },
-            "borderRadius": {
-                    "DEFAULT": "1rem",
-                    "lg": "2rem",
-                    "xl": "3rem",
-                    "full": "9999px"
-            },
-            "fontFamily": {
-                    "sans": ["Inter", "sans-serif"],
-            }
-          },
-        },
-      }
+        }
     </script>
 <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f9f9fe; }
-        .dot-pattern { background-image: radial-gradient(#d9dade 1px, transparent 1px); background-size: 20px 20px; }
-        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        [v-cloak] { display: none; }
+        .dot-pattern {
+            background-color: #f9f9fe;
+            background-image: radial-gradient(#d9dade 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
         .header-gradient { background: linear-gradient(135deg, #0058bc 0%, #0070eb 100%); }
-        @media print { .no-print { display: none !important; } }
-        .view-section { display: none; }
-        .view-section.active { display: block; }
-        input:disabled, button:disabled { cursor: not-allowed; opacity: 0.6; }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; }
+            .dot-pattern { background-image: none !important; }
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d8e2ff; border-radius: 10px; }
         
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d8e2ff; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #adc6ff; }
-
-        /* Modal specific animations */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
-        .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-custom { animation: spin 1s linear infinite; }
     </style>
 </head>
-<body class="dot-pattern min-h-screen text-on-surface pb-20">
-<!-- Teacher Login Modal -->
-<div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm hidden animate-fade-in" id="teacher-modal">
-<div class="bg-white w-full max-w-md rounded-lg shadow-2xl overflow-hidden animate-slide-up relative">
-<button class="absolute top-4 right-4 text-outline hover:text-on-surface transition-colors" onclick="closeTeacherModal()">
-<span class="material-symbols-outlined">close</span>
-</button>
-<div class="p-8 text-center">
-<div class="w-16 h-16 bg-primary-fixed rounded-full flex items-center justify-center mx-auto mb-6">
-<span class="material-symbols-outlined text-3xl text-primary">lock_person</span>
-</div>
-<h3 class="text-2xl font-black tracking-tight mb-2">Lehrer-Login</h3>
-<p class="text-on-surface-variant text-sm mb-8">Bitte gib das Passwort ein, um zum Lehrerbereich zu gelangen.</p>
-<div class="space-y-4">
-<div class="relative">
-<input class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-6 py-4 text-center font-bold text-lg outline-none focus:border-primary focus:ring-4 focus:ring-primary-fixed transition-all" id="teacher-password-input" placeholder="Passwort" type="password"/>
-</div>
-<div class="text-error text-xs font-bold hidden" id="password-error">Passwort nicht korrekt.</div>
-<button class="w-full bg-primary text-on-primary font-black py-4 rounded-full hover:shadow-lg active:scale-95 transition-all text-lg" onclick="validateTeacherPassword()">
-                    Anmelden
-                </button>
-</div>
-</div>
-</div>
-</div>
-<!-- Header -->
+<body class="dot-pattern text-on-surface min-h-screen selection:bg-blue-100 flex flex-col font-sans">
 <header class="header-gradient sticky top-0 z-50 shadow-lg no-print">
 <div class="max-w-6xl mx-auto px-6 h-18 flex items-center justify-between py-3">
 <div class="flex items-center gap-4">
-<span class="text-3xl font-extrabold tracking-tighter text-white">doeltschi</span>
-<div class="bg-white/20 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 border border-white/30">
-<span class="material-symbols-outlined text-[16px]">cloud_done</span>
-<span id="connection-status">Live</span>
+<h1 class="text-3xl font-extrabold tracking-tighter text-white cursor-pointer" onclick="app.resetToHome()">DÖLTSCHI</h1>
+<div class="hidden md:flex items-center gap-2 bg-white/10 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border border-white/20">
+<span class="material-symbols-outlined text-[16px]">verified_user</span><span class="">Digitaler Planer</span>
 </div>
-<button class="hidden md:flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/90 hover:bg-white/20 transition-all px-4 py-1.5 rounded-full border border-white/20" id="btn-change-class" onclick="leaveClass()">
-<span class="material-symbols-outlined text-[16px]">swap_horiz</span> Klasse wechseln
-            </button>
 </div>
 <div class="flex bg-black/10 backdrop-blur-md p-1.5 rounded-full border border-white/10" id="nav-mode-selector">
-<button class="flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 bg-white text-primary shadow-lg" id="btn-student" onclick="setMode('student')">
-<span class="material-symbols-outlined text-[18px]">person</span> Schüler
-            </button>
-<button class="flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 text-white/80 hover:text-white" id="btn-teacher" onclick="openTeacherModal()">
-<span class="material-symbols-outlined text-[18px]">lock</span> Lehrer
-            </button>
+<button class="px-6 py-2 rounded-full text-sm font-bold transition-all duration-300" id="nav-student" onclick="app.setRole('student')">Schüler</button>
+<button class="px-6 py-2 rounded-full text-sm font-bold transition-all duration-300" id="nav-teacher" onclick="app.setRole('login')">Lehrer</button>
+<button class="px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 text-white/80 hover:text-white" onclick="app.showClassEntry()">Klasse wechseln</button>
 </div>
 </div>
 </header>
-<main class="max-w-6xl mx-auto px-6 mt-12">
-<!-- 0. Welcome/Class Selection View -->
-<div class="view-section active" id="class-selection-view">
+<main class="flex-1 w-full max-w-6xl mx-auto px-6 py-12 no-print" id="main-content">
+<!-- Lehrer Login -->
+<div class="hidden flex flex-col items-center justify-center py-20" id="login-view">
+<div class="bg-white p-10 rounded-lg shadow-2xl max-w-md w-full text-center border border-surface-container">
+<div class="w-16 h-16 bg-surface-container rounded-full flex items-center justify-center mx-auto mb-6">
+<span class="material-symbols-outlined text-primary text-4xl">lock</span>
+</div>
+<h2 class="text-2xl font-black mb-2 tracking-tight">Lehrer Login</h2>
+<p class="text-on-surface-variant text-sm mb-8">Geben Sie Ihr Passwort ein, um zum Dashboard zu gelangen.</p>
+<input class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-6 py-4 text-center font-bold text-lg outline-none focus:border-primary focus:ring-4 focus:ring-primary-container/20 transition-all mb-4" id="login-password" onkeyup="if(event.key==='Enter') app.handleLogin()" placeholder="Passwort" type="password"/>
+<button class="w-full py-4 bg-primary text-white rounded-full font-black text-lg hover:shadow-xl active:scale-95 transition-all" onclick="app.handleLogin()">Anmelden</button>
+</div>
+</div>
+<!-- Start Screen -->
+<div class="hidden" id="start-view">
 <div class="max-w-xl mx-auto">
 <div class="bg-white p-12 rounded-lg shadow-2xl border border-surface-container relative overflow-hidden group">
-<div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-secondary to-tertiary"></div>
+<div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-primary-container to-secondary"></div>
 <div class="text-center mb-10">
-<div class="inline-flex items-center justify-center w-20 h-20 bg-primary-fixed rounded-full mb-6">
-<span class="material-symbols-outlined text-4xl text-primary">school</span>
+<div class="inline-flex items-center justify-center w-20 h-20 bg-surface-container rounded-full mb-6">
+<span class="material-symbols-outlined text-4xl text-primary">calendar_today</span>
 </div>
 <h1 class="text-5xl font-black text-on-surface mb-3 tracking-tight">Willkommen</h1>
-<p class="text-on-surface-variant text-lg">Gib deine Klasse ein, um zu starten.</p>
+<p class="text-on-surface-variant text-lg">Gib deine Klasse ein, um im Digitalen Planer zu starten.</p>
 </div>
 <div class="relative mb-8">
-<input class="w-full bg-surface-container-low border-2 border-surface-container-high rounded-full px-8 py-5 text-2xl font-bold text-on-surface shadow-inner focus:border-primary focus:ring-4 focus:ring-primary-fixed transition-all outline-none uppercase text-center placeholder:text-outline-variant" id="class-name-input" placeholder="Z.B. B4B" type="text"/>
+<input class="w-full bg-surface-container-low border-2 border-surface-container-high rounded-full px-8 py-5 text-2xl font-bold text-on-surface shadow-inner focus:border-primary focus:ring-4 focus:ring-primary-container/10 transition-all outline-none uppercase text-center placeholder:text-outline-variant" id="class-name-input" placeholder="Z.B. B4B" type="text"/>
 </div>
-<button class="w-full bg-primary text-on-primary font-black text-xl py-5 rounded-full hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3" onclick="selectClass()">
-                    Klasse beitreten <span class="material-symbols-outlined font-bold">arrow_forward</span>
+<button class="w-full bg-primary text-on-primary font-black text-xl py-5 rounded-full hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3" onclick="app.openClass()">
+                        Klasse öffnen <span class="material-symbols-outlined font-bold">arrow_forward</span>
 </button>
-<p class="mt-8 text-center text-sm font-medium text-on-surface-variant flex items-center justify-center gap-2">
-<span class="material-symbols-outlined text-sm">help_outline</span>
-                    Frage deine Lehrperson nach dem Namen.
-                </p>
+<div class="mt-12 flex flex-col items-center gap-4">
+<div class="p-4 bg-white border-2 border-surface-container rounded-lg shadow-sm" id="start-qrcode"></div>
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Scan zum Synchronisieren</p>
 </div>
 </div>
 </div>
-<!-- 1. Start-View (Student Name Selection) -->
-<div class="view-section" id="start-view">
+</div>
+<!-- Student Select Name -->
+<div class="hidden flex flex-col items-center py-12" id="student-select-view">
 <div class="text-center mb-12">
-<div class="mb-4 inline-block px-6 py-2 bg-secondary-fixed text-on-secondary-fixed rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-sm" id="display-class-name">Klasse: --</div>
-<h1 class="text-6xl font-black text-on-surface mb-4 tracking-tighter">Wer bist du?</h1>
-<p class="text-on-surface-variant text-xl">Wähle deinen Namen aus.</p>
+<div class="mb-4 inline-block px-6 py-2 bg-primary/10 text-primary rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-sm" id="current-class-display">Klasse: --</div>
+<h2 class="text-6xl font-black text-on-surface tracking-tighter">Wer bist du?</h2>
+<p class="text-on-surface-variant text-xl mt-2">Wähle deinen Namen aus der Liste.</p>
 </div>
-<div class="max-w-xl mx-auto mb-16">
-<div class="relative">
-<select class="w-full bg-white border-2 border-primary/20 rounded-full px-10 py-5 text-2xl font-bold text-on-surface shadow-xl focus:border-primary focus:ring-4 focus:ring-primary-fixed transition-all outline-none appearance-none cursor-pointer" id="student-selector" onchange="selectStudent(this.value)">
-<option value="">Wähle deinen Namen...</option>
+<div class="w-full max-w-xl space-y-8">
+<div class="relative group">
+<select class="w-full bg-white border-2 border-primary/20 rounded-full px-10 py-5 text-2xl font-bold text-on-surface shadow-xl focus:border-primary focus:ring-4 focus:ring-primary-container/20 transition-all outline-none appearance-none cursor-pointer" id="student-dropdown" onchange="if(this.value) app.selectStudent(this.value)">
+<option disabled="" selected="" value="">Wähle deinen Namen...</option>
 </select>
 <div class="absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-primary">
-<span class="material-symbols-outlined font-black">expand_more</span>
+<span class="material-symbols-outlined font-black text-3xl">expand_more</span>
 </div>
 </div>
+<div class="grid md:grid-cols-2 gap-8 mt-12">
+<div class="bg-white p-10 rounded-lg border border-surface-container shadow-xl flex flex-col items-center hover:shadow-2xl transition-shadow">
+<h3 class="text-xl font-black mb-2 tracking-tight text-primary">Dein Direktzugang</h3>
+<p class="text-on-surface-variant text-xs mb-6">Speichere diesen QR für schnellen Zugriff.</p>
+<div class="bg-white p-4 rounded-lg border-2 border-surface-container shadow-inner mb-4" id="student-main-qr"></div>
 </div>
-<div class="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
-<div class="bg-white p-12 rounded-lg border border-surface-container shadow-xl flex flex-col items-center hover:shadow-2xl transition-shadow">
-<h3 class="text-2xl font-black mb-2 tracking-tight text-primary">Direkter Zugang</h3>
-<p class="text-on-surface-variant text-sm mb-8">Einfach scannen und loslegen.</p>
-<div class="bg-white p-6 rounded-lg border-2 border-surface-container shadow-inner mb-8 transform hover:scale-105 transition-transform" id="qrcode-container"></div>
-<p class="text-xs font-bold text-on-surface-variant text-center uppercase tracking-wider">Klasse: <span class="class-label-inline text-primary"></span></p>
-</div>
-<div class="bg-white p-12 rounded-lg border border-surface-container shadow-xl text-left hover:shadow-2xl transition-shadow">
-<h3 class="text-2xl font-black mb-8 tracking-tight text-secondary">Als App nutzen</h3>
-<div class="space-y-6">
-<div class="flex items-start gap-4">
-<span class="w-8 h-8 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-black text-sm">1</span>
-<p class="text-sm font-bold text-on-surface-variant pt-1.5">Link im Browser öffnen.</p>
-</div>
-<div class="flex items-start gap-4">
-<span class="w-8 h-8 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-black text-sm">2</span>
-<p class="text-sm font-bold text-on-surface-variant pt-1.5">Auf „Teilen“ (iOS) oder die Punkte (Android) tippen.</p>
-</div>
-<div class="flex items-start gap-4">
-<span class="w-8 h-8 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center font-black text-sm">3</span>
-<p class="text-sm font-bold text-on-surface-variant pt-1.5">„Zum Home-Bildschirm hinzufügen“ wählen.</p>
+<div class="bg-white p-10 rounded-lg border border-surface-container shadow-xl text-left hover:shadow-2xl transition-shadow">
+<h3 class="text-xl font-black mb-6 tracking-tight text-secondary">Als App nutzen</h3>
+<div class="space-y-4 text-xs font-bold text-on-surface-variant">
+<div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center">1</span> <span class="">Im Browser öffnen</span></div>
+<div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center">2</span> <span class="">„Teilen“ oder „Optionen“</span></div>
+<div class="flex items-center gap-3"><span class="w-6 h-6 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center">3</span> <span class="">„Zum Home-Bildschirm“</span></div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<!-- 2. Planer-View -->
-<div class="view-section" id="planer-view">
-<div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
-<div>
-<button class="hidden items-center gap-2 text-primary font-black mb-4 hover:bg-primary-fixed px-4 py-2 rounded-full transition-all" id="back-to-dashboard" onclick="setMode('teacher')">
-<span class="material-symbols-outlined font-black">arrow_back</span> Dashboard
-                </button>
-<div class="flex flex-wrap items-center gap-5">
-<h2 class="text-5xl font-black text-on-surface tracking-tighter" id="current-user-display">Schüler</h2>
+<!-- Student Tasks View -->
+<div class="hidden space-y-12" id="student-tasks-view">
+<div class="flex flex-col md:flex-row justify-between items-end gap-6 no-print">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2 text-primary font-black px-4 py-2 rounded-full w-fit">
+<span class="text-4xl tracking-tighter" id="display-student-name">...</span>
+</div>
 <div class="hidden flex items-center gap-2 bg-error-container text-on-error-container px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest shadow-sm animate-pulse border border-error/20" id="lock-indicator">
-<span class="material-symbols-outlined text-sm">lock</span>
-                        Plan gesperrt
+<span class="material-symbols-outlined text-sm">lock</span> GESPERRT
                     </div>
 </div>
-</div>
 <div class="md:text-right">
-<div class="text-sm font-black text-primary/60 uppercase tracking-[0.3em]" id="week-display">Woche --</div>
 </div>
 </div>
-<div class="space-y-4" id="task-container"></div>
-<!-- Elternbestätigung -->
-<div class="mt-16 p-10 bg-white rounded-lg border-2 border-primary border-dashed shadow-xl" id="parent-section">
+<div class="space-y-4" id="task-list"></div>
+<!-- Parental Confirmation Section -->
+<div class="mt-16 p-10 bg-white rounded-lg border-2 border-primary border-dashed shadow-xl transition-all relative overflow-hidden" id="parents-confirmation-card">
+<div class="absolute inset-0 bg-white/70 backdrop-blur-[2px] z-10 flex items-center justify-center text-center p-6 hidden" id="confirmation-overlay">
+<div class="max-w-md">
+<span class="material-symbols-outlined text-5xl text-primary mb-4">qr_code_scanner</span>
+<h4 class="text-xl font-black text-primary mb-2 uppercase tracking-tight">Sicherheits-Sperre</h4>
+<p class="text-on-surface font-bold">Diese Bestätigung kann nur über den persönlichen Eltern-QR-Code deiner Lehrperson vorgenommen werden.</p>
+</div>
+</div>
 <div class="flex flex-col md:flex-row items-center justify-between gap-8">
 <div class="text-center md:text-left">
 <h3 class="text-2xl font-black text-primary mb-2 flex items-center justify-center md:justify-start gap-3">
-<span class="material-symbols-outlined text-3xl">verified_user</span> Bestätigung der Eltern
-                    </h3>
-<p class="text-on-surface-variant font-medium">Haben deine Eltern die Hausaufgaben gesehen?</p>
+<span class="material-symbols-outlined text-3xl" id="confirmation-icon">verified_user</span> Bestätigung der Eltern
+                        </h3>
+<p class="text-on-surface-variant font-medium" id="confirmation-description">Bitte Eltern-QR-Code scannen, um zu bestätigen.</p>
 </div>
-<div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto" id="parent-form">
-<input class="bg-surface-container-low border-2 border-surface-container rounded-full px-6 py-4 outline-none focus:border-primary transition-all font-bold placeholder:text-outline-variant min-w-[240px]" id="parent-name" placeholder="Vorname Nachname" type="text"/>
-<button class="bg-primary text-on-primary font-black py-4 px-8 rounded-full hover:shadow-lg active:scale-95 transition-all" onclick="confirmParent()">Bestätigen</button>
+<div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto" id="confirmation-form">
+<input class="bg-surface-container-low border-2 border-surface-container rounded-full px-6 py-4 outline-none focus:border-primary transition-all font-bold placeholder:text-outline-variant min-w-[240px]" id="parent-name-input" placeholder="Vorname Nachname" type="text"/>
+<button class="bg-primary text-on-primary font-black py-4 px-8 rounded-full hover:shadow-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale flex items-center justify-center gap-2" id="confirm-btn" onclick="app.confirmByParent()">
+<span class="" id="confirm-btn-text">Bestätigen</span>
+<span class="material-symbols-outlined animate-spin-custom hidden" id="confirm-loader">progress_activity</span>
+</button>
 </div>
 </div>
-<div class="hidden text-primary font-black bg-primary-fixed/30 p-6 rounded-lg text-center border border-primary/20 mt-6" id="parent-status"></div>
+<div class="hidden text-primary font-black bg-primary/5 p-6 rounded-lg text-center border border-primary/20 mt-6" id="confirmation-status-box"></div>
 </div>
-<!-- Color Legend Student View -->
-<div class="mt-16 p-8 bg-white rounded-lg border border-surface-container shadow-sm no-print">
+<div class="mt-12 p-8 bg-white rounded-lg border border-surface-container shadow-sm">
 <h4 class="text-xs font-black text-outline-variant uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
 <span class="material-symbols-outlined text-sm">palette</span> Fächer-Farben
-            </h4>
-<div class="flex flex-wrap gap-4" id="color-legend-student"></div>
+                </h4>
+<div class="flex flex-wrap gap-4" id="subject-legend-student"></div>
 </div>
 </div>
-<!-- 3. Teacher-View -->
-<div class="view-section" id="teacher-view">
-<div class="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
-<h2 class="text-5xl font-black tracking-tighter">Lehrer-Bereich</h2>
-<div class="flex items-center gap-4">
-<div class="bg-primary-fixed text-on-primary-fixed-variant px-8 py-3 rounded-full font-black uppercase tracking-[0.1em] shadow-sm border border-primary/10" id="teacher-class-label">Klasse: --</div>
-<button class="bg-error text-on-error font-black px-6 py-3 rounded-full hover:bg-error-container hover:text-on-error-container transition-all flex items-center gap-2 text-sm shadow-sm" onclick="deleteEntireClass()">
-<span class="material-symbols-outlined text-[18px]">delete_forever</span> Ganze Klasse löschen
-                </button>
+<!-- Teacher Dashboard View -->
+<div class="hidden space-y-12" id="teacher-dashboard">
+<div class="flex flex-col md:flex-row justify-between items-center gap-6">
+<h2 class="text-5xl font-black tracking-tighter">Dashboard <span class="text-primary text-2xl align-middle" id="teacher-current-class"></span></h2>
+<div class="flex flex-wrap gap-3">
+<button class="px-6 py-3 bg-on-surface text-white font-black rounded-full hover:shadow-lg transition-all flex items-center gap-2 text-sm shadow-sm" onclick="app.resetStudentSession()">
+<span class="material-symbols-outlined text-[18px]">no_accounts</span> Sitzungssperre aufheben
+                    </button>
+<button class="px-6 py-3 bg-red-600 text-white font-black rounded-full hover:bg-red-700 hover:shadow-lg transition-all flex items-center gap-2 text-sm shadow-sm" onclick="app.deleteAllTasks()">
+<span class="material-symbols-outlined text-[18px]">delete</span> Alle Aufgaben löschen
+                    </button>
+<button class="px-6 py-3 bg-error text-on-error font-black rounded-full hover:bg-red-700 transition-all flex items-center gap-2 text-sm shadow-sm" onclick="app.deleteCurrentClass()">
+<span class="material-symbols-outlined text-[18px]">delete_forever</span> Klasse löschen
+                    </button>
 </div>
 </div>
-<div class="grid lg:grid-cols-2 gap-10 mb-10">
-<!-- Klassenliste -->
+<div class="grid lg:grid-cols-2 gap-10">
+<!-- Class Management -->
 <div class="bg-white p-10 rounded-lg border border-surface-container shadow-xl">
 <h3 class="text-2xl font-black mb-6 flex items-center gap-3 tracking-tight">
-<span class="material-symbols-outlined text-primary text-3xl">group</span> Klassenliste
-                </h3>
-<textarea class="w-full bg-surface-container-low border-2 border-surface-container-high rounded-lg p-6 min-h-[160px] mb-6 focus:ring-4 focus:ring-primary-fixed focus:border-primary transition-all font-medium" id="class-input" placeholder="Namen pro Zeile..."></textarea>
+<span class="material-symbols-outlined text-primary text-3xl">group</span> Klassenliste verwalten
+                    </h3>
+<textarea class="w-full bg-surface-container-low border-2 border-surface-container-high rounded-lg p-6 min-h-[180px] mb-6 focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all font-medium text-sm" id="class-input" placeholder="Ein Name pro Zeile..."></textarea>
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-<button class="bg-primary text-on-primary font-black py-4 rounded-full hover:shadow-xl transition-all" onclick="updateClassList()">Speichern</button>
-<input accept=".txt" class="hidden" id="txt-import" onchange="handleTxtImport(event)" type="file"/>
-<button class="bg-surface-container-high text-on-surface-variant font-black py-4 rounded-full hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2" onclick="document.getElementById('txt-import').click()">
-<span class="material-symbols-outlined text-lg">upload_file</span> .txt Import
-                    </button>
-<input accept=".docx" class="hidden" id="docx-import" onchange="handleDocxImport(event)" type="file"/>
+<button class="bg-primary text-on-primary font-black py-4 rounded-full hover:shadow-xl transition-all" onclick="app.updateClassList()">Speichern</button>
+<input accept=".docx" class="hidden" id="docx-import" onchange="app.handleDocxImport(event)" type="file"/>
 <button class="bg-surface-container-high text-on-surface-variant font-black py-4 rounded-full hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2" onclick="document.getElementById('docx-import').click()">
 <span class="material-symbols-outlined text-lg">description</span> .docx Import
-                    </button>
+                        </button>
+<button class="bg-primary-container text-white font-black py-4 rounded-full hover:shadow-xl transition-all flex items-center justify-center gap-2" onclick="app.printQRCodes()">
+<span class="material-symbols-outlined text-lg">qr_code_2</span> QR Print
+                        </button>
 </div>
 </div>
-<!-- Aufgabe zuteilen -->
+<!-- Task Assignment (Multi-Student Update) -->
 <div class="bg-white p-10 rounded-lg border border-surface-container shadow-xl">
 <h3 class="text-2xl font-black mb-6 flex items-center gap-3 tracking-tight">
-<span class="material-symbols-outlined text-secondary text-3xl">add_task</span> Aufgabe zuteilen
-                </h3>
-<div class="space-y-4">
-<div class="grid grid-cols-2 gap-4">
+<span class="material-symbols-outlined text-secondary text-3xl">add_task</span> Neue Aufgabe
+                    </h3>
+<form class="space-y-4" onsubmit="app.addTask(event)">
+<div class="space-y-3">
+<label class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest block mb-1 px-1">Schüler auswählen</label>
+<div class="flex gap-2 mb-2">
+<button class="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-surface-container text-primary rounded-full hover:bg-primary/10 transition-all border border-surface-container" onclick="app.selectAllStudents(true)" type="button">Alle wählen</button>
+<button class="text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-surface-container text-outline rounded-full hover:bg-surface-container-high transition-all border border-surface-container" onclick="app.selectAllStudents(false)" type="button">Alle abwählen</button>
+</div>
+<div class="max-h-[160px] overflow-y-auto border-2 border-surface-container rounded-lg p-3 custom-scrollbar bg-surface-container-low" id="multi-student-list">
+</div>
+</div>
 <div class="relative">
-<select class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-6 py-4 font-bold focus:ring-4 focus:ring-secondary-fixed focus:border-secondary transition-all appearance-none" id="task-who"></select>
+<select class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-6 py-4 font-bold appearance-none outline-none focus:border-secondary transition-all" id="new-task-subject"></select>
 <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
 </div>
-<div class="relative">
-<select class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-6 py-4 font-bold focus:ring-4 focus:ring-secondary-fixed focus:border-secondary transition-all appearance-none" id="task-subject"></select>
-<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
+<input class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-8 py-4 font-bold outline-none focus:border-secondary transition-all" id="new-task-desc" placeholder="Was ist zu tun?" required="" type="text"/>
+<input class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-8 py-4 font-bold outline-none focus:border-secondary transition-all" id="new-task-date" type="date"/>
+<button class="w-full bg-secondary text-white font-black py-4 rounded-full hover:shadow-xl active:scale-95 transition-all text-lg flex items-center justify-center gap-2" id="add-task-submit-btn" type="submit">
+<span class="">Hinzufügen</span>
+<span class="material-symbols-outlined animate-spin-custom hidden" id="task-loader">progress_activity</span>
+</button>
+</form>
 </div>
 </div>
-<input class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-8 py-4 font-bold focus:ring-4 focus:ring-secondary-fixed focus:border-secondary transition-all" id="task-desc" placeholder="Was ist zu tun?" type="text"/>
-<input class="w-full bg-surface-container-low border-2 border-surface-container rounded-full px-8 py-4 font-bold focus:ring-4 focus:ring-secondary-fixed focus:border-secondary transition-all" id="task-date" type="date"/>
-<button class="w-full bg-secondary text-on-secondary font-black py-4 rounded-full hover:shadow-xl active:scale-95 transition-all text-lg" onclick="addTask()">Zuweisen</button>
-</div>
-</div>
-</div>
-<!-- Klassenfortschritt -->
-<div class="bg-white rounded-lg border border-surface-container shadow-xl mb-10 overflow-hidden">
+<!-- Progress Table -->
+<div class="bg-white rounded-lg border border-surface-container shadow-xl overflow-hidden">
 <div class="p-10 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-surface-container">
-<button class="flex items-center gap-4 tracking-tight group" onclick="toggleSection('progress-section')">
 <h3 class="text-2xl font-black flex items-center gap-4">
 <span class="material-symbols-outlined text-primary text-3xl">analytics</span> Klassenfortschritt
                     </h3>
-<span class="material-symbols-outlined text-outline-variant transition-transform duration-500 scale-150" id="progress-chevron">expand_less</span>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 px-6 py-2 bg-surface-container-high text-on-surface-variant font-black rounded-full hover:bg-surface-container-highest transition-all text-sm uppercase tracking-widest" onclick="app.toggleProgress()">
+<span class="material-symbols-outlined text-lg" id="toggle-progress-icon">visibility_off</span>
+<span class="" id="toggle-progress-text">Ausblenden</span>
 </button>
-<button class="border-2 border-error text-error px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest hover:bg-error-container/20 transition-all flex items-center gap-2" onclick="deleteAllConfirmations()">
-<span class="material-symbols-outlined text-[16px]">lock_reset</span> Alle Bestätigungen löschen
-                </button>
+<button class="border-2 border-error text-error px-6 py-2 rounded-full font-black text-xs uppercase tracking-widest hover:bg-error-container/20 transition-all flex items-center gap-2" onclick="app.unlockAll()">
+<span class="material-symbols-outlined text-[16px]">lock_reset</span> Alle Pläne entsperren
+                        </button>
 </div>
-<div class="px-10 pb-10" id="progress-section">
-<div class="overflow-x-auto">
-<table class="w-full text-left border-collapse">
+</div>
+<div class="px-10 pb-10 transition-all duration-300" id="teacher-progress-container">
+<div class="overflow-x-auto pt-6">
+<table class="w-full text-left">
 <thead>
 <tr class="text-[10px] font-black text-outline-variant uppercase tracking-[0.2em] border-b border-surface-container">
-<th class="py-6 px-4">Schüler</th>
-<th class="py-6 px-4">Erledigt</th>
-<th class="py-6 px-4 text-center">Eltern Bestätigung</th>
-<th class="py-6 px-4 text-right">Aktion</th>
+<th class="py-6 px-4">Schüler</th><th class="py-6 px-4">Fortschritt</th><th class="py-6 px-4 text-center">QR-Links</th><th class="py-6 px-4 text-center">Bestätigung</th><th class="py-6 px-4 text-right">Aktion</th>
 </tr>
 </thead>
-<tbody class="divide-y divide-surface-container" id="progress-table-body">
-</tbody>
+<tbody class="divide-y divide-surface-container" id="teacher-student-table"></tbody>
 </table>
 </div>
 </div>
 </div>
-<!-- Task Overview -->
-<div class="bg-white p-10 rounded-lg border border-surface-container shadow-xl mb-10">
+<!-- All Tasks -->
+<div class="bg-white p-10 rounded-lg border border-surface-container shadow-xl">
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
 <h3 class="text-2xl font-black flex items-center gap-4 tracking-tight">
-<span class="material-symbols-outlined text-tertiary text-3xl">list_alt</span> Aktuelle Aufgaben
-                </h3>
-<button class="flex items-center justify-center gap-3 px-6 py-3 border-2 border-error text-error font-black rounded-full hover:bg-error-container transition-all text-sm uppercase tracking-widest" onclick="deleteAllTasks()">
-<span class="material-symbols-outlined text-lg">delete_sweep</span> Alle löschen
-                </button>
+<span class="material-symbols-outlined text-primary text-3xl">list_alt</span> Aktuelle Aufgaben
+                    </h3>
 </div>
-<div class="grid sm:grid-cols-2 gap-4" id="teacher-tasks"></div>
+<div class="grid sm:grid-cols-2 gap-4" id="all-tasks-list"></div>
 </div>
-<!-- Color Legend Teacher View -->
-<div class="p-8 bg-white rounded-lg border border-surface-container shadow-sm no-print">
+<div class="p-8 bg-white rounded-lg border border-surface-container shadow-sm">
 <h4 class="text-xs font-black text-outline-variant uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
 <span class="material-symbols-outlined text-sm">palette</span> Fächer-Farben
-            </h4>
-<div class="flex flex-wrap gap-4" id="color-legend-teacher"></div>
+                </h4>
+<div class="flex flex-wrap gap-4" id="subject-legend-teacher"></div>
 </div>
 </div>
 </main>
-<script>
-    // --- FIREBASE KONFIGURATION ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
-        authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
-        projectId: "doeltschi-hausaufgabenplaner",
-        storageBucket: "doeltschi-hausaufgabenplaner.firebasestorage.app",
-        messagingSenderId: "741131007424",
-        appId: "1:741131007424:web:04427f839b7eb86aa9c425",
-        measurementId: "G-C6GTQJ8C1D"
-    };
+<!-- QR Modal -->
+<div class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md hidden" id="qr-modal">
+<div class="bg-white w-full max-w-sm rounded-lg shadow-2xl overflow-hidden relative">
+<button class="absolute top-4 right-4 text-outline hover:text-on-surface transition-colors" onclick="app.closeQRModal()">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="p-8 text-center">
+<h3 class="text-xl font-black tracking-tight mb-2" id="qr-modal-title">QR Code</h3>
+<p class="text-on-surface-variant text-xs mb-6" id="qr-modal-subtitle">Für Eltern oder Schüler</p>
+<div class="bg-white p-4 rounded-lg border-2 border-surface-container shadow-inner mb-6 flex justify-center" id="modal-qrcode-container"></div>
+<p class="text-[10px] font-bold text-outline uppercase tracking-widest break-all" id="qr-modal-url"></p>
+</div>
+</div>
+</div>
+<!-- Print Only View -->
+<div class="hidden print-only p-8 bg-white" id="print-qr-section">
+<div class="flex justify-between items-center mb-12 border-b-2 border-slate-100 pb-6">
+<div>
+<h1 class="text-4xl font-black text-slate-900 tracking-tighter">Döltschi <span class="text-primary">Planer</span></h1>
+<p class="text-slate-500 font-bold uppercase tracking-widest text-sm mt-1">Eltern-QR-Codes zur Bestätigung</p>
+</div>
+<div class="text-right">
+<span class="px-4 py-2 bg-primary text-white text-xs font-black uppercase rounded-full">Klasse: <span id="print-class-name"></span></span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-x-12 gap-y-12" id="print-qr-grid"></div>
+</div>
+<footer class="bg-white border-t border-surface-container no-print py-10 mt-auto">
+<div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="text-center md:text-left">
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">© 2024 Döltschi Aufgabenplaner</p>
+<p class="text-[9px] text-outline-variant font-mono mt-1 uppercase">Digitaler Aufgabenplaner • Swiss Edition • Cloud Sync</p>
+</div>
+<div class="flex gap-8">
+<a class="text-xs font-bold text-on-surface-variant hover:text-primary transition-colors uppercase tracking-widest" href="#">Datenschutz</a>
+<a class="text-xs font-bold text-on-surface-variant hover:text-primary transition-colors uppercase tracking-widest" href="#">Hilfe</a>
+</div>
+</div>
+</footer>
+<script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, setDoc, updateDoc, arrayUnion, arrayRemove, collection, addDoc, query, orderBy, deleteDoc, deleteField, writeBatch, getDocs, FieldPath } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    let currentClass = null;
-    let currentMode = 'student';
-    let currentUser = null;
-    let students = [];
-    let tasks = [];
-    let parentConfirms = {};
-    let isTeacherInspecting = false;
-    let unsubSettings, unsubTasks, unsubConfirms;
-
-    const subjects = {
-        'DE': { name: 'Deutsch', color: '#ef4444' },
-        'MA': { name: 'Mathematik', color: '#3b82f6' },
-        'E': { name: 'Englisch', color: '#eab308' },
-        'F': { name: 'Französisch', color: '#22c55e' },
-        'RZG': { name: 'RZG', color: '#f97316' },
-        'NT': { name: 'NT', color: '#06b6d4' },
-        'MU': { name: 'Musik', color: '#a855f7' },
-        'BS': { name: 'Sport', color: '#d97706' },
-        'MI': { name: 'Medien', color: '#64748b' },
-        'WAH': { name: 'WAH', color: '#f43f5e' }
-    };
-
-    function init() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const classFromUrl = urlParams.get('class');
-        
-        if (classFromUrl) {
-            setupClass(classFromUrl.toUpperCase());
-        } else {
-            updateUI();
-        }
-        
-        renderSubjectOptions();
-        renderColorLegends();
-        updateWeekDisplay();
-
-        // Allow 'Enter' key on password field
-        document.getElementById('teacher-password-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                validateTeacherPassword();
-            }
-        });
-    }
-
-    function openTeacherModal() {
-        if (isTeacherInspecting) {
-            setMode('teacher');
-            return;
-        }
-        const modal = document.getElementById('teacher-modal');
-        const input = document.getElementById('teacher-password-input');
-        const error = document.getElementById('password-error');
-        modal.classList.remove('hidden');
-        input.value = '';
-        input.focus();
-        error.classList.add('hidden');
-    }
-
-    function closeTeacherModal() {
-        document.getElementById('teacher-modal').classList.add('hidden');
-    }
-
-    function validateTeacherPassword() {
-        const input = document.getElementById('teacher-password-input');
-        const error = document.getElementById('password-error');
-        if (input.value === 'lehrer123') {
-            closeTeacherModal();
-            setMode('teacher');
-        } else {
-            error.classList.remove('hidden');
-            input.classList.add('border-error');
-            setTimeout(() => input.classList.remove('border-error'), 1000);
-            input.focus();
-        }
-    }
-
-    function selectClass() {
-        const nameInput = document.getElementById('class-name-input');
-        const name = nameInput.value.trim().toUpperCase();
-        if (!name) return;
-        setupClass(name);
-        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?class=' + name;
-        window.history.pushState({path:newUrl},'',newUrl);
-        nameInput.value = '';
-    }
-
-    function setupClass(className) {
-        currentClass = className;
-        
-        if (unsubSettings) unsubSettings();
-        if (unsubTasks) unsubTasks();
-        if (unsubConfirms) unsubConfirms();
-
-        const classDocRef = db.collection('classes').doc(currentClass);
-
-        unsubSettings = classDocRef.onSnapshot(doc => {
-            if (doc.exists) {
-                students = doc.data().students || [];
-                document.getElementById('class-input').value = students.join('\n');
-                renderStudentOptions();
-                renderProgressTable();
-            } else {
-                students = [];
-                document.getElementById('class-input').value = '';
-                renderStudentOptions();
-                renderProgressTable();
-            }
-        });
-
-        unsubTasks = classDocRef.collection('tasks').orderBy('timestamp', 'desc').onSnapshot(snapshot => {
-            tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderTasks();
-            renderTeacherTasks();
-            renderProgressTable();
-        });
-
-        unsubConfirms = classDocRef.collection('confirms').onSnapshot(snapshot => {
-            parentConfirms = {};
-            snapshot.docs.forEach(doc => parentConfirms[doc.id] = doc.data());
-            renderProgressTable();
-            if (currentUser) {
-                checkParentStatus();
-                renderTasks(); 
-            }
-        });
-
-        document.querySelectorAll('.class-label-inline').forEach(el => el.innerText = currentClass);
-        document.getElementById('display-class-name').innerText = `Klasse: ${currentClass}`;
-        document.getElementById('teacher-class-label').innerText = `Klasse: ${currentClass}`;
-        
-        generateClassQRCode();
-        updateUI();
-    }
-
-    function leaveClass() {
-        if (confirm("Klasse wirklich verlassen?")) {
-            resetAppState();
-        }
-    }
-
-    function resetAppState() {
-        if (unsubSettings) unsubSettings();
-        if (unsubTasks) unsubTasks();
-        if (unsubConfirms) unsubConfirms();
-        
-        currentClass = null;
-        currentUser = null;
-        isTeacherInspecting = false;
-        currentMode = 'student';
-        students = [];
-        tasks = [];
-        parentConfirms = {};
-        
-        window.history.pushState({}, '', window.location.pathname);
-        updateUI();
-    }
-
-    async function deleteEntireClass() {
-        if (!currentClass) return;
-        
-        const confirmed = confirm(`Möchtest du die gesamte Klasse [${currentClass}] unwiderruflich löschen? Alle Schüler und Aufgaben gehen verloren.`);
-        if (!confirmed) return;
-
-        try {
-            const classDocRef = db.collection('classes').doc(currentClass);
-            
-            // Delete all tasks
-            const tasksSnapshot = await classDocRef.collection('tasks').get();
-            const tasksBatch = db.batch();
-            tasksSnapshot.docs.forEach(doc => tasksBatch.delete(doc.ref));
-            await tasksBatch.commit();
-
-            // Delete all confirmations
-            const confirmsSnapshot = await classDocRef.collection('confirms').get();
-            const confirmsBatch = db.batch();
-            confirmsSnapshot.docs.forEach(doc => confirmsBatch.delete(doc.ref));
-            await confirmsBatch.commit();
-
-            // Delete the class document itself
-            await classDocRef.delete();
-
-            alert(`Klasse ${currentClass} wurde erfolgreich gelöscht.`);
-            resetAppState();
-        } catch (error) {
-            console.error("Error deleting class: ", error);
-            alert("Fehler beim Löschen der Klasse. Bitte erneut versuchen.");
-        }
-    }
-
-    async function deleteAllConfirmations() {
-        if (!currentClass) return;
-        if (!confirm('Wirklich ALLE Elternbestätigungen für diese Klasse zurücksetzen? Alle Pläne werden für die Schüler wieder entsperrt.')) return;
-        
-        try {
-            const confirmsSnapshot = await db.collection('classes').doc(currentClass).collection('confirms').get();
-            const batch = db.batch();
-            confirmsSnapshot.docs.forEach(doc => batch.delete(doc.ref));
-            await batch.commit();
-            alert("Alle Bestätigungen wurden erfolgreich zurückgesetzt.");
-        } catch (error) {
-            console.error("Error deleting confirmations: ", error);
-            alert("Fehler beim Löschen der Bestätigungen.");
-        }
-    }
-
-    function setMode(mode) {
-        currentMode = mode;
-        if (mode === 'teacher') {
-            currentUser = null;
-            isTeacherInspecting = false;
-        }
-        updateUI();
-    }
-
-    function selectStudent(name) {
-        if (!name) return;
-        currentUser = name;
-        updateUI();
-        checkParentStatus();
-        renderTasks();
-    }
-
-    function inspectStudent(name) {
-        isTeacherInspecting = true;
-        currentUser = name;
-        currentMode = 'student';
-        updateUI();
-        checkParentStatus();
-        renderTasks();
-    }
-
-    function updateUI() {
-        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-        const nav = document.getElementById('nav-mode-selector');
-        const btnChangeClass = document.getElementById('btn-change-class');
-        const btnStudent = document.getElementById('btn-student');
-        const btnTeacher = document.getElementById('btn-teacher');
-        const backBtn = document.getElementById('back-to-dashboard');
-
-        if (!currentClass) {
-            document.getElementById('class-selection-view').classList.add('active');
-            nav.classList.add('hidden');
-            btnChangeClass.classList.add('hidden');
-            return;
-        }
-
-        nav.classList.remove('hidden');
-        btnChangeClass.classList.remove('hidden');
-
-        if (currentMode === 'teacher') {
-            document.getElementById('teacher-view').classList.add('active');
-            btnTeacher.classList.add('bg-white', 'text-primary', 'shadow-lg');
-            btnTeacher.classList.remove('text-white/80');
-            btnStudent.classList.remove('bg-white', 'text-primary', 'shadow-lg');
-            btnStudent.classList.add('text-white/80');
-            backBtn.classList.add('hidden');
-        } else if (currentUser) {
-            document.getElementById('planer-view').classList.add('active');
-            document.getElementById('current-user-display').innerText = currentUser;
-            
-            if (isTeacherInspecting) {
-                backBtn.classList.remove('hidden');
-                backBtn.classList.add('flex');
-            } else {
-                backBtn.classList.add('hidden');
-            }
-        } else {
-            document.getElementById('start-view').classList.add('active');
-            btnStudent.classList.add('bg-white', 'text-primary', 'shadow-lg');
-            btnStudent.classList.remove('text-white/80');
-            btnTeacher.classList.remove('bg-white', 'text-primary', 'shadow-lg');
-            btnTeacher.classList.add('text-white/80');
-            backBtn.classList.add('hidden');
-        }
-    }
-
-    function renderStudentOptions() {
-        const sel = document.getElementById('student-selector');
-        const taskWho = document.getElementById('task-who');
-        if (!sel || !taskWho) return;
-        const currentSelVal = sel.value;
-        sel.innerHTML = '<option value="">Wähle deinen Namen...</option>';
-        taskWho.innerHTML = '<option value="Ganze Klasse">Ganze Klasse</option>';
-        students.forEach(s => {
-            sel.innerHTML += `<option value="${s}">${s}</option>`;
-            taskWho.innerHTML += `<option value="${s}">${s}</option>`;
-        });
-        sel.value = currentSelVal;
-    }
-
-    function renderSubjectOptions() {
-        const sel = document.getElementById('task-subject');
-        if(!sel) return;
-        sel.innerHTML = '';
-        Object.entries(subjects).forEach(([id, data]) => {
-            sel.innerHTML += `<option value="${id}">${data.name}</option>`;
-        });
-    }
-
-    function renderColorLegends() {
-        const containers = [
-            document.getElementById('color-legend-student'),
-            document.getElementById('color-legend-teacher')
-        ];
-        
-        containers.forEach(container => {
-            if (!container) return;
-            container.innerHTML = Object.entries(subjects).map(([id, data]) => `
-                <div class="flex items-center gap-3 px-4 py-2 bg-surface-container rounded-full border border-surface-container-high transition-transform hover:scale-105 cursor-default">
-                    <span class="w-4 h-4 rounded-full shadow-sm border border-white/50" style="background-color: ${data.color}"></span>
-                    <span class="text-[11px] font-black text-on-surface-variant uppercase tracking-wider">${data.name}</span>
-                </div>
-            `).join('');
-        });
-    }
-
-    function addTask() {
-        if (!currentClass) return;
-        const who = document.getElementById('task-who').value;
-        const sub = document.getElementById('task-subject').value;
-        const desc = document.getElementById('task-desc').value;
-        const date = document.getElementById('task-date').value;
-        if (!desc || !date) return;
-        db.collection('classes').doc(currentClass).collection('tasks').add({
-            who, subject: sub, desc, date,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            doneBy: []
-        });
-        document.getElementById('task-desc').value = '';
-    }
-
-    async function deleteAllTasks() {
-        if (!currentClass) return;
-        if (confirm("Möchtest du wirklich ALLE aktuellen Aufgaben löschen?")) {
-            try {
-                const snapshot = await db.collection('classes').doc(currentClass).collection('tasks').get();
-                const batch = db.batch();
-                snapshot.docs.forEach((doc) => { batch.delete(doc.ref); });
-                await batch.commit();
-            } catch (error) { console.error(error); }
-        }
-    }
-
-    function toggleTask(taskId, isDone) {
-        if (!currentClass || parentConfirms[currentUser]) return;
-        const task = tasks.find(t => t.id === taskId);
-        let newList = [...(task.doneBy || [])];
-        if (isDone) {
-            if (!newList.includes(currentUser)) newList.push(currentUser);
-        } else {
-            newList = newList.filter(u => u !== currentUser);
-        }
-        db.collection('classes').doc(currentClass).collection('tasks').doc(taskId).update({ doneBy: newList });
-    }
-
-    function renderTasks() {
-        const container = document.getElementById('task-container');
-        if(!container) return;
-        const isLocked = parentConfirms[currentUser] ? true : false;
-        const myTasks = tasks.filter(t => t.who === 'Ganze Klasse' || t.who === currentUser);
-        if (myTasks.length === 0) {
-            container.innerHTML = '<div class="text-center py-24 bg-white rounded-lg border-2 border-surface-container border-dashed"><p class="text-on-surface-variant font-black italic opacity-50 uppercase tracking-widest">Keine Aufgaben vorhanden.</p></div>';
-            return;
-        }
-        container.innerHTML = myTasks.map(t => {
-            const isDone = t.doneBy && t.doneBy.includes(currentUser);
-            const subData = subjects[t.subject] || { name: t.subject, color: '#ccc' };
-            const isGlobal = t.who === 'Ganze Klasse';
-            return `
-            <div class="bg-white p-8 rounded-lg border border-surface-container flex items-center justify-between shadow-md hover:shadow-xl transition-all ${isLocked ? 'opacity-80' : ''}">
-                <div class="flex items-center gap-6">
-                    <label class="flex items-center cursor-pointer group">
-                        <input type="checkbox" ${isDone ? 'checked' : ''} ${isLocked ? 'disabled' : ''} onchange="toggleTask('${t.id}', this.checked)" class="w-8 h-8 rounded-lg border-2 border-primary/30 text-primary focus:ring-4 focus:ring-primary-fixed transition-all disabled:opacity-50">
-                    </label>
-                    <div>
-                        <div class="flex items-center gap-2 mb-2">
-                            <span class="w-3 h-3 rounded-full shadow-sm" style="background-color: ${subData.color}"></span>
-                            <span class="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em]">${subData.name}</span>
-                            ${isGlobal ? 
-                                `<span class="bg-primary-fixed text-on-primary-fixed-variant px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ml-2 border border-primary/10">Alle</span>` : 
-                                `<span class="bg-secondary-fixed text-on-secondary-fixed-variant px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ml-2 border border-secondary/10">Nur Du</span>`
-                            }
-                        </div>
-                        <p class="text-xl font-black text-on-surface leading-tight ${isDone ? 'line-through text-outline-variant opacity-50' : ''}">${t.desc}</p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <div class="text-[10px] font-black text-on-surface-variant uppercase tracking-widest bg-surface-container-low px-4 py-2 rounded-full border border-surface-container shadow-sm">
-                        ${new Date(t.date).toLocaleDateString('de-CH')}
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-    }
-
-    function renderProgressTable() {
-        const tbody = document.getElementById('progress-table-body');
-        if (!tbody) return;
-        if (students.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="py-16 text-center text-on-surface-variant font-black italic opacity-50">Keine Schüler in der Liste.</td></tr>';
-            return;
-        }
-        tbody.innerHTML = students.map(s => {
-            const myTasks = tasks.filter(t => t.who === 'Ganze Klasse' || t.who === s);
-            const total = myTasks.length;
-            const done = myTasks.filter(t => t.doneBy?.includes(s)).length;
-            const percent = total === 0 ? 0 : Math.round((done / total) * 100);
-            const conf = parentConfirms[s];
-            return `
-            <tr class="group hover:bg-surface-container-low/50 transition-colors">
-                <td class="py-6 px-4">
-                    <button onclick="inspectStudent('${s}')" class="flex items-center gap-3 text-left font-black text-on-surface hover:text-primary transition-all">
-                        <div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-[10px] uppercase font-black text-outline-variant group-hover:bg-primary-fixed group-hover:text-on-primary-fixed-variant transition-colors">${s.charAt(0)}</div>
-                        ${s}
-                        <span class="material-symbols-outlined text-[18px] opacity-0 group-hover:opacity-100 transition-opacity">visibility</span>
-                    </button>
-                </td>
-                <td class="py-6 px-4 min-w-[180px]">
-                    <div class="flex items-center gap-4">
-                        <div class="flex-1 bg-surface-container rounded-full h-3 overflow-hidden shadow-inner border border-surface-container-highest">
-                            <div class="bg-primary h-full rounded-full transition-all duration-1000 ease-out" style="width: ${percent}%"></div>
-                        </div>
-                        <span class="text-xs font-black text-primary w-10">${percent}%</span>
-                    </div>
-                </td>
-                <td class="py-6 px-4 text-center">
-                    ${conf ? 
-                        `<div class="flex flex-col items-center gap-1">
-                            <div class="flex items-center gap-2 bg-primary/5 px-3 py-1 rounded-full border border-primary/10">
-                                <span class="material-symbols-outlined text-primary text-[18px]">verified</span>
-                                <span class="text-[11px] font-bold text-primary">Gesehen: ${conf.name}</span>
-                            </div>
-                            <span class="text-[9px] font-black text-outline-variant uppercase mt-1">am ${conf.date}</span>
-                        </div>` : 
-                        `<span class="material-symbols-outlined text-outline-variant opacity-40" title="Ausstehend">pending</span>`
-                    }
-                </td>
-                <td class="py-6 px-4 text-right">
-                    <button onclick="resetParentConfirm('${s}')" class="text-on-surface-variant hover:text-error transition-all p-3 rounded-full hover:bg-error-container/20 group/btn" title="Sperre aufheben">
-                        <span class="material-symbols-outlined text-[22px] group-active/btn:scale-90">${conf ? 'lock_open' : 'do_not_disturb_on'}</span>
-                    </button>
-                </td>
-            </tr>`;
-        }).join('');
-    }
-
-    function resetParentConfirm(studentName) {
-        if(!currentClass) return;
-        if(confirm(`Bestätigung für ${studentName} wirklich zurücksetzen? Der Plan wird für den Schüler wieder entsperrt.`)) {
-            db.collection('classes').doc(currentClass).collection('confirms').doc(studentName).delete();
-        }
-    }
-
-    function renderTeacherTasks() {
-        const container = document.getElementById('teacher-tasks');
-        if(!container) return;
-        if (tasks.length === 0) {
-            container.innerHTML = '<div class="col-span-full py-10 bg-surface-container-low rounded-lg text-center"><p class="text-on-surface-variant font-black italic uppercase tracking-widest opacity-40">Keine Aufgaben erstellt.</p></div>';
-            return;
-        }
-        container.innerHTML = tasks.map(t => {
-            const subData = subjects[t.subject] || { name: t.subject, color: '#ccc' };
-            const isGlobal = t.who === 'Ganze Klasse';
-            return `
-            <div class="p-6 bg-surface-container-low rounded-lg flex justify-between items-center border border-surface-container hover:border-primary/30 transition-colors shadow-sm group">
-                <div class="min-w-0 pr-4">
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${subData.color}"></span>
-                        <span class="text-[9px] font-black text-outline-variant uppercase tracking-widest">${subData.name}</span>
-                        <span class="text-[8px] ${isGlobal ? 'bg-primary-fixed text-primary' : 'bg-tertiary-fixed text-tertiary'} px-2 py-0.5 rounded-full font-black uppercase tracking-widest border border-white/50">${t.who}</span>
-                    </div>
-                    <p class="font-black text-sm truncate text-on-surface">${t.desc}</p>
-                </div>
-                <button onclick="db.collection('classes').doc('${currentClass}').collection('tasks').doc('${t.id}').delete()" class="text-on-surface-variant hover:text-error hover:bg-error-container/20 p-3 rounded-full transition-all flex items-center justify-center">
-                    <span class="material-symbols-outlined text-[20px]">delete</span>
-                </button>
-            </div>`;
-        }).join('');
-    }
-
-    function confirmParent() {
-        if(!currentClass || !currentUser) return;
-        const name = document.getElementById('parent-name').value;
-        if (!name) return;
-        db.collection('classes').doc(currentClass).collection('confirms').doc(currentUser).set({
-            name,
-            date: new Date().toLocaleDateString('de-CH'),
-            timestamp: Date.now(),
-            parentalConfirmation: true
-        });
-    }
-
-    function checkParentStatus() {
-        const conf = parentConfirms[currentUser];
-        const status = document.getElementById('parent-status');
-        const form = document.getElementById('parent-form');
-        const lockIndicator = document.getElementById('lock-indicator');
-        const parentNameInput = document.getElementById('parent-name');
-        if (!status || !form || !lockIndicator) return;
-        if (conf) {
-            form.classList.add('hidden');
-            status.classList.remove('hidden');
-            status.innerHTML = `<div class="flex items-center justify-center gap-4"><span class="material-symbols-outlined text-3xl">verified</span> <div><div class="text-sm uppercase tracking-widest opacity-60">Bestätigt durch</div><div class="text-xl">${conf.name} am ${conf.date}</div></div></div>`;
-            lockIndicator.classList.remove('hidden');
-        } else {
-            form.classList.remove('hidden');
-            status.classList.add('hidden');
-            lockIndicator.classList.add('hidden');
-            if(parentNameInput) {
-                parentNameInput.disabled = false;
-                parentNameInput.value = '';
-            }
-        }
-    }
-
-    function updateClassList() {
-        if(!currentClass) return;
-        const names = document.getElementById('class-input').value.split('\n').map(n => n.trim()).filter(n => n !== '');
-        db.collection('classes').doc(currentClass).set({ students: names }, { merge: true });
-        alert("Klassenliste gespeichert!");
-    }
-
-    function generateClassQRCode() {
-        const container = document.getElementById('qrcode-container');
-        if (!container || !currentClass) return;
-        container.innerHTML = '';
-        const url = window.location.protocol + "//" + window.location.host + window.location.pathname + "?class=" + currentClass;
-        new QRCode(container, { text: url, width: 220, height: 220, colorDark: "#1a1c1f", correctLevel: QRCode.CorrectLevel.H });
-    }
-
-    function updateWeekDisplay() {
-        const d = new Date();
-        const date = new Date(d.getTime());
-        date.setHours(0, 0, 0, 0);
-        date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
-        const week1 = new Date(date.getFullYear(), 0, 4);
-        const w = 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
-        const display = document.getElementById('week-display');
-        if (display) display.innerText = `Woche ${w}`;
-    }
-
-    function handleTxtImport(event) {
-        if(!currentClass) return;
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const content = e.target.result;
-            processRawImports(content);
+        const firebaseConfig = {
+            apiKey: "AIzaSyCeaYiA1v8aKz27LPlGoci3XIaD-2fWbIo",
+            authDomain: "doeltschi-hausaufgabenplaner.firebaseapp.com",
+            projectId: "doeltschi-hausaufgabenplaner",
+            storageBucket: "doeltschi-hausaufgabenplaner.firebasestorage.app",
+            messagingSenderId: "741131007424",
+            appId: "1:741131007424:web:04427f839b7eb86aa9c425"
         };
-        reader.readAsText(file);
-        event.target.value = ''; 
-    }
 
-    function handleDocxImport(event) {
-        if(!currentClass) return;
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const arrayBuffer = e.target.result;
-            mammoth.extractRawText({arrayBuffer: arrayBuffer})
-                .then(function(result) {
-                    const text = result.value;
-                    processRawImports(text);
-                })
-                .catch(function(err) {
-                    console.error("Error extracting docx text: ", err);
-                    alert("Fehler beim Importieren der Word-Datei.");
-                });
+        const fbApp = initializeApp(firebaseConfig);
+        const db = getFirestore(fbApp);
+
+        const SUBJECTS = { 
+            'DE': { name: 'Deutsch', color: '#ef4444' }, 
+            'MA': { name: 'Mathematik', color: '#3b82f6' }, 
+            'E': { name: 'Englisch', color: '#eab308' }, 
+            'F': { name: 'Französisch', color: '#22c55e' }, 
+            'RZG': { name: 'RZG', color: '#f97316' },
+            'NT': { name: 'NT', color: '#06b6d4' },
+            'MU': { name: 'Musik', color: '#a855f7' },
+            'BS': { name: 'Sport', color: '#d97706' },
+            'MI': { name: 'Medien', color: '#64748b' },
+            'WAH': { name: 'WAH', color: '#f43f5e' }
         };
-        reader.readAsArrayBuffer(file);
-        event.target.value = '';
-    }
 
-    function processRawImports(rawText) {
-        if (!rawText) return;
-        let lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(l => l !== '');
-        let cleanedNames = [];
-        const isLikelyCellPerLine = lines.length > 5 && lines.every(l => l.length < 20);
+        window.app = {
+            students: [],
+            tasks: [],
+            parentalConfirmations: {},
+            currentRole: 'start', 
+            selectedStudent: null,
+            currentClassName: null,
+            isParentSession: false,
+            unsubConfig: null,
+            unsubConfirm: null,
+            unsubTasks: null,
+            isProgressVisible: true,
 
-        if (isLikelyCellPerLine) {
-            const classRegex = /^[A-Z]?\d+[A-Z]?$/i;
-            let tempGroup = [];
-            for (let i = 0; i < lines.length; i++) {
-                tempGroup.push(lines[i]);
-                if (classRegex.test(lines[i]) || tempGroup.length >= 3) {
-                    cleanedNames.push(tempGroup.join(' '));
-                    tempGroup = [];
+            async init() {
+                this.renderLegends();
+                
+                const params = new URLSearchParams(window.location.search);
+                const urlClass = params.get('class');
+                const urlUser = params.get('user');
+                const urlRole = params.get('role');
+                
+                if (urlClass) {
+                    this.currentClassName = decodeURIComponent(urlClass).toUpperCase();
+                    localStorage.setItem('lab_class', this.currentClassName);
+                } else {
+                    this.currentClassName = localStorage.getItem('lab_class');
                 }
+
+                if (urlUser) {
+                    this.selectedStudent = decodeURIComponent(urlUser);
+                    localStorage.setItem('lab_user', this.selectedStudent);
+                } else {
+                    this.selectedStudent = localStorage.getItem('lab_user');
+                }
+
+                if (urlRole === 'parent') {
+                    this.isParentSession = true;
+                }
+
+                if (this.currentClassName) {
+                    this.setupClassListeners(this.currentClassName);
+                    if (this.selectedStudent) {
+                        this.currentRole = 'student-tasks';
+                    } else {
+                        this.currentRole = 'student';
+                    }
+                } else {
+                    this.currentRole = 'start';
+                }
+                this.render();
+                this.generateStartQR();
+            },
+
+            clearLocalData() {
+                this.students = [];
+                this.tasks = [];
+                this.parentalConfirmations = {};
+            },
+
+            setupClassListeners(className) {
+                if (this.unsubConfig) this.unsubConfig();
+                if (this.unsubConfirm) this.unsubConfirm();
+                if (this.unsubTasks) this.unsubTasks();
+
+                this.unsubConfig = onSnapshot(doc(db, "classes", className, "config", "classlist"), (docSnap) => {
+                    if (this.currentClassName !== className) return;
+                    this.students = docSnap.exists() ? (docSnap.data().names || []).sort() : [];
+                    this.render();
+                });
+
+                this.unsubConfirm = onSnapshot(doc(db, "classes", className, "config", "confirmations"), (docSnap) => {
+                    if (this.currentClassName !== className) return;
+                    this.parentalConfirmations = docSnap.exists() ? docSnap.data() : {};
+                    this.render();
+                });
+
+                const tasksQuery = query(collection(db, "classes", className, "tasks"), orderBy("date", "asc"));
+                this.unsubTasks = onSnapshot(tasksQuery, (snapshot) => {
+                    if (this.currentClassName !== className) return;
+                    this.tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    this.render();
+                });
+            },
+
+            generateStartQR() {
+                const el = document.getElementById("start-qrcode");
+                if (!el) return;
+                el.innerHTML = "";
+                const url = window.location.origin + window.location.pathname + (this.currentClassName ? "?class=" + encodeURIComponent(this.currentClassName) : "");
+                new QRCode(el, { text: url, width: 120, height: 120 });
+            },
+
+            renderLegends() {
+                const html = Object.values(SUBJECTS).map(s => `
+                    <div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container rounded-full text-[10px] font-black uppercase tracking-wider">
+                        <span class="w-3 h-3 rounded-full" style="background-color: ${s.color}"></span> ${s.name}
+                    </div>`).join('');
+                const ls = document.getElementById('subject-legend-student');
+                const lt = document.getElementById('subject-legend-teacher');
+                if (ls) ls.innerHTML = html;
+                if (lt) lt.innerHTML = html;
+            },
+
+            setRole(role) {
+                if (role === 'login') {
+                    this.currentRole = 'login';
+                    const loginPass = document.getElementById('login-password');
+                    if (loginPass) loginPass.value = '';
+                } else if (role === 'student') {
+                    if (this.currentClassName) {
+                        this.currentRole = this.selectedStudent ? 'student-tasks' : 'student';
+                    } else {
+                        this.currentRole = 'start';
+                    }
+                }
+                this.render();
+            },
+
+            handleLogin() {
+                if (document.getElementById('login-password').value === 'lehrer123') {
+                    this.currentRole = 'teacher';
+                    this.render();
+                } else {
+                    alert('Passwort falsch!');
+                }
+            },
+
+            resetToHome() {
+                if (this.currentRole === 'teacher' || !this.selectedStudent) {
+                    this.currentClassName = null;
+                    this.selectedStudent = null;
+                    localStorage.removeItem('lab_class');
+                    localStorage.removeItem('lab_user');
+                    this.clearLocalData();
+                    
+                    const classInput = document.getElementById('class-name-input');
+                    if (classInput) classInput.value = '';
+                    
+                    const loginPass = document.getElementById('login-password');
+                    if (loginPass) loginPass.value = '';
+
+                    this.currentRole = 'start';
+                    this.render();
+                }
+            },
+
+            openClass() {
+                const input = document.getElementById('class-name-input');
+                const name = input.value.trim().toUpperCase();
+                if (!name) return;
+                
+                this.currentClassName = name;
+                localStorage.setItem('lab_class', name);
+                
+                this.clearLocalData();
+                this.selectedStudent = null;
+                localStorage.removeItem('lab_user');
+                
+                this.setupClassListeners(name);
+                
+                this.currentRole = 'student';
+                this.render();
+            },
+
+            showClassEntry() {
+                this.currentClassName = null;
+                localStorage.removeItem('lab_class');
+                this.clearLocalData();
+                
+                const classInput = document.getElementById('class-name-input');
+                if (classInput) classInput.value = '';
+                
+                this.currentRole = 'start';
+                this.render();
+            },
+
+            selectStudent(name) {
+                this.selectedStudent = name;
+                localStorage.setItem('lab_user', name);
+                this.currentRole = 'student-tasks';
+                this.render();
+            },
+
+            resetStudentSession() {
+                if (this.currentRole !== 'teacher') return;
+                if (confirm("Möchten Sie die gespeicherte Schülersitzung auf diesem Gerät wirklich zurücksetzen?")) {
+                    localStorage.removeItem('lab_user');
+                    this.selectedStudent = null;
+                    alert("Sitzung wurde zurückgesetzt.");
+                }
+            },
+
+            render() {
+                const views = ['login-view', 'start-view', 'student-select-view', 'student-tasks-view', 'teacher-dashboard'];
+                views.forEach(v => document.getElementById(v)?.classList.add('hidden'));
+
+                const navS = document.getElementById('nav-student');
+                const navT = document.getElementById('nav-teacher');
+                const isActive = (id) => (this.currentRole.includes(id) ? "bg-white text-primary shadow-lg" : "text-white/80 hover:text-white");
+                if(navS) navS.className = "px-6 py-2 rounded-full text-sm font-bold transition-all " + isActive('student');
+                if(navT) navT.className = "px-6 py-2 rounded-full text-sm font-bold transition-all " + (this.currentRole === 'teacher' || this.currentRole === 'login' ? "bg-white text-primary shadow-lg" : "text-white/80 hover:text-white");
+
+                if (this.currentRole === 'login') {
+                    document.getElementById('login-view').classList.remove('hidden');
+                }
+                else if (this.currentRole === 'start') {
+                    document.getElementById('start-view').classList.remove('hidden');
+                    const classInput = document.getElementById('class-name-input');
+                    if (classInput && !this.currentClassName) classInput.value = '';
+                    this.generateStartQR();
+                }
+                else if (this.currentRole === 'student') {
+                    document.getElementById('student-select-view').classList.remove('hidden');
+                    document.getElementById('current-class-display').textContent = `Klasse: ${this.currentClassName}`;
+                    this.renderStudentDropdown();
+                    this.generateStudentMainQR();
+                }
+                else if (this.currentRole === 'student-tasks') {
+                    document.getElementById('student-tasks-view').classList.remove('hidden');
+                    this.renderStudentTasks();
+                }
+                else if (this.currentRole === 'teacher') {
+                    document.getElementById('teacher-dashboard').classList.remove('hidden');
+                    this.renderTeacherDashboard();
+                }
+            },
+
+            renderStudentDropdown() {
+                const dropdown = document.getElementById('student-dropdown');
+                if (!dropdown) return;
+                dropdown.innerHTML = `<option value="" disabled selected>Wähle deinen Namen...</option>` + 
+                    this.students.map(name => `<option value="${name}">${name}</option>`).join('');
+            },
+
+            generateStudentMainQR() {
+                const el = document.getElementById('student-main-qr');
+                if (!el) return;
+                el.innerHTML = "";
+                const url = window.location.origin + window.location.pathname + `?class=${encodeURIComponent(this.currentClassName)}`;
+                new QRCode(el, { text: url, width: 140, height: 140 });
+            },
+
+            async setTaskStatus(taskId, isChecked) {
+                const name = this.selectedStudent;
+                if (this.parentalConfirmations[name]?.status === 'OK') return;
+                const taskRef = doc(db, "classes", this.currentClassName, "tasks", taskId);
+                await updateDoc(taskRef, { done: isChecked ? arrayUnion(name) : arrayRemove(name) });
+            },
+
+            async confirmByParent() {
+                if (!this.isParentSession) return;
+                const name = this.selectedStudent;
+                const parentName = document.getElementById('parent-name-input').value.trim();
+                if (!parentName) return alert("Bitte Namen eingeben.");
+
+                const btn = document.getElementById('confirm-btn');
+                const btnText = document.getElementById('confirm-btn-text');
+                const loader = document.getElementById('confirm-loader');
+
+                if (confirm(`Bestätigen Sie als ${parentName}? Danach ist keine Änderung mehr möglich.`)) {
+                    btn.disabled = true;
+                    btnText.textContent = "Wird gespeichert...";
+                    loader.classList.remove('hidden');
+
+                    try {
+                        const confRef = doc(db, "classes", this.currentClassName, "config", "confirmations");
+                        const now = new Date();
+                        const dateStr = now.toLocaleDateString('de-CH');
+                        const timeStr = now.toLocaleTimeString('de-CH', {hour:'2-digit', minute:'2-digit'});
+                        const fullDate = dateStr + " " + timeStr;
+                        
+                        await updateDoc(confRef, {
+                            [name]: {
+                                status: 'OK',
+                                confirmedBy: parentName,
+                                date: fullDate,
+                                confirmedAt: dateStr,
+                                confirmationDate: fullDate
+                            }
+                        });
+                        alert("Bestätigung erfolgreich gespeichert!");
+                    } catch (error) {
+                        console.error("Cloud Error:", error);
+                        try {
+                            const confRef = doc(db, "classes", this.currentClassName, "config", "confirmations");
+                            await setDoc(confRef, {
+                                [name]: {
+                                    status: 'OK',
+                                    confirmedBy: parentName,
+                                    date: new Date().toLocaleString('de-CH'),
+                                    confirmedAt: new Date().toLocaleDateString('de-CH')
+                                }
+                            }, { merge: true });
+                            alert("Bestätigung erfolgreich gespeichert!");
+                        } catch (innerError) {
+                            alert("Fehler beim Speichern der Bestätigung.");
+                        }
+                    } finally {
+                        btn.disabled = false;
+                        btnText.textContent = "Bestätigen";
+                        loader.classList.add('hidden');
+                    }
+                }
+            },
+
+            async resetParentalConfirm(studentId) {
+                if (!confirm(`Möchten Sie die Elternbestätigung für ${studentId} wirklich zurücksetzen?`)) return;
+
+                try {
+                    const confRef = doc(db, "classes", this.currentClassName, "config", "confirmations");
+                    await updateDoc(confRef, {
+                        [studentId]: deleteField()
+                    });
+                } catch (error) {
+                    console.error(`Firebase Error during reset:`, error);
+                    alert("Fehler beim Löschen.");
+                }
+            },
+
+            renderStudentTasks() {
+                const name = this.selectedStudent;
+                document.getElementById('display-student-name').textContent = name;
+                const isConfirmed = this.parentalConfirmations[name]?.status === 'OK';
+                const lockInd = document.getElementById('lock-indicator');
+                
+                if (lockInd) lockInd.classList.toggle('hidden', !isConfirmed);
+
+                const myTasks = this.tasks.filter(t => t.who === 'all' || t.who === name);
+                const list = document.getElementById('task-list');
+                
+                if (!list) return;
+
+                if (myTasks.length === 0) {
+                    list.innerHTML = `<div class="text-center py-24 bg-white rounded-lg border-2 border-surface-container border-dashed"><p class="text-on-surface-variant font-black italic opacity-50 uppercase tracking-widest">Keine Aufgaben vorhanden.</p></div>`;
+                } else {
+                    list.innerHTML = myTasks.map(t => {
+                        const isDone = t.done && t.done.includes(name);
+                        const sub = SUBJECTS[t.subject] || { name: t.subject, color: '#64748b' };
+                        return `
+                            <div class="bg-white p-8 rounded-lg border border-surface-container flex items-center justify-between shadow-md hover:shadow-xl transition-all ${isConfirmed ? 'opacity-80 grayscale-[0.5]' : ''}">
+                                <div class="flex items-center gap-6">
+                                    <input type="checkbox" ${isDone ? 'checked' : ''} ${isConfirmed ? 'disabled' : ''} onchange="app.setTaskStatus('${t.id}', this.checked)" class="w-8 h-8 rounded-lg border-2 border-primary/30 text-primary focus:ring-4 focus:ring-primary-container/20 transition-all cursor-pointer">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="w-3 h-3 rounded-full" style="background-color: ${sub.color}"></span>
+                                            <span class="text-[10px] font-black text-on-surface-variant uppercase tracking-[0.2em]">${sub.name}</span>
+                                        </div>
+                                        <p class="text-xl font-black text-on-surface ${isDone ? 'line-through text-outline-variant opacity-50' : ''}">${t.task}</p>
+                                    </div>
+                                </div>
+                                <div class="text-[11px] font-black text-primary uppercase tracking-widest bg-surface-container-low px-4 py-2 rounded-full border border-surface-container shadow-sm">
+                                    Bis ${t.date ? t.date.split('-').reverse().join('.') : '-'}
+                                </div>
+                            </div>`;
+                    }).join('');
+                }
+
+                const box = document.getElementById('confirmation-status-box');
+                const form = document.getElementById('confirmation-form');
+                const desc = document.getElementById('confirmation-description');
+                const confirmBtn = document.getElementById('confirm-btn');
+                const overlay = document.getElementById('confirmation-overlay');
+                
+                if (isConfirmed) {
+                    if (overlay) overlay.classList.add('hidden');
+                    if (form) form.classList.add('hidden');
+                    if (desc) desc.classList.add('hidden');
+                    if (box) {
+                        box.classList.remove('hidden');
+                        const confData = this.parentalConfirmations[name];
+                        box.innerHTML = `
+                            <div class="flex items-center justify-center gap-4 text-primary">
+                                <span class="material-symbols-outlined text-3xl">verified</span> 
+                                <div>
+                                    <div class="text-xs uppercase tracking-widest opacity-60">Plan durch Eltern gesperrt</div>
+                                    <div class="text-xl">Bestätigt durch ${confData.confirmedBy || 'Unbekannt'}</div>
+                                    <div class="text-[10px] opacity-50">${confData.date || ''}</div>
+                                </div>
+                            </div>`;
+                    }
+                } else {
+                    if (box) box.classList.add('hidden');
+                    if (this.isParentSession) {
+                        if (overlay) overlay.classList.add('hidden');
+                        if (form) form.classList.remove('hidden');
+                        if (desc) desc.classList.remove('hidden');
+                        if (confirmBtn) confirmBtn.disabled = false;
+                    } else {
+                        if (overlay) overlay.classList.remove('hidden');
+                        if (form) form.classList.remove('hidden');
+                        if (desc) desc.classList.remove('hidden');
+                        if (confirmBtn) confirmBtn.disabled = true;
+                    }
+                }
+            },
+
+            renderTeacherDashboard() {
+                const currentClassTitle = document.getElementById('teacher-current-class');
+                if (currentClassTitle) currentClassTitle.textContent = `(Klasse ${this.currentClassName})`;
+
+                const classInput = document.getElementById('class-input');
+                if (classInput) classInput.value = this.students.join('\n');
+                
+                const multiList = document.getElementById('multi-student-list');
+                if (multiList) {
+                    multiList.innerHTML = `
+                        <div class="flex items-center gap-3 p-2 hover:bg-white rounded-lg transition-all cursor-pointer group">
+                            <input type="checkbox" id="student-check-all" class="w-5 h-5 rounded border-surface-container text-secondary focus:ring-secondary/20 cursor-pointer">
+                            <label for="student-check-all" class="font-bold text-sm text-on-surface-variant cursor-pointer group-hover:text-secondary uppercase tracking-wider">Alle Schüler (Klasse)</label>
+                        </div>
+                        <div class="h-px bg-surface-container my-2"></div>
+                    ` + this.students.map(s => `
+                        <div class="flex items-center gap-3 p-2 hover:bg-white rounded-lg transition-all cursor-pointer group">
+                            <input type="checkbox" name="assign-student" value="${s}" class="student-checkbox w-5 h-5 rounded border-surface-container text-secondary focus:ring-secondary/20 cursor-pointer">
+                            <span class="font-medium text-sm text-on-surface-variant group-hover:text-on-surface">${s}</span>
+                        </div>
+                    `).join('');
+                }
+
+                const subSelect = document.getElementById('new-task-subject');
+                if (subSelect) {
+                    subSelect.innerHTML = Object.entries(SUBJECTS).map(([id, s]) => `<option value="${id}">${s.name}</option>`).join('');
+                }
+
+                const tbody = document.getElementById('teacher-student-table');
+                if (tbody) {
+                    tbody.innerHTML = this.students.map(name => {
+                        const sTasks = this.tasks.filter(t => t.who === 'all' || t.who === name);
+                        const sDone = sTasks.filter(t => t.done && t.done.includes(name)).length;
+                        const pct = sTasks.length > 0 ? Math.round((sDone / sTasks.length) * 100) : 0;
+                        const conf = this.parentalConfirmations[name];
+                        return `
+                            <tr>
+                                <td class="py-6 px-4 font-black hover:text-primary cursor-pointer transition-all truncate max-w-[200px]" title="${name}" onclick="app.selectStudent('${name}')">${name}</td>
+                                <td class="py-6 px-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-24 bg-surface-container h-2 rounded-full overflow-hidden"><div class="bg-primary h-full" style="width: ${pct}%"></div></div>
+                                        <span class="text-[10px] font-bold">${pct}%</span>
+                                    </div>
+                                </td>
+                                <td class="py-6 px-4 text-center">
+                                    <div class="flex justify-center gap-2">
+                                        <button onclick="app.showQR('${name}', 'student')" class="p-2 rounded-full bg-surface-container hover:bg-primary/10 transition-all" title="Schüler QR"><span class="material-symbols-outlined text-sm">person</span></button>
+                                        <button onclick="app.showQR('${name}', 'parent')" class="p-2 rounded-full bg-surface-container hover:bg-secondary/10 transition-all" title="Eltern QR"><span class="material-symbols-outlined text-sm">family_restroom</span></button>
+                                    </div>
+                                </td>
+                                <td class="py-6 px-4 text-center">
+                                    <div class="flex flex-col items-center justify-center min-h-[40px]">
+                                    ${conf ? `
+                                        <div class="flex items-center gap-2">
+                                            <div class="flex flex-col items-center">
+                                                <span class="bg-primary text-white px-3 py-1 rounded-full text-[10px] font-black uppercase">OK</span>
+                                                <span class="text-[9px] font-bold text-on-surface-variant mt-1">${conf.confirmedAt || ''}</span>
+                                            </div>
+                                            <button onclick="app.resetParentalConfirm('${name}')" class="p-1.5 rounded-full hover:bg-error/10 text-error transition-all" title="Bestätigung zurücksetzen">
+                                                <span class="material-symbols-outlined text-[18px]">delete</span>
+                                            </button>
+                                        </div>
+                                    ` : '<span class="opacity-30 text-[10px] font-bold uppercase tracking-wider">Offen</span>'}
+                                    </div>
+                                </td>
+                                <td class="py-6 px-4 text-right">
+                                    <div class="flex justify-end gap-2">
+                                        <button onclick="app.removeStudent('${name}')" class="text-outline-variant hover:text-error transition-all"><span class="material-symbols-outlined text-lg">person_remove</span></button>
+                                    </div>
+                                </td>
+                            </tr>`;
+                    }).join('');
+                }
+
+                const allTasksList = document.getElementById('all-tasks-list');
+                if (allTasksList) {
+                    allTasksList.innerHTML = this.tasks.map(t => {
+                        const sub = SUBJECTS[t.subject] || { name: t.subject, color: '#64748b' };
+                        return `
+                            <div class="p-6 bg-surface-container-low rounded-lg flex justify-between items-center border border-surface-container group">
+                                <div>
+                                    <div class="flex items-center gap-2 text-[9px] font-black text-on-surface-variant uppercase mb-1">
+                                        <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${sub.color}"></span> ${sub.name} • ${t.who === 'all' ? 'Alle' : t.who}
+                                    </div>
+                                    <p class="font-black text-on-surface mb-2">${t.task}</p>
+                                    <span class="inline-block bg-white px-3 py-1 rounded-full border border-surface-container text-[10px] font-bold text-primary">Bis ${t.date ? t.date.split('-').reverse().join('.') : '-'}</span>
+                                </div>
+                                <button onclick="app.deleteTask('${t.id}')" class="opacity-0 group-hover:opacity-100 text-outline-variant hover:text-error transition-all p-2"><span class="material-symbols-outlined">delete</span></button>
+                            </div>`;
+                    }).join('');
+                }
+            },
+
+            selectAllStudents(checked) {
+                const boxes = document.querySelectorAll('.student-checkbox');
+                boxes.forEach(box => box.checked = checked);
+                const allBox = document.getElementById('student-check-all');
+                if (allBox) allBox.checked = checked;
+            },
+
+            toggleProgress() {
+                const container = document.getElementById('teacher-progress-container');
+                const icon = document.getElementById('toggle-progress-icon');
+                const text = document.getElementById('toggle-progress-text');
+                this.isProgressVisible = !this.isProgressVisible;
+                if (container) container.classList.toggle('hidden', !this.isProgressVisible);
+                if (icon) icon.innerText = this.isProgressVisible ? 'visibility_off' : 'visibility';
+                if (text) text.innerText = this.isProgressVisible ? 'Ausblenden' : 'Anzeigen';
+            },
+
+            async addTask(e) {
+                e.preventDefault();
+                const subject = document.getElementById('new-task-subject').value;
+                const deadline = document.getElementById('new-task-date').value;
+                const task = document.getElementById('new-task-desc').value;
+                const loader = document.getElementById('task-loader');
+                const submitBtn = document.getElementById('add-task-submit-btn');
+
+                const allChecked = document.getElementById('student-check-all')?.checked;
+                let selectedStudents = [];
+                if (allChecked) {
+                    selectedStudents = ['all'];
+                } else {
+                    selectedStudents = Array.from(document.querySelectorAll('.student-checkbox:checked')).map(cb => cb.value);
+                }
+
+                if (selectedStudents.length === 0) {
+                    alert("Bitte wählen Sie mindestens einen Schüler aus.");
+                    return;
+                }
+
+                if (loader) loader.classList.remove('hidden');
+                if (submitBtn) submitBtn.disabled = true;
+
+                try {
+                    const batch = writeBatch(db);
+                    const taskCol = collection(db, "classes", this.currentClassName, "tasks");
+
+                    for (const who of selectedStudents) {
+                        const newTaskRef = doc(taskCol);
+                        batch.set(newTaskRef, {
+                            who,
+                            subject,
+                            task,
+                            date: deadline,
+                            done: [],
+                            createdAt: Date.now()
+                        });
+                    }
+
+                    await batch.commit();
+                    document.getElementById('new-task-desc').value = "";
+                    this.selectAllStudents(false);
+                } catch (error) {
+                    console.error("Error adding task:", error);
+                    alert("Fehler beim Speichern.");
+                } finally {
+                    if (loader) loader.classList.add('hidden');
+                    if (submitBtn) submitBtn.disabled = false;
+                }
+            },
+
+            async deleteTask(id) {
+                if (confirm("Löschen?")) await deleteDoc(doc(db, "classes", this.currentClassName, "tasks", id));
+            },
+
+            async deleteAllTasks() {
+                if (confirm("Alle Aufgaben löschen?")) {
+                    const q = await getDocs(collection(db, "classes", this.currentClassName, "tasks"));
+                    const batch = writeBatch(db);
+                    q.forEach(d => batch.delete(d.ref));
+                    await batch.commit();
+                }
+            },
+
+            async updateClassList() {
+                const raw = document.getElementById('class-input').value;
+                const names = raw.split('\n').map(n => n.trim()).filter(n => n.length > 1);
+                await setDoc(doc(db, "classes", this.currentClassName, "config", "classlist"), { names: [...new Set(names)].sort() });
+                alert("Klassenliste aktualisiert.");
+            },
+
+            async unlockAll() {
+                if (confirm("Alle Pläne entsperren?")) {
+                    await setDoc(doc(db, "classes", this.currentClassName, "config", "confirmations"), {});
+                }
+            },
+
+            async removeStudent(name) {
+                if (confirm(`${name} entfernen?`)) {
+                    const newNames = this.students.filter(n => n !== name);
+                    await setDoc(doc(db, "classes", this.currentClassName, "config", "classlist"), { names: newNames });
+                    try {
+                        const confRef = doc(db, "classes", this.currentClassName, "config", "confirmations");
+                        await updateDoc(confRef, { [name]: deleteField() });
+                    } catch(e) {}
+                }
+            },
+
+            async deleteCurrentClass() {
+                if (confirm("Komplette Klasse löschen?")) {
+                    const batch = writeBatch(db);
+                    const q = await getDocs(collection(db, "classes", this.currentClassName, "tasks"));
+                    q.forEach(d => batch.delete(d.ref));
+                    batch.delete(doc(db, "classes", this.currentClassName, "config", "classlist"));
+                    batch.delete(doc(db, "classes", this.currentClassName, "config", "confirmations"));
+                    await batch.commit();
+                    this.showClassEntry();
+                }
+            },
+
+            async handleDocxImport(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const res = await mammoth.extractRawText({ arrayBuffer: e.target.result });
+                        const lines = res.value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                        document.getElementById('class-input').value = lines.join('\n');
+                    } catch (err) { alert("Fehler beim Lesen."); }
+                };
+                reader.readAsArrayBuffer(file);
+            },
+
+            showQR(student, type) {
+                const modal = document.getElementById('qr-modal');
+                const container = document.getElementById('modal-qrcode-container');
+                const urlEl = document.getElementById('qr-modal-url');
+                const title = document.getElementById('qr-modal-title');
+                
+                let url = window.location.origin + window.location.pathname + `?class=${encodeURIComponent(this.currentClassName)}&user=${encodeURIComponent(student)}`;
+                if (type === 'parent') {
+                    url += "&role=parent";
+                    title.innerText = "Eltern-QR: " + student;
+                } else {
+                    title.innerText = "Direkt-QR: " + student;
+                }
+                
+                container.innerHTML = "";
+                urlEl.innerText = url;
+                new QRCode(container, { text: url, width: 200, height: 200 });
+                modal.classList.remove('hidden');
+            },
+
+            closeQRModal() { document.getElementById('qr-modal').classList.add('hidden'); },
+
+            printQRCodes() {
+                const grid = document.getElementById('print-qr-grid');
+                const nameDisplay = document.getElementById('print-class-name');
+                if (nameDisplay) nameDisplay.textContent = this.currentClassName;
+                if (grid) {
+                    grid.innerHTML = "";
+                    this.students.forEach(name => {
+                        const div = document.createElement('div');
+                        div.className = "flex flex-col items-center p-10 border-4 border-slate-100 rounded-lg text-center break-inside-avoid relative overflow-hidden bg-white";
+                        const cleanId = `qr-${name.replace(/\W/g, '')}`;
+                        div.innerHTML = `
+                            <div class="absolute top-0 right-0 p-4"><span class="px-3 py-1 bg-primary text-white text-[10px] font-black uppercase rounded-lg">Döltschi Planer</span></div>
+                            <div class="flex items-center gap-3 mb-6"><h3 class="font-black text-xl text-slate-800 tracking-tight leading-tight">${name}</h3></div>
+                            <div id="${cleanId}" class="mb-6 bg-white p-4 shadow-sm border border-slate-50 rounded-lg"></div>
+                            <p class="text-[14px] font-black text-primary uppercase tracking-widest">Eltern-Login</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Scan zum Bestätigen</p>`;
+                        grid.appendChild(div);
+                        new QRCode(document.getElementById(cleanId), {
+                            text: window.location.origin + window.location.pathname + `?class=${encodeURIComponent(this.currentClassName)}&user=${encodeURIComponent(name)}&role=parent`,
+                            width: 180, height: 180
+                        });
+                    });
+                }
+                window.print();
             }
-            if (tempGroup.length > 0) cleanedNames.push(tempGroup.join(' '));
-        } else {
-            if (lines.length === 1 && lines[0].includes(',')) {
-                cleanedNames = lines[0].split(',').map(n => n.trim()).filter(n => n !== '');
-            } else {
-                const headers = ['vorname', 'nachname', 'klasse', 'name', 'surname', 'class'];
-                cleanedNames = lines.filter(l => !headers.includes(l.toLowerCase()));
+        };
+
+        document.addEventListener('DOMContentLoaded', () => window.app.init());
+        document.addEventListener('change', (e) => {
+            if (e.target && e.target.id === 'student-check-all') {
+                window.app.selectAllStudents(e.target.checked);
             }
-        }
-
-        cleanedNames = cleanedNames.map(n => n.replace(/\s+/g, ' ').trim()).filter(n => n.length > 2);
-        const uniqueNames = [...new Set(cleanedNames)];
-
-        if (uniqueNames.length > 0) {
-            const inputField = document.getElementById('class-input');
-            const currentNames = inputField.value.split('\n').map(n => n.trim()).filter(n => n !== '');
-            const finalCombined = [...currentNames];
-            uniqueNames.forEach(un => {
-                if (!finalCombined.includes(un)) finalCombined.push(un);
-            });
-            inputField.value = finalCombined.join('\n');
-            alert(`${uniqueNames.length} Schüler wurden erfolgreich importiert und zusammengeführt.`);
-        } else {
-            alert("Es konnten keine Schülernamen im Dokument gefunden werden.");
-        }
-    }
-
-    function toggleSection(id) {
-        const el = document.getElementById(id);
-        const chevron = document.getElementById('progress-chevron');
-        if (el.classList.contains('hidden')) {
-            el.classList.remove('hidden');
-            chevron.style.transform = 'rotate(0deg)';
-        } else {
-            el.classList.add('hidden');
-            chevron.style.transform = 'rotate(180deg)';
-        }
-    }
-
-    window.onload = init;
-</script>
+        });
+    </script>
 </body></html>
