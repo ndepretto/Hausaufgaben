@@ -487,7 +487,6 @@
             setRole(role) {
                 if (role === 'login') {
                     this.currentRole = 'login';
-                    // Reset login password if switching to login
                     const loginPass = document.getElementById('login-password');
                     if (loginPass) loginPass.value = '';
                 } else if (role === 'student') {
@@ -517,7 +516,6 @@
                     localStorage.removeItem('lab_user');
                     this.clearLocalData();
                     
-                    // Reset inputs when returning home
                     const classInput = document.getElementById('class-name-input');
                     if (classInput) classInput.value = '';
                     
@@ -552,7 +550,6 @@
                 localStorage.removeItem('lab_class');
                 this.clearLocalData();
                 
-                // Clear the class name input when switching classes
                 const classInput = document.getElementById('class-name-input');
                 if (classInput) classInput.value = '';
                 
@@ -591,7 +588,6 @@
                 }
                 else if (this.currentRole === 'start') {
                     document.getElementById('start-view').classList.remove('hidden');
-                    // Ensure input is empty whenever start view is rendered
                     const classInput = document.getElementById('class-name-input');
                     if (classInput && !this.currentClassName) classInput.value = '';
                     this.generateStartQR();
@@ -665,7 +661,6 @@
                                 confirmationDate: fullDate
                             }
                         });
-                        alert("Bestätigung erfolgreich gespeichert!");
                     } catch (error) {
                         console.error("Cloud Error:", error);
                         try {
@@ -678,7 +673,6 @@
                                     confirmedAt: new Date().toLocaleDateString('de-CH')
                                 }
                             }, { merge: true });
-                            alert("Bestätigung erfolgreich gespeichert!");
                         } catch (innerError) {
                             alert("Fehler beim Speichern der Bestätigung.");
                         }
@@ -834,21 +828,23 @@
                                 <td class="py-6 px-4 text-center">
                                     <div class="flex flex-col items-center justify-center min-h-[40px]">
                                     ${conf ? `
-                                        <div class="flex items-center gap-2">
-                                            <div class="flex flex-col items-center">
-                                                <span class="bg-primary text-white px-3 py-1 rounded-full text-[10px] font-black uppercase">OK</span>
-                                                <span class="text-[9px] font-bold text-on-surface-variant mt-1">${conf.confirmedAt || ''}</span>
-                                            </div>
-                                            <button onclick="app.resetParentalConfirm('${name}')" class="p-1.5 rounded-full hover:bg-error/10 text-error transition-all" title="Bestätigung zurücksetzen">
-                                                <span class="material-symbols-outlined text-[18px]">delete</span>
-                                            </button>
+                                        <div class="flex flex-col items-center">
+                                            <span class="bg-primary text-white px-3 py-1 rounded-full text-[10px] font-black uppercase">OK</span>
+                                            <span class="text-[9px] font-bold text-on-surface-variant mt-1">${conf.confirmedAt || ''}</span>
                                         </div>
                                     ` : '<span class="opacity-30 text-[10px] font-bold uppercase tracking-wider">Offen</span>'}
                                     </div>
                                 </td>
                                 <td class="py-6 px-4 text-right">
                                     <div class="flex justify-end gap-2">
-                                        <button onclick="app.removeStudent('${name}')" class="text-outline-variant hover:text-error transition-all"><span class="material-symbols-outlined text-lg">person_remove</span></button>
+                                        ${conf ? `
+                                            <button onclick="app.resetParentalConfirm('${name}')" class="p-2 rounded-full hover:bg-error/10 text-error transition-all" title="Elternbestätigung zurücksetzen">
+                                                <span class="material-symbols-outlined text-lg">delete_sweep</span>
+                                            </button>
+                                        ` : ''}
+                                        <button onclick="app.removeStudent('${name}')" class="p-2 rounded-full hover:bg-error/10 text-outline-variant hover:text-error transition-all" title="Schüler entfernen">
+                                            <span class="material-symbols-outlined text-lg">person_remove</span>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>`;
