@@ -3,7 +3,7 @@
 <html class="light" lang="de"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Döltschi | Digitaler Aufgabenplaner</title>
+<title>Döltschi | Test-Labor</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -74,12 +74,16 @@
     </style>
 </head>
 <body class="dot-pattern text-on-surface min-h-screen selection:bg-blue-100 flex flex-col font-sans">
+<div class="bg-amber-500 text-amber-950 py-2 px-4 text-center font-black text-xs uppercase tracking-[0.3em] z-[110] sticky top-0 shadow-md flex items-center justify-center gap-3 no-print">
+<span class="">🧪 TEST-MODUS AKTIV</span>
+<span class="material-symbols-outlined text-sm">science</span>
+</div>
 <header class="header-gradient sticky top-0 z-50 shadow-lg no-print">
 <div class="max-w-6xl mx-auto px-6 h-18 flex items-center justify-between py-3">
 <div class="flex items-center gap-4">
-<h1 class="text-3xl font-extrabold tracking-tighter text-white cursor-pointer" onclick="app.resetToHome()">DÖLTSCHI</h1>
-<div class="hidden md:flex items-center gap-2 bg-white/10 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border border-white/20">
-<span class="material-symbols-outlined text-[16px]">verified_user</span><span class="">Digitaler Planer</span>
+<h1 class="text-3xl font-extrabold tracking-tighter text-white cursor-pointer" onclick="app.resetToHome()">TEST-LABOR</h1>
+<div class="hidden md:flex items-center gap-2 bg-amber-400/20 backdrop-blur-md text-amber-400 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest border border-amber-400/30">
+<span class="material-symbols-outlined text-[16px]">science</span><span class="">Testumgebung</span>
 </div>
 </div>
 <div class="flex bg-black/10 backdrop-blur-md p-1.5 rounded-full border border-white/10" id="nav-mode-selector">
@@ -106,13 +110,13 @@
 <div class="hidden" id="start-view">
 <div class="max-w-xl mx-auto">
 <div class="bg-white p-12 rounded-lg shadow-2xl border border-surface-container relative overflow-hidden group">
-<div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-primary-container to-secondary"></div>
+<div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-secondary to-amber-400"></div>
 <div class="text-center mb-10">
 <div class="inline-flex items-center justify-center w-20 h-20 bg-surface-container rounded-full mb-6">
-<span class="material-symbols-outlined text-4xl text-primary">calendar_today</span>
+<span class="material-symbols-outlined text-4xl text-primary">science</span>
 </div>
 <h1 class="text-5xl font-black text-on-surface mb-3 tracking-tight">Willkommen</h1>
-<p class="text-on-surface-variant text-lg">Gib deine Klasse ein, um im Digitalen Planer zu starten.</p>
+<p class="text-on-surface-variant text-lg">Gib deine Klasse ein, um im Test-Labor zu starten.</p>
 </div>
 <div class="relative mb-8">
 <input class="w-full bg-surface-container-low border-2 border-surface-container-high rounded-full px-8 py-5 text-2xl font-bold text-on-surface shadow-inner focus:border-primary focus:ring-4 focus:ring-primary-container/10 transition-all outline-none uppercase text-center placeholder:text-outline-variant" id="class-name-input" placeholder="Z.B. B4B" type="text"/>
@@ -130,7 +134,7 @@
 <!-- Student Select Name -->
 <div class="hidden flex flex-col items-center py-12" id="student-select-view">
 <div class="text-center mb-12">
-<div class="mb-4 inline-block px-6 py-2 bg-primary/10 text-primary rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-sm" id="current-class-display">Klasse: --</div>
+<div class="mb-4 inline-block px-6 py-2 bg-secondary-fixed text-on-secondary-fixed rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-sm" id="current-class-display">Klasse: --</div>
 <h2 class="text-6xl font-black text-on-surface tracking-tighter">Wer bist du?</h2>
 <p class="text-on-surface-variant text-xl mt-2">Wähle deinen Namen aus der Liste.</p>
 </div>
@@ -237,7 +241,7 @@
 <button class="bg-surface-container-high text-on-surface-variant font-black py-4 rounded-full hover:bg-surface-container-highest transition-all flex items-center justify-center gap-2" onclick="document.getElementById('docx-import').click()">
 <span class="material-symbols-outlined text-lg">description</span> .docx Import
                         </button>
-<button class="bg-primary-container text-white font-black py-4 rounded-full hover:shadow-xl transition-all flex items-center justify-center gap-2" onclick="app.printQRCodes()">
+<button class="bg-amber-400 text-amber-950 font-black py-4 rounded-full hover:shadow-xl transition-all flex items-center justify-center gap-2" onclick="app.printQRCodes()">
 <span class="material-symbols-outlined text-lg">qr_code_2</span> QR Print
                         </button>
 </div>
@@ -303,7 +307,7 @@
 <div class="bg-white p-10 rounded-lg border border-surface-container shadow-xl">
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
 <h3 class="text-2xl font-black flex items-center gap-4 tracking-tight">
-<span class="material-symbols-outlined text-primary text-3xl">list_alt</span> Aktuelle Aufgaben
+<span class="material-symbols-outlined text-amber-500 text-3xl">list_alt</span> Aktuelle Aufgaben
                     </h3>
 </div>
 <div class="grid sm:grid-cols-2 gap-4" id="all-tasks-list"></div>
@@ -334,11 +338,11 @@
 <div class="hidden print-only p-8 bg-white" id="print-qr-section">
 <div class="flex justify-between items-center mb-12 border-b-2 border-slate-100 pb-6">
 <div>
-<h1 class="text-4xl font-black text-slate-900 tracking-tighter">Döltschi <span class="text-primary">Planer</span></h1>
+<h1 class="text-4xl font-black text-slate-900 tracking-tighter">Döltschi <span class="text-primary">Test-Labor</span></h1>
 <p class="text-slate-500 font-bold uppercase tracking-widest text-sm mt-1">Eltern-QR-Codes zur Bestätigung</p>
 </div>
 <div class="text-right">
-<span class="px-4 py-2 bg-primary text-white text-xs font-black uppercase rounded-full">Klasse: <span id="print-class-name"></span></span>
+<span class="px-4 py-2 bg-amber-400 text-amber-950 text-xs font-black uppercase rounded-full border border-amber-500">Klasse: <span id="print-class-name"></span></span>
 </div>
 </div>
 <div class="grid grid-cols-2 gap-x-12 gap-y-12" id="print-qr-grid"></div>
@@ -347,7 +351,7 @@
 <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
 <div class="text-center md:text-left">
 <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">© 2024 Döltschi Aufgabenplaner</p>
-<p class="text-[9px] text-outline-variant font-mono mt-1 uppercase">Digitaler Aufgabenplaner • Swiss Edition • Cloud Sync</p>
+<p class="text-[9px] text-outline-variant font-mono mt-1 uppercase">Lab Version • Swiss Edition • Cloud Sync</p>
 </div>
 <div class="flex gap-8">
 <a class="text-xs font-bold text-on-surface-variant hover:text-primary transition-colors uppercase tracking-widest" href="#">Datenschutz</a>
@@ -490,6 +494,7 @@
             setRole(role) {
                 if (role === 'login') {
                     this.currentRole = 'login';
+                    // Reset login password if switching to login
                     const loginPass = document.getElementById('login-password');
                     if (loginPass) loginPass.value = '';
                 } else if (role === 'student') {
@@ -519,6 +524,7 @@
                     localStorage.removeItem('lab_user');
                     this.clearLocalData();
                     
+                    // Reset inputs when returning home
                     const classInput = document.getElementById('class-name-input');
                     if (classInput) classInput.value = '';
                     
@@ -553,6 +559,7 @@
                 localStorage.removeItem('lab_class');
                 this.clearLocalData();
                 
+                // Clear the class name input when switching classes
                 const classInput = document.getElementById('class-name-input');
                 if (classInput) classInput.value = '';
                 
@@ -591,6 +598,7 @@
                 }
                 else if (this.currentRole === 'start') {
                     document.getElementById('start-view').classList.remove('hidden');
+                    // Ensure input is empty whenever start view is rendered
                     const classInput = document.getElementById('class-name-input');
                     if (classInput && !this.currentClassName) classInput.value = '';
                     this.generateStartQR();
@@ -1038,7 +1046,7 @@
                         div.className = "flex flex-col items-center p-10 border-4 border-slate-100 rounded-lg text-center break-inside-avoid relative overflow-hidden bg-white";
                         const cleanId = `qr-${name.replace(/\W/g, '')}`;
                         div.innerHTML = `
-                            <div class="absolute top-0 right-0 p-4"><span class="px-3 py-1 bg-primary text-white text-[10px] font-black uppercase rounded-lg">Döltschi Planer</span></div>
+                            <div class="absolute top-0 right-0 p-4"><span class="px-3 py-1 bg-amber-400 text-amber-950 text-[10px] font-black uppercase rounded-lg">Test-Labor</span></div>
                             <div class="flex items-center gap-3 mb-6"><h3 class="font-black text-xl text-slate-800 tracking-tight leading-tight">${name}</h3></div>
                             <div id="${cleanId}" class="mb-6 bg-white p-4 shadow-sm border border-slate-50 rounded-lg"></div>
                             <p class="text-[14px] font-black text-primary uppercase tracking-widest">Eltern-Login</p>
