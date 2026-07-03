@@ -348,7 +348,7 @@
         'NT': { name: 'NT', color: '#06b6d4' },
         'MU': { name: 'Musik', color: '#a855f7' },
         'BS': { name: 'Sport', color: '#d97706' },
-        'DIV': { name: 'DIVERSES', color: '#ffffff', textColor: '#1e293b', border: '1px solid #e2e8f0' }
+        'DIV': { name: 'Diverses', color: '#ffffff', textColor: '#1e293b', border: '1px solid #e2e8f0' }
     };
 
     window.app = {
@@ -409,7 +409,6 @@
             if (role === 'login') {
                 this.currentRole = 'login';
             } else if (role === 'student') {
-                // If user is locked to a name, jump to student-tasks
                 const savedUser = localStorage.getItem('doeltschi_user');
                 if (savedUser && this.students.includes(savedUser)) {
                     this.selectedStudent = savedUser;
@@ -445,7 +444,6 @@
 
         logoutStudent() {
             if(confirm("Möchtest du dich abmelden? Deine Identität bleibt auf diesem Gerät für heute gespeichert.")) {
-                // We keep localStorage for "Identity Protection" but allow switching if explicitly confirmed
                 localStorage.removeItem('doeltschi_user');
                 this.selectedStudent = null;
                 this.currentRole = 'student';
@@ -492,7 +490,6 @@
         generateHomeQR() {
             const container = document.getElementById('qrcode-home');
             if (!container) return;
-            // Handle special chars correctly by encoding URL components
             const safeUrl = window.location.origin + window.location.pathname; 
             container.innerHTML = "";
             new QRCode(container, {
