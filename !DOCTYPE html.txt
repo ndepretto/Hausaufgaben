@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+
+<html class="light" lang="de"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Döltschi Planer - Master Version</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .subject-bar { width: 6px; border-radius: 3px 0 0 3px; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+        .animate-cloud-pulse { animation: pulse-soft 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        [v-cloak] { display: none; }
+    </style>
+<!-- Tailwind Config Verbatim -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#9e3d00",
+                    "outline": "#727784",
+                    "on-error-container": "#93000a",
+                    "surface-tint": "#095bbf",
+                    "sub-e": "#eab308",
+                    "on-primary-fixed-variant": "#004494",
+                    "secondary-fixed": "#e2dfff",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb595",
+                    "sub-bs": "#f59e0b",
+                    "on-tertiary-container": "#ffc9b2",
+                    "on-primary-fixed": "#001a41",
+                    "tertiary": "#782c00",
+                    "on-surface-variant": "#424753",
+                    "sub-nt": "#06b6d4",
+                    "sub-de": "#ef4444",
+                    "on-surface": "#1a1c1f",
+                    "primary-fixed": "#d8e2ff",
+                    "on-secondary-fixed": "#0b006b",
+                    "secondary-fixed-dim": "#c2c1ff",
+                    "primary-container": "#0058bc",
+                    "on-tertiary": "#ffffff",
+                    "primary-fixed-dim": "#adc6ff",
+                    "on-primary-container": "#c3d4ff",
+                    "on-secondary-fixed-variant": "#3531b4",
+                    "surface-dim": "#d9dade",
+                    "primary": "#00418f",
+                    "surface-container-high": "#e7e8ed",
+                    "sub-ma": "#3b82f6",
+                    "background": "#f9f9fe",
+                    "tertiary-fixed": "#ffdbcd",
+                    "surface-bright": "#f9f9fe",
+                    "sub-f": "#22c55e",
+                    "sub-mu": "#a855f7",
+                    "surface-container": "#ededf2",
+                    "on-secondary": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "secondary": "#4c4aca",
+                    "surface-variant": "#e2e2e7",
+                    "on-background": "#1a1c1f",
+                    "sub-mi": "#64748b",
+                    "on-secondary-container": "#fffbff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary-fixed": "#351000",
+                    "sub-rzg": "#f97316",
+                    "inverse-surface": "#2e3034",
+                    "surface-container-low": "#f3f3f8",
+                    "error": "#ba1a1a",
+                    "secondary-container": "#6564e4",
+                    "error-container": "#ffdad6",
+                    "surface-container-highest": "#e2e2e7",
+                    "inverse-primary": "#adc6ff",
+                    "surface": "#f9f9fe",
+                    "inverse-on-surface": "#f0f0f5",
+                    "on-tertiary-fixed-variant": "#7c2e00",
+                    "sub-wah": "#ea580c",
+                    "outline-variant": "#c2c6d5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-padding": "1.25rem",
+                    "gutter": "1.5rem",
+                    "section-gap": "3rem",
+                    "input-padding": "1rem",
+                    "container-margin": "2rem"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "h1-mobile": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "h2": ["Inter"],
+                    "subject-tag": ["Inter"],
+                    "h1": ["Inter"]
+            },
+            "fontSize": {
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "h1-mobile": ["26px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "h2": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "subject-tag": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                    "h1": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 left-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant flex justify-center items-center px-gutter h-16">
+<div class="w-full max-w-[1280px] flex justify-between items-center">
+<div class="flex items-center gap-4">
+<h1 class="text-h2 font-h2 text-primary">Döltschi Planer</h1>
+<div class="flex items-center gap-1.5 px-3 py-1 bg-surface-container-low rounded-full border border-outline-variant">
+<span class="material-symbols-outlined text-green-500 animate-cloud-pulse" style="font-variation-settings: 'FILL' 1;">cloud_done</span>
+<span class="text-label-caps font-label-caps text-outline uppercase">Cloud Live</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-primary text-on-primary px-6 py-2 rounded-full font-label-caps text-label-caps hover:bg-primary-container transition-all active:scale-95 flex items-center gap-2" id="viewToggle">
+<span class="material-symbols-outlined text-sm">school</span>
+                    Lehrer Modus
+                </button>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="flex-grow pt-24 pb-stack-padding px-gutter max-w-[1280px] mx-auto w-full space-y-section-gap">
+<!-- View 1: Onboarding / Name Selection -->
+<section class="flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in duration-500" id="onboardingSection">
+<div class="space-y-4">
+<h2 class="text-h1 font-h1 text-on-surface">Wer bist du?</h2>
+<p class="text-body-lg text-on-surface-variant">Wähle deinen Namen aus der Liste, um deinen persönlichen Planer zu laden.</p>
+</div>
+<div class="w-full max-w-md bg-surface-container-lowest p-8 rounded-lg shadow-sm border border-outline-variant space-y-6">
+<div class="relative group">
+<select class="w-full h-14 pl-12 pr-4 rounded-full bg-surface-container-low border border-outline-variant text-body-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all appearance-none cursor-pointer" id="studentSelect">
+<option disabled="" selected="" value="">Dein Name...</option>
+<option value="s1">Lukas Müller</option>
+<option value="s2">Sarah Schmid</option>
+<option value="s3">Noah Weber</option>
+<option value="s4">Elena Fischer</option>
+</select>
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary">person</span>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
+</div>
+<button class="w-full bg-primary text-on-primary h-14 rounded-full font-label-caps text-label-caps flex items-center justify-center gap-2 hover:opacity-90 transition-opacity" onclick="startSession()">
+                    Planer öffnen <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<!-- QR Sync -->
+<div class="flex flex-col items-center space-y-4 pt-12">
+<div class="p-4 bg-white border-2 border-dashed border-outline-variant rounded-xl">
+<img class="w-32 h-32 opacity-80" data-alt="A clean, high-contrast QR code generated in a minimalist black and white style, presented on a white square background with rounded corners. The surrounding environment is a soft, blurry desk setting in light-mode tones. Perfect for a modern tech integration visual." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDayifv9frnYhR6uD-BCLUlPALXbtnMtAFgfN0S3GLE2psuidMxoZUXRONOaa-06xSCNqxXZIR8uQKau8tdThgAyewYqnTKW350H6a1tH0PAQ2ysDRfTaDua8Jb0yc0bmsxry3X-jINWRaCV6pzBrIzYEyBR7gc8scGv8-NzZVyljr010zwVyqbF9v1D_wEc33SNvbnp3Kk4593u5Bwn1MTMJPspDOApNRLkWmJ9kMaGlpofrbFEKOWmnDQq493fgFSFHoXMVqEt5g"/>
+</div>
+<p class="text-label-caps font-label-caps text-outline">MOBILE SYNC - SCANNE MICH</p>
+</div>
+</section>
+<!-- View 2: Student Dashboard (Hidden by default) -->
+<section class="hidden space-y-stack-padding" id="studentDashboard">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div class="space-y-1">
+<span class="text-label-caps font-label-caps text-primary uppercase">Hallo Lukas</span>
+<h2 class="text-h1 font-h1">Deine Aufgaben</h2>
+</div>
+<div class="text-right text-outline text-label-caps font-label-caps uppercase">
+                    Heute: <span id="currentDateDisplay">24.05.2024</span>
+</div>
+</div>
+<!-- Tasks Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Task List Card -->
+<div class="md:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm overflow-hidden">
+<div class="p-5 border-b border-outline-variant bg-surface-container-low flex justify-between items-center">
+<h3 class="text-label-caps font-label-caps text-on-surface-variant uppercase tracking-widest">Hausaufgaben & Projekte</h3>
+<span class="bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-xs font-bold">4 Offen</span>
+</div>
+<div class="divide-y divide-outline-variant" id="taskListContainer">
+<!-- Task Item -->
+<div class="p-5 flex items-center gap-4 relative hover:bg-surface-container-low transition-colors group">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-sub-de"></div>
+<input class="w-6 h-6 rounded-full border-2 border-outline text-primary focus:ring-primary cursor-pointer" type="checkbox"/>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-1">
+<span class="bg-sub-de text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase">Deutsch</span>
+<span class="text-label-caps font-label-caps text-outline">Bis 26.05.2024</span>
+</div>
+<p class="text-body-md font-semibold">Lesetagebuch: Kapitel 4-5 zusammenfassen und Fragen beantworten.</p>
+</div>
+</div>
+<!-- Task Item -->
+<div class="p-5 flex items-center gap-4 relative hover:bg-surface-container-low transition-colors group">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-sub-ma"></div>
+<input class="w-6 h-6 rounded-full border-2 border-outline text-primary focus:ring-primary cursor-pointer" type="checkbox"/>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-1">
+<span class="bg-sub-ma text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase">Mathe</span>
+<span class="text-label-caps font-label-caps text-outline">Bis 27.05.2024</span>
+</div>
+<p class="text-body-md font-semibold">Arbeitsblatt 'Bruchrechnen' Seite 12-14 lösen.</p>
+</div>
+</div>
+<!-- Task Item -->
+<div class="p-5 flex items-center gap-4 relative hover:bg-surface-container-low transition-colors group">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-sub-nt"></div>
+<input class="w-6 h-6 rounded-full border-2 border-outline text-primary focus:ring-primary cursor-pointer" type="checkbox"/>
+<div class="flex-grow">
+<div class="flex items-center gap-2 mb-1">
+<span class="bg-sub-nt text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase">NT</span>
+<span class="text-label-caps font-label-caps text-outline">Bis 30.05.2024</span>
+</div>
+<p class="text-body-md font-semibold">Plakatentwurf für das Thema 'Ökosystem Wald' fertigstellen.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Parental Confirmation -->
+<div class="md:col-span-4 space-y-6">
+<div class="p-8 border-2 border-dashed border-primary rounded-lg bg-surface-container-lowest flex flex-col items-center text-center space-y-6 transition-all duration-300" id="parentConfirmation">
+<span class="material-symbols-outlined text-5xl text-primary" style="font-variation-settings: 'FILL' 0;">family_history</span>
+<div class="space-y-2">
+<h3 class="text-h2 font-h2">Eltern-Check</h3>
+<p class="text-body-md text-on-surface-variant">Lasse deine Eltern die Aufgaben prüfen. Nach der Bestätigung wird die Liste gesperrt.</p>
+</div>
+<button class="w-full py-4 bg-primary text-on-primary rounded-full font-bold shadow-md hover:bg-primary-container transition-all active:scale-95" onclick="confirmTasks()">
+                            Gesehen & Bestätigt
+                        </button>
+</div>
+<div class="p-6 bg-surface-container-high rounded-lg space-y-4">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined">info</span>
+<span class="text-label-caps font-label-caps uppercase">Hinweis</span>
+</div>
+<p class="text-body-md text-on-surface-variant">Bestätigte Aufgaben können nur durch die Lehrperson wieder freigeschaltet werden.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- View 3: Teacher Mode Dashboard (Hidden by default) -->
+<section class="hidden space-y-section-gap" id="teacherDashboard">
+<div class="flex items-center justify-between">
+<h2 class="text-h1 font-h1">Lehrer Dashboard</h2>
+<div class="flex gap-2">
+<button class="bg-surface-container-high px-4 py-2 rounded-full text-label-caps font-label-caps hover:bg-outline-variant transition-colors">Import (.docx)</button>
+<button class="bg-surface-container-high px-4 py-2 rounded-full text-label-caps font-label-caps hover:bg-outline-variant transition-colors">Export (.txt)</button>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Task Creation Form -->
+<div class="lg:col-span-4 space-y-6">
+<div class="bg-surface-container-lowest p-6 rounded-lg border border-outline-variant shadow-sm space-y-4">
+<h3 class="text-h2 font-h2 mb-4">Neue Aufgabe</h3>
+<div class="space-y-4">
+<div>
+<label class="text-label-caps font-label-caps text-outline block mb-1">FACH</label>
+<select class="w-full bg-surface-container-low border-outline-variant rounded-full h-11 px-4">
+<option>Deutsch</option>
+<option>Mathe</option>
+<option>Englisch</option>
+<option>RZG</option>
+</select>
+</div>
+<div>
+<label class="text-label-caps font-label-caps text-outline block mb-1">AUFGABE</label>
+<textarea class="w-full bg-surface-container-low border-outline-variant rounded-lg p-4 h-24" placeholder="Was ist zu tun?"></textarea>
+</div>
+<div>
+<label class="text-label-caps font-label-caps text-outline block mb-1">TERMIN</label>
+<input class="w-full bg-surface-container-low border-outline-variant rounded-full h-11 px-4" type="date"/>
+</div>
+<div>
+<label class="text-label-caps font-label-caps text-outline block mb-1">ZUWEISEN AN</label>
+<select class="w-full bg-surface-container-low border-outline-variant rounded-full h-11 px-4">
+<option>Ganze Klasse</option>
+<option>Lukas Müller</option>
+<option>Sarah Schmid</option>
+</select>
+</div>
+<button class="w-full bg-primary text-on-primary py-3 rounded-full font-bold flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">add_task</span> Zuweisen
+                            </button>
+</div>
+</div>
+<!-- Class Management -->
+<div class="bg-surface-container-lowest p-6 rounded-lg border border-outline-variant shadow-sm space-y-4">
+<h3 class="text-h2 font-h2">Klassen-Verwaltung</h3>
+<textarea class="w-full bg-surface-container-low border-outline-variant rounded-lg p-4 h-32 text-xs" placeholder="Namen hier einfügen (ein Name pro Zeile)"></textarea>
+<button class="w-full py-2 bg-error-container text-on-error-container rounded-full font-label-caps text-label-caps uppercase hover:opacity-80 transition-opacity">
+                            Ganze Klasse löschen
+                        </button>
+</div>
+</div>
+<!-- Progress Tracking -->
+<div class="lg:col-span-8 space-y-6">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm">
+<div class="p-5 border-b border-outline-variant bg-surface-container-low">
+<h3 class="text-label-caps font-label-caps text-on-surface-variant uppercase">Schüler-Fortschritt (Klasse 3b)</h3>
+</div>
+<div class="divide-y divide-outline-variant">
+<!-- Student Progress Row -->
+<details class="group">
+<summary class="p-5 flex items-center gap-4 cursor-pointer list-none">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-bold">LM</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-2">
+<span class="font-bold">Lukas Müller</span>
+<span class="text-label-caps font-label-caps text-outline">3/4 Erledigt</span>
+</div>
+<div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="w-3/4 h-full bg-primary"></div>
+</div>
+</div>
+<span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
+</summary>
+<div class="px-5 pb-5 pt-2 bg-surface-container-lowest space-y-3">
+<div class="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-100">
+<div class="flex items-center gap-2 text-green-700">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="text-sm font-semibold">Eltern-Bestätigung erhalten (23.05.2024)</span>
+</div>
+<button class="text-xs bg-white border border-green-200 px-3 py-1 rounded shadow-sm text-green-700 font-bold hover:bg-green-50 transition-colors">ENTSPERREN</button>
+</div>
+<div class="text-xs text-outline italic">Letzte Synchronisation: Gerade eben</div>
+</div>
+</details>
+<!-- Student Progress Row -->
+<details class="group">
+<summary class="p-5 flex items-center gap-4 cursor-pointer list-none">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed font-bold">SS</div>
+<div class="flex-grow">
+<div class="flex justify-between items-center mb-2">
+<span class="font-bold">Sarah Schmid</span>
+<span class="text-label-caps font-label-caps text-outline">1/4 Erledigt</span>
+</div>
+<div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="w-1/4 h-full bg-secondary"></div>
+</div>
+</div>
+<span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
+</summary>
+<div class="px-5 pb-5 pt-2 bg-surface-container-lowest space-y-3">
+<div class="flex justify-between items-center p-3 bg-surface-container-low rounded-lg border border-outline-variant">
+<div class="flex items-center gap-2 text-outline">
+<span class="material-symbols-outlined">pending</span>
+<span class="text-sm">Warten auf Eltern-Bestätigung</span>
+</div>
+</div>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer with Subject Legend -->
+<footer class="w-full py-section-gap px-gutter flex flex-col items-center gap-8 max-w-[1280px] mx-auto border-t border-outline-variant">
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-8 gap-y-4 w-full">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded bg-sub-de"></span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">Deutsch</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded bg-sub-ma"></span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">Mathe</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded bg-sub-e"></span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">Englisch</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded bg-sub-f"></span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">Französisch</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded bg-sub-rzg"></span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">RZG</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded bg-sub-nt"></span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">NT</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded bg-sub-mu"></span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">Musik</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded bg-sub-bs"></span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">Sport</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded bg-sub-mi"></span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">Medien</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded bg-sub-wah"></span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">WAH</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded border border-outline"></span>
+<span class="text-label-caps font-label-caps text-on-surface-variant">Diverses</span>
+</div>
+</div>
+<div class="w-full flex flex-col md:flex-row justify-between items-center pt-8 border-t border-outline-variant gap-4">
+<p class="text-body-md text-on-surface-variant">© 2024 Döltschi Planer - Organisiert & Ermutigend</p>
+<div class="flex gap-6 text-label-caps font-label-caps text-outline">
+<a class="hover:text-primary transition-colors" href="#">Impressum</a>
+<a class="hover:text-primary transition-colors" href="#">Datenschutz</a>
+<a class="hover:text-primary transition-colors" href="#">Hilfe</a>
+</div>
+</div>
+</footer>
+<!-- Scripts -->
+<script>
+        const viewToggle = document.getElementById('viewToggle');
+        const onboarding = document.getElementById('onboardingSection');
+        const studentDashboard = document.getElementById('studentDashboard');
+        const teacherDashboard = document.getElementById('teacherDashboard');
+        const studentSelect = document.getElementById('studentSelect');
+        const confirmationCard = document.getElementById('parentConfirmation');
+
+        let isTeacherMode = false;
+
+        // View Switching Logic
+        viewToggle.addEventListener('click', () => {
+            if (!isTeacherMode) {
+                const password = prompt("Lehrer-Passwort eingeben:");
+                if (password === "lehrer123") {
+                    setTeacherMode(true);
+                } else {
+                    alert("Falsches Passwort!");
+                }
+            } else {
+                setTeacherMode(false);
+            }
+        });
+
+        function setTeacherMode(enabled) {
+            isTeacherMode = enabled;
+            if (enabled) {
+                onboarding.classList.add('hidden');
+                studentDashboard.classList.add('hidden');
+                teacherDashboard.classList.remove('hidden');
+                viewToggle.innerHTML = `<span class="material-symbols-outlined text-sm">person</span> Schüler-Ansicht`;
+                viewToggle.classList.replace('bg-primary', 'bg-surface-container-high');
+                viewToggle.classList.replace('text-on-primary', 'text-on-surface');
+            } else {
+                teacherDashboard.classList.add('hidden');
+                onboarding.classList.remove('hidden');
+                viewToggle.innerHTML = `<span class="material-symbols-outlined text-sm">school</span> Lehrer Modus`;
+                viewToggle.classList.replace('bg-surface-container-high', 'bg-primary');
+                viewToggle.classList.replace('text-on-surface', 'text-on-primary');
+            }
+        }
+
+        function startSession() {
+            if (studentSelect.value) {
+                onboarding.classList.add('hidden');
+                studentDashboard.classList.remove('hidden');
+            } else {
+                alert("Bitte wähle einen Namen aus!");
+            }
+        }
+
+        function confirmTasks() {
+            confirmationCard.classList.replace('bg-surface-container-lowest', 'bg-primary');
+            confirmationCard.classList.replace('border-dashed', 'border-solid');
+            confirmationCard.innerHTML = `
+                <span class="material-symbols-outlined text-5xl text-on-primary" style="font-variation-settings: 'FILL' 1;">verified</span>
+                <div class="space-y-2 text-on-primary">
+                    <h3 class="text-h2 font-h2">Bestätigt!</h3>
+                    <p class="text-body-md opacity-90">Die Liste wurde für heute gesperrt. Viel Erfolg beim Lernen!</p>
+                </div>
+                <div class="text-label-caps font-label-caps text-on-primary/70 uppercase">Sperre aktiv</div>
+            `;
+            // Lock all checkboxes
+            document.querySelectorAll('#taskListContainer input').forEach(cb => cb.disabled = true);
+        }
+
+        // Set Swiss Date
+        const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+        document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString('de-CH', dateOptions);
+    </script>
+</body></html>
